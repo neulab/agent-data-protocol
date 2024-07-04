@@ -1,15 +1,11 @@
 import json
 import sys
 import re
-import os
-
-sys.path.append(os.path.abspath("/Users/ranpox/Projects/agent-data-collection"))
 
 from schema.action.action import Action
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.observation.image import BoundingBox, ImageObservation, ImageAnnotation
 from schema.trajectory import Trajectory
 
 
