@@ -1,61 +1,44 @@
-from typing import List, Optional
 from pydantic import BaseModel
+from typing import List, Optional
+from datetime import datetime
 
 
-class Action(BaseModel):
-    action: str
-    args: dict
+class Args(BaseModel):
+    LLM_MODEL: Optional[str] = None
+    AGENT: Optional[str] = None
+    LANGUAGE: Optional[str] = None
+    LLM_API_KEY: Optional[str] = None
+    content: Optional[str] = None
     command: Optional[str] = None
-    background: Optional[bool] = False
+    background: Optional[bool] = None
     thought: Optional[str] = None
 
 
-class Cause(BaseModel):
-    id: int
+class Extras(BaseModel):
+    agent_state: Optional[str] = None
+    command_id: Optional[int] = None
+    command: Optional[str] = None
+    exit_code: Optional[int] = None
 
 
-class Observation(BaseModel):
-    source: str
-    message: str
-    observation: str
-    content: Optional[str] = None
-    extras: Optional[dict] = None
-
-
-class TrajectoryEntry(BaseModel):
-    id: int
-    timestamp: str
-    source: str
-    message: str
+class TrajectoryItem(BaseModel):
     action: Optional[str] = None
-    args: Optional[dict] = None
-    cause: Optional[Cause] = None
-    observation: Optional[Observation] = None
-    content: Optional[str] = None
-    extras: Optional[dict] = None
+    args: Optional[Args] = None
+    token: Optional[str] = None
+    status: Optional[str] = None
+    id: Optional[int] = None
+    timestamp: Optional[datetime] = None
+    source: Optional[str] = None
+    message: str = ""
+    observation: Optional[str] = None
+    content: str = ""
+    extras: Optional[Extras] = None
+    cause: Optional[int] = None
 
 
-class LogEntry(BaseModel):
-    FAIL_TO_PASS: dict
-    PASS_TO_PASS: dict
-    FAIL_TO_FAIL: dict
-    PASS_TO_FAIL: dict
-
-
-class Summary(BaseModel):
-    repo: str
-    total_predictions: int
-    Patch_Apply_Success: dict
-
-
-class Data:
-    summary: Summary
-
-
-class Root(BaseModel):
+class SchemaRaw(BaseModel):
     version: str
     token: str
     feedback: str
     permissions: str
-    trajectory: List[TrajectoryEntry]
-    data: Data
+    trajectory: List[TrajectoryItem]
