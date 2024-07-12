@@ -17,6 +17,7 @@ def type(text: str):
     Args:
     ----
         text (str): the text to input.
+
     """
     pass
 
@@ -26,6 +27,7 @@ def press(key_name: str):
     Args:
     ----
         key_name (str): go_back | go_home | enter, the key to press
+
     """
     pass
 
@@ -35,5 +37,6 @@ def end(succeeds: bool):
     Args:
     ----
         succeeds (bool): if the task is successful
+
     """
     pass
