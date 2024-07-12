@@ -12,30 +12,30 @@ def touch_and_lift(x0: float, y0: float, x1: float, y1: float) -> None:
     pass
 
 def type(text: str):
-    """
-    Type given text through keyboard.
+    """Type given text through keyboard.
 
     Args:
+    ----
         text (str): the text to input.
     """
 
     pass
 
 def press(key_name: str):
-    """
-    Press a special key according the key name.
+    """Press a special key according the key name.
 
     Args:
+    ----
         key_name (str): go_back | go_home | enter, the key to press
     """
 
     pass
 
 def end(succeeds: bool):
-    """
-    Claim the end of the task with whether it is successfully completed.
+    """Claim the end of the task with whether it is successfully completed.
 
     Args:
+    ----
         succeeds (bool): if the task is successful
     """
 
