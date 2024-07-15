@@ -5,10 +5,10 @@ import os
 import zipfile
 
 root = "datasets/wonderbread"
-source_id = "12iJoRZXyBV4pvEsWeAKv2n61LwVbUpqo"
-source_file_name = f"{root}/debug_demos.zip"
-# source_id = "1k-T-q1SI7rDu7pvqUPQ2w87OLf_IQrSv"
-# source_file_name = "{root}/demos.zip"
+# source_id = "12iJoRZXyBV4pvEsWeAKv2n61LwVbUpqo"
+# source_file_name = f"{root}/debug_demos.zip"
+source_id = "1k-T-q1SI7rDu7pvqUPQ2w87OLf_IQrSv"
+source_file_name = f"{root}/demos.zip"
 data_folder = source_file_name.split(".")[0]
 
 
