@@ -10,6 +10,11 @@ from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
+    if step["role"] == "system":
+        return [
+            TextObservation(content=step["content"], source=step["role"]),
+        ]
+
     assert step["role"] in ["assistant", "user"], f"Invalid role: {step['role']}"
 
     task_regex = re.match(r"Task:\n(.*)", step["content"], re.DOTALL)
@@ -66,10 +71,6 @@ for line in sys.stdin:
 
     content = []
     for step in raw_data["conversations"]:
-        if step["role"] == "system":
-            # skip system message since we are standardizing the format
-            # and can come up with different system messages for training
-            continue
         content.extend(convert_step(step))
 
     traj: Trajectory = Trajectory(
