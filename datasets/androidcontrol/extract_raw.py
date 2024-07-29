@@ -16,7 +16,7 @@ import os
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# 构建相对于脚本目录的文件路径
+# Construct file paths relative to the script directory
 # Load train episode IDs from split.json
 split_file = os.path.join(script_dir, "android_control/splits.json")
 with open(split_file, 'r') as f:
