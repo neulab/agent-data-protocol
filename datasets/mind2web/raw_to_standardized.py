@@ -78,6 +78,8 @@ def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
         url=None,
     )
 
+    # TODO: get the DOM element from `step.raw_html` here
+
     api_action = ApiAction(
         function=step.operation.op.lower(),
         kwargs={"value": step.operation.value} if step.operation.value else {},
