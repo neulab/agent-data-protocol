@@ -1,5 +1,6 @@
 import json
 import sys
+sys.path.insert(1, './')
 import re
 
 from schema.action.action import Action
@@ -7,7 +8,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-
+from schema.trajectory import Trajectory
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     system_regex = re.match(
@@ -68,11 +69,11 @@ for line in sys.stdin:
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
 
-    # Standardize the data
-    standardize_data = {
-        "id": raw_data["id"],
-        "content": content,
-    }
+   # Standardize the data
+    standardize_data = Trajectory(
+        id=raw_data["id"],
+        content=content,
+    )
 
     # Print the standardized data
-    print(json.dumps(standardize_data))
+    print(standardize_data.model_dump_json())
