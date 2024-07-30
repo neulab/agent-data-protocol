@@ -9,10 +9,22 @@ from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
+
+TOOL_DESCRIPTION = "Tool function available (already imported in <execute> environment):"
+
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
+    global APIS
+
     if step["role"] == "system":
+        system_msg = step["content"]
+        
+        if TOOL_DESCRIPTION in system_msg:
+            splited = system_msg.split(TOOL_DESCRIPTION, maxsplit=1)
+            system_msg = splited[0].rstrip()
+            APIS.add(splited[1])
+
         return [
-            TextObservation(content=step["content"], source=step["role"]),
+            TextObservation(content=system_msg, source=step["role"]),
         ]
 
     assert step["role"] in ["assistant", "user"], f"Invalid role: {step['role']}"
@@ -66,6 +78,8 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             f" {json.dumps(step, indent=2)}"
         )
 
+APIS = set()
+
 for line in sys.stdin:
     raw_data = json.loads(line)
 
@@ -78,3 +92,7 @@ for line in sys.stdin:
         content=content,
     )
     print(traj.model_dump_json())
+
+# with open("apis.txt", "w") as f:
+#     for api in APIS:
+#         f.write(api + "\n")
