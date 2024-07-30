@@ -27,10 +27,13 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
     elif code_act_regex:
         code_extract_regex = re.match(
-            r"bash\n\n```bash\n(.*)\n```", code_act_regex.group(2), re.DOTALL
+            r"(bash\n\n```bash\n(.*)\n```|bash \n\n```bash\n(.*)\n```|bash\n  \n```bash\n(.*)\n```)", code_act_regex.group(2), re.DOTALL
         )
         answer_extract_regex = re.match(
             r"answer\((.*)\)", code_act_regex.group(2), re.DOTALL
+        )
+        finish_extract_regex = re.match(
+            r"finish", code_act_regex.group(2), re.DOTALL
         )
         if code_extract_regex:
             return [
@@ -45,6 +48,13 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 MessageAction(
                     content=answer_extract_regex.group(1),
                     description=code_act_regex.group(1),
+                ),
+            ]
+        elif finish_extract_regex:
+            return [
+                MessageAction(
+                    content=finish_extract_regex.group(0),
+                    description=code_act_regex.group(1)
                 ),
             ]
         else:
