@@ -175,7 +175,7 @@ def process_trace(trace_file, page, record):
                 strings = tree["strings"]
                 if "data-pw-testid-buckeye" not in strings:
                     print('"data-pw-testid-buckeye" not in strings')
-                    return ""
+                    continue
                 tgt_idx = strings.index("data-pw-testid-buckeye")
                 nodes = document["nodes"]
                 backend_node_ids = nodes["backendNodeId"]
