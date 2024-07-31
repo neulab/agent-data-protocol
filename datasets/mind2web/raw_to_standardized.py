@@ -1,12 +1,10 @@
 import json
 import sys
 import os
-sys.path.append(os.path.abspath('/home/tianyueo/agent-data-collection/'))
 from schema.action.api import ApiAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-sys.path.append(os.path.abspath('/home/tianyueo/agent-data-collection/'))
 from schema_raw import SchemaRaw, Action as RawAction
 import collections
 import re
