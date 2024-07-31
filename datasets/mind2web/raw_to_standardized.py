@@ -1,15 +1,19 @@
 import json
 import sys
-
+import os
+sys.path.append(os.path.abspath('/home/tianyueo/agent-data-collection/'))
 from schema.action.api import ApiAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-from datasets.mind2web.schema_raw import SchemaRaw, Action as RawAction
+sys.path.append(os.path.abspath('/home/tianyueo/agent-data-collection/'))
+from schema_raw import SchemaRaw, Action as RawAction
+import collections
+import re
 
-from playwright.sync_api import CDPSession, Page, ViewportSize
+from playwright.sync_api import CDPSession, Page, ViewportSize, sync_playwright
 
-from .webarena_utils import (
+from webarena_utils import (
     AccessibilityTree,
     AccessibilityTreeNode,
     BrowserConfig,
@@ -67,6 +71,139 @@ def fetch_browser_info(
     self.d_tree = tree
     return info
 
+def get_bounding_client_rect(
+        client: CDPSession, backend_node_id: str
+    ):
+        try:
+            remote_object = client.send(
+                "DOM.resolveNode", {"backendNodeId": int(backend_node_id)}
+            )
+            remote_object_id = remote_object["object"]["objectId"]
+            response = client.send(
+                "Runtime.callFunctionOn",
+                {
+                    "objectId": remote_object_id,
+                    "functionDeclaration": """
+                        function() {
+                            if (this.nodeType == 3) {
+                                var range = document.createRange();
+                                range.selectNode(this);
+                                var rect = range.getBoundingClientRect().toJSON();
+                                range.detach();
+                                return rect;
+                            } else {
+                                return this.getBoundingClientRect().toJSON();
+                            }
+                        }
+                    """,
+                    "returnByValue": True,
+                },
+            )
+            return response
+        except Exception as e:
+            return {"result": {"subtype": "error"}}
+
+
+def process_trace(trace_file, page, record):
+    page.goto("https://trace.playwright.dev/")
+
+    with page.expect_file_chooser() as fc_info:
+        page.get_by_role("button", name="Select file(s)").click()
+
+    file_chooser = fc_info.value
+
+    file_chooser.set_files(trace_file)
+    trace_file = trace_file.split('/')[-2]
+    # print(trace_file)
+    action_mapping = collections.defaultdict(list)
+    action_uids = []
+    page.locator(".action-title").first.wait_for(timeout=50000)
+
+    for idx in range(page.locator(".action-title").count()):
+        action = page.locator(".action-title").nth(idx)
+        action_repr = action.text_content()
+        if action_repr.startswith("Keyboard.type"):
+            action_uid = [action_uid]
+        else:
+            action_uid = re.findall(r"get_by_test_id\(\"(.+?)\"\)", action_repr)
+        if (
+            action_repr.startswith("Locator.count")
+            or action_repr.startswith("Locator.all")
+            or len(action_uid) == 0
+        ):
+            continue
+        
+        action_uid = action_uid[0]
+        if action_uid not in action_mapping:
+            action_uids.append(action_uid)
+        action_mapping[action_uid].append(action)
+
+    # print(action_uids)
+
+    for action_uid in action_uids:
+        for action_idx in range(len(action_mapping[action_uid])):
+            if os.path.exists(record):
+                with open(record, "r") as file:
+                    content = file.read()
+                    if (trace_file + "-" + action_uid +'-'+f"{action_idx:03d}") in content:
+                        continue
+            action_seq = action_mapping[action_uid]
+            action_seq[action_idx].click()
+
+            # before
+            page.locator('div.tabbed-pane-tab-label:text("Before")').click()
+            with page.expect_popup() as snapshot_popup:
+                page.locator("button.link-external").click()
+                # snapshot is the playwright page
+                snapshot = snapshot_popup.value
+                cdp_client = snapshot.context.new_cdp_session(snapshot)
+                snapshot.wait_for_load_state("domcontentloaded")
+                
+                snapshot.evaluate(
+                    """()=>{
+                    const highlight_element = document.getElementById("x-pw-highlight-box");
+                    if (highlight_element !== null) {highlight_element.style.display = "none";}
+                }"""
+                )
+                tree = cdp_client.send(
+                    "DOMSnapshot.captureSnapshot",
+                    {
+                        "computedStyles": [],
+                        "includeDOMRects": True,
+                        "includePaintOrder": True,
+                    },
+                )
+                document = tree["documents"][0]
+                strings = tree["strings"]
+                if "data-pw-testid-buckeye" not in strings:
+                    print('"data-pw-testid-buckeye" not in strings')
+                    return ""
+                tgt_idx = strings.index("data-pw-testid-buckeye")
+                nodes = document["nodes"]
+                backend_node_ids = nodes["backendNodeId"]
+                node_names = nodes["nodeName"]
+                node_types = nodes["nodeType"]
+                attributes = nodes["attributes"]
+                backend_node_id = -1
+                for idx in range(len(node_names)):
+                    if tgt_idx in attributes[idx]:
+                        action_uid_idx = attributes[idx][attributes[idx].index(tgt_idx) + 1]
+                        if strings[action_uid_idx] == action_uid:
+                            backend_node_id = backend_node_ids[idx]
+                            break
+                if backend_node_id != -1:
+                    print(action_uid, backend_node_id)
+                    # now backend_node_id stores dom node id
+                    # remaining processing code here
+                    # e.g. 
+                    # info_mapping[action_uid] = {
+                    #   boundingbox = ...
+                    #   
+                    # }
+                    # return info_mapping
+
+                cdp_client.detach()
+                snapshot.close()
 
 def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
     web_observation = WebObservation(
@@ -80,6 +217,8 @@ def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
 
     # TODO: get the DOM element from `step.raw_html` here
 
+    # use info_mapping[action_uid] to retrieve node's attributes
+    
     api_action = ApiAction(
         function=step.operation.op.lower(),
         kwargs={"value": step.operation.value} if step.operation.value else {},
@@ -87,6 +226,41 @@ def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
     )
     return web_observation, api_action
 
+
+
+trace_files = []
+for trace_file in os.listdir('./raw_dump/'):
+    trace_file = os.path.join('./raw_dump/', trace_file, "trace.zip")
+    session_id = trace_file.split("/")[-2]
+    trace_files.append((trace_file))
+
+with sync_playwright() as p:
+    p.selectors.set_test_id_attribute("data-pw-testid-buckeye")
+    browser = p.chromium.launch(headless=True)
+    context = browser.new_context(viewport={"width": 1280, "height": 1080})
+
+    for trace_file in trace_files:
+        success = False
+        page = context.new_page()
+        record_fn = "./record"
+        if not os.path.exists(record_fn):
+            with open(record_fn, 'w') as file:
+                pass
+        try:
+            process_trace(
+                trace_file,
+                page,
+                record=record_fn,
+            )
+
+            success = True
+        except Exception as e:
+            print(e)
+        page.close()
+        if not success:
+            print(f"Failed to process {trace_file}")
+    browser.close()
+    
 
 for line in sys.stdin:
 
