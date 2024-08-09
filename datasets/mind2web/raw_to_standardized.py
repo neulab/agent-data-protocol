@@ -1,3 +1,4 @@
+import argparse
 import json
 import sys
 import os
@@ -8,6 +9,7 @@ from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw, Action as RawAction
 import collections
 import re
+import tqdm
 
 from playwright.sync_api import CDPSession, Page, ViewportSize, sync_playwright
 
@@ -21,6 +23,7 @@ from webarena_utils import (
     Observation,
     png_bytes_to_numpy,
 )
+
 
 def fetch_browser_info(
     self,
@@ -69,19 +72,18 @@ def fetch_browser_info(
     self.d_tree = tree
     return info
 
-def get_bounding_client_rect(
-        client: CDPSession, backend_node_id: str
-    ):
-        try:
-            remote_object = client.send(
-                "DOM.resolveNode", {"backendNodeId": int(backend_node_id)}
-            )
-            remote_object_id = remote_object["object"]["objectId"]
-            response = client.send(
-                "Runtime.callFunctionOn",
-                {
-                    "objectId": remote_object_id,
-                    "functionDeclaration": """
+
+def get_bounding_client_rect(client: CDPSession, backend_node_id: str):
+    try:
+        remote_object = client.send(
+            "DOM.resolveNode", {"backendNodeId": int(backend_node_id)}
+        )
+        remote_object_id = remote_object["object"]["objectId"]
+        response = client.send(
+            "Runtime.callFunctionOn",
+            {
+                "objectId": remote_object_id,
+                "functionDeclaration": """
                         function() {
                             if (this.nodeType == 3) {
                                 var range = document.createRange();
@@ -94,12 +96,12 @@ def get_bounding_client_rect(
                             }
                         }
                     """,
-                    "returnByValue": True,
-                },
-            )
-            return response
-        except Exception as e:
-            return {"result": {"subtype": "error"}}
+                "returnByValue": True,
+            },
+        )
+        return response
+    except Exception as e:
+        return {"result": {"subtype": "error"}}
 
 
 def process_trace(trace_file, page, record):
@@ -111,7 +113,7 @@ def process_trace(trace_file, page, record):
     file_chooser = fc_info.value
 
     file_chooser.set_files(trace_file)
-    trace_file = trace_file.split('/')[-2]
+    trace_file = trace_file.split("/")[-2]
     # print(trace_file)
     action_mapping = collections.defaultdict(list)
     action_uids = []
@@ -130,7 +132,7 @@ def process_trace(trace_file, page, record):
             or len(action_uid) == 0
         ):
             continue
-        
+
         action_uid = action_uid[0]
         if action_uid not in action_mapping:
             action_uids.append(action_uid)
@@ -143,7 +145,9 @@ def process_trace(trace_file, page, record):
             if os.path.exists(record):
                 with open(record, "r") as file:
                     content = file.read()
-                    if (trace_file + "-" + action_uid +'-'+f"{action_idx:03d}") in content:
+                    if (
+                        trace_file + "-" + action_uid + "-" + f"{action_idx:03d}"
+                    ) in content:
                         continue
             action_seq = action_mapping[action_uid]
             action_seq[action_idx].click()
@@ -156,7 +160,7 @@ def process_trace(trace_file, page, record):
                 snapshot = snapshot_popup.value
                 cdp_client = snapshot.context.new_cdp_session(snapshot)
                 snapshot.wait_for_load_state("domcontentloaded")
-                
+
                 snapshot.evaluate(
                     """()=>{
                     const highlight_element = document.getElementById("x-pw-highlight-box");
@@ -185,7 +189,9 @@ def process_trace(trace_file, page, record):
                 backend_node_id = -1
                 for idx in range(len(node_names)):
                     if tgt_idx in attributes[idx]:
-                        action_uid_idx = attributes[idx][attributes[idx].index(tgt_idx) + 1]
+                        action_uid_idx = attributes[idx][
+                            attributes[idx].index(tgt_idx) + 1
+                        ]
                         if strings[action_uid_idx] == action_uid:
                             backend_node_id = backend_node_ids[idx]
                             break
@@ -193,15 +199,16 @@ def process_trace(trace_file, page, record):
                     print(action_uid, backend_node_id)
                     # now backend_node_id stores dom node id
                     # remaining processing code here
-                    # e.g. 
+                    # e.g.
                     # info_mapping[action_uid] = {
                     #   boundingbox = ...
-                    #   
+                    #
                     # }
                     # return info_mapping
 
                 cdp_client.detach()
                 snapshot.close()
+
 
 def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
     web_observation = WebObservation(
@@ -216,7 +223,7 @@ def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
     # TODO: get the DOM element from `step.raw_html` here
 
     # use info_mapping[action_uid] to retrieve node's attributes
-    
+
     api_action = ApiAction(
         function=step.operation.op.lower(),
         kwargs={"value": step.operation.value} if step.operation.value else {},
@@ -225,60 +232,70 @@ def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
     return web_observation, api_action
 
 
+if __name__ == "__main__":
 
-trace_files = []
-for trace_file in os.listdir('./raw_dump/'):
-    trace_file = os.path.join('./raw_dump/', trace_file, "trace.zip")
-    session_id = trace_file.split("/")[-2]
-    trace_files.append((trace_file))
+    # add argparse to get location of raw_dump
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--raw-dump", type=str)
+    args = parser.parse_args()
 
-with sync_playwright() as p:
-    p.selectors.set_test_id_attribute("data-pw-testid-buckeye")
-    browser = p.chromium.launch(headless=True)
-    context = browser.new_context(viewport={"width": 1280, "height": 1080})
+    trace_files = []
+    for root, dirs, files in os.walk(args.raw_dump):
+        for file in files:
+            if file == "trace.zip":
+                trace_file = os.path.join(root, file)
+                trace_files.append(trace_file)
 
-    for trace_file in trace_files:
-        success = False
-        page = context.new_page()
-        record_fn = "./record"
-        if not os.path.exists(record_fn):
-            with open(record_fn, 'w') as file:
-                pass
-        try:
-            process_trace(
-                trace_file,
-                page,
-                record=record_fn,
+    with sync_playwright() as p:
+        p.selectors.set_test_id_attribute("data-pw-testid-buckeye")
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(viewport={"width": 1280, "height": 1080})
+
+        for trace_file in tqdm.tqdm(trace_files):
+            success = False
+            page = context.new_page()
+            record_fn = "./record"
+            if not os.path.exists(record_fn):
+                with open(record_fn, "w") as file:
+                    pass
+            try:
+                process_trace(
+                    trace_file,
+                    page,
+                    record=record_fn,
+                )
+
+                success = True
+            except Exception as e:
+                print(e)
+            page.close()
+            if not success:
+                print(f"Failed to process {trace_file}")
+        browser.close()
+
+    for line in sys.stdin:
+
+        raw_data = json.loads(line)
+        data = SchemaRaw(**raw_data)
+
+        content: list = [
+            TextObservation(
+                content=data.confirmed_task, source="user"
             )
+        ]
+        for action in data.actions:
+            content.extend(convert_step(action))
 
-            success = True
-        except Exception as e:
-            print(e)
-        page.close()
-        if not success:
-            print(f"Failed to process {trace_file}")
-    browser.close()
-    
+        standardized_data = Trajectory(
+            id=data.annotation_id,
+            content=content,
+            details={
+                "website": data.website,
+                "domain": data.domain,
+                "confirmed_task": data.confirmed_task,
+                "subdomain": data.subdomain,
+            },
+        )
 
-for line in sys.stdin:
-
-    raw_data = json.loads(line)
-    data = SchemaRaw(**raw_data)
-
-    content: list = [TextObservation(content=data.confirmed_task, source="user")]
-    for action in data.actions:
-        content.extend(convert_step(action))
-
-    standardized_data = Trajectory(
-        id=data.annotation_id,
-        content=content,
-        details={
-            "website": data.website,
-            "domain": data.domain,
-            "confirmed_task": data.confirmed_task,
-            "subdomain": data.subdomain,
-        },
-    )
-
-    # Print the standardized data
-    print(standardized_data.model_dump_json())
+        # Print the standardized data
+        print(standardized_data.model_dump_json())
