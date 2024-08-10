@@ -105,6 +105,7 @@ def get_bounding_client_rect(client: CDPSession, backend_node_id: str):
 
 
 def process_trace(trace_file, page, record):
+    info_mapping = {}
     page.goto("https://trace.playwright.dev/")
 
     with page.expect_file_chooser() as fc_info:
@@ -196,21 +197,15 @@ def process_trace(trace_file, page, record):
                             backend_node_id = backend_node_ids[idx]
                             break
                 if backend_node_id != -1:
-                    print(action_uid, backend_node_id)
-                    # now backend_node_id stores dom node id
-                    # remaining processing code here
-                    # e.g.
-                    # info_mapping[action_uid] = {
-                    #   boundingbox = ...
-                    #
-                    # }
-                    # return info_mapping
-
+                    # print(action_uid, backend_node_id)
+                    # print('trace_file',trace_file)
+                    info_mapping[trace_file + "-" + action_uid] = backend_node_id
                 cdp_client.detach()
                 snapshot.close()
+    return info_mapping
 
 
-def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
+def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[WebObservation, ApiAction]:
     web_observation = WebObservation(
         html=step.raw_html,
         # TODO: this should be added to the schema
@@ -221,12 +216,12 @@ def convert_step(step: RawAction) -> tuple[WebObservation, ApiAction]:
     )
 
     # TODO: get the DOM element from `step.raw_html` here
-
     # use info_mapping[action_uid] to retrieve node's attributes
 
+    dom_nodeid = info_mapping.get(f'{annotation_id}-{step.action_uid}', 'not found')
     api_action = ApiAction(
         function=step.operation.op.lower(),
-        kwargs={"value": step.operation.value} if step.operation.value else {},
+        kwargs={"value": step.operation.value, "dom_node_id":dom_nodeid} if step.operation.value else {"dom_node_id":dom_nodeid},
         description=None,
     )
     return web_observation, api_action
@@ -251,6 +246,7 @@ if __name__ == "__main__":
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(viewport={"width": 1280, "height": 1080})
 
+        info_mapping = dict()
         for trace_file in tqdm.tqdm(trace_files):
             success = False
             page = context.new_page()
@@ -259,11 +255,12 @@ if __name__ == "__main__":
                 with open(record_fn, "w") as file:
                     pass
             try:
-                process_trace(
+                trace_info_mapping = process_trace(
                     trace_file,
                     page,
                     record=record_fn,
                 )
+                info_mapping.update(trace_info_mapping)
 
                 success = True
             except Exception as e:
@@ -284,7 +281,7 @@ if __name__ == "__main__":
             )
         ]
         for action in data.actions:
-            content.extend(convert_step(action))
+            content.extend(convert_step(action,info_mapping,data.annotation_id))
 
         standardized_data = Trajectory(
             id=data.annotation_id,
@@ -298,4 +295,4 @@ if __name__ == "__main__":
         )
 
         # Print the standardized data
-        print(standardized_data.model_dump_json())
+        # print(standardized_data.model_dump_json())
