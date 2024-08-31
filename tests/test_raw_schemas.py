@@ -9,8 +9,9 @@ DATASET_PATH = Path(__file__).parent.parent / "datasets"
 
 
 def get_subdirectories(directory):
+    ignore_dirs = ["__pycache__"]
     return [
-        d for d in os.listdir(directory) if os.path.isdir(os.path.join(directory, d))
+        d for d in os.listdir(directory) if os.path.isdir(os.path.join(directory, d)) and d not in ignore_dirs
     ]
 
 
