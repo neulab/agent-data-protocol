@@ -1,5 +1,4 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field, root_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 
 class SchemaRaw(BaseModel):
