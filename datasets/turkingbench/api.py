@@ -1,4 +1,4 @@
-def modify_text(self, input_name: str, input_value) -> None:
+def modify_text(input_name: str, input_value: str) -> None:
     """For a given input element, enter the input value.
 
     Args:
@@ -9,7 +9,7 @@ def modify_text(self, input_name: str, input_value) -> None:
     pass
 
 
-def modify_checkbox(self, input_name: str, input_value) -> None:
+def modify_checkbox(input_name: str, input_value: str) -> None:
     """For a given checkbox element, check or uncheck the box.
 
     Args:
@@ -20,7 +20,7 @@ def modify_checkbox(self, input_name: str, input_value) -> None:
     pass
 
 
-def modify_radio(self, input_name: str, input_value) -> None:
+def modify_radio(input_name: str, input_value: str) -> None:
     """For a given radio element, select the radio button.
 
     Args:
@@ -30,7 +30,7 @@ def modify_radio(self, input_name: str, input_value) -> None:
     """
     pass
 
-def modify_select(self, input_name: str, input_value) -> None:
+def modify_select(input_name: str, input_value: str) -> None:
     """For a given select element, select the option.
 
     Args:
@@ -40,7 +40,7 @@ def modify_select(self, input_name: str, input_value) -> None:
     """
     pass
 
-def modify_range(self, input_name: str, input_value) -> None:
+def modify_range(input_name: str, input_value: str) -> None:
     """For a given range element, set the value.
 
     Args:

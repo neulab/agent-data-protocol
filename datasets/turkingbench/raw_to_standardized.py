@@ -32,7 +32,7 @@ if __name__ == "__main__":
                 continue
             html_template = html_template.replace(f"${{{key}}}", data[key]) # e.g., replaces '${explanation_1}' with raw_data["explanation_1"]
         content: list = [
-            WebObservation(html=html_template, url="", viewport_size=(-1, -1), image_observation=ImageObservation(content="", source="", annotations=None),)
+            WebObservation(html=html_template, url=None, viewport_size=None, image_observation=None)
         ]
 
         soup = BeautifulSoup(html_template, "html.parser")

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, root_validator, ConfigDict
 
 
 class SchemaRaw(BaseModel):
@@ -10,5 +10,5 @@ class SchemaRaw(BaseModel):
     Keywords: str
     Template: str
     Answer: dict[str, str]
-    class Config:
-        extra = "allow"
+
+    model_config = ConfigDict(extra="allow")
