@@ -2,6 +2,8 @@ import argparse
 import json
 import sys
 import os
+sys.path.insert(1, './')
+
 from schema.action.api import ApiAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
