@@ -41,13 +41,13 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         solution = solution_regex.group(2).strip()
         if "<execute>" not in thought:
             return [
-                MessageAction(content=solution, description=thought),
+                MessageAction(content=solution, description=thought or ''),
             ]
         else:
             # some of the thoughts contains <execute> tag which could be confusing
             # to model for training, so i did not include thought for solution
             return [
-                MessageAction(content=solution, description=None),
+                MessageAction(content=solution, description=''),
             ]
 
     elif execute_regex:
@@ -59,7 +59,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             CodeAction(
                 language="python3",
                 content=code,
-                description=thought if thought else None,
+                description=thought or '',
             ),
         ]
 
