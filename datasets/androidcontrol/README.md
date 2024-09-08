@@ -6,9 +6,13 @@
      pip install -r requirements.txt
      ```
 
-2. **Copy or Download TFRecord Files**
+2. **(Optional) Copy or Download TFRecord Files**
    - Retrieve the TFRecord files from Google Cloud.
    - Place all the files into the `android_control` folder. You can also use the sample files provided there for testing.
+   - Alternatively, you can directly iterate the data by this code:
+   ```sh
+   tfrecord_files_remote= tf.io.gfile.glob('gs://gresearch/android_control/android_control*')
+   ```
 
 3. **Set Up Latest android_env**
    - Navigate to the `android_env_utils` directory and install it (have included there):
@@ -17,7 +21,7 @@
      cd agent-data-collection/datasets/androidcontrol/android_env_utils
      python setup.py install
      
-     # or
+     # or (Windows)
      
      cd agent-data-collection/datasets/androidcontrol/android_env_utils
       setup.py install

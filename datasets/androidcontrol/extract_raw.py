@@ -9,10 +9,9 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 import traceback
-# from android_env_utils.android_env.proto.a11y import android_accessibility_forest_pb2
-# from android_env_utils import representation_utils
+from android_env_utils.android_env.proto.a11y import android_accessibility_forest_pb2
+from android_env_utils import representation_utils
 
-from android_env.proto.a11y import android_accessibility_forest_pb2
 
 import os
 
@@ -44,7 +43,17 @@ def _parse_function(example_proto):
 # Convert UI elements to dictionaries for easier handling
 def convert_ui_elements_to_dicts(ui_elements):
     filtered_list=[]
-    # Logic copied from https://github.com/google-research/android_world/blob/4d941153396c5daf4adc013f2f5cd265858bdffa/android_world/agents/m3a_utils.py#L448
+    ''' The filtering impelementations in Android Control and Android World are a bit different: 
+    Android World:
+    https://github.com/google-research/android_world/blob/4d941153396c5daf4adc013f2f5cd265858bdffa/android_world/agents/m3a_utils.py#L448
+    
+    Android Control:
+    https://github.com/google-research/google-research/issues/2120#issuecomment-2332316904
+    
+    '''
+
+    # Here I use AndroidWorld's for now since it makes more senses:
+
     for element in ui_elements:
         element_dict=element.to_dict()
         if ((element_dict['content_description'] is not None or element_dict['text'] is not None) and element_dict['is_visible'] and (element_dict["bbox_pixels"]["height"]>0) and (element_dict["bbox_pixels"]["width"]>0) and (element_dict["bbox_pixels"]["x_min"]<1080) and (element_dict["bbox_pixels"]["y_min"]<2400) and (element_dict["bbox_pixels"]["x_max"]>0) and (element_dict["bbox_pixels"]["y_max"]>0)):
@@ -106,24 +115,21 @@ def process_tfrecord_file(tfrecord_file):
         file_data.append(record)
 
     return file_data
-
 # Directory containing the TFRecord files
 data_dir = os.path.join(script_dir,"android_control")
 output_dir = os.path.join(script_dir,"android_control_screenshots")
-
 # Ensure the output directory exists
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
-
 # Get the list of TFRecord files
 tfrecord_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if not f.endswith('.json')]
-
+tfrecord_files_remote= tf.io.gfile.glob('gs://gresearch/android_control/android_control*')
 # Create a list to store parsed data
 data = []
-
 # Use ThreadPoolExecutor to process files in parallel
 with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
     futures = {executor.submit(process_tfrecord_file, tfrecord_file): tfrecord_file for tfrecord_file in tfrecord_files}
+    #TODO: If you want to skip downloading the tf record files, you can use 'tfrecord_files_remote' instead of 'tfrecord_files'
     for future in tqdm(as_completed(futures), total=len(futures), desc="Processing TFRecord files"):
         try:
             file_data = future.result()
@@ -135,12 +141,13 @@ with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
 # print(f"Total records processed: {len(data)}")
 
 # Save data to a JSON file
-
-# with open('sample_raw.json', 'w', encoding='utf-8') as f:
-#     json.dump(data, f, ensure_ascii=False, indent=4)
-
+#TODO: If you want to directly dump all the files
+with open('sample_raw.json', 'w', encoding='utf-8') as f:
+    json.dump(data, f, ensure_ascii=False, indent=4)
+#TODO: If you want to print them out. Notice that the dataset is super large!
 for i in data:
     print(i)
+
 # Uncomment the following lines if you want to save the data to a CSV file
 # import pandas as pd
 # df = pd.DataFrame(data)
