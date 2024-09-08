@@ -1,16 +1,18 @@
-
 from pydantic import BaseModel
 from typing import List
+
 
 class NegCandidate(BaseModel):
     attributes: str
     backend_node_id: str
     tag: str
 
+
 class Operation(BaseModel):
     op: str
     original_op: str
     value: str
+
 
 class PosCandidate(BaseModel):
     attributes: str
@@ -19,6 +21,7 @@ class PosCandidate(BaseModel):
     is_top_level_target: bool
     tag: str
 
+
 class Action(BaseModel):
     action_uid: str
     cleaned_html: str
@@ -26,6 +29,7 @@ class Action(BaseModel):
     operation: Operation
     pos_candidates: List[PosCandidate]
     raw_html: str
+
 
 class SchemaRaw(BaseModel):
     website: str

@@ -15,7 +15,14 @@
      ```sh
      cd agent-data-collection/datasets/androidcontrol/android_env_utils
       setup.py install
-     ```
+     
+     # or 
+     
+     cd agent-data-collection/datasets/androidcontrol/android_env_utils
+       pip install .
+        ```
+
+
 
 4. **Run the Script**
    - Execute the `extract_raw.py` script to process the data:
@@ -23,9 +30,8 @@
      python extract_raw.py
      ```
 
-# Below are content from original repo
-
-## AndroidControl
+# Below are content from [original repo](https://github.com/google-research/google-research/tree/master/android_control)
+# AndroidControl
 
 AndroidControl is a collection of over 15,000 demonstrations from human raters performing a
 diverse variety of tasks on 833 different apps spanning 40 app categories on Android devices. The
@@ -34,11 +40,11 @@ generalize beyond the apps and tasks they were trained on. The dataset includes
 screenshots and accessibility trees from the device, natural language instructions (both high-level
 goals and low-level step instructions), and actions represented as JSON dictionaries.
 
-### Dataset location
+## Dataset location
 
 The AndroidControl dataset and split file can be found [here](https://console.cloud.google.com/storage/browser/gresearch/android_control).
 
-### Dataset format
+## Dataset format
 
 Each datapoint is stored as a
 [TFRecord file](https://www.tensorflow.org/tutorials/load_data/tfrecord#reading_a_tfrecord_file_2)
@@ -53,7 +59,32 @@ with compression type `'GZIP'` with the following fields:
 *   `actions`: a list of actions represented as JSON dictionaries. The actions are performed between consecutive screenshots, so there are **len(screenshots) - 1** of them.
 *   `step_instructions`: a list of the step instructions describing each step to complete the task. The number of step instructions equals the number of actions, but it's important to note that each step instruction does not necessarily describe a single action. A step instruction can require more than one action to complete, and in these cases the step instruction is repeated to maintain a one-to-one mapping from step instructions to actions.
 
-### Action space
+### Parsing the accessibility tree
+To parse the trees from their serialized strings, you must clone/install the [android_env repository](https://github.com/google-deepmind/android_env/tree/main/android_env) using the methods they describe. To access the proto in Colab we used the following
+
+```
+!git clone https://github.com/deepmind/android_env/
+!cd android_env; pip install .
+```
+
+Once it's installed, you can import the proto and instantiate the forest object. Here’s an example of how to do that
+
+```
+import tensorflow as tf
+from android_env.proto.a11y import android_accessibility_forest_pb2
+
+filenames = tf.io.gfile.glob('gs://gresearch/android_control/android_control*')
+raw_dataset = tf.data.TFRecordDataset(filenames, compression_type='GZIP')
+dataset_iterator = tf.compat.v1.data.make_one_shot_iterator(raw_dataset)
+
+example = tf.train.Example.FromString(dataset_iterator.get_next().numpy())
+
+forest = android_accessibility_forest_pb2.AndroidAccessibilityForest().FromString(example.features.feature['accessibility_trees'].bytes_list.value[0])
+print(forest)
+```
+
+
+## Action space
 
 Our actions are represented as JSON dictionaries with an `action_type` key. The other fields in the action dictionary are unique for each `action_type` and  store parameter values for that action (e.g., "open_app" actions have an "app_name" key, but no "x" or "y" keys). The `action_type` field will have one of the following values:
 
@@ -66,16 +97,16 @@ Our actions are represented as JSON dictionaries with an `action_type` key. The 
 * `navigate_back`: go back to the previous screen.
 * `wait`: wait a set number of seconds. This is used when no action should be taken other than to wait for something on screen (e.g., a loading bar).
 
-### Comparison to other datasets
+## Comparison to other datasets
 
 ![](images/dataset_comparison.png)
 
-### Example episodes
+## Example episodes
 
 ![](images/episode_1.png)
 ![](images/episode_2.png)
 
-### Citation
+## Citation
 
 ```
 @article{li2024effects,

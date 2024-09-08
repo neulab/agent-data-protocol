@@ -27,10 +27,14 @@ def parse_image_data(image_bytes, height, width, nb_channels) -> Image.Image:
     return img
     #  }}} function parse_image_data # 
 
-ACTION_TYPES = [ "dual-point gesture", "type"
-               , "go_back", "go_home", "enter"
-               , "task_complete", "task_impossible"
-               ]
+#ACTION_TYPES = [ "dual-point gesture", "type"
+               #, "go_back", "go_home", "enter"
+               #, "task_complete", "task_impossible"
+               #]
+ACTION_TYPES = { 3: "type", 4: "dual-point gesture"
+               , 5: "go_back", 6: "go_home", 7: "enter"
+               , 10: "task_complete", 11: "task_impossible"
+               }
 
 dataset = tf.data.TFRecordDataset(file_names, compression_type="GZIP")
 json_list: List[Dict[str, Any]] = []

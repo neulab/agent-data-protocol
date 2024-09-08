@@ -9,11 +9,16 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 import traceback
-from datasets.androidcontrol.android_env_utils.android_env.proto.a11y import android_accessibility_forest_pb2
-from datasets.androidcontrol.android_env_utils import representation_utils
+from android_env_utils.android_env.proto.a11y import android_accessibility_forest_pb2
+from android_env_utils import representation_utils
 
+import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct file paths relative to the script directory
 # Load train episode IDs from split.json
-split_file = "android_control/splits.json"
+split_file = os.path.join(script_dir, "android_control/splits.json")
 with open(split_file, 'r') as f:
     split_data = json.load(f)
 train_episode_ids = set(split_data['train'])
@@ -36,7 +41,13 @@ def _parse_function(example_proto):
 
 # Convert UI elements to dictionaries for easier handling
 def convert_ui_elements_to_dicts(ui_elements):
-    return [element.to_dict() for element in ui_elements]
+    filtered_list=[]
+    for element in ui_elements:
+        element_dict=element.to_dict()
+        if ((element_dict['content_description'] is not None or element_dict['text'] is not None) and element_dict['is_visible'] and (element_dict["bbox_pixels"]["height"]>0) and (element_dict["bbox_pixels"]["width"]>0) and (element_dict["bbox_pixels"]["x_min"]<1080) and (element_dict["bbox_pixels"]["y_min"]<2400) and (element_dict["bbox_pixels"]["x_max"]>0) and (element_dict["bbox_pixels"]["y_max"]>0)):
+            filtered_list.append(element_dict)
+
+    return filtered_list
 
 # Function to process a single TFRecord file
 def process_tfrecord_file(tfrecord_file):
@@ -94,8 +105,8 @@ def process_tfrecord_file(tfrecord_file):
     return file_data
 
 # Directory containing the TFRecord files
-data_dir = "android_control"
-output_dir = "android_control_screenshots"
+data_dir = os.path.join(script_dir,"android_control")
+output_dir = os.path.join(script_dir,"android_control_screenshots")
 
 # Ensure the output directory exists
 if not os.path.exists(output_dir):
@@ -116,14 +127,16 @@ with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
             data.extend(file_data)
         except Exception as e:
             traceback.print_exc()
-            print(f"Error processing file {futures[future]}: {e}")
+            # print(f"Error processing file {futures[future]}: {e}")
 
-print(f"Total records processed: {len(data)}")
+# print(f"Total records processed: {len(data)}")
 
 # Save data to a JSON file
 with open('sample_raw.json', 'w', encoding='utf-8') as f:
     json.dump(data, f, ensure_ascii=False, indent=4)
 
+for i in data:
+    print(i)
 # Uncomment the following lines if you want to save the data to a CSV file
 # import pandas as pd
 # df = pd.DataFrame(data)

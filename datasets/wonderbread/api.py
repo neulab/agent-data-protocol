@@ -25,6 +25,17 @@ def keystroke(element: dict[str, Any], str: str) -> None:
     pass
 
 
+def keypress(key) -> None:
+    """Press the key.
+
+    Args:
+    ----
+        key: the key to press.
+
+    """
+    pass
+
+
 def scroll(x: float, y: float) -> None:
     """Scroll the page.
 
