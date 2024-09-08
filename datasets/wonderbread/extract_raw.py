@@ -3,12 +3,12 @@ import subprocess
 import sys
 import os
 import zipfile
+import urllib.parse
+
 
 root = "datasets/wonderbread"
-# source_id = "12iJoRZXyBV4pvEsWeAKv2n61LwVbUpqo"
-# source_file_name = f"{root}/debug_demos.zip"
-source_id = "1k-T-q1SI7rDu7pvqUPQ2w87OLf_IQrSv"
-source_file_name = f"{root}/demos.zip"
+zenodo_link = "https://zenodo.org/records/12671568/files/demos.zip?download=1"
+source_file_name = root + "/" + os.path.basename(urllib.parse.urlparse(zenodo_link).path)
 data_folder = source_file_name.split(".")[0]
 
 
@@ -22,7 +22,7 @@ def extract_sop(s: str) -> str:
 
 if not os.path.exists(data_folder):
     # download the file
-    subprocess.run(["gdown", source_id, "-O", source_file_name], check=True)
+    subprocess.run(["wget", zenodo_link, "-O", source_file_name], check=True)
 
     # unzip the file
     with zipfile.ZipFile(source_file_name, "r") as zip_ref:

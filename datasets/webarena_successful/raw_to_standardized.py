@@ -14,10 +14,15 @@ from schema.trajectory import Trajectory
 root = "datasets/webarena_successful"
 trajs: list[Trajectory] = []
 
+# step does not have screenshot recording, skip to maintain the consistency of data format
+SOURCE_BLACK_LIST = ['SteP']
+
 for line in sys.stdin:
     raw_traj = json.loads(line)
     task = raw_traj["intent"]
     model = raw_traj["source"]
+    if model in SOURCE_BLACK_LIST:
+        continue
     traj = Trajectory(
         id=str(raw_traj["task_id"]),
         content=[TextObservation(content=task, source="user")],
