@@ -43,7 +43,7 @@ def _parse_function(example_proto):
 # Convert UI elements to dictionaries for easier handling
 def convert_ui_elements_to_dicts(ui_elements):
     filtered_list=[]
-    ''' The filtering impelementations in Android Control and Android World are a bit different: 
+    ''' The filtering implementations in Android Control and Android World are a bit different: 
     Android World:
     https://github.com/google-research/android_world/blob/4d941153396c5daf4adc013f2f5cd265858bdffa/android_world/agents/m3a_utils.py#L448
     
