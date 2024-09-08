@@ -1,5 +1,6 @@
 import json
 import sys
+sys.path.insert(1, './')
 import re
 
 from schema.action.action import Action
@@ -7,7 +8,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-
+from schema.trajectory import Trajectory
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     system_regex = re.match(
@@ -26,10 +27,13 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
     elif code_act_regex:
         code_extract_regex = re.match(
-            r"bash\n\n```bash\n(.*)\n```", code_act_regex.group(2), re.DOTALL
+            r"(bash\n\n```bash\n(.*)\n```|bash \n\n```bash\n(.*)\n```|bash\n  \n```bash\n(.*)\n```)", code_act_regex.group(2), re.DOTALL
         )
         answer_extract_regex = re.match(
             r"answer\((.*)\)", code_act_regex.group(2), re.DOTALL
+        )
+        finish_extract_regex = re.match(
+            r"finish", code_act_regex.group(2), re.DOTALL
         )
         if code_extract_regex:
             return [
@@ -44,6 +48,13 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 MessageAction(
                     content=answer_extract_regex.group(1),
                     description=code_act_regex.group(1),
+                ),
+            ]
+        elif finish_extract_regex:
+            return [
+                MessageAction(
+                    content=finish_extract_regex.group(0),
+                    description=code_act_regex.group(1)
                 ),
             ]
         else:
@@ -68,11 +79,11 @@ for line in sys.stdin:
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
 
-    # Standardize the data
-    standardize_data = {
-        "id": raw_data["id"],
-        "content": content,
-    }
+   # Standardize the data
+    standardize_data = Trajectory(
+        id=raw_data["id"],
+        content=content,
+    )
 
     # Print the standardized data
-    print(json.dumps(standardize_data))
+    print(standardize_data.model_dump_json())

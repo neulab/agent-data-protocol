@@ -10,7 +10,7 @@ class BBoxPixels(BaseModel):
     center: List[float]
     width: int
     height: int
-    area: int
+    # area: int
 
 
 class AccessibilityTree(BaseModel):
@@ -31,10 +31,10 @@ class AccessibilityTree(BaseModel):
     is_scrollable: bool
     is_selected: bool
     is_visible: bool
-    package_name: str
-    resource_name: Optional[Union[str, None]] = None
+    # package_name: str
+    # resource_name: Optional[Union[str, None]] = None
     tooltip: Optional[Union[None, None]] = None
-    resource_id: Optional[Union[None, None]] = None
+    # resource_id: Optional[Union[None, None]] = None
 
 
 class Action(BaseModel):

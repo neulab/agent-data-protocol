@@ -58,7 +58,7 @@ class BoundingBox:
           "center": self.center,
           "width": self.width,
           "height": self.height,
-          "area": self.area,
+          # "area": self.area,
       }
 
 
@@ -93,25 +93,26 @@ class UIElement:
       return {
           "text": self.text,
           "content_description": self.content_description,
-          "class_name": self.class_name,
-          "bbox": self.bbox.to_dict() if self.bbox else None,
-          "bbox_pixels": self.bbox_pixels.to_dict() if self.bbox_pixels else None,
           "hint_text": self.hint_text,
+          "tooltip": self.tooltip,
+          "class_name": self.class_name,
+          "resource_id": self.resource_id,
+          # "bbox": self.bbox.to_dict() if self.bbox else None,
+          "is_visible": self.is_visible,
+          "is_enabled": self.is_enabled,
+          "is_focused": self.is_focused,
+          "is_selected": self.is_selected,
           "is_checked": self.is_checked,
           "is_checkable": self.is_checkable,
           "is_clickable": self.is_clickable,
           "is_editable": self.is_editable,
-          "is_enabled": self.is_enabled,
-          "is_focused": self.is_focused,
           "is_focusable": self.is_focusable,
           "is_long_clickable": self.is_long_clickable,
           "is_scrollable": self.is_scrollable,
-          "is_selected": self.is_selected,
-          "is_visible": self.is_visible,
-          "package_name": self.package_name,
-          "resource_name": self.resource_name,
-          "tooltip": self.tooltip,
-          "resource_id": self.resource_id,
+          # "package_name": self.package_name,
+          # "resource_name": self.resource_name,
+
+          "bbox_pixels": self.bbox_pixels.to_dict() if self.bbox_pixels else None,
       }
 
 

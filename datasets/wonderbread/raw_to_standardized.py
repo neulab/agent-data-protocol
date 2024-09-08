@@ -1,3 +1,4 @@
+import collections
 import json
 import os
 import sys
@@ -69,28 +70,35 @@ for line in sys.stdin:
 
         elif element["type"] == "action":
             function = element["data"]["type"]
+            try:
+                match function:
+                    case "mouseup":
+                        kwargs = {
+                            "element": element["data"]["element_attributes"]["element"],
+                            "misc": {
+                                "is_right_click": element["data"]["is_right_click"],
+                                "pressed": element["data"]["pressed"],
+                            },
+                        }
+                    case "keystroke":
+                        kwargs = {
+                            "element": element["data"]["element_attributes"]["element"],
+                            "str": element["data"]["key"],
+                        }
+                    case "keypress":
+                        kwargs = {"key": element["data"]["key"]}
+                    case "scroll":
+                        kwargs = {
+                            "x": element["data"]["dx"],
+                            "y": element["data"]["dy"],
+                        }
+                    case _:
+                        raise ValueError(f"Unknown action type: {function}")
 
-            match function:
-                case "mouseup":
-                    kwargs = {
-                        "element": element["data"]["element_attributes"]["element"],
-                        "misc": {
-                            "is_right_click": element["data"]["is_right_click"],
-                            "pressed": element["data"]["pressed"],
-                        },
-                    }
-                case "keystroke":
-                    kwargs = {
-                        "element": element["data"]["element_attributes"]["element"],
-                        "str": element["data"]["key"],
-                    }
-                case "scroll":
-                    kwargs = {"x": element["data"]["dx"], "y": element["data"]["dy"]}
-                case _:
-                    raise ValueError(f"Unknown action type: {function}")
-
-            action = ApiAction(function=function, kwargs=kwargs)
-            traj.content.append(action)
+                action = ApiAction(function=function, kwargs=kwargs)
+                traj.content.append(action)
+            except TypeError as e:
+                continue
         else:
             raise ValueError(f"Unknown element type: {element['type']}")
 

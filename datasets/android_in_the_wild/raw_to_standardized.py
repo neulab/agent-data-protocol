@@ -1,5 +1,6 @@
 import json
 import sys
+sys.path.append(".")
 from typing import Any
 
 from schema.action.action import Action
@@ -59,16 +60,39 @@ for line in sys.stdin:
         )
     )
     # Create the action
-    if data["results/action_type"] == "enter":
+    if data["results/action_type"] == "dual-point gesture":
         content.append(
             ApiAction(
-                function="enter",
+                function="touch_and_lift",
                 kwargs={
-                    "x": data["results/yx_touch"][1],
-                    "y": data["results/yx_touch"][0],
+                    "x0": data["results/yx_touch"][1],
+                    "y0": data["results/yx_touch"][0],
+                    "x1": data["results/yx_lift"][1],
+                    "y1": data["results/yx_lift"][0],
                 },
             )
         )
+    elif data["results/action_type"] == "type":
+        content.append(
+                ApiAction(
+                    function="type"
+                  , kwargs={"text": data["results/type_action"]}
+                  )
+              )
+    elif data["results/action_type"] in {"go_back", "go_home", "enter"}:
+        content.append(
+                ApiAction(
+                    function="press"
+                  , kwargs={"key_name": data["results/action_type"]}
+                  )
+              )
+    elif data["results/action_type"] in {"task_complete", "task_impossible"}:
+        content.append(
+                ApiAction(
+                    function="end"
+                  , kwargs={"succeeds": data["results/action_type"]=="task_complete"}
+                  )
+              )
     else:
         raise ValueError(f"Unknown action type: {data['results/action_type']}")
 
