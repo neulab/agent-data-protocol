@@ -157,6 +157,7 @@ for i in raw_data:
     # print(trajectory.json(indent=2))
 
     output_file = "output_trajectory.json"
+    # BOYU: It seems that the actions are missing in a directly dumped json file. I'm not sure whether I understand the raw_to_standardized.py correctly. The printed content is good though.
     with open(output_file, "w") as f:
         f.write(trajectory.model_dump_json(indent=2))
     print(trajectory.model_dump_json())
