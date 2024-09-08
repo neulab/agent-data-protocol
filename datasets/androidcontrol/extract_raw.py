@@ -9,8 +9,10 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 import traceback
-from android_env_utils.android_env.proto.a11y import android_accessibility_forest_pb2
-from android_env_utils import representation_utils
+# from android_env_utils.android_env.proto.a11y import android_accessibility_forest_pb2
+# from android_env_utils import representation_utils
+
+from android_env.proto.a11y import android_accessibility_forest_pb2
 
 import os
 
@@ -42,6 +44,7 @@ def _parse_function(example_proto):
 # Convert UI elements to dictionaries for easier handling
 def convert_ui_elements_to_dicts(ui_elements):
     filtered_list=[]
+    # Logic copied from https://github.com/google-research/android_world/blob/4d941153396c5daf4adc013f2f5cd265858bdffa/android_world/agents/m3a_utils.py#L448
     for element in ui_elements:
         element_dict=element.to_dict()
         if ((element_dict['content_description'] is not None or element_dict['text'] is not None) and element_dict['is_visible'] and (element_dict["bbox_pixels"]["height"]>0) and (element_dict["bbox_pixels"]["width"]>0) and (element_dict["bbox_pixels"]["x_min"]<1080) and (element_dict["bbox_pixels"]["y_min"]<2400) and (element_dict["bbox_pixels"]["x_max"]>0) and (element_dict["bbox_pixels"]["y_max"]>0)):
@@ -132,8 +135,9 @@ with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
 # print(f"Total records processed: {len(data)}")
 
 # Save data to a JSON file
-with open('sample_raw.json', 'w', encoding='utf-8') as f:
-    json.dump(data, f, ensure_ascii=False, indent=4)
+
+# with open('sample_raw.json', 'w', encoding='utf-8') as f:
+#     json.dump(data, f, ensure_ascii=False, indent=4)
 
 for i in data:
     print(i)
