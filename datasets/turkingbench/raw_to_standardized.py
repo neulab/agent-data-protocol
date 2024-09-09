@@ -173,12 +173,13 @@ def process_data(data: dict) -> Trajectory:
             el = input_element[0]
             input_type = get_element_type(el)
             action = ACTIONS.get(input_type)
-            if not action and "DEBUG" in os.environ:
-                print_error_once(
-                    f"Could not find action for input element: type {input_type}, name {k}\n"
-                    f"  Task: {data['Task']}\n"
-                    f"  Title: {data['Title']}"
-                )
+            if not action:
+                if "DEBUG" in os.environ:
+                    print_error_once(
+                        f"Could not find action for input element: type {input_type}, name {k}\n"
+                        f"  Task: {data['Task']}\n"
+                        f"  Title: {data['Title']}"
+                    )
                 continue
             api_action = ApiAction(
                 function=action,
