@@ -49,6 +49,8 @@ for line in sys.stdin:
                 kwargs["page_number"] = element["action"]["page_number"]
             elif function in ['go_back', 'page_close', 'go_forward']:
                 kwargs = {}
+            else:
+                raise ValueError(f"Unknown function: {function}")
 
             action = ApiAction(
                 function=function,
