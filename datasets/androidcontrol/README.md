@@ -32,7 +32,7 @@
        pip install .
         ```
      
-If you met this error:
+If you encouter an error about loading from the google package:
 
 please do:
 
