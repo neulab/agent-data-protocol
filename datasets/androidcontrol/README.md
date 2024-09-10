@@ -41,7 +41,7 @@ pip install --upgrade protobuf
 
 
 4. **Run the Script**
-   Before you starting to run, choose whether you want to directly dump the json file, or print the data out, and whether you downloaded or the tf files, or want to iterate without pre-downloads.
+   - Before you starting to run, choose whether you want to directly dump the json file, or print the data out, and whether you downloaded or the tf files, or want to iterate without pre-downloads.
    - Execute the `extract_raw.py` script to process the data:
      ```sh
      python extract_raw.py
