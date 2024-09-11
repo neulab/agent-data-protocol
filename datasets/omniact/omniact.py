@@ -8,7 +8,7 @@ import datasets
 
 logger = logging.getLogger(__name__)
 
-_URL = "https://huggingface.co/datasets/Writer/omniact/resolve/main/{}?download=true"
+_URL = "https://huggingface.co/datasets/Writer/omniact/resolve/main/{}"
 
 
 def image_to_base64(image_path):
