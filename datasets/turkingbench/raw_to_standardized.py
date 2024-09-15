@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-sys.path.insert(1, './')
 
 from schema.action.api import ApiAction
 from schema.observation.web import WebObservation

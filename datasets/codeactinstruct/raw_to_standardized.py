@@ -1,7 +1,6 @@
 import json
 import sys
 import re
-sys.path.insert(1, './')
 
 from schema.action.action import Action
 from schema.action.code import CodeAction

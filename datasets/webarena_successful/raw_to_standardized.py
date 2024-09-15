@@ -1,6 +1,5 @@
 import json
 import sys
-sys.path.insert(1, './')
 
 from typing import Any
 
