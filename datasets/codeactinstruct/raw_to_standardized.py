@@ -11,6 +11,7 @@ from schema.trajectory import Trajectory
 
 
 TOOL_DESCRIPTION = "Tool function available (already imported in <execute> environment):"
+WARNING_MSG = "Observation:\nI don't understand your input. \nIf you want to execute code, please use <execute> YOUR_CODE_HERE </execute>.\nIf you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>.\nFor example: The answer to the question is <solution> 42 </solution>."
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     global APIS
@@ -34,19 +35,23 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     execute_regex = re.match(r"(.*)<execute>(.*)</execute>", step["content"], re.DOTALL)
     obs_regex = re.match(r"Observation:\n(.*)", step["content"], re.DOTALL)
 
-    if solution_regex:
-        assert step["role"] == "assistant", f"Expected assistant role, got {step['role']}"
+    if WARNING_MSG in step["content"]:
+        return [
+            TextObservation(content=step["content"], source=step["role"]),
+        ]
+    elif solution_regex:
+        assert step["role"] == "assistant", f"Expected assistant role, got {step['role']}. {json.dumps(step, indent=2)}"
         thought = solution_regex.group(1).strip()
         solution = solution_regex.group(2).strip()
         if "<execute>" not in thought:
             return [
-                MessageAction(content=solution, description=thought),
+                MessageAction(content=solution, description=thought or ''),
             ]
         else:
             # some of the thoughts contains <execute> tag which could be confusing
             # to model for training, so i did not include thought for solution
             return [
-                MessageAction(content=solution, description=None),
+                MessageAction(content=solution, description=''),
             ]
 
     elif execute_regex:
@@ -58,7 +63,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             CodeAction(
                 language="python3",
                 content=code,
-                description=thought if thought else None,
+                description=thought or '',
             ),
         ]
 
@@ -73,10 +78,10 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
 
     else:
-        raise ValueError(
-            "Could not extract action or observation from"
-            f" {json.dumps(step, indent=2)}"
-        )
+        # return raw messages directly if non of the regex matches
+        return [
+            MessageAction(content=step["content"], description=None),
+        ]
 
 APIS = set()
 

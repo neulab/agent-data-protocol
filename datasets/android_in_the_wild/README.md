@@ -1,4 +1,15 @@
-### Data Location & Statistics
+# Android in the Wild
+
+This dataset is a collection of Android apps and their interactions, collected
+from the wild. [arXiv paper](https://arxiv.org/abs/2307.10088)
+
+## Setup
+
+Before running `extract_raw.py`, you need to set up your Google Cloud
+credentials. Please run `gcloud auth application-default login` to set up your
+credentials.
+
+## Data Location & Statistics
 
 |     Name    |  # Episodes |   # Examples  | # Unique Prompts |                                                                  Data location                                                                 |
 |:-----------:|:-----------:|:-------------:|:----------------:|:----------------------------------------------------------------------------------------------------------------------------------------------:|
@@ -9,7 +20,7 @@
 |    Single   |    26,303   |     85,668    |      15,366      |       [gs://gresearch/android-in-the-wild/single](https://console.cloud.google.com/storage/browser/gresearch/android-in-the-wild/single)       |
 |  **Total**  | **715,142** | **5,689,993** |    **30,378**    |              [gs://gresearch/android-in-the-wild](https://console.cloud.google.com/storage/browser/gresearch/android-in-the-wild/)             |
 
-### Data Format
+## Data Format
 
 Each datapoint is stored as a [TFRecord
 file](https://www.tensorflow.org/tutorials/load_data/tfrecord#reading_a_tfrecord_file_2)

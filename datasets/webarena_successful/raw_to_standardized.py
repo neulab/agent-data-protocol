@@ -1,5 +1,6 @@
 import json
 import sys
+
 from typing import Any
 
 from schema.action.action import Action
@@ -41,12 +42,14 @@ for line in sys.stdin:
                 kwargs["element_id"] = element["action"]["element_id"]
             elif function == "scroll":
                 kwargs["direction"] = element["action"]["direction"]
-            elif function == "press":
+            elif function in ["key_press", "press"]:
                 kwargs["key_comb"] = element["action"]["key_comb"]
-            elif function in ["new_tab", "goto"]:
+            elif function in ["new_tab", "goto", "goto_url"]:
                 kwargs["url"] = element["action"]["url"]
-            elif function == "tab_focus":
+            elif function in ['tab_focus', 'page_focus']:
                 kwargs["page_number"] = element["action"]["page_number"]
+            elif function in ['go_back', 'page_close', 'go_forward']:
+                kwargs = {}
             else:
                 raise ValueError(f"Unknown function: {function}")
 

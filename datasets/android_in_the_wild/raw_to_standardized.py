@@ -1,6 +1,5 @@
 import json
 import sys
-sys.path.append(".")
 from typing import Any
 
 from schema.action.action import Action
