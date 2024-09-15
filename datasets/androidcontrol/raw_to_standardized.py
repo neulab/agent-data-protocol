@@ -2,6 +2,9 @@ import json
 import sys
 from typing import Any
 
+import sys
+sys.path.append(".")
+
 from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
@@ -146,20 +149,34 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
     return Trajectory(id=str(data["episode_id"]), content=content)
 
 
-# Load the JSON data
-file_path = "sample_raw.json"
-with open(file_path, "r") as f:
-    raw_data = json.load(f)
 
-for i in raw_data:
-    # Convert and print the results
-    trajectory = convert_to_trajectory(i)
-    # print(trajectory.json(indent=2))
 
+for line in sys.stdin:
+    raw_data = json.loads(line)
+    trajectory = convert_to_trajectory(raw_data)
     output_file = "output_trajectory.json"
-    # BOYU: It seems that the actions are missing in a directly dumped json file. I'm not sure whether I understand the raw_to_standardized.py correctly. The printed content is good though.
-    with open(output_file, "w") as f:
-        f.write(trajectory.model_dump_json(indent=2))
     print(trajectory.model_dump_json())
 
-# print(f"Trajectory saved to {output_file}")
+
+
+
+
+
+#
+# # Load the JSON data
+# file_path = "sample_raw.json"
+# with open(file_path, "r") as f:
+#     raw_data = json.load(f)
+#
+# for i in raw_data:
+#     # Convert and print the results
+#     trajectory = convert_to_trajectory(i)
+#     # print(trajectory.json(indent=2))
+#
+#     output_file = "output_trajectory.json"
+#     # BOYU: It seems that the actions are missing in a directly dumped json file. I'm not sure whether I understand the raw_to_standardized.py correctly. The printed content is good though.
+#     with open(output_file, "w") as f:
+#         f.write(trajectory.model_dump_json(indent=2))
+#     print(trajectory.model_dump_json())
+#
+# # print(f"Trajectory saved to {output_file}")
