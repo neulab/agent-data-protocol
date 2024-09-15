@@ -9,6 +9,9 @@
 2. **(Optional) Copy or Download TFRecord Files**
    - Retrieve the TFRecord files from Google Cloud.
    - Place all the files into the `android_control` folder. You can also use the sample files provided there for testing.
+   - Go to: https://console.cloud.google.com/storage/browser/gresearch/android_control
+   - and use gsutil to download all the files to androidcontrol/android_control
+   - you would prolly need to install google suite  https://cloud.google.com/storage/docs/gsutil_install#linux
    - Alternatively, you can directly iterate the data by this code:
    ```sh
    tfrecord_files_remote= tf.io.gfile.glob('gs://gresearch/android_control/android_control*')
