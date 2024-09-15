@@ -22,7 +22,7 @@ def extract_sop(s: str) -> str:
 
 if not os.path.exists(data_folder):
     # download the file
-    subprocess.run(["wget", zenodo_link, "-O", source_file_name], check=True)
+    subprocess.run(["wget", "-c", zenodo_link, "-O", source_file_name], check=True)
 
     # unzip the file
     with zipfile.ZipFile(source_file_name, "r") as zip_ref:
@@ -34,6 +34,8 @@ if not os.path.exists(data_folder):
 # enumerate the files
 for task_stamp in os.listdir(data_folder):
     task_folder = f"{data_folder}/{task_stamp}"
+    if task_stamp == ".DS_Store":
+        continue
 
     # move screenshots to "./screenshots/task_stamp"
     screenshots_folder = f"{root}/screenshots/{task_stamp}"
@@ -44,6 +46,8 @@ for task_stamp in os.listdir(data_folder):
             os.path.join(screenshots_folder, img),
         )
 
+    if task_stamp[-3:] == "(1)":
+        task_stamp = task_stamp[:-4]
     with open(f"{task_folder}/{task_stamp}.json") as f:
         data = json.load(f)
         wa_info = data.pop("webarena")

@@ -2,6 +2,7 @@ import collections
 import json
 import os
 import sys
+sys.path.insert(1, './')
 from typing import Any
 
 from schema.action.action import Action
@@ -14,8 +15,6 @@ from schema.observation.image import BoundingBox, ImageObservation, ImageAnnotat
 from schema.trajectory import Trajectory
 
 root = "datasets/wonderbread"
-
-trajs: list[Trajectory] = []
 
 for line in sys.stdin:
     raw_traj = json.loads(line)
@@ -102,7 +101,4 @@ for line in sys.stdin:
         else:
             raise ValueError(f"Unknown element type: {element['type']}")
 
-    trajs.append(traj)
-
-for traj in trajs:
     print(traj.model_dump_json())
