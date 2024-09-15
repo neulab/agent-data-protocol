@@ -37,6 +37,7 @@ We can then apply this to the sample data to create a sample in the standardized
 
 ```bash
 export MY_DATASET=dataset_name
+export PYTHONPATH=`pwd`:$PYTHONPATH
 cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_indented_json.py > datasets/$MY_DATASET/sample.json
 ```
 
