@@ -146,7 +146,7 @@ with open('sample_raw.json', 'w', encoding='utf-8') as f:
     json.dump(data, f, ensure_ascii=False, indent=4)
 #TODO: If you want to print them out. Notice that the dataset is super large!
 for i in data:
-    print(i)
+    print(json.dumps(i))
 
 # Uncomment the following lines if you want to save the data to a CSV file
 # import pandas as pd
