@@ -38,7 +38,7 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
     
 sft_data = []
 
-with open(f'./datasets/{dataset}/sample.json', 'r') as file:
+with open(f'./datasets/{dataset}/full_std.json', 'r') as file:
     trajectory_data_file = json.load(file)
     for trajectory_data in trajectory_data_file:
         # print(trajectory_data)
@@ -56,7 +56,7 @@ with open(f'./datasets/{dataset}/sample.json', 'r') as file:
         sft_data.append({"id": trajectory.id, "conversations": conversations})
 
 
-with open(f'./datasets/{dataset}/sample_sft.json', 'w') as file:
+with open(f'./datasets/{dataset}/full_sft.json', 'w') as file:
     json.dump(sft_data, file, indent=2)
 
 # print(sft_data)
