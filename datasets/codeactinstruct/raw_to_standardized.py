@@ -23,13 +23,15 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             splited = system_msg.split(TOOL_DESCRIPTION, maxsplit=1)
             system_msg = splited[0].rstrip()
             APIS.add(splited[1])
-
+        system_msg = re.sub(r'<execute>', r'<execute_ipython>', system_msg)
+        system_msg = re.sub(r'</execute>', r'</execute_ipython>', system_msg)
         return [
             TextObservation(content=system_msg, source=step["role"]),
         ]
 
     assert step["role"] in ["assistant", "user"], f"Invalid role: {step['role']}"
-
+    step["content"] = re.sub(r'<execute>', r'<execute_ipython>', step["content"])
+    step["content"] = re.sub(r'</execute>', r'</execute_ipython>', step["content"])
     task_regex = re.match(r"Task:\n(.*)", step["content"], re.DOTALL)
     solution_regex = re.match(r"(.*)<solution>(.*)</solution>", step["content"], re.DOTALL)
     execute_regex = re.match(r"(.*)<execute>(.*)</execute>", step["content"], re.DOTALL)

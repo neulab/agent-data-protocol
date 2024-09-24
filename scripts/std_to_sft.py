@@ -20,6 +20,8 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
     #     return {"role": "assistant", "content": f"{event.description}\n<execute_api>{event.function}("+", ".join([f'{k}="{v}"' for k, v in event.kwargs.items()])+")"}
 
     if isinstance(event, CodeAction):
+        if 'python' in event.language:
+            event.language = 'ipython'
         return {"role": "assistant", "content": f"{event.description}\n<execute_{event.language}>\n{event.content}\n</execute_{event.language}>"}
     
     elif isinstance(event, MessageAction):
