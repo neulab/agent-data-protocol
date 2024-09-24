@@ -20,12 +20,17 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
     #     return {"role": "assistant", "content": f"{event.description}\n<execute_api>{event.function}("+", ".join([f'{k}="{v}"' for k, v in event.kwargs.items()])+")"}
 
     if isinstance(event, CodeAction):
-        return {"role": "assistant", "content": f"{event.description}\n<execute_{event.language}>{event.content}</execute_{event.language}>"}
+        return {"role": "assistant", "content": f"{event.description}\n<execute_{event.language}>\n{event.content}\n</execute_{event.language}>"}
+    
     elif isinstance(event, MessageAction):
         # print(event.content)
-        return {"role": "assistant", "content": f"THOUGHT: {event.description}\nACTION: {event.content}"} if event.description else {"role": "assistant", "content": f"{event.content}"}
+        return {"role": "assistant", "content": f"THINK: {event.description}\nACT: {event.content}"} if event.description else {"role": "assistant", "content": f"ACT: {event.content}"}
+    
     elif isinstance(event, TextObservation):
-        return {"role": event.source, "content": event.content} if event.source == "user" or event.source=='system' else {"role": "user", "content": f"OBSERVATION from {event.source}: {event.content}"}
+        # I had this earlier to include source in the message, but OpenHands does not have that and has bash executions as user messages
+        #return {"role": event.source, "content": event.content} if event.source == "user" or event.source=='system' else {"role": "user", "content": f"OBSERVATION from {event.source}: {event.content}"}
+        return {"role": event.source, "content": event.content} if event.source == "user" or event.source=='system' else {"role": "user", "content": [{'type': 'text', 'text': f"OBSERVATION:\n{event.content}"}]}
+
     else:
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
     

@@ -20,13 +20,32 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         r"The output of the OS:\n(.*)", step["content"], re.DOTALL
     )
     if system_regex:
+        if "You are an assistant" in system_regex.group(1):
+            assert re.search(r'\"bash\"', system_regex.group(1), re.DOTALL)
+            assert re.search(r'Act: finish', system_regex.group(1), re.DOTALL)
+            assert re.search(r'```bash\n(.*?)\n```', system_regex.group(1), re.DOTALL)
+            assert re.search(r'answer(.*)', system_regex.group(1), re.DOTALL)
+
+            bash_subs = re.sub(r'\"bash\"', '<execute_bash>', system_regex.group(1))
+            bash_subs = re.sub(r'Act: bash\n\n```bash\n(.*?)\n```', r'<execute_bash>\n# put your bash code here\n</execute_bash>', bash_subs, flags=re.DOTALL)
+
+            finish_subs = re.sub(r'\"finish\"', r'exit', bash_subs)
+            finish_subs = re.sub(r'Act: finish', '<execute_bash>\nexit\n</execute_bash>', finish_subs)
+
+            answer_subs = re.sub(r'\"answer\"', r'<solution>', finish_subs)
+            answer_subs = re.sub(r'Act: answer\(.*\)', r'<solution> Your solution here </solution>', answer_subs)
+
+            return [
+                TextObservation(content = answer_subs, source="system"),
+                TextObservation(content=system_regex.group(2), source="user"),
+            ]
         return [
             TextObservation(content=system_regex.group(1), source="system"),
             TextObservation(content=system_regex.group(2), source="user"),
         ]
     elif code_act_regex:
         code_extract_regex = re.match(
-            r"(bash\n\n```bash\n(.*)\n```|bash \n\n```bash\n(.*)\n```|bash\n  \n```bash\n(.*)\n```)", code_act_regex.group(2), re.DOTALL
+            r"bash\n\n```bash\n(.*)\n```|bash \n\n```bash\n(.*)\n```|bash\n  \n```bash\n(.*)\n```", code_act_regex.group(2), re.DOTALL
         )
         answer_extract_regex = re.match(
             r"answer\((.*)\)", code_act_regex.group(2), re.DOTALL
@@ -45,14 +64,15 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         elif answer_extract_regex:
             return [
                 MessageAction(
-                    content=answer_extract_regex.group(1),
+                    content=f"<solution> {answer_extract_regex.group(1)} </solution>",
                     description=code_act_regex.group(1),
                 ),
             ]
         elif finish_extract_regex:
             return [
                 MessageAction(
-                    content=finish_extract_regex.group(0),
+                    # content=finish_extract_regex.group(0),
+                    content="<execute_bash>\nexit\n</execute_bash>",
                     description=code_act_regex.group(1)
                 ),
             ]
