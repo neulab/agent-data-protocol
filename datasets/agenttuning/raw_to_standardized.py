@@ -57,7 +57,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             return [
                 CodeAction(
                     language="bash",
-                    content=code_extract_regex.group(1),
+                    content=code_extract_regex.group(1) or code_extract_regex.group(2) or code_extract_regex.group(3),
                     description=code_act_regex.group(1),
                 ),
             ]
