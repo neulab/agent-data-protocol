@@ -1,4 +1,4 @@
-import sys
+import argparse
 
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
@@ -13,6 +13,11 @@ import json
 import os
 
 dataset = os.getenv("MY_DATASET")
+
+parser = argparse.ArgumentParser(description='Convert standardized data to SFT format')
+parser.add_argument('--input_dataset', type=str, help='Dataset name', default='sample.json')
+parser.add_argument('--output_dataset', type=str, help='Dataset name', default='sample_sft.json')
+args = parser.parse_args()
 
 def standardized_event_to_openhands_message(event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation) -> dict:
     # NOTE for KETAN: deal with the different types of events later
@@ -38,7 +43,7 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
     
 sft_data = []
 
-with open(f'./datasets/{dataset}/full_std.json', 'r') as file:
+with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
     trajectory_data_file = json.load(file)
     for trajectory_data in trajectory_data_file:
         # print(trajectory_data)
@@ -56,7 +61,7 @@ with open(f'./datasets/{dataset}/full_std.json', 'r') as file:
         sft_data.append({"id": trajectory.id, "conversations": conversations})
 
 
-with open(f'./datasets/{dataset}/full_sft.json', 'w') as file:
+with open(f'./datasets/{dataset}/{args.output_dataset}', 'w') as file:
     json.dump(sft_data, file, indent=2)
 
 # print(sft_data)
