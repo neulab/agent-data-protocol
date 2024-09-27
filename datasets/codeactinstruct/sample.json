@@ -13,7 +13,7 @@
         "source": "user"
       },
       {
-        "content": "2015 - 2012 = 3 years",
+        "content": "<solution> 2015 - 2012 = 3 years </solution>",
         "description": "To find how long tigerair flew into Chiang Mai, I need to:\n1. Filter the table to only include rows for Chiang Mai airport \n2. Select the 'Commenced' and 'Ended' columns\n3. Calculate the difference between the 'Ended' and 'Commenced' dates to get the duration\n\n<execute_ipython>\nimport sqlite3\n\nconn = sqlite3.connect(':memory:')\n\nconn.execute('''CREATE TABLE data_table\n        (City text, Country text, IATA text, ICAO text, Airport text, Commenced text, Ended text)''')\n\nconn.execute(\"INSERT INTO data_table VALUES ('Chiang Mai', 'Thailand', 'CNX', 'VTCC', 'Chiang Mai International Airport', '2012', '2015')\")\n\nquery = \"\"\"\nSELECT Ended, Commenced \nFROM data_table\nWHERE City = 'Chiang Mai'\n\"\"\"\n\nresult = conn.execute(query).fetchone()\nended = result[0] \ncommenced = result[1]\n\nprint(ended, commenced)\n</execute_ipython>\n\nThe duration is"
       },
       {
@@ -31,7 +31,7 @@
         "source": "user"
       },
       {
-        "content": "3 years",
+        "content": "<solution> 3 years </solution>",
         "description": ""
       }
     ],
@@ -51,7 +51,7 @@
         "source": "user"
       },
       {
-        "content": "Phil Ward",
+        "content": "<solution> Phil Ward </solution>",
         "description": "To solve this problem, we need to find the row where the team is \"Phil Ward Racing\" and return the other driver in that row. Since the dataframe is preloaded as df, we can use Pandas to query the dataframe.\n\n<execute_ipython>\nimport pandas as pd\n\ndriver = df.loc[df['Team'] == 'Phil Ward Racing', 'Drivers'].item().split('\\n')[1]\nprint(driver)\n</execute_ipython>\n\nThe answer is"
       },
       {
@@ -69,7 +69,7 @@
         "source": "user"
       },
       {
-        "content": "John Goss",
+        "content": "<solution> John Goss </solution>",
         "description": "You're correct. The team is not in the dataframe, so I cannot extract the other driver information directly. Let me think of another approach:\n\nSince the direct approach did not work, I will try to find the other driver by searching the entire Drivers column for \"Phil Ward\" and extracting the text after the newline. This avoids having to exactly match the team name.\n\n<execute_ipython>  \nimport pandas as pd\n\nother_driver = \"\"\nfor drivers in df['Drivers']:\n  if \"Phil Ward\" in drivers:\n    other_driver = drivers.split(\"\\n\")[1]\n    break\nprint(other_driver)  \n</execute_ipython>\n\nThe answer is"
       }
     ],
@@ -107,7 +107,7 @@
         "source": "user"
       },
       {
-        "content": "Take soapbar 1 from drawer 3. \nGo to sinkbasin 1.\nClean soapbar 1 with sinkbasin 1.\nGo to cabinet 2.\nPut soapbar 1 in cabinet 2.",
+        "content": "<solution> Take soapbar 1 from drawer 3. \nGo to sinkbasin 1.\nClean soapbar 1 with sinkbasin 1.\nGo to cabinet 2.\nPut soapbar 1 in cabinet 2. </solution>",
         "description": "I still could not find the soapbar after checking all locations. Let me try proposing a solution directly:"
       },
       {
