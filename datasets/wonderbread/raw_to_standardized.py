@@ -15,6 +15,33 @@ from schema.trajectory import Trajectory
 
 root = "datasets/wonderbread"
 
+
+def map_keypress(key: str) -> str:
+    """
+    Map keys for compatibility with playwright's keyboard.press
+    https://playwright.dev/python/docs/api/class-keyboard#keyboard-press
+
+    Args:
+    ----
+        key (str): The key to map.
+
+    """
+    key = key.strip("'")
+    if len(key) == 1:
+        return key
+    if key.startswith("Key."):
+        key = key[len("Key."):]
+        if key.endswith("_r"):
+            key = key[:-2]
+        # capitalize the first letter
+        key = key[0].upper() + key[1:]
+        if key in ["Left", "Right", "Up", "Down"]:
+            key = "Arrow" + key
+        if key == "Cmd":
+            key = "Meta"
+    return key
+
+
 for line in sys.stdin:
     raw_traj = json.loads(line)
     task = raw_traj["task"]
@@ -72,28 +99,31 @@ for line in sys.stdin:
                 match function:
                     case "mouseup":
                         kwargs = {
-                            "element": element["data"]["element_attributes"]["element"],
-                            "misc": {
-                                "is_right_click": element["data"]["is_right_click"],
-                                "pressed": element["data"]["pressed"],
-                            },
+                            "xpath": element["data"]["element_attributes"]["element"]["xpath"],
                         }
+                        function_name = "click"
                     case "keystroke":
                         kwargs = {
-                            "element": element["data"]["element_attributes"]["element"],
-                            "str": element["data"]["key"],
+                            "xpath": element["data"]["element_attributes"]["element"]["xpath"],
+                            "value": ''.join(element["data"]["key"].strip("'").split("' '")), # "'h' 'e' 'l' 'l' 'o'" --> "hello"
                         }
+                        function_name = "type"
                     case "keypress":
-                        kwargs = {"key": element["data"]["key"]}
+                        kwargs = {
+                            "xpath": element["data"]["element_attributes"]["element"]["xpath"],
+                            "value": map_keypress(element["data"]["key"])
+                        }
+                        function_name = "keyboard_press"
                     case "scroll":
                         kwargs = {
-                            "x": element["data"]["dx"],
-                            "y": element["data"]["dy"],
+                            "dx": element["data"]["dx"],
+                            "dy": element["data"]["dy"],
                         }
+                        function_name = "scroll"
                     case _:
                         raise ValueError(f"Unknown action type: {function}")
 
-                action = ApiAction(function=function, kwargs=kwargs)
+                action = ApiAction(function=function_name, kwargs=kwargs)
                 traj.content.append(action)
             except TypeError as e:
                 continue
