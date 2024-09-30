@@ -21,16 +21,16 @@ INPUT_ELEMENTS = [
 ]
 
 ACTIONS = {
-    "radio": "modify_radio",
-    "checkbox": "modify_checkbox",
+    "radio": "click",
+    "checkbox": "click",
     "range": "modify_range",
-    "text": "modify_text",
-    "select": "modify_select",
-    "textarea": "modify_text",
-    "hidden": "modify_text",
-    "crowd-checkbox": "modify_checkbox",
+    "text": "type",
+    "select": "select",
+    "textarea": "type",
+    "hidden": "type",
+    "crowd-checkbox": "click",
     "crowd-slider": "modify_range",
-    "crowd-input": "modify_text",
+    "crowd-input": "type",
 }
 
 RESERVED_FIELDS = set(
@@ -182,14 +182,13 @@ def process_data(data: dict) -> Trajectory:
                         f"  Title: {data['Title']}"
                     )
                 continue
-            api_action = ApiAction(
-                function=action,
-                kwargs={
-                    "input_type": input_type,
-                    "input_name": k,
-                    "input_value": v,
-                },
-            )
+            if input_type == "hidden":
+                continue
+            xpath = f"//{el.name}[@name='{k}']" if not el.get("type") else f"//{el.name}[@name='{k}' and @type='{el["type"]}']"
+            kwargs={"xpath": xpath}
+            if action != "click":
+                kwargs["value"] = v.strip()
+            api_action = ApiAction(function=action, kwargs=kwargs)
             content.append(api_action)
         else:
             # we can ignore "col_name.value" if a corresponding "col_name" is present
