@@ -39,7 +39,7 @@ def modify_range(xpath: str, value: str) -> None:
     Args:
     ----
         xpath (str): The xpath of the range element.
-        input_value (str): The value to set the range element to.
+        value (str): The value to set the range element to.
 
     """
     pass

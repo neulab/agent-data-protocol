@@ -25,8 +25,9 @@ def type(xpath: str, value: str) -> None:
 
 
 def keyboard_press(xpath: str, value: str) -> None:
-    """Press the key. Valid keys are defined in
-    https://playwright.dev/python/docs/api/class-keyboard#keyboard-press
+    """Press the key.
+
+    Valid keys are defined in https://playwright.dev/python/docs/api/class-keyboard#keyboard-press
 
     Args:
     ----
@@ -42,8 +43,8 @@ def scroll(dx: float, dy: float) -> None:
 
     Args:
     ----
-        x: the distance to scroll in the x direction.
-        y: the distance to scroll in the y direction.
+        dx: the distance to scroll in the x direction.
+        dy: the distance to scroll in the y direction.
 
     """
     pass
