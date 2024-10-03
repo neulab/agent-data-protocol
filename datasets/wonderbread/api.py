@@ -1,48 +1,50 @@
 from typing import Any
 
 
-def mouseup(element: dict[str, Any], misc: dict[str, Any]) -> None:
+def click(xpath: str) -> None:
     """Click on the element.
 
     Args:
     ----
-        element: the dictionary that stores the element information. The most important key is 'xpath'.
-        misc: meta information such as whether it is a right click.
+        xpath (str): The xpath of the element to click.
 
     """
     pass
 
 
-def keystroke(element: dict[str, Any], str: str) -> None:
-    """Type the string into the element.
+def type(xpath: str, value: str) -> None:
+    """Type some text into an input element.
 
     Args:
     ----
-        element: the dictionary that stores the element information. The most important key is 'xpath'.
-        str: the string to type, seperate by space. For example 'h' 'e' 'l' 'l' 'o'.
+        xpath (str): The xpath of the element to type into.
+        value (str): The text to type.
 
     """
     pass
 
 
-def keypress(key) -> None:
+def keyboard_press(xpath: str, value: str) -> None:
     """Press the key.
 
+    Valid keys are defined in https://playwright.dev/python/docs/api/class-keyboard#keyboard-press
+
     Args:
     ----
-        key: the key to press.
+        xpath: the xpath of the selected element.
+        value: the key to press.
 
     """
     pass
 
 
-def scroll(x: float, y: float) -> None:
-    """Scroll the page.
+def scroll(dx: float, dy: float) -> None:
+    """Scroll the page. Scroll horizontally dx pixels, vertically dy pixels. Positive for right or down scrolling, negative for left or up scrolling.
 
     Args:
     ----
-        x: the distance to scroll in the x direction.
-        y: the distance to scroll in the y direction.
+        dx: the distance to scroll in the x direction.
+        dy: the distance to scroll in the y direction.
 
     """
     pass

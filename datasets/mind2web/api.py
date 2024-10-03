@@ -1,24 +1,32 @@
-def select(value: str) -> None:
-    """Select an element with the given id.
+def select(xpath: str, value: str) -> None:
+    """Select an option from a dropdown menu.
 
     Args:
     ----
-        value (str): The id of the web element to select.
+        xpath (str): The xpath of the select element.
+        value (str): The select option to choose.
 
     """
     pass
 
 
-def click() -> None:
-    """Click on the selected element."""
-    pass
-
-
-def type(value: str) -> None:
-    """Type some text into the selected element.
+def click(xpath: str) -> None:
+    """Click on the element.
 
     Args:
     ----
+        xpath (str): The xpath of the element to click.
+
+    """
+    pass
+
+
+def type(xpath: str, value: str) -> None:
+    """Type some text into an input element.
+
+    Args:
+    ----
+        xpath (str): The xpath of the element to type into.
         value (str): The text to type.
 
     """

@@ -12,6 +12,10 @@ from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
 
+from itertools import chain
+from webarena_constants import SPECIAL_KEYS, ASCII_CHARSET, FREQ_UNICODE_CHARSET
+_id2key = list(chain(SPECIAL_KEYS, ASCII_CHARSET, FREQ_UNICODE_CHARSET, ["\n"]))
+
 root = "datasets/webarena_successful"
 trajs: list[Trajectory] = []
 
@@ -36,20 +40,26 @@ for line in sys.stdin:
             if function == "stop":
                 kwargs["answer"] = element["action"]["answer"]
             elif function == "type":
-                kwargs["text"] = element["action"]["text"]
+                # TODO: ignoring the special keys for now, fix this
+                kwargs["text"] = ''.join([_id2key[i] for i in element["action"]["text"] if i < len(_id2key) and i >= len(SPECIAL_KEYS)])
                 kwargs["element_id"] = element["action"]["element_id"]
             elif function in ["hover", "click"]:
                 kwargs["element_id"] = element["action"]["element_id"]
             elif function == "scroll":
-                kwargs["direction"] = element["action"]["direction"]
+                kwargs["dx"] = 0
+                kwargs["dy"] = 100 if element["action"]["direction"].lower() == "down" else -100
             elif function in ["key_press", "press"]:
                 kwargs["key_comb"] = element["action"]["key_comb"]
+                function = "press"
             elif function in ["new_tab", "goto", "goto_url"]:
                 kwargs["url"] = element["action"]["url"]
+                function = "goto" if function == "goto_url" else function
             elif function in ['tab_focus', 'page_focus']:
                 kwargs["page_number"] = element["action"]["page_number"]
+                function = "tab_focus"
             elif function in ['go_back', 'page_close', 'go_forward']:
                 kwargs = {}
+                function = "tab_close" if function == "page_close" else function
             else:
                 raise ValueError(f"Unknown function: {function}")
 

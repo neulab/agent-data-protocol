@@ -1,61 +1,45 @@
-def modify_text(input_type: str, input_name: str, input_value: str) -> None:
-    """For a given input element, enter the input value.
+def type(xpath: str, value: str) -> None:
+    """Type some text into an input element.
 
     Args:
     ----
-        input_type (str): The type of the input element.
-        input_name (str): The name of the input element.
-        input_value: The value to enter into the input element.
+        xpath (str): The xpath of the element to type into.
+        value (str): The text to type.
 
     """
     pass
 
 
-def modify_checkbox(input_type: str, input_name: str, input_value: str) -> None:
-    """For a given checkbox element, check or uncheck the box.
+def click(xpath: str) -> None:
+    """Click on the element.
 
     Args:
     ----
-        input_type (str): The type of the input element.
-        input_name (str): The name of the checkbox element.
-        input_value: The value to set the checkbox to.
+        xpath (str): The xpath of the element to click.
 
     """
     pass
 
 
-def modify_radio(input_type: str, input_name: str, input_value: str) -> None:
-    """For a given radio element, select the radio button.
+def select(xpath: str, value: str) -> None:
+    """Select an option from a dropdown menu.
 
     Args:
     ----
-        input_type (str): The type of the input element.
-        input_name (str): The name of the radio element.
-        input_value: The value to set the radio button to.
+        xpath (str): The xpath of the select element.
+        value (str): The select option to choose.
 
     """
     pass
 
-def modify_select(input_type: str, input_name: str, input_value: str) -> None:
-    """For a given select element, select the option.
 
-    Args:
-    ----
-        input_type (str): The type of the input element.
-        input_name (str): The name of the select element.
-        input_value: The value to set the select element to.
-
-    """
-    pass
-
-def modify_range(input_type: str, input_name: str, input_value: str) -> None:
+def modify_range(xpath: str, value: str) -> None:
     """For a given range element, set the value.
 
     Args:
     ----
-        input_type (str): The type of the input element.
-        input_name (str): The name of the range element.
-        input_value: The value to set the range element to.
+        xpath (str): The xpath of the range element.
+        value (str): The value to set the range element to.
 
     """
     pass
