@@ -184,7 +184,7 @@ def process_data(data: dict) -> Trajectory:
                 continue
             if input_type == "hidden":
                 continue
-            xpath = f"//{el.name}[@name='{k}']" if not el.get("type") else f"//{el.name}[@name='{k}' and @type='{el["type"]}']"
+            xpath = f"//{el.name}[@name='{k}']" if not el.get("type") else f"//{el.name}[@name='{k}' and @type='{el['type']}']"
             kwargs={"xpath": xpath}
             if action != "click":
                 kwargs["value"] = v.strip()
