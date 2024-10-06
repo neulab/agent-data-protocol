@@ -301,7 +301,7 @@ if __name__ == "__main__":
             details={
                 "website": data.website,
                 "domain": data.domain,
-                "confirmed_task": data.confirmed_task,
+                "task_description": data.confirmed_task,
                 "subdomain": data.subdomain,
             },
         )

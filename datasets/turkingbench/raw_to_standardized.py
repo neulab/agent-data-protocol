@@ -212,7 +212,7 @@ def process_data(data: dict) -> Trajectory:
         details={
             "task": data["Task"],
             "title": data["Title"],
-            "description": data["Description"],
+            "task_description": data["Description"],
             "keywords": data["Keywords"],
         },
     )
