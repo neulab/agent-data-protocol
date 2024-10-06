@@ -1,4 +1,8 @@
+import json
+import os
 import argparse
+
+from browsergym.core.action.highlevel import HighLevelActionSet
 
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
@@ -8,21 +12,36 @@ from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 
 from schema.trajectory import Trajectory
-import json
 
-import os
+from scripts.html_to_axtree import HTMLToAXTree
+from scripts.browsing_prompts.system import get_web_system_message
+from scripts.browsing_prompts.user import get_web_user_message
 
 dataset = os.getenv("MY_DATASET")
 
+USE_NAV = (
+    os.environ.get('USE_NAV', 'true') == 'true'
+)  # only disable NAV actions when running webarena and miniwob benchmarks
+
+generate_axtree = HTMLToAXTree(dataset)
+
 parser = argparse.ArgumentParser(description='Convert standardized data to SFT format')
-parser.add_argument('--input_dataset', type=str, help='Dataset name', default='sample.json')
-parser.add_argument('--output_dataset', type=str, help='Dataset name', default='sample_sft.json')
+parser.add_argument('--input_dataset', type=str, help='Input Dataset name', default='sample.json')
+parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
+parser.add_argument('--is_web_dataset', type=bool, help='Is Dataset type web api', default=False)
 args = parser.parse_args()
 
-def standardized_event_to_openhands_message(event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation) -> dict:
+def standardized_event_to_openhands_message(event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previos_actions: list) -> dict:
     # NOTE for KETAN: deal with the different types of events later
-    # if isinstance(event, ApiAction):
-    #     return {"role": "assistant", "content": f"{event.description}\n<execute_api>{event.function}("+", ".join([f'{k}="{v}"' for k, v in event.kwargs.items()])+")"}
+    if isinstance(event, WebObservation):
+        axtree = generate_axtree.build_axtree(event.html)
+        prompt = get_web_user_message("", event.url, axtree, previos_actions)
+        return {"role": "user", "content": [{'type': 'text', 'text': prompt}]}
+    
+    if isinstance(event, ApiAction):
+        api_action = f"{event.function}("+", ".join([f'{k}="{v}"' for k, v in event.kwargs.items()])+")"
+        previos_actions.append(api_action)
+        return {"role": "assistant", "content": f"{event.description or ''}\n<execute_api>\n{api_action}\n</execute_api>"}
 
     if isinstance(event, CodeAction):
         if 'python' in event.language:
@@ -45,6 +64,7 @@ sft_data = []
 
 with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
     trajectory_data_file = json.load(file)
+    previous_actions = []
     for trajectory_data in trajectory_data_file:
         # print(trajectory_data)
         trajectory = Trajectory(**trajectory_data)
@@ -53,10 +73,27 @@ with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
         # iterate over the event in the trajectory
         
         id = trajectory.id
-        conversations = []
         events = trajectory.content
+        details = trajectory.details
+
+        conversations = []
+
+        # Add system message similar to OH Browsing Agent if the dataset is web dataset
+        if args.is_web_dataset:
+            action_subsets = ['chat', 'bid']
+            if USE_NAV:
+                action_subsets.append('nav')
+            action_space = HighLevelActionSet(
+                subsets=action_subsets,
+                strict=False,  # less strict on the parsing of the actions
+                multiaction=True,  # enable to agent to take multiple actions at once
+            )
+            system_message = get_web_system_message(details['task_description'], 
+                                                    action_space.describe(with_long_description=False, with_examples=True))
+            conversations.append({"role": "system", "content": system_message})
+
         for event in events:
-            conversations.append(standardized_event_to_openhands_message(event))
+            conversations.append(standardized_event_to_openhands_message(event, details, previous_actions))
 
         sft_data.append({"id": trajectory.id, "conversations": conversations})
 
