@@ -63,11 +63,10 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
 sft_data = []
 
 with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
-    trajectory_data_file = json.load(file)
-    previous_actions = []
-    for trajectory_data in trajectory_data_file:
+    std_dataset = json.load(file)
+    for std_data in std_dataset:
         # print(trajectory_data)
-        trajectory = Trajectory(**trajectory_data)
+        trajectory = Trajectory(**std_data)
         # Process the trajectory object 
         # print(trajectory)
         # iterate over the event in the trajectory
@@ -77,6 +76,7 @@ with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
         details = trajectory.details
 
         conversations = []
+        previous_actions = []
 
         # Add system message similar to OH Browsing Agent if the dataset is web dataset
         if args.is_web_dataset:
