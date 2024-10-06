@@ -282,12 +282,16 @@ if __name__ == "__main__":
 
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
+        
+        # this user message is the task and it's already included in the trajectory's details dictionary
+        # commenting this out since we no longer need it in the standardized data as it is passed into the system prompt (based on BrowsingAgent)
 
-        content: list = [
-            TextObservation(
-                content=data.confirmed_task, source="user"
-            )
-        ]
+        # content: list = [
+        #     TextObservation(
+        #         content=data.confirmed_task, source="user"
+        #     )
+        # ]
+        content: list = []
         for action in data.actions:
             content.extend(convert_step(action,info_mapping,data.annotation_id))
 
