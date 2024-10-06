@@ -28,7 +28,8 @@ def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
     elif function in ["click"]:
         kwargs["element_id"] = step.next_action.axt_node_id
     elif function == "scroll":
-        kwargs["direction"] = step.next_action.typed_string
+        kwargs["dx"] = 0
+        kwargs["dy"] = 100 if "down" in step.next_action.typed_string else -100
     elif function in ["key_press", "press"]:
         kwargs["key_comb"] = step.next_action.typed_string
         function = "press"

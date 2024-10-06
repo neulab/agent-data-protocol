@@ -21,12 +21,13 @@ def type(element_id: str, text: str) -> None:
     pass
 
 
-def scroll(direction: str) -> None:
-    """Scroll the page. Scroll up or down.
+def scroll(dx: float, dy: float) -> None:
+    """Scroll the page. Scroll horizontally dx pixels, vertically dy pixels. Positive for right or down scrolling, negative for left or up scrolling.
 
     Args:
     ----
-        direction (str): Indicate the direction of scrolling.
+        dx: the distance to scroll in the x direction.
+        dy: the distance to scroll in the y direction.
 
     """
     pass
