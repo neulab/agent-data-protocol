@@ -14,6 +14,7 @@ class HTMLToAXTree:
             headless=True,
             task_kwargs={"start_url": "https://www.google.com"},
             wait_for_user_message=False,
+            tags_to_mark="all",
         )
 
     def build_axtree(self, html_content: str) -> str:
