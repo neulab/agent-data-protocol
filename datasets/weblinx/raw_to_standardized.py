@@ -3,73 +3,123 @@ import json
 from pathlib import Path
 from typing import Any
 from schema.action.api import ApiAction
+from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
+from schema.observation.image import ImageObservation
 from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw
 
 
-download_instructions = """
+DOWNLOAD_INSTRUCTIONS = """
+    # Please download the raw dumps first:
     cd datasets/weblinx/
     git clone https://huggingface.co/datasets/McGill-NLP/WebLINX-full
     cd WebLINX-full/
     git lfs pull --exclude="candidates/*,chat/*,data/*,**/bboxes/*,*.mp4,*.png"
 """
 
-ROLE_MAP = {
-    "instructor": "user",
-    "navigator": "assistant",
+INTENT_MAP = {
+    "load": "goto",
+    "click": "click",
+    "textInput": "type",
+    "paste": "type",
+    "scroll": "scroll",
+    "submit": "submit",
+    "change": "select",
 }
 
-STEPS_TO_IGNORE = ["tabcreate", "tabswitch", "tabremove", "copy"]
+WEBLINX_DUMP = Path(__file__).parent / "WebLINX-full"
+
+intents_skipped = set()
 
 
-weblinx_dump = Path(__file__).parent / "WebLINX-full"
+def convert_step(
+    step: Any, shortcode: str
+) -> list[TextObservation | MessageAction | WebObservation | ApiAction]:
+    """Convert a step in the raw data to a list of standardized actions.
 
+    Args:
+    ----
+        step (Any): The step to convert.
+        shortcode (str): The shortcode of the demonstration.
 
-def convert_step(step: Any, shortcode: str) -> list:
+    """
     if step.type == "chat":
-        return [TextObservation(content=step.utterance, source=ROLE_MAP[step.speaker])]
+        if step.speaker == "instructor":
+            return [TextObservation(content=step.utterance, source="user")]
+        elif step.speaker == "navigator":
+            return [MessageAction(content=step.utterance, description=None)]
+        else:
+            print(f"Unknown speaker: {step.speaker}", file=sys.stderr)
     elif step.action["intent"] == "load":
-        url = step.action["arguments"]["metadata"]["url"]
-        return [ApiAction(function="goto", kwargs={"url": url})]
-    elif step.action["intent"] in STEPS_TO_IGNORE:
-        return []
-    else:
+        return [
+            ApiAction(
+                function=INTENT_MAP[step.action["intent"]],
+                kwargs={"url": step.action["arguments"]["metadata"]["url"]},
+            )
+        ]
+    elif step.action["intent"] in INTENT_MAP:
         args = step.action["arguments"]
+        image_observation = None
+        if step.state.screenshot:
+            image_observation = ImageObservation(
+                content=step.state.screenshot, source="browser"
+            )
         web_observation = WebObservation(
-            html=(weblinx_dump / "demonstrations" / shortcode / "pages"/ step.state.page).read_text(),
+            html=(
+                WEBLINX_DUMP / "demonstrations" / shortcode / "pages" / step.state.page
+            ).read_text(),
             url=args["metadata"]["url"],
-            viewport_size=(args["metadata"]["viewportWidth"], args["metadata"]["viewportHeight"]),
-            image_observation=None, # TODO: add image observation
+            viewport_size=(
+                args["metadata"]["viewportWidth"],
+                args["metadata"]["viewportHeight"],
+            ),
+            image_observation=image_observation,
         )
-        _elid = args["element"]["attributes"].get("data-webtasks-id")
-        xpath = f"//*[@data-webtasks-id='{_elid}']" if _elid else args["element"]["xpath"]
-        if step.action["intent"] == "click":
+        if step.action["intent"] == "scroll":
             return [
                 web_observation,
                 ApiAction(
-                    function="click",
-                    kwargs={"xpath": xpath},
-                )
+                    function=INTENT_MAP[step.action["intent"]],
+                    kwargs={"dx": args["scrollX"], "dy": args["scrollY"]},
+                ),
             ]
-        elif step.action["intent"] in ["textInput", "paste"]:
-            value = args["text" if step.action["intent"] == "textInput" else "pasted"]
+        _elid = args["element"]["attributes"].get("data-webtasks-id")
+        xpath = (
+            f"//*[@data-webtasks-id='{_elid}']" if _elid else args["element"]["xpath"]
+        )
+        if step.action["intent"] in ["click", "submit"]:
             return [
                 web_observation,
                 ApiAction(
-                    function="type",
+                    function=INTENT_MAP[step.action["intent"]],
+                    kwargs={"xpath": xpath},
+                ),
+            ]
+        elif step.action["intent"] in ["textInput", "paste", "change"]:
+            value_key = {
+                "textInput": "text",
+                "paste": "pasted",
+                "change": "value",
+            }
+            value = args[value_key[step.action["intent"]]]
+            return [
+                web_observation,
+                ApiAction(
+                    function=INTENT_MAP[step.action["intent"]],
                     kwargs={"xpath": xpath, "value": value},
-                )
+                ),
             ]
         else:
-            print(f"Unknown action: {step.action['intent']}", file=sys.stderr)
+            print(f"Unknown intent: {step.action['intent']}", file=sys.stderr)
+    else:
+        intents_skipped.add(step.action["intent"])
     return []
 
 
 if __name__ == "__main__":
-
-    assert weblinx_dump.is_dir(), "Please download the dataset first: " + download_instructions
+    assert WEBLINX_DUMP.is_dir(), DOWNLOAD_INSTRUCTIONS
     for line in sys.stdin:
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
@@ -87,3 +137,4 @@ if __name__ == "__main__":
             },
         )
         print(standardized_data.model_dump_json())
+    print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)
