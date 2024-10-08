@@ -225,7 +225,7 @@ def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[We
     xpath = f"//*[@backend_node_id='{dom_nodeid}']"
     api_action = ApiAction(
         function=step.operation.op.lower(),
-        kwargs={"value": step.operation.value, "xpath": xpath} if step.operation.value else {"xpath": xpath},
+        kwargs={"xpath": xpath, "value": step.operation.value} if step.operation.value else {"xpath": xpath},
         description=None,
     )
     return web_observation, api_action
