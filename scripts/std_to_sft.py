@@ -103,7 +103,7 @@ with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
         for event in events:
             conversations.append(standardized_event_to_openhands_message(event, details, previous_actions))
 
-        sft_data.append({"id": trajectory.id, "conversations": conversations})
+        sft_data.extend([{"id": trajectory.id, "conversations": conversations}])
 
 
 with open(f'./datasets/{dataset}/{args.output_dataset}', 'w') as file:
