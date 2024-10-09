@@ -208,6 +208,7 @@ def process_trace(trace_file, page, record):
 
 def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[WebObservation, ApiAction]:
     web_observation = WebObservation(
+        axtree=None,
         html=step.raw_html,
         # TODO: this should be added to the schema
         # https://github.com/neulab/agent-data-collection/issues/26

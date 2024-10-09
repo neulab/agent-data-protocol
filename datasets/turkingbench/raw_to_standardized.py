@@ -149,7 +149,7 @@ def process_data(data: dict) -> Trajectory:
 
     content: list = [
         WebObservation(
-            html=html_template, url=None, viewport_size=None, image_observation=None
+            axtree = None, html=html_template, url=None, viewport_size=None, image_observation=None
         )
     ]
 
