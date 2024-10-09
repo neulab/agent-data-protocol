@@ -28,13 +28,15 @@ generate_axtree = HTMLToAXTree(dataset)
 parser = argparse.ArgumentParser(description='Convert standardized data to SFT format')
 parser.add_argument('--input_dataset', type=str, help='Input Dataset name', default='sample.json')
 parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
-parser.add_argument('--is_web_dataset', type=bool, help='Is Dataset type web api', required=True)
+parser.add_argument('--is_web', type=bool, help='Is Dataset type web api', required=True)
 args = parser.parse_args()
 
 def standardized_event_to_openhands_message(event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previos_actions: list) -> dict:
     # NOTE for KETAN: deal with the different types of events later
     if isinstance(event, WebObservation):
-        if generate_axtree.last_html != event.html:
+        if event.axtree is not None:
+            axtree = event.axtree
+        elif generate_axtree.last_html != event.html:
             axtree = generate_axtree.build_axtree(event.html)
         else:
             axtree = generate_axtree.last_xtree
@@ -42,14 +44,22 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
         return {"role": "user", "content": [{'type': 'text', 'text': prompt}]}
     
     if isinstance(event, ApiAction):
+        # try to directly get the browsergym_id from the event kwargs
+        browsergym_id = event.kwargs.get('element_id', None)
+
         # this gets the browsergym_id of the element that the user is interacting with
         # the latest(last seen) html's obs is updated whenever build_axtree is called
         # the latest obs is used to get the browsergym_id
-        event_xpath = ", ".join([f'{v}' for k, v in event.kwargs.items()])
-        browsergym_id = generate_axtree.get_bid(event_xpath)
-        api_action = f"{event.function}({browsergym_id})"
+        if not browsergym_id:
+            event_xpath = event.kwargs.get('xpath', None)
+            if event_xpath:
+                browsergym_id = generate_axtree.get_bid(event_xpath)
+        if len(event.kwargs)==1:
+            api_action = f"{event.function}(bid={browsergym_id})"
+        else:
+            api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
         previos_actions.append(api_action)
-        return {"role": "assistant", "content": f"{event.description or ''}\n<execute_api>\n{api_action}\n</execute_api>"}
+        return {"role": "assistant", "content": f"{event.description or ''}\n```{api_action}```\n"}
 
     if isinstance(event, CodeAction):
         if 'python' in event.language:
@@ -87,7 +97,7 @@ with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
         previous_actions = []
 
         # Add system message similar to OH Browsing Agent if the dataset is web dataset
-        if args.is_web_dataset:
+        if args.is_web:
             action_subsets = ['chat', 'bid']
             if USE_NAV:
                 action_subsets.append('nav')
