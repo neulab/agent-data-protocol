@@ -8,6 +8,8 @@ from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw, Action as RawAction
+from bs4 import BeautifulSoup
+from lxml import etree
 import collections
 import re
 import tqdm
@@ -207,8 +209,15 @@ def process_trace(trace_file, page, record):
 
 
 def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[WebObservation, ApiAction]:
+    
+    soup = BeautifulSoup(step.raw_html, 'html.parser')
+    elements_with_attribute = soup.find_all(attrs={"data_pw_testid_buckeye": True})
+    for element in elements_with_attribute:
+        del element['data_pw_testid_buckeye']
+    raw_html_no_label = soup.prettify()
+
     web_observation = WebObservation(
-        html=step.raw_html,
+        html=raw_html_no_label,
         # TODO: this should be added to the schema
         # https://github.com/neulab/agent-data-collection/issues/26
         image_observation=None,
@@ -218,11 +227,16 @@ def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[We
 
     # TODO: get the DOM element from `step.raw_html` here
     # use info_mapping[action_uid] to retrieve node's attributes
+    label_xpath = f"//*[@data_pw_testid_buckeye='{step.action_uid}']"
+    tree = etree.HTML(step.raw_html)
+    elements = tree.xpath(label_xpath)
+    backend_node_id = elements[0].get("backend_node_id")
 
     dom_nodeid = info_mapping.get(f'{annotation_id}-{step.action_uid}', 'not found')
-    if dom_nodeid == 'not found' and step.pos_candidates:
-        dom_nodeid = step.pos_candidates[0].backend_node_id
+    if dom_nodeid == 'not found' and backend_node_id:
+        dom_nodeid = backend_node_id
     xpath = f"//*[@backend_node_id='{dom_nodeid}']"
+
     api_action = ApiAction(
         function=step.operation.op.lower(),
         kwargs={"value": step.operation.value, "xpath": xpath} if step.operation.value else {"xpath": xpath},
@@ -278,6 +292,7 @@ if __name__ == "__main__":
                     print(f"Failed to process {trace_file}")
             browser.close()
 
+
     for line in sys.stdin:
 
         raw_data = json.loads(line)
@@ -301,6 +316,5 @@ if __name__ == "__main__":
                 "subdomain": data.subdomain,
             },
         )
-
         # Print the standardized data
         print(standardized_data.model_dump_json())
