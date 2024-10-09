@@ -2,12 +2,17 @@ import os
 import tqdm
 import glob
 import argparse
+import json
+
+from lxml import etree
+
 import gymnasium as gym
 import browsergym.core  # register the openended task as a gym environment
-from browsergym.utils.obs import flatten_axtree_to_str
+from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
 
 class HTMLToAXTree:
     def __init__(self, dataset: str):
+        self.errors = []
         self.dataset = dataset
         self.env = gym.make(
             "browsergym/openended",
@@ -16,16 +21,41 @@ class HTMLToAXTree:
             wait_for_user_message=False,
             tags_to_mark="all",
         )
+        self.last_html = None
+        self.last_xtree = None
+        self.last_obs = None
 
     def build_axtree(self, html_content: str) -> str:
+        self.last_html = html_content
         temp_file = os.path.abspath(f'./temp_{self.dataset}.html')
         with open(temp_file, "w") as f:
             f.write(html_content)
+
         obs, info = self.env.reset()
-        obs, reward, terminated, truncated, info = self.env.step(f"goto('file://{temp_file}')")
+        obs, reward, terminated, truncated, info = self.env.step(f"page.goto('file://{temp_file}')")
         os.remove(temp_file)
 
-        return flatten_axtree_to_str(obs["axtree_object"])
+        self.last_obs = obs
+        self.last_xtree = flatten_axtree_to_str(obs["axtree_object"])
+
+        return self.last_xtree
+    
+    def get_bid(self, x_path: str) -> str:
+        html_string = flatten_dom_to_str(self.last_obs["dom_object"])
+        tree = etree.HTML(html_string)
+        try:
+            element = tree.xpath(x_path)
+            print(x_path)
+            print(etree.tostring(element[0], pretty_print=True).decode("utf-8"))
+            browsergym_id = element[0].get("bid")
+            return browsergym_id
+        except Exception as e:
+            print("Error:", e)
+            self.errors.append({"error": str(e), "x_path": x_path, 
+                                    "html": html_string})
+            with open(f'./datasets/{self.dataset}/bid_errors.json', 'w') as f:
+                json.dump(self.errors, f, indent=4)
+            return "Error generating browsergym_id"
     
 if __name__ == "__main__":
     html_to_axtree = HTMLToAXTree()
