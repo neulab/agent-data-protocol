@@ -12,10 +12,11 @@ from trajectory import Trajectory as synatra_trajectory
 
 def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
     web_observation = WebObservation(
-        html=step.obs,
+        html=None,
+        axtree=step.obs,
         image_observation=None,
         viewport_size=None,
-        url=None,
+        url=step.website,
     )
 
     kwargs = {}
@@ -72,17 +73,26 @@ if __name__ == "__main__":
             data = synatra_trajectory(raw_data)
         except:
             continue
+
+        # this user message is the task and it's already included in the trajectory's details dictionary
+        # commenting this out since we no longer need it in the standardized data as it is passed into the system prompt (based on BrowsingAgent)
         
-        content: list = [
-            TextObservation(
-                content=data.objective, source="user"
-            )
-        ]
+        # content: list = [
+        #     TextObservation(
+        #         content=data.objective, source="user"
+        #     )
+        # ]
+
+        content: list = []
         content.extend(convert_step(data))
 
         standardized_data = Trajectory(
             id=str(idx),
             content=content,
+            details = {
+                "task_description": data.objective,
+                "website": data.website,
+            }
         )
         
         idx+=1
