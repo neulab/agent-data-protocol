@@ -28,18 +28,26 @@ generate_axtree = HTMLToAXTree(dataset)
 parser = argparse.ArgumentParser(description='Convert standardized data to SFT format')
 parser.add_argument('--input_dataset', type=str, help='Input Dataset name', default='sample.json')
 parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
-parser.add_argument('--is_web_dataset', type=bool, help='Is Dataset type web api', default=False)
+parser.add_argument('--is_web_dataset', type=bool, help='Is Dataset type web api', required=True)
 args = parser.parse_args()
 
 def standardized_event_to_openhands_message(event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previos_actions: list) -> dict:
     # NOTE for KETAN: deal with the different types of events later
     if isinstance(event, WebObservation):
-        axtree = generate_axtree.build_axtree(event.html)
+        if generate_axtree.last_html != event.html:
+            axtree = generate_axtree.build_axtree(event.html)
+        else:
+            axtree = generate_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, previos_actions)
         return {"role": "user", "content": [{'type': 'text', 'text': prompt}]}
     
     if isinstance(event, ApiAction):
-        api_action = f"{event.function}("+", ".join([f'{k}="{v}"' for k, v in event.kwargs.items()])+")"
+        # this gets the browsergym_id of the element that the user is interacting with
+        # the latest(last seen) html's obs is updated whenever build_axtree is called
+        # the latest obs is used to get the browsergym_id
+        event_xpath = ", ".join([f'{v}' for k, v in event.kwargs.items()])
+        browsergym_id = generate_axtree.get_bid(event_xpath)
+        api_action = f"{event.function}({browsergym_id})"
         previos_actions.append(api_action)
         return {"role": "assistant", "content": f"{event.description or ''}\n<execute_api>\n{api_action}\n</execute_api>"}
 
