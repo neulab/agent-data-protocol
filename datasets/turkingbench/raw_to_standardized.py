@@ -118,6 +118,22 @@ def fetch_dynamic_content(html_template: str) -> str:
         return html
 
 
+def numeric_equal(a: str, b: str) -> bool:
+    """
+    Check if two strings are numerically equal, otherwise check normal equality
+
+    Args:
+        a: The first string
+        b: The second string
+
+    """
+    a, b = a.strip(), b.strip()
+    try:
+        return float(a) == float(b)
+    except ValueError:
+        return a == b
+
+
 def process_data(data: dict) -> Trajectory:
     """
     Process the data
@@ -165,10 +181,26 @@ def process_data(data: dict) -> Trajectory:
         SOUP_CACHE[data["Task"]] = {"_beautiful_soup": soup}
 
     for k, v in data["Answer"].items():
+        if not v.strip():
+            # if no value, that means no answer was provided or no checkbox/radio was selected
+            # so safe to ignore
+            continue
         if use_cache and k in SOUP_CACHE[data["Task"]]:
             input_element = SOUP_CACHE[data["Task"]][k]
         else:
-            input_element = soup.find_all(INPUT_ELEMENTS, {"name": k}, limit=1)
+            input_element = soup.find_all(INPUT_ELEMENTS, {"name": k})
+            if len(input_element) > 1:
+                if get_element_type(input_element[0]) in ["radio", "checkbox", "crowd-checkbox"]:
+                    # default "value" for a radio/checkbox is "on" if no explicit value attribute is provided
+                    input_element = [el for el in input_element if numeric_equal(v, el.get("value", "on"))]
+                    if len(input_element) > 1:
+                        print_error_once(
+                            f"Found multiple elements with name {k} and value {v} in Task {data['Task']}"
+                        )
+                else:
+                    print_error_once(
+                        f"Found multiple elements with name {k} in Task {data['Task']}"
+                    )
             SOUP_CACHE[data["Task"]][k] = input_element
 
         if input_element:
