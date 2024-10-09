@@ -189,19 +189,20 @@ def process_data(data: dict) -> Trajectory:
             input_element = SOUP_CACHE[data["Task"]][k]
         else:
             input_element = soup.find_all(INPUT_ELEMENTS, {"name": k})
-            if len(input_element) > 1:
-                if get_element_type(input_element[0]) in ["radio", "checkbox", "crowd-checkbox"]:
-                    # default "value" for a radio/checkbox is "on" if no explicit value attribute is provided
-                    input_element = [el for el in input_element if numeric_equal(v, el.get("value", "on"))]
-                    if len(input_element) > 1:
-                        print_error_once(
-                            f"Found multiple elements with name {k} and value {v} in Task {data['Task']}"
-                        )
-                else:
-                    print_error_once(
-                        f"Found multiple elements with name {k} in Task {data['Task']}"
-                    )
             SOUP_CACHE[data["Task"]][k] = input_element
+
+        if len(input_element) > 1:
+            if get_element_type(input_element[0]) in ["radio", "checkbox", "crowd-checkbox"]:
+                # default "value" for a radio/checkbox is "on" if no explicit value attribute is provided
+                input_element = [el for el in input_element if numeric_equal(v, el.get("value", "on"))]
+                if len(input_element) > 1:
+                    print_error_once(
+                        f"Found multiple elements with name {k} and value {v} in Task {data['Task']}"
+                    )
+            else:
+                print_error_once(
+                    f"Found multiple elements with name {k} in Task {data['Task']}"
+                )
 
         if input_element:
             el = input_element[0]
