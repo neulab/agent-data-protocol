@@ -25,6 +25,8 @@ from webarena_utils import (
     png_bytes_to_numpy,
 )
 
+not_found_count = 0
+total_count = 0
 
 def fetch_browser_info(
     self,
@@ -216,6 +218,8 @@ def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[We
         viewport_size=None,
         url=None,
     )
+    global not_found_count
+    global total_count
 
     # TODO: get the DOM element from `step.raw_html` here
     # use info_mapping[action_uid] to retrieve node's attributes
@@ -223,6 +227,9 @@ def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[We
     dom_nodeid = info_mapping.get(f'{annotation_id}-{step.action_uid}', 'not found')
     if dom_nodeid == 'not found' and step.pos_candidates:
         dom_nodeid = step.pos_candidates[0].backend_node_id
+    if dom_nodeid == 'not found':
+        not_found_count += 1
+    total_count += 1
     xpath = f"//*[@backend_node_id='{dom_nodeid}']"
     api_action = ApiAction(
         function=step.operation.op.lower(),
@@ -309,3 +316,5 @@ if __name__ == "__main__":
 
         # Print the standardized data
         print(standardized_data.model_dump_json())
+    with open('not_found_count.txt', 'w') as f:
+        f.write(f'{not_found_count} / {total_count}')
