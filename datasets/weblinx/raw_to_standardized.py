@@ -63,8 +63,11 @@ def convert_step(
         args = step.action["arguments"]
         image_observation = None
         if step.state.screenshot:
+            img_path = (
+                WEBLINX_DUMP / "demonstrations" / shortcode / "screenshots" / step.state.screenshot
+            ).relative_to(Path.cwd()).as_posix()
             image_observation = ImageObservation(
-                content=step.state.screenshot, source="browser"
+                content=img_path, source="browser"
             )
         web_observation = WebObservation(
             html=(
