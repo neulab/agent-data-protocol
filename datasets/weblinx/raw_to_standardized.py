@@ -9,6 +9,7 @@ from schema.observation.web import WebObservation
 from schema.observation.image import ImageObservation
 from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw
+from lxml import etree
 
 
 DOWNLOAD_INSTRUCTIONS = """
@@ -32,6 +33,24 @@ INTENT_MAP = {
 WEBLINX_DUMP = Path(__file__).parent / "WebLINX-full"
 
 intents_skipped = set()
+
+
+def xpath_exists(html: str, xpath: str) -> bool:
+    """Check if the xpath exists in the html.
+
+    Args:
+    ----
+        html (str): The html content.
+        xpath (str): The xpath to check.
+
+    """
+    tree = etree.HTML(html)
+    try:
+        result = tree.xpath(xpath)
+        return bool(result)
+    except Exception:
+        return False
+
 
 
 def convert_step(
@@ -89,9 +108,14 @@ def convert_step(
                 ),
             ]
         _elid = args["element"]["attributes"].get("data-webtasks-id")
-        xpath = (
-            f"//*[@data-webtasks-id='{_elid}']" if _elid else args["element"]["xpath"]
-        )
+        if _elid:
+            xpath = f"//*[@data-webtasks-id='{_elid}']"
+            if not xpath_exists(web_observation.html, f"//*[@data-webtasks-id='{_elid}']"):
+                _elid = None
+        if not _elid:
+            xpath = args["element"]["xpath"]
+            if not xpath_exists(web_observation.html, xpath):
+                xpath = "not found"
         if step.action["intent"] in ["click", "submit"]:
             return [
                 web_observation,
