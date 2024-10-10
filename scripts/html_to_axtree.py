@@ -41,19 +41,20 @@ class HTMLToAXTree:
         return self.last_xtree
     
     def get_bid(self, x_path: str) -> str:
-        html_string = flatten_dom_to_str(self.last_obs["dom_object"])
-        tree = etree.HTML(html_string)
+        # html_string = flatten_dom_to_str(self.last_obs["dom_object"])
+        # tree = etree.HTML(html_string)
+        tree = etree.HTML(self.last_html)
         try:
             element = tree.xpath(x_path)
-            print(x_path)
-            print(etree.tostring(element[0], pretty_print=True).decode("utf-8"))
+            # print(x_path)
+            # print(etree.tostring(element[0], pretty_print=True).decode("utf-8"))
             browsergym_id = element[0].get("bid")
             return browsergym_id
         except Exception as e:
             print("Error:", e)
             self.errors.append({"error": str(e), "x_path": x_path, 
-                                    "html": html_string})
-            with open(f'./datasets/{self.dataset}/bid_errors.json', 'w') as f:
+                                    "html": self.last_html, "axtree": self.last_xtree})
+            with open(f'./datasets/{self.dataset}/{self.dataset}_bid_errors.json', 'w') as f:
                 json.dump(self.errors, f, indent=4)
             return "Error generating browsergym_id"
     
