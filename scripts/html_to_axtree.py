@@ -25,7 +25,7 @@ class HTMLToAXTree:
         self.last_xtree = None
         self.last_obs = None
 
-    def build_axtree(self, html_content: str) -> str:
+    def build_axtree(self, id, html_content: str) -> str:
         self.last_html = html_content
         temp_file = os.path.abspath(f'./temp_{self.dataset}.html')
         with open(temp_file, "w") as f:
@@ -40,7 +40,7 @@ class HTMLToAXTree:
 
         return self.last_xtree
     
-    def get_bid(self, x_path: str) -> str:
+    def get_bid(self, id, x_path: str) -> str:
         html_string = flatten_dom_to_str(self.last_obs["dom_object"])
         tree = etree.HTML(html_string)
         try:
@@ -51,8 +51,8 @@ class HTMLToAXTree:
             return browsergym_id
         except Exception as e:
             print("Error:", e)
-            self.errors.append({"error": str(e), "x_path": x_path, 
-                                    "html": self.last_html, "axtree": self.last_xtree})
+            self.errors.append({"id":id, "error": str(e), 
+                                "x_path": x_path, "html": html_string})
             with open(f'./datasets/{self.dataset}/{self.dataset}_bid_errors.json', 'w') as f:
                 json.dump(self.errors, f, indent=4)
             return "Error generating browsergym_id"
