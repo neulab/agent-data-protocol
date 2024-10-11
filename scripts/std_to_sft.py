@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import argparse
 
 from browsergym.core.action.highlevel import HighLevelActionSet
@@ -80,8 +81,8 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
     
 sft_data = []
 
-with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
-    std_dataset = json.load(file)
+for line in sys.stdin:
+    std_dataset = [json.loads(line)]
     for std_data in std_dataset:
         # print(trajectory_data)
         trajectory = Trajectory(**std_data)
@@ -113,10 +114,10 @@ with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
         for event in events:
             conversations.append(standardized_event_to_openhands_message(event, details, previous_actions))
 
-        sft_data.extend([{"id": trajectory.id, "conversations": conversations}])
+        print(json.dumps([{"id": trajectory.id, "conversations": conversations}]))
 
 
-with open(f'./datasets/{dataset}/{args.output_dataset}', 'w') as file:
-    json.dump(sft_data, file, indent=2)
+# with open(f'./datasets/{dataset}/{args.output_dataset}', 'w') as file:
+#     json.dump(sft_data, file, indent=2)
 
 # print(sft_data)
