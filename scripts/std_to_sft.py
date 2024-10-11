@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import argparse
 
 from browsergym.core.action.highlevel import HighLevelActionSet
@@ -31,13 +32,13 @@ parser.add_argument('--output_dataset', type=str, help='Output Dataset name', de
 parser.add_argument('--is_web', type=bool, help='Is Dataset type web api', required=True)
 args = parser.parse_args()
 
-def standardized_event_to_openhands_message(event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previos_actions: list) -> dict:
+def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previos_actions: list) -> dict:
     # NOTE for KETAN: deal with the different types of events later
     if isinstance(event, WebObservation):
         if event.axtree is not None:
             axtree = event.axtree
         elif generate_axtree.last_html != event.html:
-            axtree = generate_axtree.build_axtree(event.html)
+            axtree = generate_axtree.build_axtree(id, event.html)
         else:
             axtree = generate_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, previos_actions)
@@ -53,12 +54,12 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
         if not browsergym_id:
             event_xpath = event.kwargs.get('xpath', None)
             if event_xpath:
-                browsergym_id = generate_axtree.get_bid(event_xpath)
+                browsergym_id = generate_axtree.get_bid(id, event_xpath)
         if len(event.kwargs)==1:
             api_action = f"{event.function}(bid={browsergym_id})"
         else:
             api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
-        previos_actions.append(api_action)
+        previos_actions.extend([api_action])
         return {"role": "assistant", "content": f"{event.description or ''}\n```{api_action}```\n"}
 
     if isinstance(event, CodeAction):
@@ -80,8 +81,8 @@ def standardized_event_to_openhands_message(event: ApiAction | CodeAction | Mess
     
 sft_data = []
 
-with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
-    std_dataset = json.load(file)
+for line in sys.stdin:
+    std_dataset = [json.loads(line)]
     for std_data in std_dataset:
         # print(trajectory_data)
         trajectory = Trajectory(**std_data)
@@ -108,15 +109,15 @@ with open(f'./datasets/{dataset}/{args.input_dataset}', 'r') as file:
             )
             system_message = get_web_system_message(details['task_description'], 
                                                     action_space.describe(with_long_description=False, with_examples=True))
-            conversations.append({"role": "system", "content": system_message})
+            conversations.extend([{"role": "system", "content": system_message}])
 
         for event in events:
-            conversations.append(standardized_event_to_openhands_message(event, details, previous_actions))
+            conversations.extend([standardized_event_to_openhands_message(id, event, details, previous_actions)])
 
-        sft_data.extend([{"id": trajectory.id, "conversations": conversations}])
+        print(json.dumps([{"id": trajectory.id, "conversations": conversations}]))
 
 
-with open(f'./datasets/{dataset}/{args.output_dataset}', 'w') as file:
-    json.dump(sft_data, file, indent=2)
+# with open(f'./datasets/{dataset}/{args.output_dataset}', 'w') as file:
+#     json.dump(sft_data, file, indent=2)
 
 # print(sft_data)
