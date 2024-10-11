@@ -41,9 +41,8 @@ class HTMLToAXTree:
         return self.last_xtree
     
     def get_bid(self, x_path: str) -> str:
-        # html_string = flatten_dom_to_str(self.last_obs["dom_object"])
-        # tree = etree.HTML(html_string)
-        tree = etree.HTML(self.last_html)
+        html_string = flatten_dom_to_str(self.last_obs["dom_object"])
+        tree = etree.HTML(html_string)
         try:
             element = tree.xpath(x_path)
             # print(x_path)
