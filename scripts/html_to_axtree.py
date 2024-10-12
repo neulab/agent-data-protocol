@@ -1,5 +1,5 @@
 import os
-import tqdm
+import sys
 import glob
 import argparse
 import json
@@ -50,9 +50,9 @@ class HTMLToAXTree:
             browsergym_id = element[0].get("bid")
             return browsergym_id
         except Exception as e:
-            print("Error:", e)
-            self.errors.append({"id":id, "error": str(e), 
-                                "x_path": x_path, "html": html_string})
+            print("Error:", e, file=sys.stderr)
+            self.errors.append({"id":id, "error": str(e), "x_path": x_path, 
+                                "html_dom": html_string, "raw_html": self.last_html})
             with open(f'./datasets/{self.dataset}/{self.dataset}_bid_errors.json', 'w') as f:
                 json.dump(self.errors, f, indent=4)
             return "Error generating browsergym_id"
