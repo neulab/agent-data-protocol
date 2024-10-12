@@ -211,15 +211,15 @@ def process_trace(trace_file, page, record):
 
 def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[WebObservation, ApiAction]:
     
-    soup = BeautifulSoup(step.raw_html, 'html.parser')
-    elements_with_attribute = soup.find_all(attrs={"data_pw_testid_buckeye": True})
-    for element in elements_with_attribute:
-        del element['data_pw_testid_buckeye']
-    raw_html_no_label = soup.prettify()
+    # soup = BeautifulSoup(step.raw_html, 'html.parser')
+    # elements_with_attribute = soup.find_all(attrs={"data_pw_testid_buckeye": True})
+    # for element in elements_with_attribute:
+    #     del element['data_pw_testid_buckeye']
+    # raw_html_no_label = soup.prettify()
 
     web_observation = WebObservation(
         axtree=None,
-        html=raw_html_no_label,
+        html=step.raw_html,
         # TODO: this should be added to the schema
         # https://github.com/neulab/agent-data-collection/issues/26
         image_observation=None,
