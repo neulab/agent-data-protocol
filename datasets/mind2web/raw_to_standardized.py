@@ -237,7 +237,7 @@ def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[We
 
     web_observation = WebObservation(
         axtree=None,
-        html=step.raw_html,
+        html=fix_iframes(step.raw_html),
         # TODO: this should be added to the schema
         # https://github.com/neulab/agent-data-collection/issues/26
         image_observation=None,
