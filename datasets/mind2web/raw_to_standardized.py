@@ -26,7 +26,25 @@ from webarena_utils import (
     Observation,
     png_bytes_to_numpy,
 )
+from lxml import html
 
+def fix_iframes(html_str: str) -> str:
+    """
+    Fix iframes by moving their HTML child elements to the srcdoc attribute.
+    
+    Args:
+        html_str (str): HTML string
+    
+    """
+    document = html.fromstring(html_str)
+    for iframe in document.xpath('//iframe'):
+        if iframe.attrib.get('src') or iframe.attrib.get('srcdoc'):
+            continue
+        iframe_content = ''.join(html.tostring(e, encoding='unicode') for e in iframe)
+        iframe.attrib['srcdoc'] = f"{iframe_content}"
+        for child in iframe:
+            iframe.remove(child)
+    return etree.tostring(document, pretty_print=True, encoding='unicode', method='html')
 
 
 def fetch_browser_info(
