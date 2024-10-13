@@ -114,7 +114,7 @@ for line in sys.stdin:
         for event in events:
             conversations.extend([standardized_event_to_openhands_message(id, event, details, previous_actions)])
 
-        print(json.dumps([{"id": trajectory.id, "conversations": conversations}]))
+        print(json.dumps({"id": trajectory.id, "conversations": conversations}))
 
 
 # with open(f'./datasets/{dataset}/{args.output_dataset}', 'w') as file:
