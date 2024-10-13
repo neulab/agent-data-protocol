@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser(description='Convert standardized data to SFT f
 # parser.add_argument('--input_dataset', type=str, help='Input Dataset name', default='sample.json')
 # parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
 parser.add_argument('--chunk', type=str, help='Dataset name', required=True)
-parser.add_argument('--is_web', type=bool, help='Is Dataset type web api', required=True)
+parser.add_argument('--is_web', type=str, choices=['yes', 'no'], help='Is Dataset type web api', required=True)
 args = parser.parse_args()
 
 def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previos_actions: list) -> dict:
@@ -99,7 +99,7 @@ for line in sys.stdin:
         previous_actions = []
 
         # Add system message similar to OH Browsing Agent if the dataset is web dataset
-        if args.is_web:
+        if args.is_web=='yes':
             action_subsets = ['chat', 'bid']
             if USE_NAV:
                 action_subsets.append('nav')
