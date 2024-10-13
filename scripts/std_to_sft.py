@@ -55,7 +55,7 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         if not browsergym_id:
             event_xpath = event.kwargs.get('xpath', None)
             if event_xpath:
-                browsergym_id = generate_axtree.get_bid(id, event_xpath)
+                browsergym_id = generate_axtree.get_bid(id, event_xpath, args.chunk)
         if len(event.kwargs)==1:
             api_action = f"{event.function}(bid={browsergym_id})"
         else:

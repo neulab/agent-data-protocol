@@ -40,7 +40,7 @@ class HTMLToAXTree:
 
         return self.last_xtree
     
-    def get_bid(self, id, x_path: str) -> str:
+    def get_bid(self, id, x_path: str, chunk) -> str:
         html_string = flatten_dom_to_str(self.last_obs["dom_object"])
         tree = etree.HTML(html_string)
         try:
@@ -53,7 +53,7 @@ class HTMLToAXTree:
             print("Error:", e, file=sys.stderr)
             self.errors.append({"id":id, "error": str(e), "x_path": x_path, 
                                 "html_dom": html_string, "raw_html": self.last_html})
-            with open(f'./datasets/{self.dataset}/{self.dataset}_bid_errors.json', 'w') as f:
+            with open(f'./datasets/{self.dataset}/{self.dataset}_{chunk}_bid_errors.json', 'w') as f:
                 json.dump(self.errors, f, indent=4)
             return "Error generating browsergym_id"
     
