@@ -27,8 +27,9 @@ USE_NAV = (
 generate_axtree = HTMLToAXTree(dataset)
 
 parser = argparse.ArgumentParser(description='Convert standardized data to SFT format')
-parser.add_argument('--input_dataset', type=str, help='Input Dataset name', default='sample.json')
-parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
+# parser.add_argument('--input_dataset', type=str, help='Input Dataset name', default='sample.json')
+# parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
+parser.add_argument('--chunk', type=str, help='Dataset name', required=True)
 parser.add_argument('--is_web', type=bool, help='Is Dataset type web api', required=True)
 args = parser.parse_args()
 
@@ -38,7 +39,7 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         if event.axtree is not None:
             axtree = event.axtree
         elif generate_axtree.last_html != event.html:
-            axtree = generate_axtree.build_axtree(id, event.html)
+            axtree = generate_axtree.build_axtree(id, event.html, args.chunk)
         else:
             axtree = generate_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, previos_actions)
