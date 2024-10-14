@@ -66,7 +66,7 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
             api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
         previos_actions.extend([api_action])
         thought = "THOUGHT: " + event.description if event.description else ""
-        return {"role": "assistant", "content": f"{thought}\nACTION: \n```{api_action}```\n"}
+        return {"role": "assistant", "content": f"{thought}\n\nACTION: \n```{api_action}```\n"}
 
     if isinstance(event, CodeAction):
         if 'python' in event.language:
