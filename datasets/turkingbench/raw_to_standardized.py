@@ -99,25 +99,33 @@ def print_error_once(err_msg: str) -> None:
         ERROR_MESSAGES[err_msg] += 1
 
 
-def fetch_dynamic_content(html_template: str) -> str:
-    """
-    Fetch dynamic content using Playwright
+class PlaywrightLoader:
+    def __init__(self):
+        self.playwright = sync_playwright().start()
+        self.browser = self.playwright.chromium.launch(headless=True)
+        self.page = self.browser.new_page()
 
-    Args:
-        html_template: The HTML template
+    def get_html_snapshot(self, html_template: str) -> str:
+        """
+        Fetch dynamic content using Playwright
 
-    Returns:
-        The modified html (str)
+        Args:
+            html_template: The HTML template
 
-    """
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.set_content(html_template)
-        page.wait_for_load_state("networkidle")
-        html = page.content()
-        browser.close()
+        Returns:
+            The modified html (str)
+        """
+        self.page.set_content(html_template)
+        self.page.wait_for_load_state("networkidle")
+        html = self.page.content()
         return html
+
+    def close(self):
+        self.page.close()
+        self.browser.close()
+        self.playwright.stop()
+
+playwright_loader = PlaywrightLoader()
 
 
 def numeric_equal(a: str, b: str) -> bool:
@@ -201,7 +209,7 @@ def process_data(data: dict) -> Trajectory:
             # the html_template has javascript that dynamically generates input elements
             # use playwright to run the javascript and get the modified html
             # Doesn't take care of all cases, for example if number of input elements changes based on user input
-            html_template = fetch_dynamic_content(html_template)
+            html_template = playwright_loader.get_html_snapshot(html_template)
         tree = etree.HTML(html_template)
         input_elements = tree.xpath(ALL_INPUT_ELEMENTS_XPATH)
         ELEMENT_CACHE[data["Task"]] = {
