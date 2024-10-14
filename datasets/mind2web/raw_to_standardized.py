@@ -320,7 +320,7 @@ if __name__ == "__main__":
 
         content: list = [
             TextObservation(
-                content=data.confirmed_task, source="user"
+                content= f"Go to the website https://www.{data.website}.com and {data.confirmed_task}", source="user"
             )
         ]
 
