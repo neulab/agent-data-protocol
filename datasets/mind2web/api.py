@@ -31,3 +31,14 @@ def type(xpath: str, value: str) -> None:
 
     """
     pass
+
+def goto(url: str) -> None:
+    """Type some text into an input element.
+
+    Args:
+    ----
+        xpath (str): The xpath of the element to type into.
+        value (str): The text to type.
+
+    """
+    pass
