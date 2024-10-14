@@ -35,6 +35,7 @@ def get_web_user_message(
 Here is an example with chain of thought of a valid action when clicking on a button:
 "
 THOUGHT: In order to accomplish my goal I need to click on the button with bid 12
+
 ACTION:
 ```click("12")```
 "
