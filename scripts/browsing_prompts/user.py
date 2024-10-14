@@ -39,6 +39,8 @@ THOUGHT: In order to accomplish my goal I need to click on the button with bid 1
 ACTION:
 ```click("12")```
 "
+
+If you do not have a proper THOUGHT for your action, you can directly provide the ACTION.
 """.strip()
     if USE_CONCISE_ANSWER:
         prompt += CONCISE_INSTRUCTION
