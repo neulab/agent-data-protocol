@@ -37,8 +37,7 @@ def goto(url: str) -> None:
 
     Args:
     ----
-        xpath (str): The xpath of the element to type into.
-        value (str): The text to type.
+        url (str): The url of the website to go to.
 
     """
     pass
