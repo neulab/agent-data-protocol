@@ -6,9 +6,10 @@ from schema.action.api import ApiAction
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw
-from bs4 import BeautifulSoup
 from collections import defaultdict
 from playwright.sync_api import sync_playwright
+from lxml import etree
+
 
 
 INPUT_ELEMENTS = [
@@ -19,6 +20,7 @@ INPUT_ELEMENTS = [
     "crowd-slider",
     "crowd-input",
 ]
+ALL_INPUT_ELEMENTS_XPATH = " | ".join(f"//{el}" for el in INPUT_ELEMENTS)
 
 ACTIONS = {
     "radio": "click",
@@ -56,7 +58,7 @@ DYNAMICALLY_GENERATED_TASKS = set(
 )
 
 MISSING_COUNTS = defaultdict(lambda: defaultdict(int))
-SOUP_CACHE = {}
+ELEMENT_CACHE = {}
 
 
 def get_element_type(el: any) -> str:
@@ -71,11 +73,11 @@ def get_element_type(el: any) -> str:
 
     """
     if el.get("type"):
-        return el["type"]
-    elif el.name == "select":
+        return el.get("type")
+    elif el.tag == "select":
         return "select"
-    elif el.name.startswith("crowd-"):
-        return el.name
+    elif el.tag.startswith("crowd-"):
+        return el.tag
     return "text"
 
 
@@ -120,7 +122,8 @@ def fetch_dynamic_content(html_template: str) -> str:
 
 def numeric_equal(a: str, b: str) -> bool:
     """
-    Check if two strings are numerically equal, otherwise check normal equality
+    Check if two strings are numerically equal, otherwise check normal equality.
+    Need to use this because turkingbench dataset sometimes represents 1 as 1.0 etc.
 
     Args:
         a: The first string
@@ -132,6 +135,30 @@ def numeric_equal(a: str, b: str) -> bool:
         return float(a) == float(b)
     except ValueError:
         return a == b
+
+
+def verify_xpath(task: str, html_tree: etree.Element, el: etree.Element, xpath: str) -> bool:
+    """
+    Verify if the xpath is correct
+
+    Args:
+        task: The task
+        html_tree: The HTML tree
+        el: The element
+        xpath: The xpath
+
+    Returns:
+        Whether the xpath is correct (bool)
+
+    """
+    res = html_tree.xpath(xpath)
+    if not res:
+        print_error_once(f"Could not find element with xpath {xpath} in Task {task}")
+    elif len(res) > 1:
+        print_error_once(f"Found multiple elements with xpath {xpath} in Task {task}")
+    elif res[0] != el:
+        print_error_once(f"Element found with xpath does not match {xpath} in Task {task}")
+    return res and res[0] == el
 
 
 def process_data(data: dict) -> Trajectory:
@@ -152,10 +179,7 @@ def process_data(data: dict) -> Trajectory:
             continue
         # replaces '${col_name}' in html_template with raw_data["col_name"]
         html_template = html_template.replace(f"${{{key}}}", data[key])
-        if (
-            data["Task"] not in DYNAMICALLY_GENERATED_TASKS
-            and " name=" in data[key]
-        ):
+        if data["Task"] not in DYNAMICALLY_GENERATED_TASKS and " name=" in data[key]:
             # sometimes there are html snippets in these batch.csv columns
             # In that case, we should not use soup_cache
             # but if it's a dynamically generated html template that requires playwright
@@ -169,75 +193,113 @@ def process_data(data: dict) -> Trajectory:
         )
     ]
 
-    if use_cache and data["Task"] in SOUP_CACHE:
-        soup = SOUP_CACHE[data["Task"]]["_beautiful_soup"]
+    if use_cache and data["Task"] in ELEMENT_CACHE:
+        tree = ELEMENT_CACHE[data["Task"]]["_html_tree"]
+        input_elements = ELEMENT_CACHE[data["Task"]]["_input_elements"]
     else:
         if data["Task"] in DYNAMICALLY_GENERATED_TASKS:
             # the html_template has javascript that dynamically generates input elements
             # use playwright to run the javascript and get the modified html
             # Doesn't take care of all cases, for example if number of input elements changes based on user input
             html_template = fetch_dynamic_content(html_template)
-        soup = BeautifulSoup(html_template, "html.parser")
-        SOUP_CACHE[data["Task"]] = {"_beautiful_soup": soup}
+        tree = etree.HTML(html_template)
+        input_elements = tree.xpath(ALL_INPUT_ELEMENTS_XPATH)
+        ELEMENT_CACHE[data["Task"]] = {
+            "_html_tree": tree,
+            "_input_elements": input_elements,
+        }
 
-    for k, v in data["Answer"].items():
-        if not v.strip():
-            # if no value, that means no answer was provided or no checkbox/radio was selected
-            # so safe to ignore
+    for el in input_elements:
+        if (
+            get_element_type(el) == "hidden"
+            or not el.get("name")
+            or data["Answer"].get(el.get("name")) is None
+        ):
             continue
-        if use_cache and k in SOUP_CACHE[data["Task"]]:
-            input_element = SOUP_CACHE[data["Task"]][k]
-        else:
-            input_element = soup.find_all(INPUT_ELEMENTS, {"name": k})
-            SOUP_CACHE[data["Task"]][k] = input_element
-
-        if len(input_element) > 1:
-            if get_element_type(input_element[0]) in ["radio", "checkbox", "crowd-checkbox"]:
-                # default "value" for a radio/checkbox is "on" if no explicit value attribute is provided
-                input_element = [el for el in input_element if numeric_equal(v, el.get("value", "on"))]
-                if len(input_element) > 1:
-                    print_error_once(
-                        f"Found multiple elements with name {k} and value {v} in Task {data['Task']}"
-                    )
+        v = data["Answer"][el.get("name")].strip()
+        if get_element_type(el) in ["checkbox", "crowd-checkbox", "radio"]:
+            if el.get("value"):
+                xpath = f"//{el.tag}[@name='{el.get('name')}' and @type='{el.get('type')}' and @value='{el.get('value')}]"
             else:
-                print_error_once(
-                    f"Found multiple elements with name {k} in Task {data['Task']}"
-                )
-
-        if input_element:
-            el = input_element[0]
-            input_type = get_element_type(el)
-            action = ACTIONS.get(input_type)
-            if not action:
-                if "DEBUG" in os.environ:
-                    print_error_once(
-                        f"Could not find action for input element: type {input_type}, name {k}\n"
-                        f"  Task: {data['Task']}\n"
-                        f"  Title: {data['Title']}"
+                xpath = f"//{el.tag}[@name='{el.get('name')}' and @type='{el.get('type')}]"
+            if not verify_xpath(data["Task"], tree, el, xpath):
+                continue
+            if not v and el.get("checked"):
+                # this was a radio/checkbox that was initially checked
+                # but no answer was recorded, that means we need to uncheck it
+                content.append(ApiAction(function="click", kwargs={"xpath": xpath}))
+                del el.attrib["checked"]
+                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+            if v and not el.get("checked") and numeric_equal(v, el.get("value", "on")):
+                # this was a radio/checkbox that was initially unchecked
+                # but an answer was recorded, that means we need to check it
+                content.append(ApiAction(function="click", kwargs={"xpath": xpath}))
+                el.attrib["checked"] = "checked"
+                if get_element_type(el) == "radio":
+                    # uncheck all other radios in the group
+                    other_radios = tree.xpath(f"//input[@name='{el.get('name')}' and @type='radio']")
+                    for radio in other_radios:
+                        if radio.get("checked"):
+                            del radio.attrib["checked"]
+                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+        elif get_element_type(el) in ["range", "crowd-slider"]:
+            xpath = f"//{el.tag}[@name='{el.get('name')}' and @type='{el.get('type')}']" if el.get("type") else f"//{el.tag}[@name='{el.get('name')}']"
+            if not verify_xpath(data["Task"], tree, el, xpath):
+                continue
+            if v and not numeric_equal(v, el["value"]):
+                content.append(
+                    ApiAction(
+                        function="modify_range",
+                        kwargs={"xpath": xpath, "value": v},
                     )
+                )
+                el.attrib["value"] = v
+                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+        elif get_element_type(el) == "select":
+            xpath = f"//{el.tag}[@name='{el.get('name')}]"
+            if not verify_xpath(data["Task"], tree, el, xpath):
                 continue
-            if input_type == "hidden":
+            if el.get("multiple"):
+                print_error_once(f"Found multiple select element in Task {data['Task']}:\n{etree.tostring(el).decode()}")
+            options = el.xpath("./option")
+            # if the option is already selected, no need to select it again
+            if any([o.get("selected") and numeric_equal(o.get("value", o.text), v) for o in options]):
                 continue
-            xpath = f"//{el.name}[@name='{k}']"
-            if el.get("type"):
-                xpath = f"//{el.name}[@name='{k}' and @type='{el['type']}']"
-                if el["type"] in ["radio", "checkbox", "crowd-checkbox"] and el.get("value"):
-                    xpath = f"//{el.name}[@name='{k}' and @type='{el['type']}' and @value='{el['value']}']"
-            kwargs={"xpath": xpath}
-            if action != "click":
-                kwargs["value"] = v.strip()
-            api_action = ApiAction(function=action, kwargs=kwargs)
-            content.append(api_action)
+            # if the first option is selected by default and it's value is equal to the answer, no need to select it again
+            if numeric_equal(options[0].get("value", options[0].text), v) and all([o.get("selected") is None for o in options]):
+                continue
+            if any([numeric_equal(o.get("value", o.text), v) for o in options]):
+                content.append(
+                    ApiAction(
+                        function="select",
+                        kwargs={"xpath": xpath, "value": v},
+                    )
+                )
+                for option in options:
+                    if numeric_equal(option.get("value", option.text), v):
+                        option.attrib["selected"] = "selected"
+                    elif option.get("selected"):
+                        del option.attrib["selected"]
+                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+        elif get_element_type(el) in ["text", "textarea", "crowd-input"]:
+            xpath = f"//{el.tag}[@name='{el.get('name')}' and @type='{el.get('type')}']" if el.get("type") else f"//{el.tag}[@name='{el.get('name')}']"
+            if not verify_xpath(data["Task"], tree, el, xpath):
+                continue
+            text = el.text if el.tag == "textarea" else el.get("value")
+            if not numeric_equal(text, v):
+                content.append(
+                    ApiAction(
+                        function="type",
+                        kwargs={"xpath": xpath, "value": v},
+                    )
+                )
+                if el.tag == "textarea":
+                    el.text = v
+                else:
+                    el.attrib["value"] = v
+                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
         else:
-            # we can ignore "col_name.value" if a corresponding "col_name" is present
-            # github.com/JHU-CLSP/turking-bench/blob/5c842ada548a919b9d6130f628c8f30f7e8c8eac/src/utils/clean_csv.py#L55
-            if "." in k and k.rsplit(".", 1)[0] in data["Answer"]:
-                continue
-            # turkingbench sometimes autogenerates Answer.input_name_{n} not all of which may be present in the html
-            # log missing error only if the value is not null
-            if v.strip().lower() not in NULL_VALUES:
-                MISSING_COUNTS[data["Task"]][k] += 1
-            continue
+            print_error_once(f"Unhandled input element type: {get_element_type(el)}")
 
     return Trajectory(
         id=data["_id"],
