@@ -46,6 +46,10 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         return {"role": "user", "content": [{'type': 'text', 'text': prompt}]}
     
     if isinstance(event, ApiAction):
+        if event.function == 'goto': # could add more or condtions here for actions that don't require bid
+            api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
+            return {"role": "assistant", "content": f"ACTION: \n```{api_action}```\n"}
+
         # try to directly get the browsergym_id from the event kwargs
         browsergym_id = event.kwargs.get('element_id', None)
 
@@ -61,7 +65,8 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         else:
             api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
         previos_actions.extend([api_action])
-        return {"role": "assistant", "content": f"{event.description or ''}\n```{api_action}```\n"}
+        thought = "THOUGHT: " + event.description if event.description else ""
+        return {"role": "assistant", "content": f"{thought}\nACTION: \n```{api_action}```\n"}
 
     if isinstance(event, CodeAction):
         if 'python' in event.language:
@@ -108,8 +113,8 @@ for line in sys.stdin:
                 strict=False,  # less strict on the parsing of the actions
                 multiaction=True,  # enable to agent to take multiple actions at once
             )
-            system_message = get_web_system_message(details['task_description'], 
-                                                    action_space.describe(with_long_description=False, with_examples=True))
+            system_message = get_web_system_message(action_space.describe(with_long_description=False,
+                                                                           with_examples=True))
             conversations.extend([{"role": "system", "content": system_message}])
 
         for event in events:
