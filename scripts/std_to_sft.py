@@ -48,6 +48,7 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
     if isinstance(event, ApiAction):
         if event.function == 'goto': # could add more or condtions here for actions that don't require bid
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
+            previos_actions.extend([api_action])
             return {"role": "assistant", "content": f"ACTION: \n```{api_action}```\n"}
 
         # try to directly get the browsergym_id from the event kwargs
