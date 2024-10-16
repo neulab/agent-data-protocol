@@ -1,9 +1,21 @@
 import os
+import sys
 import pandas as pd
 import json
+import subprocess
 
 
 data_dir = os.path.join(os.path.dirname(__file__), "turking-bench", "tasks")
+if not os.path.exists(data_dir):
+    cmd = ["git", "clone", "--depth=1", "https://github.com/JHU-CLSP/turking-bench"]
+    print(" ".join(cmd), file=sys.stderr)
+    subprocess.run(
+        cmd,
+        cwd=os.path.dirname(__file__),
+        stdout=sys.stderr,
+        stderr=sys.stderr,
+    )
+assert os.path.isdir(data_dir)
 
 
 if __name__ == "__main__":
