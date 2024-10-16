@@ -76,6 +76,14 @@ if __name__ == "__main__":
         content: list = [
             TextObservation(
                 content=data.objective, source="user"
+            ),
+            
+            # The following placeholder ApiAction is added for building SFT data v-0.1
+            # Remove for other use cases
+            ApiAction(
+                function='goto',
+                kwargs={"url":f"https://synatra_info.github.io/tasks/task_{idx}"},
+                description="",
             )
         ]
         content.extend(convert_step(data))
