@@ -57,7 +57,6 @@ DYNAMICALLY_GENERATED_TASKS = set(
     ]
 )
 
-MISSING_COUNTS = defaultdict(lambda: defaultdict(int))
 ELEMENT_CACHE = {}
 
 
@@ -72,12 +71,17 @@ def get_element_type(el: any) -> str:
         The type of the input element (str)
 
     """
-    if el.get("type"):
-        return el.get("type")
-    elif el.tag == "select":
-        return "select"
+    if el.tag == "input":
+        if el.get("type") in ["radio", "checkbox", "range"] + ["hidden", "submit", "reset", "button"]:
+            return el.get("type")
+        else:
+            return "text"
+    elif el.tag in ["select", "textarea"]:
+        return el.tag
     elif el.tag.startswith("crowd-"):
         return el.tag
+    # maybe some custom input element
+    # as long as it stores text in 'value' attribute, we can treat it as a text input
     return "text"
 
 
@@ -159,7 +163,11 @@ def verify_xpath(task: str, html_tree: etree.Element, el: etree.Element, xpath: 
         Whether the xpath is correct (bool)
 
     """
-    res = html_tree.xpath(xpath)
+    try:
+        res = html_tree.xpath(xpath)
+    except Exception as e:
+        print_error_once(f"Invalid xpath: {xpath} in Task {task}")
+        raise e
     if not res:
         print_error_once(f"Could not find element with xpath {xpath} in Task {task}")
     elif len(res) > 1:
@@ -219,17 +227,16 @@ def process_data(data: dict) -> Trajectory:
 
     for el in input_elements:
         if (
-            get_element_type(el) == "hidden"
+            get_element_type(el) in ["hidden", "submit", "reset", "button"]
             or not el.get("name")
             or data["Answer"].get(el.get("name")) is None
         ):
             continue
         v = data["Answer"][el.get("name")].strip()
         if get_element_type(el) in ["checkbox", "crowd-checkbox", "radio"]:
-            if el.get("value"):
-                xpath = f"//{el.tag}[@name='{el.get('name')}' and @type='{el.get('type')}' and @value='{el.get('value')}]"
-            else:
-                xpath = f"//{el.tag}[@name='{el.get('name')}' and @type='{el.get('type')}]"
+            type_filter = f'and @type="{el.get('type')}"' if el.get("type") else ""
+            value_filter = f'and @value="{el.get('value')}"' if el.get("value") else ""
+            xpath = f'//{el.tag}[@name="{el.get('name')}" {type_filter} {value_filter}]'
             if not verify_xpath(data["Task"], tree, el, xpath):
                 continue
             if not v and el.get("checked"):
@@ -251,10 +258,11 @@ def process_data(data: dict) -> Trajectory:
                             del radio.attrib["checked"]
                 content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
         elif get_element_type(el) in ["range", "crowd-slider"]:
-            xpath = f"//{el.tag}[@name='{el.get('name')}' and @type='{el.get('type')}']" if el.get("type") else f"//{el.tag}[@name='{el.get('name')}']"
-            if not verify_xpath(data["Task"], tree, el, xpath):
-                continue
-            if v and not numeric_equal(v, el["value"]):
+            if v and not numeric_equal(v, el.get("value", "")):
+                type_filter = f'and @type="{el.get('type')}"' if el.get("type") else ""
+                xpath = f'//{el.tag}[@name="{el.get('name')}" {type_filter}]'
+                if not verify_xpath(data["Task"], tree, el, xpath):
+                    continue
                 content.append(
                     ApiAction(
                         function="modify_range",
@@ -264,36 +272,38 @@ def process_data(data: dict) -> Trajectory:
                 el.attrib["value"] = v
                 content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
         elif get_element_type(el) == "select":
-            xpath = f"//{el.tag}[@name='{el.get('name')}]"
+            xpath = f'//{el.tag}[@name="{el.get('name')}"]'
             if not verify_xpath(data["Task"], tree, el, xpath):
                 continue
-            if el.get("multiple"):
-                print_error_once(f"Found multiple select element in Task {data['Task']}:\n{etree.tostring(el).decode()}")
+            if el.get("multiple") is not None:
+                print_error_once(f"Found select element with 'multiple' attribute in Task {data['Task']}:\n{etree.tostring(el).decode()}")
             options = el.xpath("./option")
             # if the option is already selected, no need to select it again
-            if any([o.get("selected") and numeric_equal(o.get("value", o.text), v) for o in options]):
+            if any([o.get("selected") is not None and numeric_equal(o.get("value", o.text or ""), v) for o in options]):
                 continue
-            # if the first option is selected by default and it's value is equal to the answer, no need to select it again
-            if numeric_equal(options[0].get("value", options[0].text), v) and all([o.get("selected") is None for o in options]):
+            # if no option has 'selected' attribute, that means the first option is selected by default
+            if all([o.get("selected") is None for o in options]) and numeric_equal(options[0].get("value", options[0].text or ""), v):
                 continue
-            if any([numeric_equal(o.get("value", o.text), v) for o in options]):
+            if any([numeric_equal(o.get("value", o.text or ""), v) for o in options]):
                 content.append(
                     ApiAction(
                         function="select",
                         kwargs={"xpath": xpath, "value": v},
                     )
                 )
+                # select the option and unselect all other options
                 for option in options:
-                    if numeric_equal(option.get("value", option.text), v):
+                    if numeric_equal(option.get("value", option.text or ""), v):
                         option.attrib["selected"] = "selected"
                     elif option.get("selected"):
                         del option.attrib["selected"]
                 content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
         elif get_element_type(el) in ["text", "textarea", "crowd-input"]:
-            xpath = f"//{el.tag}[@name='{el.get('name')}' and @type='{el.get('type')}']" if el.get("type") else f"//{el.tag}[@name='{el.get('name')}']"
+            type_filter = f'and @type="{el.get('type')}"' if el.get("type") else ""
+            xpath = f'//{el.tag}[@name="{el.get('name')}" {type_filter}]'
             if not verify_xpath(data["Task"], tree, el, xpath):
                 continue
-            text = el.text if el.tag == "textarea" else el.get("value")
+            text = el.text or "" if el.tag == "textarea" else el.get("value", "")
             if not numeric_equal(text, v):
                 content.append(
                     ApiAction(
@@ -327,8 +337,3 @@ if __name__ == "__main__":
         data = SchemaRaw(**raw_data).model_dump()
         standardized_data = process_data(data)
         print(standardized_data.model_dump_json())
-
-    if "DEBUG" in os.environ:
-        for task, counts in MISSING_COUNTS.items():
-            for name, count in counts.items():
-                print(f"{task}\t{name}\t{count}", file=sys.stderr)
