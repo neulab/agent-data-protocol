@@ -19,6 +19,10 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     code_obs_regex = re.match(
         r"The output of the OS:\n(.*)", step["content"], re.DOTALL
     )
+
+    sql_act_regex = re.match(r"(.*)Action: Operation\n```sql\n(.*)\n```", step["content"], re.DOTALL)
+    sql_solution_regex = re.match(r"(.*)Action: Answer\nFinal Answer: (.*)", step["content"], re.DOTALL)
+
     if system_regex:
         if "You are an assistant" in system_regex.group(1):
             assert re.search(r'\"bash\"', system_regex.group(1), re.DOTALL)
@@ -43,8 +47,18 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             TextObservation(content=system_regex.group(1), source="system"),
             TextObservation(content=system_regex.group(2), source="user"),
         ]
+    # Special case for SQL
+    elif "I will ask you a question, then you should help me operate a MySQL database with SQL to answer the question." in step["content"]:
+        return [
+            TextObservation(content=step["content"], source="user"),
+        ]
+    # Special case for alfworld
+    elif "Interact with a household to solve a task." in step["content"]:
+        return [
+            TextObservation(content=step["content"], source="user"),
+        ]
     elif code_act_regex:
-        code_extract_regex = re.match(
+        bash_extract_regex = re.match(
             r"bash\n\n```bash\n(.*)\n```|bash \n\n```bash\n(.*)\n```|bash\n  \n```bash\n(.*)\n```", code_act_regex.group(2), re.DOTALL
         )
         answer_extract_regex = re.match(
@@ -53,11 +67,11 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         finish_extract_regex = re.match(
             r"finish", code_act_regex.group(2), re.DOTALL
         )
-        if code_extract_regex:
+        if bash_extract_regex:
             return [
                 CodeAction(
                     language="bash",
-                    content=code_extract_regex.group(1) or code_extract_regex.group(2) or code_extract_regex.group(3),
+                    content=bash_extract_regex.group(1) or bash_extract_regex.group(2) or bash_extract_regex.group(3),
                     description=code_act_regex.group(1),
                 ),
             ]
@@ -81,9 +95,28 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 "Could not extract code from code action in"
                 f" {json.dumps(step, indent=2)}"
             )
+    elif sql_act_regex:
+        return [
+            CodeAction(
+                language="mysql",
+                content=sql_act_regex.group(2),
+                description=sql_act_regex.group(1),
+            ),
+        ]
+    elif sql_solution_regex:
+        return [
+            MessageAction(
+                content=f"<solution> {sql_solution_regex.group(2)} </solution>",
+                description=sql_solution_regex.group(1)
+            ),
+        ]
     elif code_obs_regex:
         return [
             TextObservation(content=code_obs_regex.group(1), source="os"),
+        ]
+    elif step["content"].strip().lower() == "ok.":
+        return [
+            MessageAction(content="ok."),
         ]
     else:
         return [
