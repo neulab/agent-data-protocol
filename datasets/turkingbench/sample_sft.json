@@ -1,0 +1,164 @@
+[
+  {
+    "id": "ATOMIC - NL Rephrase Eval__0",
+    "conversations": [
+      {
+        "role": "system",
+        "content": "# Instructions\nReview the current state of the page and all other information to find the best\npossible next action to accomplish your goal. Your answer will be interpreted\nand executed by a program, make sure to follow the formatting instructions.\n\n# Goal:\nDetermine if phrases make sense and is grammatically correct, and if they are true or false.\n\n# Action Space\n\n16 different types of actions are available.\n\nnoop(wait_ms: float = 1000)\n    Examples:\n        noop()\n\n        noop(500)\n\nsend_msg_to_user(text: str)\n    Examples:\n        send_msg_to_user('Based on the results of my search, the city was built in 1751.')\n\nscroll(delta_x: float, delta_y: float)\n    Examples:\n        scroll(0, 200)\n\n        scroll(-50.2, -100.5)\n\nfill(bid: str, value: str)\n    Examples:\n        fill('237', 'example value')\n\n        fill('45', 'multi-line\\nexample')\n\n        fill('a12', 'example with \"quotes\"')\n\nselect_option(bid: str, options: str | list[str])\n    Examples:\n        select_option('a48', 'blue')\n\n        select_option('c48', ['red', 'green', 'blue'])\n\nclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'Meta', 'Shift']] = [])\n    Examples:\n        click('a51')\n\n        click('b22', button='right')\n\n        click('48', button='middle', modifiers=['Shift'])\n\ndblclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'Meta', 'Shift']] = [])\n    Examples:\n        dblclick('12')\n\n        dblclick('ca42', button='right')\n\n        dblclick('178', button='middle', modifiers=['Shift'])\n\nhover(bid: str)\n    Examples:\n        hover('b8')\n\npress(bid: str, key_comb: str)\n    Examples:\n        press('88', 'Backspace')\n\n        press('a26', 'Control+a')\n\n        press('a61', 'Meta+Shift+t')\n\nfocus(bid: str)\n    Examples:\n        focus('b455')\n\nclear(bid: str)\n    Examples:\n        clear('996')\n\ndrag_and_drop(from_bid: str, to_bid: str)\n    Examples:\n        drag_and_drop('56', '498')\n\nupload_file(bid: str, file: str | list[str])\n    Examples:\n        upload_file('572', 'my_receipt.pdf')\n\n        upload_file('63', ['/home/bob/Documents/image.jpg', '/home/bob/Documents/file.zip'])\n\ngo_back()\n    Examples:\n        go_back()\n\ngo_forward()\n    Examples:\n        go_forward()\n\ngoto(url: str)\n    Examples:\n        goto('http://www.example.com')\n\nMultiple actions can be provided at once, but will be executed sequentially without any feedback from the page.\nMore than 2-3 actions usually leads to failure or unexpected behavior. Example:\nfill('a12', 'example with \"quotes\"')\nclick('a51')\nclick('48', button='middle', modifiers=['Shift'])\n\n"
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "# Current Page URL:\nNone\n\n# Current Accessibility Tree:\nRootWebArea ''\n\t[12] heading 'Instructions (click to expand)'\n\t\t[13] button 'Instructions (click to expand)', expanded=True, controls='instructions'\n\t[17] paragraph ''\n\t\tStaticText 'Thanks for participating in this HIT!'\n\t[18] paragraph ''\n\t\tStaticText 'You will:'\n\t[20] list ''\n\t\t[21] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Read a short phrase.'\n\t\t[22] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Determine if the phrase makes sense and is grammatically correct.'\n\t\t[23] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Determine if the phrase is true or false.'\n\t\t\t[24] list ''\n\t\t\t\t[25] listitem ''\n\t\t\t\t\tListMarker '\u25e6'\n\t\t\t\t\t[26] emphasis ''\n\t\t\t\t\t\tStaticText 'Use the legend below to guide your answers:'\n\t\t\tStaticText 'true'\n\t\t\tStaticText 'Generally true.'\n\t\t\tStaticText 'false'\n\t\t\tStaticText 'Generally untrue.'\n\t\t\tStaticText 'unclear'\n\t\t\tStaticText \"Unclear - phrase makes sense, but isn't generally true or untrue.\"\n\t[39] heading 'Examples (click to expand)'\n\t\t[40] button 'Examples (click to expand)', expanded=True, controls='examples'\n\t[195] Section ''\n\t\tStaticText '1)'\n\t\tStaticText 'Use some soap and water to clean up.'\n\t\tStaticText 'a)'\n\t\t[204] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[207] radio '', checked='false'\n\t\t[208] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[210] radio 'No', checked='false'\n\t\t[211] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[218] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[221] LabelText ''\n\t\t\t[222] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[223] LabelText ''\n\t\t\t[224] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[225] LabelText ''\n\t\t\t[226] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '2)'\n\t\tStaticText 'one can keep their hands clean with gloves while working'\n\t\tStaticText 'a)'\n\t\t[234] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[237] radio '', checked='false'\n\t\t[238] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[240] radio 'No', checked='false'\n\t\t[241] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[248] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[251] LabelText ''\n\t\t\t[252] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[253] LabelText ''\n\t\t\t[254] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[255] LabelText ''\n\t\t\t[256] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '3)'\n\t\tStaticText 'You may want to bring an umbrella to walk under incase it rains.'\n\t\tStaticText 'a)'\n\t\t[264] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[267] radio '', checked='false'\n\t\t[268] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[270] radio 'No', checked='false'\n\t\t[271] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[278] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[281] LabelText ''\n\t\t\t[282] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[283] LabelText ''\n\t\t\t[284] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[285] LabelText ''\n\t\t\t[286] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '4)'\n\t\tStaticText 'A customer might write a check for the shirt using a checkbook'\n\t\tStaticText 'a)'\n\t\t[294] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[297] radio '', checked='false'\n\t\t[298] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[300] radio 'No', checked='false'\n\t\t[301] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[308] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[311] LabelText ''\n\t\t\t[312] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[313] LabelText ''\n\t\t\t[314] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[315] LabelText ''\n\t\t\t[316] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '5)'\n\t\tStaticText 'You can carry sweet delight in a sac.'\n\t\tStaticText 'a)'\n\t\t[324] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[327] radio '', checked='false'\n\t\t[328] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[330] radio 'No', checked='false'\n\t\t[331] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[338] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[341] LabelText ''\n\t\t\t[342] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[343] LabelText ''\n\t\t\t[344] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[345] LabelText ''\n\t\t\t[346] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\t[349] paragraph ''\n\t\t\tStaticText '(Optional) Please let us know if anything was unclear, if you experienced any issues, or if you have any other fedback for us.'\n\t\t[350] textbox ''\n\t\t[353] button 'Submit'\n\n# Previous Actions\n[]\n\nHere is an example with chain of thought of a valid action when clicking on a button:\n\"\nIn order to accomplish my goal I need to click on the button with bid 12\n```click(\"12\")```\n\""
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=207)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=237)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=267)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=297)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=327)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=222)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=252)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=282)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=312)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=342)```\n"
+      }
+    ]
+  },
+  {
+    "id": "ATOMIC - NL Rephrase Eval__1",
+    "conversations": [
+      {
+        "role": "system",
+        "content": "# Instructions\nReview the current state of the page and all other information to find the best\npossible next action to accomplish your goal. Your answer will be interpreted\nand executed by a program, make sure to follow the formatting instructions.\n\n# Goal:\nDetermine if phrases make sense and is grammatically correct, and if they are true or false.\n\n# Action Space\n\n16 different types of actions are available.\n\nnoop(wait_ms: float = 1000)\n    Examples:\n        noop()\n\n        noop(500)\n\nsend_msg_to_user(text: str)\n    Examples:\n        send_msg_to_user('Based on the results of my search, the city was built in 1751.')\n\nscroll(delta_x: float, delta_y: float)\n    Examples:\n        scroll(0, 200)\n\n        scroll(-50.2, -100.5)\n\nfill(bid: str, value: str)\n    Examples:\n        fill('237', 'example value')\n\n        fill('45', 'multi-line\\nexample')\n\n        fill('a12', 'example with \"quotes\"')\n\nselect_option(bid: str, options: str | list[str])\n    Examples:\n        select_option('a48', 'blue')\n\n        select_option('c48', ['red', 'green', 'blue'])\n\nclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'Meta', 'Shift']] = [])\n    Examples:\n        click('a51')\n\n        click('b22', button='right')\n\n        click('48', button='middle', modifiers=['Shift'])\n\ndblclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'Meta', 'Shift']] = [])\n    Examples:\n        dblclick('12')\n\n        dblclick('ca42', button='right')\n\n        dblclick('178', button='middle', modifiers=['Shift'])\n\nhover(bid: str)\n    Examples:\n        hover('b8')\n\npress(bid: str, key_comb: str)\n    Examples:\n        press('88', 'Backspace')\n\n        press('a26', 'Control+a')\n\n        press('a61', 'Meta+Shift+t')\n\nfocus(bid: str)\n    Examples:\n        focus('b455')\n\nclear(bid: str)\n    Examples:\n        clear('996')\n\ndrag_and_drop(from_bid: str, to_bid: str)\n    Examples:\n        drag_and_drop('56', '498')\n\nupload_file(bid: str, file: str | list[str])\n    Examples:\n        upload_file('572', 'my_receipt.pdf')\n\n        upload_file('63', ['/home/bob/Documents/image.jpg', '/home/bob/Documents/file.zip'])\n\ngo_back()\n    Examples:\n        go_back()\n\ngo_forward()\n    Examples:\n        go_forward()\n\ngoto(url: str)\n    Examples:\n        goto('http://www.example.com')\n\nMultiple actions can be provided at once, but will be executed sequentially without any feedback from the page.\nMore than 2-3 actions usually leads to failure or unexpected behavior. Example:\nfill('a12', 'example with \"quotes\"')\nclick('a51')\nclick('48', button='middle', modifiers=['Shift'])\n\n"
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "# Current Page URL:\nNone\n\n# Current Accessibility Tree:\nRootWebArea ''\n\t[12] heading 'Instructions (click to expand)'\n\t\t[13] button 'Instructions (click to expand)', expanded=True, controls='instructions'\n\t[17] paragraph ''\n\t\tStaticText 'Thanks for participating in this HIT!'\n\t[18] paragraph ''\n\t\tStaticText 'You will:'\n\t[20] list ''\n\t\t[21] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Read a short phrase.'\n\t\t[22] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Determine if the phrase makes sense and is grammatically correct.'\n\t\t[23] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Determine if the phrase is true or false.'\n\t\t\t[24] list ''\n\t\t\t\t[25] listitem ''\n\t\t\t\t\tListMarker '\u25e6'\n\t\t\t\t\t[26] emphasis ''\n\t\t\t\t\t\tStaticText 'Use the legend below to guide your answers:'\n\t\t\tStaticText 'true'\n\t\t\tStaticText 'Generally true.'\n\t\t\tStaticText 'false'\n\t\t\tStaticText 'Generally untrue.'\n\t\t\tStaticText 'unclear'\n\t\t\tStaticText \"Unclear - phrase makes sense, but isn't generally true or untrue.\"\n\t[39] heading 'Examples (click to expand)'\n\t\t[40] button 'Examples (click to expand)', expanded=True, controls='examples'\n\t[195] Section ''\n\t\tStaticText '1)'\n\t\tStaticText 'Use some soap and water to clean up.'\n\t\tStaticText 'a)'\n\t\t[204] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[207] radio '', checked='false'\n\t\t[208] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[210] radio 'No', checked='false'\n\t\t[211] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[218] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[221] LabelText ''\n\t\t\t[222] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[223] LabelText ''\n\t\t\t[224] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[225] LabelText ''\n\t\t\t[226] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '2)'\n\t\tStaticText 'one can keep their hands clean with gloves while working'\n\t\tStaticText 'a)'\n\t\t[234] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[237] radio '', checked='false'\n\t\t[238] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[240] radio 'No', checked='false'\n\t\t[241] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[248] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[251] LabelText ''\n\t\t\t[252] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[253] LabelText ''\n\t\t\t[254] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[255] LabelText ''\n\t\t\t[256] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '3)'\n\t\tStaticText 'You may want to bring an umbrella to walk under incase it rains.'\n\t\tStaticText 'a)'\n\t\t[264] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[267] radio '', checked='false'\n\t\t[268] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[270] radio 'No', checked='false'\n\t\t[271] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[278] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[281] LabelText ''\n\t\t\t[282] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[283] LabelText ''\n\t\t\t[284] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[285] LabelText ''\n\t\t\t[286] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '4)'\n\t\tStaticText 'A customer might write a check for the shirt using a checkbook'\n\t\tStaticText 'a)'\n\t\t[294] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[297] radio '', checked='false'\n\t\t[298] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[300] radio 'No', checked='false'\n\t\t[301] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[308] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[311] LabelText ''\n\t\t\t[312] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[313] LabelText ''\n\t\t\t[314] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[315] LabelText ''\n\t\t\t[316] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '5)'\n\t\tStaticText 'You can carry sweet delight in a sac.'\n\t\tStaticText 'a)'\n\t\t[324] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[327] radio '', checked='false'\n\t\t[328] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[330] radio 'No', checked='false'\n\t\t[331] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[338] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[341] LabelText ''\n\t\t\t[342] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[343] LabelText ''\n\t\t\t[344] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[345] LabelText ''\n\t\t\t[346] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\t[349] paragraph ''\n\t\t\tStaticText '(Optional) Please let us know if anything was unclear, if you experienced any issues, or if you have any other fedback for us.'\n\t\t[350] textbox ''\n\t\t[353] button 'Submit'\n\n# Previous Actions\n[]\n\nHere is an example with chain of thought of a valid action when clicking on a button:\n\"\nIn order to accomplish my goal I need to click on the button with bid 12\n```click(\"12\")```\n\""
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=207)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=237)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=267)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=300)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=330)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=222)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=252)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=282)```\n"
+      }
+    ]
+  },
+  {
+    "id": "ATOMIC - NL Rephrase Eval__2",
+    "conversations": [
+      {
+        "role": "system",
+        "content": "# Instructions\nReview the current state of the page and all other information to find the best\npossible next action to accomplish your goal. Your answer will be interpreted\nand executed by a program, make sure to follow the formatting instructions.\n\n# Goal:\nDetermine if phrases make sense and is grammatically correct, and if they are true or false.\n\n# Action Space\n\n16 different types of actions are available.\n\nnoop(wait_ms: float = 1000)\n    Examples:\n        noop()\n\n        noop(500)\n\nsend_msg_to_user(text: str)\n    Examples:\n        send_msg_to_user('Based on the results of my search, the city was built in 1751.')\n\nscroll(delta_x: float, delta_y: float)\n    Examples:\n        scroll(0, 200)\n\n        scroll(-50.2, -100.5)\n\nfill(bid: str, value: str)\n    Examples:\n        fill('237', 'example value')\n\n        fill('45', 'multi-line\\nexample')\n\n        fill('a12', 'example with \"quotes\"')\n\nselect_option(bid: str, options: str | list[str])\n    Examples:\n        select_option('a48', 'blue')\n\n        select_option('c48', ['red', 'green', 'blue'])\n\nclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'Meta', 'Shift']] = [])\n    Examples:\n        click('a51')\n\n        click('b22', button='right')\n\n        click('48', button='middle', modifiers=['Shift'])\n\ndblclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'Meta', 'Shift']] = [])\n    Examples:\n        dblclick('12')\n\n        dblclick('ca42', button='right')\n\n        dblclick('178', button='middle', modifiers=['Shift'])\n\nhover(bid: str)\n    Examples:\n        hover('b8')\n\npress(bid: str, key_comb: str)\n    Examples:\n        press('88', 'Backspace')\n\n        press('a26', 'Control+a')\n\n        press('a61', 'Meta+Shift+t')\n\nfocus(bid: str)\n    Examples:\n        focus('b455')\n\nclear(bid: str)\n    Examples:\n        clear('996')\n\ndrag_and_drop(from_bid: str, to_bid: str)\n    Examples:\n        drag_and_drop('56', '498')\n\nupload_file(bid: str, file: str | list[str])\n    Examples:\n        upload_file('572', 'my_receipt.pdf')\n\n        upload_file('63', ['/home/bob/Documents/image.jpg', '/home/bob/Documents/file.zip'])\n\ngo_back()\n    Examples:\n        go_back()\n\ngo_forward()\n    Examples:\n        go_forward()\n\ngoto(url: str)\n    Examples:\n        goto('http://www.example.com')\n\nMultiple actions can be provided at once, but will be executed sequentially without any feedback from the page.\nMore than 2-3 actions usually leads to failure or unexpected behavior. Example:\nfill('a12', 'example with \"quotes\"')\nclick('a51')\nclick('48', button='middle', modifiers=['Shift'])\n\n"
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "# Current Page URL:\nNone\n\n# Current Accessibility Tree:\nRootWebArea ''\n\t[12] heading 'Instructions (click to expand)'\n\t\t[13] button 'Instructions (click to expand)', expanded=True, controls='instructions'\n\t[17] paragraph ''\n\t\tStaticText 'Thanks for participating in this HIT!'\n\t[18] paragraph ''\n\t\tStaticText 'You will:'\n\t[20] list ''\n\t\t[21] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Read a short phrase.'\n\t\t[22] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Determine if the phrase makes sense and is grammatically correct.'\n\t\t[23] listitem ''\n\t\t\tListMarker '0.'\n\t\t\tStaticText 'Determine if the phrase is true or false.'\n\t\t\t[24] list ''\n\t\t\t\t[25] listitem ''\n\t\t\t\t\tListMarker '\u25e6'\n\t\t\t\t\t[26] emphasis ''\n\t\t\t\t\t\tStaticText 'Use the legend below to guide your answers:'\n\t\t\tStaticText 'true'\n\t\t\tStaticText 'Generally true.'\n\t\t\tStaticText 'false'\n\t\t\tStaticText 'Generally untrue.'\n\t\t\tStaticText 'unclear'\n\t\t\tStaticText \"Unclear - phrase makes sense, but isn't generally true or untrue.\"\n\t[39] heading 'Examples (click to expand)'\n\t\t[40] button 'Examples (click to expand)', expanded=True, controls='examples'\n\t[195] Section ''\n\t\tStaticText '1)'\n\t\tStaticText 'Use some soap and water to clean up.'\n\t\tStaticText 'a)'\n\t\t[204] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[207] radio '', checked='false'\n\t\t[208] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[210] radio 'No', checked='false'\n\t\t[211] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[218] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[221] LabelText ''\n\t\t\t[222] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[223] LabelText ''\n\t\t\t[224] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[225] LabelText ''\n\t\t\t[226] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '2)'\n\t\tStaticText 'one can keep their hands clean with gloves while working'\n\t\tStaticText 'a)'\n\t\t[234] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[237] radio '', checked='false'\n\t\t[238] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[240] radio 'No', checked='false'\n\t\t[241] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[248] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[251] LabelText ''\n\t\t\t[252] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[253] LabelText ''\n\t\t\t[254] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[255] LabelText ''\n\t\t\t[256] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '3)'\n\t\tStaticText 'You may want to bring an umbrella to walk under incase it rains.'\n\t\tStaticText 'a)'\n\t\t[264] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[267] radio '', checked='false'\n\t\t[268] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[270] radio 'No', checked='false'\n\t\t[271] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[278] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[281] LabelText ''\n\t\t\t[282] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[283] LabelText ''\n\t\t\t[284] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[285] LabelText ''\n\t\t\t[286] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '4)'\n\t\tStaticText 'A customer might write a check for the shirt using a checkbook'\n\t\tStaticText 'a)'\n\t\t[294] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[297] radio '', checked='false'\n\t\t[298] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[300] radio 'No', checked='false'\n\t\t[301] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[308] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[311] LabelText ''\n\t\t\t[312] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[313] LabelText ''\n\t\t\t[314] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[315] LabelText ''\n\t\t\t[316] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\tStaticText '5)'\n\t\tStaticText 'You can carry sweet delight in a sac.'\n\t\tStaticText 'a)'\n\t\t[324] emphasis ''\n\t\t\tStaticText 'Does this phrase make sense? Is it grammatically correct?'\n\t\t[327] radio '', checked='false'\n\t\t[328] LabelText ''\n\t\t\tStaticText 'Yes'\n\t\t[330] radio 'No', checked='false'\n\t\t[331] LabelText ''\n\t\t\tStaticText 'No'\n\t\tStaticText 'b)'\n\t\t[338] emphasis ''\n\t\t\tStaticText 'Is it true or false?'\n\t\t[341] LabelText ''\n\t\t\t[342] radio '', checked='false'\n\t\t\tStaticText 'true'\n\t\t[343] LabelText ''\n\t\t\t[344] radio '', checked='false'\n\t\t\tStaticText 'false'\n\t\t[345] LabelText ''\n\t\t\t[346] radio '', checked='false'\n\t\t\tStaticText 'unclear'\n\t\t[349] paragraph ''\n\t\t\tStaticText '(Optional) Please let us know if anything was unclear, if you experienced any issues, or if you have any other fedback for us.'\n\t\t[350] textbox ''\n\t\t[353] button 'Submit'\n\n# Previous Actions\n[]\n\nHere is an example with chain of thought of a valid action when clicking on a button:\n\"\nIn order to accomplish my goal I need to click on the button with bid 12\n```click(\"12\")```\n\""
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=207)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=237)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=267)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=297)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=330)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=222)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=252)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=282)```\n"
+      },
+      {
+        "role": "assistant",
+        "content": "\n```click(bid=312)```\n"
+      }
+    ]
+  }
+]

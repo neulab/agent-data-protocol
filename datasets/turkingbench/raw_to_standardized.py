@@ -205,7 +205,7 @@ def process_data(data: dict) -> Trajectory:
 
     content: list = [
         WebObservation(
-            html=html_template, url=None, viewport_size=None, image_observation=None
+            html=html_template, axtree=None, url=None, viewport_size=None, image_observation=None
         )
     ]
 
@@ -325,7 +325,7 @@ def process_data(data: dict) -> Trajectory:
         details={
             "task": data["Task"],
             "title": data["Title"],
-            "description": data["Description"],
+            "task_description": data["Description"],
             "keywords": data["Keywords"],
         },
     )

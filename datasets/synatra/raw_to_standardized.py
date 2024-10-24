@@ -12,10 +12,11 @@ from trajectory import Trajectory as synatra_trajectory
 
 def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
     web_observation = WebObservation(
-        html=step.obs,
+        html=None,
+        axtree=step.obs + "\n\n# Previous Actions\n"+ step.history.replace("element_id", "bid"),
         image_observation=None,
         viewport_size=None,
-        url=None,
+        url=step.website,
     )
 
     kwargs = {}
@@ -49,7 +50,6 @@ def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
         "sub_task": step.next_action.subtask,
         "CoT": step.next_action.cot,
         "action_description": step.next_action.action_description,
-        "history": step.history,
     }
     api_action = ApiAction(
         function=function,
@@ -78,11 +78,16 @@ if __name__ == "__main__":
                 content=data.objective, source="user"
             )
         ]
+
         content.extend(convert_step(data))
 
         standardized_data = Trajectory(
             id=str(idx),
             content=content,
+            details = {
+                "task_description": data.objective,
+                "website": data.website,
+            }
         )
         
         idx+=1

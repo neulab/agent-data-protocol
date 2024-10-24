@@ -26,6 +26,25 @@ from webarena_utils import (
     Observation,
     png_bytes_to_numpy,
 )
+from lxml import html
+
+def fix_iframes(html_str: str) -> str:
+    """
+    Fix iframes by moving their HTML child elements to the srcdoc attribute.
+    
+    Args:
+        html_str (str): HTML string
+    
+    """
+    document = html.fromstring(html_str)
+    for iframe in document.xpath('//iframe'):
+        if iframe.attrib.get('src') or iframe.attrib.get('srcdoc'):
+            continue
+        iframe_content = ''.join(html.tostring(e, encoding='unicode') for e in iframe)
+        iframe.attrib['srcdoc'] = f"{iframe_content}"
+        for child in iframe:
+            iframe.remove(child)
+    return etree.tostring(document, pretty_print=True, encoding='unicode', method='html')
 
 
 def fetch_browser_info(
@@ -210,14 +229,10 @@ def process_trace(trace_file, page, record):
 
 def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[WebObservation, ApiAction]:
     
-    soup = BeautifulSoup(step.raw_html, 'html.parser')
-    elements_with_attribute = soup.find_all(attrs={"data_pw_testid_buckeye": True})
-    for element in elements_with_attribute:
-        del element['data_pw_testid_buckeye']
-    raw_html_no_label = soup.prettify()
 
     web_observation = WebObservation(
-        html=raw_html_no_label,
+        axtree=None,
+        html=fix_iframes(step.raw_html),
         # TODO: this should be added to the schema
         # https://github.com/neulab/agent-data-collection/issues/26
         image_observation=None,
@@ -239,7 +254,7 @@ def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[We
 
     api_action = ApiAction(
         function=step.operation.op.lower(),
-        kwargs={"value": step.operation.value, "xpath": xpath} if step.operation.value else {"xpath": xpath},
+        kwargs={"xpath": xpath, "value": step.operation.value} if step.operation.value else {"xpath": xpath},
         description=None,
     )
     return web_observation, api_action
@@ -300,9 +315,12 @@ if __name__ == "__main__":
 
         content: list = [
             TextObservation(
-                content=data.confirmed_task, source="user"
+                content= f"Go to the website https://www.{data.website}.com and {data.confirmed_task}", source="user"
             )
         ]
+
+        content.extend([ApiAction(function="goto", kwargs={"url": f"https://www.{data.website}.com" }, description=None)])
+
         for action in data.actions:
             content.extend(convert_step(action,info_mapping,data.annotation_id))
 
@@ -312,9 +330,10 @@ if __name__ == "__main__":
             details={
                 "website": data.website,
                 "domain": data.domain,
-                "confirmed_task": data.confirmed_task,
+                "task_description": data.confirmed_task,
                 "subdomain": data.subdomain,
             },
         )
         # Print the standardized data
         print(standardized_data.model_dump_json())
+        

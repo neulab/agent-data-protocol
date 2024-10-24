@@ -19,6 +19,6 @@ class Step(BaseModel):
 class SchemaRaw(BaseModel):
     shortcode: str
     description: str
-    status: str
+    status: Optional[str] = None
     tasks: List[str]
     data: List[Step]
