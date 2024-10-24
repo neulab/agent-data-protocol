@@ -22,7 +22,14 @@ if __name__ == "__main__":
     for task in os.listdir(data_dir):
         with open(os.path.join(data_dir, task, "template.html"), "r") as f:
             template = f.read()
-        data = pd.read_csv(os.path.join(data_dir, task, "batch.csv"), dtype=str)
+        na_values = ["{}", "'{}'"]
+        data = pd.read_csv(
+            os.path.join(data_dir, task, "batch.csv"),
+            dtype=str,
+            na_filter=True,
+            keep_default_na=False,
+            na_values=na_values,
+        )
 
         data["Task"] = task
         data["Template"] = template
