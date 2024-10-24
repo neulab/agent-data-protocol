@@ -35,6 +35,7 @@ args = parser.parse_args()
 
 def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previos_actions: list) -> dict:
     # NOTE for KETAN: deal with the different types of events later
+    # The Web and API Actions are based on Browsergym's schema. So use normal actions if the style is different to HTML/AXTree
     if isinstance(event, WebObservation):
         if event.axtree is not None:
             axtree = event.axtree
@@ -72,16 +73,18 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
     if isinstance(event, CodeAction):
         if 'python' in event.language:
             event.language = 'ipython'
-        return {"role": "assistant", "content": f"{event.description}\n<execute_{event.language}>\n{event.content}\n</execute_{event.language}>"}
+        thought = "THOUGHT: " + event.description + "\n\n" if event.description else ""
+        return {"role": "assistant", "content": f"{thought}ACTION: <execute_{event.language}>\n{event.content}\n</execute_{event.language}>"}
     
     elif isinstance(event, MessageAction):
         # print(event.content)
-        return {"role": "assistant", "content": f"THINK: {event.description}\nACT: {event.content}"} if event.description else {"role": "assistant", "content": f"ACT: {event.content}"}
+        thought = "THOUGHT: " + event.description + "\n\n" if event.description else ""
+        return {"role": "assistant", "content": f"{thought}ACTION: {event.content}"}
     
     elif isinstance(event, TextObservation):
         # I had this earlier to include source in the message, but OpenHands does not have that and has bash executions as user messages
         #return {"role": event.source, "content": event.content} if event.source == "user" or event.source=='system' else {"role": "user", "content": f"OBSERVATION from {event.source}: {event.content}"}
-        return {"role": event.source, "content": event.content} if event.source == "user" or event.source=='system' else {"role": "user", "content": [{'type': 'text', 'text': f"OBSERVATION:\n{event.content}"}]}
+        return {"role": event.source, "content": event.content} if event.source in ["user", "system", "assistant"] else {"role": "user", "content": [{'type': 'text', 'text': f"OBSERVATION:\n{event.content}"}]}
 
     else:
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
