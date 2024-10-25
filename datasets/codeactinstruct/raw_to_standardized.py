@@ -11,7 +11,7 @@ from schema.trajectory import Trajectory
 
 
 TOOL_DESCRIPTION = "Tool function available (already imported in <execute> environment):"
-WARNING_MSG = "Observation:\nI don't understand your input. \nIf you want to execute code, please use <execute_ipython> YOUR_CODE_HERE </execute_ipython>.\nIf you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>.\nFor example: The answer to the question is <solution> 42 </solution>."
+WARNING_MSG = "Observation:\nI don't understand your input. \nIf you want to execute code, please use <execute> YOUR_CODE_HERE </execute>.\nIf you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>.\nFor example: The answer to the question is <solution> 42 </solution>."
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     global APIS
@@ -30,8 +30,6 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
 
     assert step["role"] in ["assistant", "user"], f"Invalid role: {step['role']}"
-    step["content"] = re.sub(r'<execute>', r'<execute_ipython>', step["content"])
-    step["content"] = re.sub(r'</execute>', r'</execute_ipython>', step["content"])
     task_regex = re.match(r"Task:\n(.*)", step["content"], re.DOTALL)
     solution_regex = re.match(r"(.*)<solution>(.*)</solution>", step["content"], re.DOTALL)
     execute_regex = re.match(r"(.*)<execute>(.*)</execute>", step["content"], re.DOTALL)
