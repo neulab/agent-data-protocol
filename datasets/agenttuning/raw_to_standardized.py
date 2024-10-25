@@ -89,9 +89,9 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 TextObservation(content="Ok? Understood?", source="user"),
             ] 
         
+        # Now I will start a new problem
         return [
-            TextObservation(content=system_regex.group(1), source="system"),
-            TextObservation(content=system_regex.group(2), source="user"),
+            TextObservation(content=system_regex.group(1)+system_regex.group(2), source="user")
         ]
     
     # Special case for SQL
@@ -175,7 +175,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         
         return [
             TextObservation(content=step["content"].replace('Thought:', 'THOUGHT:').replace('Action:', 'ACTION:').replace("Observation:", "OBSERVATION:"),
-                            source= step["role"] or "user"),
+                            source= step["role"] if step["role"]!="system" else "user"),
         ]
 
 
