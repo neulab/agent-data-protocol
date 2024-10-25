@@ -59,6 +59,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
             return [
                 TextObservation(content=sys_sql_subs, source="system"),
+                TextObservation(content="Ok? Understood?", source="user"),
             ]
         elif "You are web shopping" in system_regex.group(1):
             webshop_sys_msg = system_regex.group(1) + "\nclick[something]"
@@ -69,6 +70,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
             return [
                 TextObservation(content=thought_subs, source="system"),
+                TextObservation(content="Ok? Understood?", source="user"),
             ]
         
         elif "You are an agent that answers questions" in system_regex.group(1):
@@ -77,12 +79,14 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             answer_sub = re.sub(r'Final Answer: #3', r'ACTION: <solution> #3 </solution>', system_regex.group(1))
             return [
                 TextObservation(content=answer_sub, source="system"),
+                TextObservation(content="Ok? Understood?", source="user"),
             ]
         
         elif "Interact with a household to solve a task" in system_regex.group(1):
             
             return [
                 TextObservation(content=system_regex.group(1), source="system"),
+                TextObservation(content="Ok? Understood?", source="user"),
             ] 
         
         return [
