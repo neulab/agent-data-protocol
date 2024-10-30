@@ -50,3 +50,27 @@ pytest tests/test_curated_schemas.py
 ### Step 3: Write README
 
 Write a README.md file in the dataset directory that describes the dataset, including the source, the format, and any other relevant information.
+
+## Downloading and Converting Full Data to SFT Format
+
+We prefer to use `.jsonl` files for downloading the full datasets
+
+### Step 1: Download Full Raw Data
+
+```bash
+export MY_DATASET=dataset_name
+python datasets/$MY_DATASET/extract_raw.py > datasets/$MY_DATASET/full_raw.jsonl
+```
+
+### Step 2: Convert Raw Data to the Standardized Schema
+
+```bash
+export PYTHONPATH=`pwd`:$PYTHONPATH
+cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_standardized.py > datasets/$MY_DATASET/full_std.jsonl
+```
+### Step 3: Convert Standardized Data to SFT Format
+
+```bash
+cat datasets/$MY_DATASET/full_std.jsonl | python -u scripts/std_to_sft.py --is_web=no --chunk=all > datasets/$MY_DATASET/full_sft.jsonl
+```
+Use `--is_web=yes` for web only based datasets like `mind2web, synatra`
