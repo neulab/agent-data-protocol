@@ -258,13 +258,13 @@ def process_data(data: dict) -> Trajectory:
                 # this was a radio/checkbox that was initially unchecked
                 # but an answer was recorded, that means we need to check it
                 content.append(ApiAction(function="click", kwargs={"xpath": xpath}))
-                el.attrib["checked"] = "checked"
                 if get_element_type(el) == "radio":
                     # uncheck all other radios in the group
                     other_radios = tree.xpath(f"//input[@name='{el.get('name')}' and @type='radio']")
                     for radio in other_radios:
                         if radio.get("checked"):
                             del radio.attrib["checked"]
+                el.attrib["checked"] = "checked"
                 content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
         elif get_element_type(el) in ["range", "crowd-slider"]:
             if v and not numeric_equal(v, el.get("value", "")):
