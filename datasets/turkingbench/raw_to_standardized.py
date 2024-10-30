@@ -204,15 +204,6 @@ def process_data(data: dict) -> Trajectory:
             # (the 11 dynamically_generated_tasks don't have html snippets in batch.csv anyway)
             use_cache = False
 
-    fake_url = f"https://turkingbench.github.io/tasks/{urllib.parse.quote(data['_id'])}"
-    content: list = [
-        TextObservation(content=f"Go to {fake_url} and follow the instructions on the page", source="user"),
-        ApiAction(function="goto", kwargs={"url": fake_url}),
-        WebObservation(
-            html=html_template, axtree=None, url=None, viewport_size=None, image_observation=None
-        )
-    ]
-
     if use_cache and data["Task"] in ELEMENT_CACHE:
         tree = ELEMENT_CACHE[data["Task"]]["_html_tree"]
         input_elements = ELEMENT_CACHE[data["Task"]]["_input_elements"]
@@ -228,6 +219,15 @@ def process_data(data: dict) -> Trajectory:
             "_html_tree": tree,
             "_input_elements": input_elements,
         }
+
+    fake_url = f"https://turkingbench.github.io/tasks/{urllib.parse.quote(data['_id'])}"
+    content: list = [
+        TextObservation(content=f"Go to {fake_url} and follow the instructions on the page", source="user"),
+        ApiAction(function="goto", kwargs={"url": fake_url}),
+        WebObservation(
+            html=html_template, axtree=None, url=None, viewport_size=None, image_observation=None
+        )
+    ]
 
     for el in input_elements:
         if (
