@@ -105,6 +105,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             TextObservation(content=step["content"], source="user").replace('Thought:', 'THOUGHT:').replace('Action:', 'ACTION:'),
         ]
 
+
     elif code_act_regex:
         bash_extract_regex = re.match(
             r"bash\n\n```bash\n(.*)\n```|bash \n\n```bash\n(.*)\n```|bash\n  \n```bash\n(.*)\n```", code_act_regex.group(2), re.DOTALL
