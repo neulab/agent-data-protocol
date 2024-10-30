@@ -43,3 +43,14 @@ def modify_range(xpath: str, value: str) -> None:
 
     """
     pass
+
+
+def goto(url: str) -> None:
+    """Type some text into an input element.
+
+    Args:
+    ----
+        url (str): The url of the website to go to.
+
+    """
+    pass

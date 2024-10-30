@@ -4,11 +4,12 @@ import json
 
 from schema.action.api import ApiAction
 from schema.observation.web import WebObservation
+from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw
-from collections import defaultdict
 from playwright.sync_api import sync_playwright
 from lxml import etree
+import urllib.parse
 
 
 
@@ -203,7 +204,10 @@ def process_data(data: dict) -> Trajectory:
             # (the 11 dynamically_generated_tasks don't have html snippets in batch.csv anyway)
             use_cache = False
 
+    fake_url = f"https://turkingbench.github.io/tasks/{urllib.parse.quote(data['_id'])}"
     content: list = [
+        TextObservation(content=f"Go to {fake_url} and follow the instructions on the page", source="user"),
+        ApiAction(function="goto", kwargs={"url": fake_url}),
         WebObservation(
             html=html_template, axtree=None, url=None, viewport_size=None, image_observation=None
         )
