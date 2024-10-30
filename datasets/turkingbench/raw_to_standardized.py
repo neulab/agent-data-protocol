@@ -249,7 +249,12 @@ def process_data(data: dict) -> Trajectory:
                 content.append(ApiAction(function="click", kwargs={"xpath": xpath}))
                 del el.attrib["checked"]
                 content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
-            if v and not el.get("checked") and numeric_equal(v, el.get("value", "on")):
+            values_are_equal = numeric_equal(v, el.get("value", "on"))
+            if not values_are_equal and get_element_type(el) in ["checkbox", "crowd-checkbox"] and '|' in v:
+                # turkingbench represents multiple selected checkboxes with the same name
+                # but different values as a single string of values separated by '|'
+                values_are_equal = any([numeric_equal(value, el.get("value", "on")) for value in v.split('|')])
+            if v and not el.get("checked") and values_are_equal:
                 # this was a radio/checkbox that was initially unchecked
                 # but an answer was recorded, that means we need to check it
                 content.append(ApiAction(function="click", kwargs={"xpath": xpath}))
