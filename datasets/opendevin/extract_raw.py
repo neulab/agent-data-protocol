@@ -1,13 +1,9 @@
-import tempfile
-import urllib.request
 import os
+import sys
 
-ORIG_FILE_LOC = "http://phontron.com/data/od-trajectories-20240701.jsonl.gz"
+input_jsonl = sys.argv[1] if len(sys.argv) > 1 else "feedback_neubig_public.jsonl"
+assert os.path.exists(input_jsonl), f"File not found: {input_jsonl}"
 
-with tempfile.TemporaryDirectory() as tmpdirname:
-    urllib.request.urlretrieve(ORIG_FILE_LOC, f"{tmpdirname}/data.jsonl.gz")
-    # Unzip the file
-    os.system(f"gunzip {tmpdirname}/data.jsonl.gz")
-    with open(f"{tmpdirname}/data.jsonl", "r") as f:
-        for line in f:
-            print(line.strip())
+with open(input_jsonl, "r") as f:
+    for line in f:
+        print(line.strip())
