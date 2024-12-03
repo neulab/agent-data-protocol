@@ -22,7 +22,7 @@ def run_ipython(code: str, kernel_init_code: str):
 
 
 def browse_interactive(browser_actions: str):
-    """Interact with the browser using Python code (BrowserGym action space)
+    """Interact with the browser using Python code (BrowserGym action space).
 
     Args:
     ----
@@ -33,7 +33,7 @@ def browse_interactive(browser_actions: str):
 
 
 def initialize(env_vars: dict):
-    """set environment variables.
+    """Set environment variables.
 
     Args:
     ----
@@ -61,6 +61,7 @@ def delegate_to_agent(agent: str, task: str):
     ----
         agent (str): The agent to delegate the task to.
         task (str): task description.
+
     """
     pass
 
@@ -72,6 +73,7 @@ def delegate_to_CrawlAgent(task: str, link: str):
     ----
         task (str): task description.
         link (str): the link to crawl.
+
     """
     pass
 
@@ -83,6 +85,7 @@ def delegate_to_RagAgent(task: str, query: str):
     ----
         task (str): task description.
         query (str): the query to search.
+
     """
     pass
 
@@ -137,7 +140,8 @@ def task_plan(task: str, plan: str):
 
     Args:
     ----
-        plan (list[str]): the plan
+        task (str): The task to plan.
+        plan (list[str]): The plan.
 
     """
     pass

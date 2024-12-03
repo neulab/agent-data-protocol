@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional, Union
 from datetime import datetime
-from litellm import ModelResponse
+# from litellm import ModelResponse
 
 
 class Inputs(BaseModel):
@@ -96,7 +96,7 @@ class Extras(BaseModel):
 class ToolCallMetadata(BaseModel):
     function_name: Optional[str] = None
     tool_call_id: Optional[str] = None
-    model_response: Optional[ModelResponse] = None
+    model_response: Optional[dict] = None
     total_calls_in_response: Optional[int] = None
 
 
