@@ -1,34 +1,31 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime
 from litellm import ModelResponse
 
 
 class Inputs(BaseModel):
-    task: Optional[str] = None
+    task: str = ""
     class Config:
         extra = "allow"
 
 class Outputs(BaseModel):
-    content: Optional[str] = None
+    content: str = ""
     class Config:
         extra = "allow"
 
 class Args(BaseModel):
     action_suffix: Optional[str] = None
     agent: Optional[str] = None
-    AGENT: Optional[str] = None
     agent_state: Optional[str] = None
-    background: Optional[str] = None
+    background: Optional[bool] = None
     blocking: Optional[bool] = None
     browser_actions: Optional[str] = None
     browsergym_send_msg_to_user: Optional[str] = None
     code: Optional[str] = None
     command: Optional[str] = None
-    CONFIRMATION_MODE: Optional[bool] = None
     confirmation_state: Optional[str] = None
     content: Optional[str] = None
-    CUSTOM_LLM_MODEL: Optional[str] = None
     end: Optional[int] = None
     hidden: Optional[bool] = None
     images_urls: Optional[List[str]] = None
@@ -38,18 +35,24 @@ class Args(BaseModel):
     is_confirmed: Optional[str] = None
     keep_prompt: Optional[bool] = None
     kernel_init_code: Optional[str] = None
-    LANGUAGE: Optional[str] = None
-    LLM_API_KEY: Optional[str] = None
-    LLM_BASE_URL: Optional[str] = None
-    LLM_MODEL: Optional[str] = None
     outputs: Optional[Outputs] = None
     path: Optional[str] = None
-    SECURITY_ANALYZER: Optional[str] = None
+    plan: Optional[Union[str, list, dict]] = None
     start: Optional[int] = None
     thought: Optional[str] = None
     timestamp: Optional[datetime] = None # 2024-10-31T19:35:13.242Z
-    USING_CUSTOM_MODEL: Optional[bool] = None
     wait_for_response: Optional[bool] = None
+    # AGENT: Optional[str] = None
+    # CUSTOM_LLM_MODEL: Optional[str] = None
+    # CONFIRMATION_MODE: Optional[bool] = None
+    # LANGUAGE: Optional[str] = None
+    # LLM_API_KEY: Optional[str] = None
+    # LLM_BASE_URL: Optional[str] = None
+    # LLM_MODEL: Optional[str] = None
+    # SECURITY_ANALYZER: Optional[str] = None
+    # USING_CUSTOM_MODEL: Optional[bool] = None
+    class Config:
+        extra = "allow"
 
 
 class Extras(BaseModel):
@@ -104,13 +107,14 @@ class TrajectoryItem(BaseModel):
     status: Optional[str] = None
     id: Optional[int] = None
     timestamp: Optional[datetime] = None # 2024-11-11T13:09:26.404714
-    source: Optional[str] = None
+    source: str
     message: str = ""
     observation: Optional[str] = None
     content: str = ""
+    log: Optional[str] = None
     extras: Optional[Extras] = None
     cause: Optional[int] = None
-    error: Optional[str] = None
+    error: Optional[Union[str, bool]] = None
     error_code: Optional[int] = None
     timeout: Optional[int] = None
     tool_call_metadata: Optional[ToolCallMetadata] = None
@@ -118,11 +122,10 @@ class TrajectoryItem(BaseModel):
 
 class SchemaRaw(BaseModel):
     version: str
-    email: str
+    email: Optional[str] = None
     polarity: str = ""
     feedback: str
     token: Optional[str] = None
-    timestamp: str
-    feedback_id: str # 2024-11-11-13-27-12
+    timestamp: str # 2024-11-11-13-27-12
     permissions: str
     trajectory: List[TrajectoryItem]
