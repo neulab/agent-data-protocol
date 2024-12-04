@@ -12,60 +12,19 @@ from schema_raw import SchemaRaw
 def process_data(data):
     content = []
     for item in data.trajectory:
-        if item.source == "environment":
-            if item.action == "initialize":
-                env_vars = {k: v for k, v in item.args.dict().items() if v is not None}
-                content.append(
-                    ApiAction(
-                        function=item.action,
-                        kwargs={
-                            "env_vars": env_vars,
-                        },
-                    )
-                )
-            elif item.action == "change_agent_state":
-                content.append(
-                    ApiAction(
-                        function=item.action,
-                        kwargs={
-                            "agent_state": item.args.agent_state,
-                        },
-                    )
-                )
-            else:
-                message = item.message
-                if item.error:
-                    message = f"Error code: {item.error_code}, Error message: {item.error}"
-                elif item.status:
-                    message = f"Status: {item.status}"
-                if message:
-                    content.append(
-                        TextObservation(
-                            source=item.source,
-                            content=message,
-                        )
-                    )
-            continue
-
-        if not item.action and (item.observation or item.log or item.message or item.content):
+        if not item.action and (item.observation or item.log or item.message or item.content or item.error or item.error_code or item.status):
             obs = []
-            if item.observation:
-                obs.append(f"Observation: {item.observation}")
-            if item.log:
-                obs.append(f"Log: {item.log}")
-            if item.message:
-                obs.append(f"Message: {item.message}")
-            if item.content:
-                obs.append(f"Content: {item.content}")
-            obs = "\n".join(obs)
+            keys = ["observation", "log", "message", "content", "error", "error_code", "status"]
+            obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None)]
             content.append(
                 TextObservation(
                     source=item.source,
-                    content=obs,
+                    content="\n".join(obs),
                 )
             )
         elif item.action == "message":
             if not item.args.content:
+                print("Empty message content, skipping!", file=sys.stderr)
                 continue
             if item.source == "user":
                 content.append(
@@ -80,6 +39,16 @@ def process_data(data):
                         content=item.args.content,
                     )
                 )
+        elif item.action == "initialize":
+            env_vars = {k: v for k, v in item.args.dict().items() if v is not None}
+            content.append(
+                ApiAction(
+                    function=item.action,
+                    kwargs={
+                        "env_vars": env_vars,
+                    },
+                )
+            )
         elif item.action == "run":
                 content.append(
                     ApiAction(
