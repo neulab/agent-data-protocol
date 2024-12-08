@@ -1,5 +1,8 @@
+import ast
 import sys
 import json
+import api
+import inspect
 
 import time
 from schema.action.api import ApiAction
@@ -9,12 +12,31 @@ from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw
 
 
+# click('48', 'example with "quotes" and, a comma', 10, button='middle', modifiers=['Shift', 'Alt'])
+def parse_browser_action(action_str):
+    try:
+        action_ast = ast.parse(action_str, mode='eval')
+    except Exception:
+        print(f"Invalid action string: {action_str}", file=sys.stderr)
+        return None, [], {}
+    if not isinstance(action_ast, ast.Expression) or not isinstance(action_ast.body, ast.Call):
+        print(f"Invalid action string: {action_str}", file=sys.stderr)
+        return None, [], {}
+    call_node = action_ast.body
+    function_name = call_node.func.id
+    args = [ast.literal_eval(arg) for arg in call_node.args]
+    kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call_node.keywords}
+    return function_name, args, kwargs
+
+
 def process_data(data):
     content = []
     for item in data.trajectory:
         if not item.action and (item.observation or item.log or item.message or item.content or item.error or item.error_code or item.status):
             obs = []
             keys = ["observation", "log", "message", "content", "error", "error_code", "status"]
+            # TODO: if item.observation == "browse", output WebObservation
+            # also custom TextObservation for "run", "run_ipython", "agent_state_changed"
             obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None)]
             content.append(
                 TextObservation(
@@ -71,15 +93,35 @@ def process_data(data):
                     )
                 )
         elif item.action == "browse_interactive":
-            content.append(
-                ApiAction(
-                    function=item.action,
-                    description=item.args.thought,
-                    kwargs={
-                        "browser_actions": item.args.browser_actions,
-                    },
+            # fill('a12', 'example with "quotes" and, a comma')\nclick('a51')\nclick('48', button='middle', modifiers=['Shift', 'Alt'])
+            action = item.args.browser_actions.strip()
+            if not action:
+                continue
+            if '\n' in action:
+                content.append(
+                    ApiAction(
+                        function="browse_interactive",
+                        description=item.args.thought,
+                        kwargs={
+                             "browser_actions": action,
+                        },
+                    )
                 )
-            )
+            else:
+                function_name, args, kwargs = parse_browser_action(action)
+                if not function_name:
+                    continue
+                api_args = list(inspect.signature(getattr(api, function_name)).parameters.keys())
+                kwargs = {k: v for k, v in kwargs.items() if k in api_args}
+                for arg in zip(args, api_args):
+                    kwargs[arg[1]] = arg[0]
+                content.append(
+                    ApiAction(
+                        function=function_name,
+                        description=item.args.thought,
+                        kwargs=kwargs,
+                    )
+                )
         elif item.action == "finish":
             content.append(
                 ApiAction(
