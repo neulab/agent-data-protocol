@@ -95,8 +95,9 @@ def process_data(data):
                 )
             else:
                 # just print all non-empty fields
-                keys = ["observation", "message", "content", "log", "status", "extras"]
+                keys = ["observation", "message", "content", "log", "status", "error", "error_code"]
                 obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None)]
+                print(f"Unknown observation: {"\n".join(obs)}", file=sys.stderr)
                 content.append(
                     TextObservation(
                         source=item.source,
