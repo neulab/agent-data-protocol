@@ -6,10 +6,14 @@ import inspect
 
 import time
 from schema.action.api import ApiAction
+from schema.observation.web import WebObservation
+from schema.observation.image import ImageObservation
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw
+
+from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
 
 
 # click('48', 'example with "quotes" and, a comma', 10, button='middle', modifiers=['Shift', 'Alt'])
@@ -33,17 +37,72 @@ def process_data(data):
     content = []
     for item in data.trajectory:
         if not item.action and (item.observation or item.log or item.message or item.content or item.error or item.error_code or item.status):
-            obs = []
-            keys = ["observation", "log", "message", "content", "error", "error_code", "status"]
             # TODO: if item.observation == "browse", output WebObservation
             # also custom TextObservation for "run", "run_ipython", "agent_state_changed"
-            obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None)]
-            content.append(
-                TextObservation(
-                    source=item.source,
-                    content="\n".join(obs),
+            if item.observation == "browse":
+                content.append(
+                    WebObservation(
+                        source=item.source,
+                        url=item.extras.url,
+                        html=None if not item.extras.dom_object else flatten_dom_to_str(item.extras.dom_object),
+                        axtree=None if not item.extras.axtree_object else flatten_axtree_to_str(item.extras.axtree_object),
+                        image_observation=None if not item.extras.screenshot else ImageObservation(
+                            source=item.source,
+                            content=item.extras.screenshot, # Base64-encoded image data, not a path
+                        ),
+                        viewport_size=None,
+                    )
                 )
-            )
+            elif item.observation == "run":
+                obs = [item.message]
+                obs += [f"Output:\n{item.content}\n"]
+                content.append(
+                    TextObservation(
+                        source=item.source,
+                        content="\n".join(obs),
+                    )
+                )
+            elif item.observation == "run_ipython":
+                obs = [item.message]
+                obs += [f"Code:\n{item.extras.code}\n"]
+                obs += [f"Output:\n{item.content}\n"]
+                content.append(
+                    TextObservation(
+                        source=item.source,
+                        content="\n".join(obs),
+                    )
+                )
+            elif item.observation == "agent_state_changed":
+                content.append(
+                    TextObservation(
+                        source=item.source,
+                        content=f"Agent state changed to {item.extras.agent_state}",
+                    )
+                )
+            elif item.observation == "delegate":
+                content.append(
+                    TextObservation(
+                        source=item.source,
+                        content=item.content if item.content else item.extras.outputs.content,
+                    )
+                )
+            elif item.observation in ["edit", "write", "read", "rag_search", "crawl", "task_plan", "error", "user_rejected"]:
+                content.append(
+                    TextObservation(
+                        source=item.source,
+                        content=f"{item.message}\n{item.content}" if item.message != item.content else item.message,
+                    )
+                )
+            else:
+                # just print all non-empty fields
+                keys = ["observation", "message", "content", "log", "status", "extras"]
+                obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None)]
+                content.append(
+                    TextObservation(
+                        source=item.source,
+                        content="\n".join(obs),
+                    )
+                )
         elif item.action == "message":
             if not item.args.content:
                 print("Empty message content, skipping!", file=sys.stderr)
