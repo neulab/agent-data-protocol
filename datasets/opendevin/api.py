@@ -188,8 +188,9 @@ def rag_search(query: str):
 
 def browse_interactive(browser_actions: str):
     """Interact with the browser using Python code (BrowserGym action space).
+
     Use this only if the command string contains multiple browser actions.
-    Otherwise, use the specific browser action functions below
+    Otherwise, use the specific browser action functions below.
 
     Args:
     ----
@@ -213,6 +214,7 @@ def goto(url: str):
     Examples:
     --------
         goto('http://www.example.com')
+
     """
     pass
 
@@ -220,9 +222,10 @@ def goto(url: str):
 def go_back():
     """Navigate to the previous page in history.
 
-    Examples:
+    Examples
     --------
         go_back()
+
     """
     pass
 
@@ -230,9 +233,10 @@ def go_back():
 def go_forward():
     """Navigate to the next page in history.
 
-    Examples:
+    Examples
     --------
         go_forward()
+
     """
     pass
 
@@ -251,6 +255,7 @@ def noop(wait_ms: float = 1000):
         noop()
 
         noop(500)
+
     """
     pass
 
@@ -268,12 +273,13 @@ def scroll(delta_x: float, delta_y: float):
         scroll(0, 200)
 
         scroll(-50.2, -100.5)
+
     """
     pass
 
 
 def fill(bid: str, value: str):
-    """Fill out a form field. It focuses the element and triggers an input event with the entered text. It works for <input>, <textarea> and [contenteditable] elements.
+    r"""Fill out a form field. It focuses the element and triggers an input event with the entered text. It works for <input>, <textarea> and [contenteditable] elements.
 
     Args:
     ----
@@ -287,6 +293,7 @@ def fill(bid: str, value: str):
         fill('45', 'multi-line\nexample')
 
         fill('a12', 'example with "quotes"')
+
     """
     pass
 
@@ -304,6 +311,7 @@ def select_option(bid: str, options: str | list[str]):
         select_option('a48', 'blue')
 
         select_option('c48', ['red', 'green', 'blue'])
+
     """
     pass
 
@@ -324,6 +332,7 @@ def click(bid: str, button: str = "left", modifiers: list[str] = []):
         click('b22', button='right')
 
         click('48', button='middle', modifiers=['Shift'])
+
     """
     pass
 
@@ -344,6 +353,7 @@ def dblclick(bid: str, button: str = "left", modifiers: list[str] = []):
         dblclick('ca42', button='right')
 
         dblclick('178', button='middle', modifiers=['Shift'])
+
     """
     pass
 
@@ -358,6 +368,7 @@ def hover(bid: str):
     Examples:
     --------
         hover('b8')
+
     """
     pass
 
@@ -377,6 +388,7 @@ def press(bid: str, key_comb: str):
         press('a26', 'ControlOrMeta+a')
 
         press('a61', 'Meta+Shift+t')
+
     """
     pass
 
@@ -391,6 +403,7 @@ def focus(bid: str):
     Examples:
     --------
         focus('b455')
+
     """
     pass
 
@@ -405,6 +418,7 @@ def clear(bid: str):
     Examples:
     --------
         clear('996')
+
     """
     pass
 
@@ -420,6 +434,7 @@ def drag_and_drop(from_bid: str, to_bid: str):
     Examples:
     --------
         drag_and_drop('56', '498')
+
     """
     pass
 
@@ -437,6 +452,7 @@ def upload_file(bid: str, file: str | list[str]):
         upload_file('572', '/home/user/my_receipt.pdf')
 
         upload_file('63', ['/home/bob/Documents/image.jpg', '/home/bob/Documents/file.zip'])
+
     """
     pass
 
@@ -451,6 +467,7 @@ def send_msg_to_user(msg: str):
     Examples:
     --------
         send_msg_to_user('Hello, World!')
+
     """
     pass
 
@@ -458,8 +475,9 @@ def send_msg_to_user(msg: str):
 def get():
     """Get the current page content.
 
-    Examples:
+    Examples
     --------
         get()
+
     """
     pass
