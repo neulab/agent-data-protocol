@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional, Union
 from datetime import datetime
-# from litellm import ModelResponse
 
 
 class Inputs(BaseModel):
@@ -42,15 +41,6 @@ class Args(BaseModel):
     thought: Optional[str] = None
     timestamp: Optional[datetime] = None # 2024-10-31T19:35:13.242Z
     wait_for_response: Optional[bool] = None
-    # AGENT: Optional[str] = None
-    # CUSTOM_LLM_MODEL: Optional[str] = None
-    # CONFIRMATION_MODE: Optional[bool] = None
-    # LANGUAGE: Optional[str] = None
-    # LLM_API_KEY: Optional[str] = None
-    # LLM_BASE_URL: Optional[str] = None
-    # LLM_MODEL: Optional[str] = None
-    # SECURITY_ANALYZER: Optional[str] = None
-    # USING_CUSTOM_MODEL: Optional[bool] = None
     class Config:
         extra = "allow"
 
@@ -81,16 +71,6 @@ class Extras(BaseModel):
     status_code: Optional[int] = None
     url: Optional[str] = None
 
-
-# class ModelResponse(BaseModel):
-#     id: Optional[str] = None
-#     created: Optional[int] = None
-#     model: Optional[str] = None
-#     object: Optional[str] = None
-#     system_fingerprint: Optional[str] = None
-#     choices: Optional[List[dict]] = None
-#     usage: Optional[dict] = None
-#     service_tier: Optional[str] = None
 
 
 class ToolCallMetadata(BaseModel):
