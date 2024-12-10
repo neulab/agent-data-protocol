@@ -6,6 +6,7 @@ import inspect
 
 import time
 from schema.action.api import ApiAction
+from schema.observation.observation import Observation
 from schema.observation.web import WebObservation
 from schema.observation.image import ImageObservation
 from schema.action.message import MessageAction
@@ -33,9 +34,11 @@ def parse_browser_action(action_str):
     return function_name, args, kwargs
 
 
-def process_data(data):
+def process_data(data, keep_all=False):
     content = []
     for item in data.trajectory:
+        if not keep_all and item.source == "environment":
+            continue
         if not item.action and (item.observation or item.log or item.message or item.content or item.error or item.error_code or item.status):
             # TODO: if item.observation == "browse", output WebObservation
             # also custom TextObservation for "run", "run_ipython", "agent_state_changed"
@@ -73,6 +76,8 @@ def process_data(data):
                     )
                 )
             elif item.observation == "agent_state_changed":
+                if not keep_all:
+                    continue
                 content.append(
                     TextObservation(
                         source=item.source,
@@ -87,6 +92,9 @@ def process_data(data):
                     )
                 )
             elif item.observation in ["edit", "write", "read", "rag_search", "crawl", "task_plan", "error", "user_rejected"]:
+                # avoid outputting consecutive TextObservations
+                if not keep_all and item.observation == "error" and content and isinstance(content[-1], Observation):
+                    continue
                 content.append(
                     TextObservation(
                         source=item.source,
@@ -94,6 +102,8 @@ def process_data(data):
                     )
                 )
             else:
+                if not keep_all and (item.message == "No observation" or item.log is not None):
+                    continue
                 # just print all non-empty fields
                 keys = ["observation", "message", "content", "log", "status", "error", "error_code"]
                 obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None)]
@@ -183,6 +193,8 @@ def process_data(data):
                     )
                 )
         elif item.action == "finish":
+            if not keep_all:
+                continue
             content.append(
                 ApiAction(
                     function=item.action,
@@ -193,6 +205,8 @@ def process_data(data):
                 )
             )
         elif item.action == "delegate":
+            if not keep_all:
+                continue
             if item.args.agent == "RagAgent":
                 content.append(
                     ApiAction(
@@ -317,6 +331,8 @@ def process_data(data):
                 )
             )
         elif item.action == "change_agent_state":
+            if not keep_all:
+                continue
             content.append(
                 ApiAction(
                     function=item.action,
@@ -339,10 +355,18 @@ def process_data(data):
         },
     )
 
+def get_args():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keep_all", action="store_true", help="Do not filter out any trajectory items")
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
+    args = get_args()
+
     for line in sys.stdin:
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
-        standardized_data = process_data(data)
+        standardized_data = process_data(data, keep_all=args.keep_all)
         print(standardized_data.model_dump_json())
