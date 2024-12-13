@@ -1,11 +1,19 @@
-import os
 import sys
+import json
+from datetime import datetime
+from datasets import load_dataset
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
 
-input_jsonl = sys.argv[1] if len(sys.argv) > 1 else os.path.join(script_dir, "feedback-public.jsonl")
-assert os.path.exists(input_jsonl), f"File not found: {input_jsonl}"
+def default_converter(o):
+    if isinstance(o, datetime):
+        return o.__str__()
+    else:
+        return o
 
-with open(input_jsonl, "r") as f:
-    for line in f:
-        print(line.strip())
+
+dataset = load_dataset("all-hands/openhands-feedback")
+for item in dataset["train"]:
+    for step in item.get("trajectory", []):
+        if isinstance(step.get("extras"), str):
+            step["extras"] = json.loads(step["extras"])
+    print(json.dumps(item, default=default_converter))

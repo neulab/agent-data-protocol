@@ -12,7 +12,7 @@ from schema.observation.image import ImageObservation
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
-from schema_raw import SchemaRaw
+from schema_raw import SchemaRaw, Args
 
 from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
 
@@ -37,6 +37,12 @@ def parse_browser_action(action_str):
 def process_data(data, keep_all=False):
     content = []
     for item in data.trajectory:
+        # In the huggingface dataset, args have been moved to extras
+        if item.extras:
+            item.args = Args(**{
+                **(item.args.dict() if item.args else {}),
+                **(item.extras.dict() if item.extras else {}),
+            })
         if not keep_all and item.source == "environment":
             continue
         if not item.action and (item.observation or item.log or item.message or item.content or item.error or item.error_code or item.status):
@@ -106,7 +112,7 @@ def process_data(data, keep_all=False):
                     continue
                 # just print all non-empty fields
                 keys = ["observation", "message", "content", "log", "status", "error", "error_code"]
-                obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None)]
+                obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None) and not (isinstance(getattr(item, k), str) and not getattr(item, k).strip())]
                 print(f"Unknown observation: {"\n".join(obs)}", file=sys.stderr)
                 content.append(
                     TextObservation(
@@ -348,10 +354,10 @@ def process_data(data, keep_all=False):
         id=str(time.time()),
         content=content,
         details={
-            "feedback": data.feedback,
-            "version": data.version,
-            "polarity": data.polarity,
-            "timestamp": data.timestamp,
+            "feedback": data.feedback or "",
+            "version": data.version or "",
+            "polarity": data.polarity or "",
+            "timestamp": data.timestamp or "",
         },
     )
 

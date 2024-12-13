@@ -53,7 +53,7 @@ class Extras(BaseModel):
     command: Optional[str] = None
     command_id: Optional[int] = None
     dom_object: Optional[dict] = None
-    error: Optional[bool] = None
+    error: Optional[Union[str, bool]] = None
     exit_code: Optional[int] = None
     extra_element_properties: Optional[dict] = None
     focused_element_bid: Optional[str] = None
@@ -70,6 +70,8 @@ class Extras(BaseModel):
     screenshot: Optional[str] = None
     status_code: Optional[int] = None
     url: Optional[str] = None
+    class Config:
+        extra = "allow"
 
 
 
@@ -88,9 +90,9 @@ class TrajectoryItem(BaseModel):
     id: Optional[int] = None
     timestamp: Optional[datetime] = None # 2024-11-11T13:09:26.404714
     source: str
-    message: str = ""
+    message: Optional[str] = ""
     observation: Optional[str] = None
-    content: str = ""
+    content: Optional[str] = ""
     log: Optional[str] = None
     extras: Optional[Extras] = None
     cause: Optional[int] = None
@@ -101,11 +103,11 @@ class TrajectoryItem(BaseModel):
 
 
 class SchemaRaw(BaseModel):
-    version: str
+    version: Optional[str] = None
     email: Optional[str] = None
-    polarity: str = ""
-    feedback: str
+    polarity: Optional[str] = None
+    feedback: Optional[str] = None
     token: Optional[str] = None
-    timestamp: str # 2024-11-11-13-27-12
-    permissions: str
+    timestamp: Optional[str] = None
+    permissions: Optional[str] = None
     trajectory: List[TrajectoryItem]
