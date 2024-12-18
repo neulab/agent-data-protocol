@@ -9,7 +9,10 @@ from schema.observation.web import WebObservation
 from schema.observation.image import ImageObservation
 from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw
+from lxml import etree
 
+not_found_count = 0
+total_count = 0
 
 DOWNLOAD_INSTRUCTIONS = """
     # Please download the raw dumps first:
@@ -34,6 +37,24 @@ WEBLINX_DUMP = Path(__file__).parent / "WebLINX-full"
 intents_skipped = set()
 
 
+def xpath_exists(html: str, xpath: str) -> bool:
+    """Check if the xpath exists in the html.
+
+    Args:
+    ----
+        html (str): The html content.
+        xpath (str): The xpath to check.
+
+    """
+    tree = etree.HTML(html)
+    try:
+        result = tree.xpath(xpath)
+        return bool(result)
+    except Exception:
+        return False
+
+
+
 def convert_step(
     step: Any, shortcode: str
 ) -> list[TextObservation | MessageAction | WebObservation | ApiAction]:
@@ -45,6 +66,9 @@ def convert_step(
         shortcode (str): The shortcode of the demonstration.
 
     """
+    global not_found_count
+    global total_count
+    total_count += 1
     if step.type == "chat":
         if step.speaker == "instructor":
             return [TextObservation(content=step.utterance, source="user")]
@@ -73,6 +97,7 @@ def convert_step(
             html=(
                 WEBLINX_DUMP / "demonstrations" / shortcode / "pages" / step.state.page
             ).read_text(),
+            axtree=None,
             url=args["metadata"]["url"],
             viewport_size=(
                 args["metadata"]["viewportWidth"],
@@ -89,9 +114,16 @@ def convert_step(
                 ),
             ]
         _elid = args["element"]["attributes"].get("data-webtasks-id")
-        xpath = (
-            f"//*[@data-webtasks-id='{_elid}']" if _elid else args["element"]["xpath"]
-        )
+        if _elid:
+            xpath = f"//*[@data-webtasks-id='{_elid}']"
+            if not xpath_exists(web_observation.html, f"//*[@data-webtasks-id='{_elid}']"):
+                _elid = None
+        if not _elid:
+            xpath = args["element"]["xpath"]
+            if not xpath_exists(web_observation.html, xpath):
+                xpath = "not found"
+                not_found_count += 1
+                
         if step.action["intent"] in ["click", "submit"]:
             return [
                 web_observation,
@@ -123,21 +155,31 @@ def convert_step(
 
 if __name__ == "__main__":
     assert WEBLINX_DUMP.is_dir(), DOWNLOAD_INSTRUCTIONS
+    shortcode_errors = []
     for line in sys.stdin:
-        raw_data = json.loads(line)
-        data = SchemaRaw(**raw_data)
+        try:
+            raw_data = json.loads(line)
+            data = SchemaRaw(**raw_data)
 
-        content: list = []
-        for step in data.data:
-            content.extend(convert_step(step, data.shortcode))
+            content: list = []
+            for step in data.data:
+                content.extend(convert_step(step, data.shortcode))
 
-        standardized_data = Trajectory(
-            id=data.shortcode,
-            content=content,
-            details={
-                "description": data.description,
-                "tasks": ", ".join(data.tasks),
-            },
-        )
-        print(standardized_data.model_dump_json())
+            standardized_data = Trajectory(
+                id=data.shortcode,
+                content=content,
+                details={
+                    "task_description": data.description,
+                    "tasks": ", ".join(data.tasks),
+                },
+            )
+            print(standardized_data.model_dump_json())
+
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            shortcode_errors.extend([{'shortcode': raw_data['shortcode'], 'error': str(e)}])
+            with open("datasets/weblinx/shortcode_errors.json", "w") as f:
+                json.dump(shortcode_errors, f, indent=4)
+            continue
     print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)
+    print(f"not found: {not_found_count}/{total_count}", file=sys.stderr)
