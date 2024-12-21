@@ -1,15 +1,11 @@
-import ast
 import sys
 import json
 import api
 import inspect
 import re
+import shlex
 
-import time
 from schema.action.api import ApiAction
-from schema.observation.observation import Observation
-from schema.observation.web import WebObservation
-from schema.observation.image import ImageObservation
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
@@ -46,12 +42,13 @@ def parse_api_action(item):
     codeblock_lang = re.fullmatch(r"\w+\s*", action_str.splitlines()[0])
     if codeblock_lang:
         action_str = "\n".join(action_str.splitlines()[1:])
+    action_str = action_str.strip()
     action_name = action_str.split()[0]
     if action_name in ACTIONS:
         if action_name == "edit":
             action_kwargs = parse_edit_action(action_str)
         else:
-            action_args = action_str.split()[1:]
+            action_args = shlex.split(action_str)[1:]
             action_params = inspect.signature(getattr(api, action_name)).parameters
             action_kwargs = {param: arg for param, arg in zip(action_params.keys(), action_args)}
         return ApiAction(function=action_name, kwargs=action_kwargs, description=thought)
