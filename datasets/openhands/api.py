@@ -260,13 +260,13 @@ def noop(wait_ms: float = 1000):
     pass
 
 
-def scroll(delta_x: float, delta_y: float):
+def scroll(dx: float, dy: float):
     """Scroll horizontally and vertically. Amounts in pixels, positive for right or down scrolling, negative for left or up scrolling. Dispatches a wheel event.
 
     Args:
     ----
-        delta_x (float): The amount to scroll horizontally.
-        delta_y (float): The amount to scroll vertically.
+        dx (float): The amount to scroll horizontally.
+        dy (float): The amount to scroll vertically.
 
     Examples:
     --------
@@ -278,13 +278,13 @@ def scroll(delta_x: float, delta_y: float):
     pass
 
 
-def fill(bid: str, value: str):
+def type(element_id: str, text: str):
     r"""Fill out a form field. It focuses the element and triggers an input event with the entered text. It works for <input>, <textarea> and [contenteditable] elements.
 
     Args:
     ----
-        bid (str): The id of the form field.
-        value (str): The value to fill in the form field.
+        element_id (str): The id of the form field.
+        text (str): The value to fill in the form field.
 
     Examples:
     --------
@@ -298,13 +298,13 @@ def fill(bid: str, value: str):
     pass
 
 
-def select_option(bid: str, options: str | list[str]):
+def select(element_id: str, value: str | list[str]):
     """Select one or multiple options in a <select> element. You can specify option value or label to select. Multiple options can be selected.
 
     Args:
     ----
-        bid (str): The id of the select element.
-        options (str | list[str]): The option(s) to select.
+        element_id (str): The id of the select element.
+        value (str | list[str]): The option(s) to select.
 
     Examples:
     --------
@@ -316,12 +316,12 @@ def select_option(bid: str, options: str | list[str]):
     pass
 
 
-def click(bid: str, button: str = "left", modifiers: list[str] = []):
+def click(element_id: str, button: str = "left", modifiers: list[str] = []):
     """Click an element.
 
     Args:
     ----
-        bid (str): The id of the element to click.
+        element_id (str): The id of the element to click.
         button (str): The mouse button to use ('left', 'middle', 'right').
         modifiers (list[str]): The modifier keys to hold during the click.
 
@@ -337,12 +337,12 @@ def click(bid: str, button: str = "left", modifiers: list[str] = []):
     pass
 
 
-def dblclick(bid: str, button: str = "left", modifiers: list[str] = []):
+def dblclick(element_id: str, button: str = "left", modifiers: list[str] = []):
     """Double click an element.
 
     Args:
     ----
-        bid (str): The id of the element to double click.
+        element_id (str): The id of the element to double click.
         button (str): The mouse button to use ('left', 'middle', 'right').
         modifiers (list[str]): The modifier keys to hold during the double click.
 
@@ -358,12 +358,12 @@ def dblclick(bid: str, button: str = "left", modifiers: list[str] = []):
     pass
 
 
-def hover(bid: str):
+def hover(element_id: str):
     """Hover over an element.
 
     Args:
     ----
-        bid (str): The id of the element to hover over.
+        element_id (str): The id of the element to hover over.
 
     Examples:
     --------
@@ -373,12 +373,12 @@ def hover(bid: str):
     pass
 
 
-def press(bid: str, key_comb: str):
+def press(element_id: str, key_comb: str):
     """Focus the matching element and press a combination of keys. It accepts the logical key names that are emitted in the keyboardEvent.key property of the keyboard events: Backquote, Minus, Equal, Backslash, Backspace, Tab, Delete, Escape, ArrowDown, End, Enter, Home, Insert, PageDown, PageUp, ArrowRight, ArrowUp, F1 - F12, Digit0 - Digit9, KeyA - KeyZ, etc. You can alternatively specify a single character you'd like to produce such as "a" or "#". Following modification shortcuts are also supported: Shift, Control, Alt, Meta, ShiftLeft, ControlOrMeta. ControlOrMeta resolves to Control on Windows and Linux and to Meta on macOS.
 
     Args:
     ----
-        bid (str): The id of the element to focus.
+        element_id (str): The id of the element to focus.
         key_comb (str): The key combination to press.
 
     Examples:
@@ -393,12 +393,12 @@ def press(bid: str, key_comb: str):
     pass
 
 
-def focus(bid: str):
+def focus(element_id: str):
     """Focus the matching element.
 
     Args:
     ----
-        bid (str): The id of the element to focus.
+        element_id (str): The id of the element to focus.
 
     Examples:
     --------
@@ -408,12 +408,12 @@ def focus(bid: str):
     pass
 
 
-def clear(bid: str):
+def clear(element_id: str):
     """Clear the input field.
 
     Args:
     ----
-        bid (str): The id of the input field to clear.
+        element_id (str): The id of the input field to clear.
 
     Examples:
     --------
@@ -439,12 +439,12 @@ def drag_and_drop(from_bid: str, to_bid: str):
     pass
 
 
-def upload_file(bid: str, file: str | list[str]):
+def upload_file(element_id: str, file: str | list[str]):
     """Click an element and wait for a "filechooser" event, then select one or multiple input files for upload. Relative file paths are resolved relative to the current working directory. An empty list clears the selected files.
 
     Args:
     ----
-        bid (str): The id of the element to click.
+        element_id (str): The id of the element to click.
         file (str | list[str]): The file(s) to upload.
 
     Examples:

@@ -18,6 +18,20 @@ from schema_raw import SchemaRaw, Args
 from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
 
 
+ACTION_MAP = {
+    "fill": "type",
+    "select_option": "select",
+}
+
+KWARGS_MAP = {
+    "bid": "element_id",
+    "value": "text",
+    "delta_x": "dx",
+    "delta_y": "dy",
+    "options": "value",
+}
+
+
 # click('48', 'example with "quotes" and, a comma', 10, button='middle', modifiers=['Shift', 'Alt'])
 def parse_browser_action(action_str):
     try:
@@ -31,7 +45,7 @@ def parse_browser_action(action_str):
     call_node = action_ast.body
     function_name = call_node.func.id
     args = [ast.literal_eval(arg) for arg in call_node.args]
-    kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call_node.keywords}
+    kwargs = {KWARGS_MAP.get(kw.arg, kw.arg): ast.literal_eval(kw.value) for kw in call_node.keywords}
     return function_name, args, kwargs
 
 
@@ -190,6 +204,7 @@ def process_data(data, keep_all=False):
                 function_name, args, kwargs = parse_browser_action(action)
                 if not function_name:
                     continue
+                function_name = ACTION_MAP.get(function_name, function_name)
                 api_args = list(inspect.signature(getattr(api, function_name)).parameters.keys())
                 kwargs = {k: v for k, v in kwargs.items() if k in api_args}
                 for arg in zip(args, api_args):
