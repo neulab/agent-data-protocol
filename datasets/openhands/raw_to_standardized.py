@@ -3,6 +3,7 @@ import sys
 import json
 import api
 import inspect
+import markdown
 
 import time
 from schema.action.api import ApiAction
@@ -46,14 +47,15 @@ def process_data(data, keep_all=False):
         if not keep_all and item.source == "environment":
             continue
         if not item.action and (item.observation or item.log or item.message or item.content or item.error or item.error_code or item.status):
-            # TODO: if item.observation == "browse", output WebObservation
-            # also custom TextObservation for "run", "run_ipython", "agent_state_changed"
             if item.observation == "browse":
+                _html = flatten_dom_to_str(item.extras.dom_object) if item.extras.dom_object else None
+                if not _html and item.content.strip():
+                    _html = markdown.markdown(item.content)
                 content.append(
                     WebObservation(
                         source=item.source,
                         url=item.extras.url,
-                        html=None if not item.extras.dom_object else flatten_dom_to_str(item.extras.dom_object),
+                        html=_html,
                         axtree=None if not item.extras.axtree_object else flatten_axtree_to_str(item.extras.axtree_object),
                         image_observation=None if not item.extras.screenshot else ImageObservation(
                             source=item.source,
@@ -174,6 +176,7 @@ def process_data(data, keep_all=False):
             if not action:
                 continue
             if '\n' in action:
+                # if there are multiple actions, simply pass them to the browse_interactive function
                 content.append(
                     ApiAction(
                         function="browse_interactive",
