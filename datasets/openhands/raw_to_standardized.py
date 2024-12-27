@@ -113,7 +113,7 @@ def process_data(data, keep_all=False):
                 # just print all non-empty fields
                 keys = ["observation", "message", "content", "log", "status", "error", "error_code"]
                 obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None) and not (isinstance(getattr(item, k), str) and not getattr(item, k).strip())]
-                print(f"Unknown observation: {"\n".join(obs)}", file=sys.stderr)
+                print("Unknown observation: " + "\n".join(obs), file=sys.stderr)
                 content.append(
                     TextObservation(
                         source=item.source,
@@ -280,7 +280,7 @@ def process_data(data, keep_all=False):
         elif item.action == "task_plan":
             plan = item.args.plan
             if isinstance(plan, dict):
-                plan = "\n".join([f"Subtask {n}:\nDescription: {s["description"]}\nTool: {s["tool"]}" for n, s in enumerate(plan["subtasks"], 1)])
+                plan = "\n".join([f"Subtask {n}:\nDescription: {s['description']}\nTool: {s['tool']}" for n, s in enumerate(plan["subtasks"], 1)])
             content.append(
                 ApiAction(
                     function=item.action,
