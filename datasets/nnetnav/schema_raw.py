@@ -5,7 +5,7 @@ class Message(BaseModel):
     role: str
     content: str
 
-class NNetNavTrajectory(BaseModel):
+class SchemaRaw(BaseModel):
     dataset: str
     id: str
     messages: List[Message]
