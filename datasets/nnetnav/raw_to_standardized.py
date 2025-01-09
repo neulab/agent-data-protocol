@@ -55,19 +55,102 @@ def parse_observation(content: str) -> Dict[str, Any]:
         'previous_actions': previous_actions
     }
 
-def parse_action(content: str) -> str:
+def parse_action(content: str) -> Dict[str, Any]:
     # Extract the action from the assistant's response
     action_start = content.find('```') + 3
     action_end = content.rfind('```')
-    return content[action_start:action_end]
+    action_str = content[action_start:action_end].strip()
+    
+    # Handle empty or malformed actions
+    if not action_str:
+        return {
+            'type': 'api_action',
+            'function': 'noop',
+            'kwargs': {}
+        }
+    
+    # Parse action string into components
+    parts = action_str.split(' ', 1)
+    function = parts[0]
+    kwargs = {}
+    
+    # Handle invalid function names
+    if function.startswith('[') or function not in [
+        'type', 'click', 'hover', 'press', 'scroll', 'new_tab', 'tab_focus',
+        'close_tab', 'goto', 'go_back', 'go_forward', 'stop', 'noop'
+    ]:
+        return {
+            'type': 'api_action',
+            'function': 'noop',
+            'kwargs': {}
+        }
+    
+    try:
+        if len(parts) > 1:
+            # Handle special cases where the action doesn't have brackets
+            if function in ['new_tab', 'close_tab', 'go_back', 'go_forward', 'noop']:
+                pass
+            else:
+                # Split by '] [' but handle the case where there's only one argument
+                args_str = parts[1].strip('[]')
+                if '] [' in args_str:
+                    args = args_str.split('] [')
+                else:
+                    args = [args_str]
+                
+                # Clean up args - remove any text after the ID number
+                args = [arg.split()[0] if arg and arg[0].isdigit() else arg for arg in args]
+                
+                if function == 'type':
+                    kwargs = {
+                        'id': args[0],
+                        'text': args[1] if len(args) > 1 else '',
+                        'press_enter_after': args[2] == '1' if len(args) > 2 else True
+                    }
+                elif function == 'click':
+                    kwargs = {'id': args[0]}
+                elif function == 'hover':
+                    kwargs = {'id': args[0]}
+                elif function == 'press':
+                    kwargs = {'key_comb': args[0]}
+                elif function == 'scroll':
+                    kwargs = {'direction': args[0]}
+                elif function == 'tab_focus':
+                    try:
+                        kwargs = {'tab_index': int(args[0])}
+                    except ValueError:
+                        return {
+                            'type': 'api_action',
+                            'function': 'noop',
+                            'kwargs': {}
+                        }
+                elif function == 'stop':
+                    kwargs = {'answer': args[0] if args else None}
+                elif function == 'goto':
+                    kwargs = {'url': args[0]}
+    except (IndexError, ValueError) as e:
+        # If there's any error parsing the action, return a noop
+        return {
+            'type': 'api_action',
+            'function': 'noop',
+            'kwargs': {}
+        }
+    
+    return {
+        'type': 'api_action',
+        'function': function,
+        'kwargs': kwargs
+    }
 
 def convert_trajectory(traj: NNetNavTrajectory) -> Dict[str, Any]:
     # Initialize standardized format
     standardized = {
         'id': traj.id,
-        'source': 'nnetnav',
-        'task': None,  # Will be set from first observation
-        'steps': []
+        'content': [],
+        'details': {
+            'source': 'nnetnav',
+            'task': None  # Will be set from first observation
+        }
     }
     
     # Skip system message and process pairs of user/assistant messages
@@ -85,28 +168,38 @@ def convert_trajectory(traj: NNetNavTrajectory) -> Dict[str, Any]:
         obs_data = parse_observation(obs_msg.content)
         
         # Set task from first observation
-        if standardized['task'] is None and obs_data['objective'] is not None:
-            standardized['task'] = obs_data['objective']
+        if standardized['details']['task'] is None and obs_data['objective'] is not None:
+            standardized['details']['task'] = obs_data['objective']
         
-        # Parse action
-        action = parse_action(action_msg.content)
-        
-        # Add step
-        standardized['steps'].append({
-            'observation': {
-                'accessibility_tree': obs_data['accessibility_tree'],
-                'url': obs_data['url'],
-                'previous_actions': obs_data['previous_actions']
+        # Add observation
+        standardized['content'].append({
+            'type': 'web_observation',
+            'html': '<html>...</html>',  # Placeholder
+            'url': obs_data['url'],
+            'axtree': '\n'.join(obs_data['accessibility_tree']),
+            'image_observation': {
+                'type': 'image_observation',
+                'content': 'base64_encoded_image_data',  # Placeholder
+                'source': 'screenshot'
             },
-            'action': action
+            'viewport_size': [1920, 1080]  # Default size
         })
+        
+        # Parse and add action
+        action = parse_action(action_msg.content)
+        standardized['content'].append(action)
     
     return standardized
 
 def main():
+    # Process each line as a separate JSON object
     for line in sys.stdin:
-        traj = NNetNavTrajectory.model_validate_json(line)
+        if not line.strip():
+            continue
+        item = json.loads(line)
+        traj = NNetNavTrajectory.model_validate(item)
         standardized = convert_trajectory(traj)
+        # Print each result as a separate line
         print(json.dumps(standardized))
 
 if __name__ == "__main__":
