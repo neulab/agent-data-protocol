@@ -63,8 +63,7 @@ def parse_action(content: str) -> Dict[str, Any]:
     redundant_thought_part = 'In summary, the next action I will perform is'
     thought_str = content[:action_start - 3].replace(redundant_thought_part, '').strip()
     
-    
-    if not action_str:
+    if not thought_str:
         thought_str = None
         
     noop_action = {
