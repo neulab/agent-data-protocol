@@ -60,14 +60,23 @@ def parse_action(content: str) -> Dict[str, Any]:
     action_start = content.find('```') + 3
     action_end = content.rfind('```')
     action_str = content[action_start:action_end].strip()
+    redundant_thought_part = 'In summary, the next action I will perform is'
+    thought_str = content[:action_start - 3].replace(redundant_thought_part, '').strip()
+    
+    
+    if not action_str:
+        thought_str = None
+        
+    noop_action = {
+        'type': 'api_action',
+        'function': 'noop',
+        'kwargs': {},
+        'description': None
+    }
     
     # Handle empty or malformed actions
     if not action_str:
-        return {
-            'type': 'api_action',
-            'function': 'noop',
-            'kwargs': {}
-        }
+        return noop_action
     
     # Parse action string into components
     parts = action_str.split(' ', 1)
@@ -79,11 +88,7 @@ def parse_action(content: str) -> Dict[str, Any]:
         'type', 'click', 'hover', 'press', 'scroll', 'new_tab', 'tab_focus',
         'close_tab', 'goto', 'go_back', 'go_forward', 'stop', 'noop'
     ]:
-        return {
-            'type': 'api_action',
-            'function': 'noop',
-            'kwargs': {}
-        }
+        return noop_action
     
     try:
         if len(parts) > 1:
@@ -130,16 +135,13 @@ def parse_action(content: str) -> Dict[str, Any]:
                     kwargs = {'url': args[0]}
     except (IndexError, ValueError) as e:
         # If there's any error parsing the action, return a noop
-        return {
-            'type': 'api_action',
-            'function': 'noop',
-            'kwargs': {}
-        }
+        return noop_action
     
     return {
         'type': 'api_action',
         'function': function,
-        'kwargs': kwargs
+        'kwargs': kwargs,
+        'description': thought_str
     }
 
 def convert_trajectory(traj: NNetNavTrajectory) -> Dict[str, Any]:
@@ -174,15 +176,11 @@ def convert_trajectory(traj: NNetNavTrajectory) -> Dict[str, Any]:
         # Add observation
         standardized['content'].append({
             'type': 'web_observation',
-            'html': '<html>...</html>',  # Placeholder
+            'html': None,
             'url': obs_data['url'],
             'axtree': '\n'.join(obs_data['accessibility_tree']),
-            'image_observation': {
-                'type': 'image_observation',
-                'content': 'base64_encoded_image_data',  # Placeholder
-                'source': 'screenshot'
-            },
-            'viewport_size': [1920, 1080]  # Default size
+            'image_observation': None,
+            'viewport_size': None
         })
         
         # Parse and add action
