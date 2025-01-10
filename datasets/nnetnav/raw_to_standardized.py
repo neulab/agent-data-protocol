@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json
 import sys
-from schema_raw import NNetNavTrajectory
+from schema_raw import SchemaRaw
 from typing import List, Dict, Any
 
 def parse_observation(content: str) -> Dict[str, Any]:
@@ -144,7 +144,7 @@ def parse_action(content: str) -> Dict[str, Any]:
         'description': thought_str
     }
 
-def convert_trajectory(traj: NNetNavTrajectory) -> Dict[str, Any]:
+def convert_trajectory(traj: SchemaRaw) -> Dict[str, Any]:
     # Initialize standardized format
     standardized = {
         'id': traj.id,
@@ -195,7 +195,7 @@ def main():
         if not line.strip():
             continue
         item = json.loads(line)
-        traj = NNetNavTrajectory.model_validate(item)
+        traj = SchemaRaw.model_validate(item)
         standardized = convert_trajectory(traj)
         # Print each result as a separate line
         print(json.dumps(standardized))
