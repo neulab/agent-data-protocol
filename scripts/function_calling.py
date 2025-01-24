@@ -399,8 +399,8 @@ BrowserTool = {
             "code": {
                 "type": "string",
                 "description": (
-                    "The Python code that interacts with the browser. "
-                    "Include actions such as opening URLs, navigating, or scraping content."
+                    'The Python code that interacts with the browser.\n'
+                    + _BROWSER_TOOL_DESCRIPTION
                 ),
             },
         },
@@ -438,6 +438,6 @@ def get_tools(
         tools.append(str(IPythonTool))
     if codeact_enable_llm_editor:
         tools.append(str(LLMBasedFileEditTool))
-    else:
+    # else:
         tools.append(str(StrReplaceEditorTool))
     return tools

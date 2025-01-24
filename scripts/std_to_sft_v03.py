@@ -143,18 +143,18 @@ for line in sys.stdin:
         previous_actions = []
 
         # Add system message similar to OH Browsing Agent if the dataset is web dataset
-        if args.is_web=='yes':
-            action_subsets = ['chat', 'bid']
-            if USE_NAV:
-                action_subsets.append('nav')
-            action_space = HighLevelActionSet(
-                subsets=action_subsets,
-                strict=False,  # less strict on the parsing of the actions
-                multiaction=True,  # enable to agent to take multiple actions at once
-            )
-            system_message = get_web_system_message(action_space.describe(with_long_description=False,
-                                                                           with_examples=True))
-            conversations.extend([{"role": "system", "content": system_message}])
+        # if args.is_web=='yes':
+        #     action_subsets = ['chat', 'bid']
+        #     if USE_NAV:
+        #         action_subsets.append('nav')
+        #     action_space = HighLevelActionSet(
+        #         subsets=action_subsets,
+        #         strict=False,  # less strict on the parsing of the actions
+        #         multiaction=True,  # enable to agent to take multiple actions at once
+        #     )
+        #     system_message = get_web_system_message(action_space.describe(with_long_description=False,
+        #                                                                    with_examples=True))
+        #     conversations.extend([{"role": "system", "content": system_message}])
 
         for event in events:
             if hasattr(event, 'source') and event.source == 'system': # Ignore dataset specific system messages since we have a unified system prompt
