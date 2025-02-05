@@ -11,7 +11,7 @@ class ToolCall(BaseModel):
     function: Function
     type: str
     id: str
-    index: Optional[str] = None
+    index: Optional[int] = None
 
 
 class Message(BaseModel):
