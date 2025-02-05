@@ -48,7 +48,9 @@ def process_data(data):
 
 if __name__ == "__main__":
     for line in sys.stdin:
-        raw_data = json.loads(line)
-        data = SchemaRaw(**raw_data)
-        standardized_data = process_data(data)
-        print(standardized_data.model_dump_json())
+        try:
+            raw_data = json.loads(line)
+            data = SchemaRaw(**raw_data)
+            standardized_data = process_data(data)
+            print(standardized_data.model_dump_json())
+        except Exception as e: continue
