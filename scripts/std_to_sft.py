@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import argparse
+import traceback
 
 from browsergym.core.action.highlevel import HighLevelActionSet
 
@@ -30,6 +31,7 @@ tools = codeact_function_calling.get_tools(
         )
 
 dataset = os.getenv("MY_DATASET")
+assert dataset, "Please set the environment variable MY_DATASET"
 
 action_function = {
     'python': 'execute_ipython_cell',
@@ -89,6 +91,7 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         # for tool calls that are not browser based
         if not browsergym_id:
             arguments = {k: v for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']}
+            api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in arguments.items()])})"
         # for tool calls that are browser based
         elif len(event.kwargs)==1 and 'element_id' in event.kwargs:
             api_action = f"{event.function}(bid={browsergym_id})"
@@ -173,12 +176,14 @@ def process_row(line):
                     else: conversations.extend([message])
                     pre_event = event
                 except Exception as e: 
+                    traceback.print_exc()
                     print(e)
                     return None
 
             system_message = get_system_message()
             return {"id": trajectory.id, "conversations": conversations, 'system': system_message,'tools': json.dumps(tools)}
     except Exception as e: 
+        traceback.print_exc()
         print(e)
         return None
 

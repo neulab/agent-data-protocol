@@ -429,7 +429,7 @@ def get_tools(
     codeact_enable_llm_editor: bool = False,
     codeact_enable_jupyter: bool = False,
 ) -> list:
-    tools = [str(CmdRunTool), str(FinishTool), str(StrReplaceEditorTool)]
+    tools = [CmdRunTool, FinishTool, StrReplaceEditorTool]
     if codeact_enable_browsing:
         tools.append(WebReadTool)
         tools.append(BrowserTool)
