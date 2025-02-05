@@ -14,6 +14,9 @@ if __name__ == "__main__":
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
 
+        if data.fail:
+            continue
+
         content = []
 
         system_msg = None
