@@ -50,5 +50,7 @@ if __name__ == "__main__":
     for line in sys.stdin:
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
+        if not data.resolved:
+            continue
         standardized_data = process_data(data)
         print(standardized_data.model_dump_json())
