@@ -398,8 +398,7 @@ BrowserTool = {
             "code": {
                 "type": "string",
                 "description": (
-                    "The Python code that interacts with the browser. "
-                    "Include actions such as opening URLs, navigating, or scraping content."
+                    "The Python code that interacts with the browser.\n" + _BROWSER_TOOL_DESCRIPTION
                 ),
             },
         },
