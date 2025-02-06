@@ -148,6 +148,8 @@ def process_data(data, keep_all=False):
                     )
                 )
             else:
+                if item.args.content.startswith("USER (assistant): "):
+                    item.args.content = item.args.content[len("USER (assistant): "):]
                 content.append(
                     MessageAction(
                         content=item.args.content,
