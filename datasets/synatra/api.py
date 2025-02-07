@@ -89,16 +89,16 @@ def tab_focus(page_number: int) -> None:
     pass
 
 
-def tab_close() -> None:
+def close_tab() -> None:
     """Close the current tab."""
     pass
 
 
 def go_back() -> None:
-    """Go back to the previous page."""
+    """Navigate to the previous page."""
     pass
 
 
 def go_forward() -> None:
-    """Go forward to the next page if go_back was called."""
+    """Navigate to the next page."""
     pass
