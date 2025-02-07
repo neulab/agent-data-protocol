@@ -15,8 +15,15 @@ def hover(id: str) -> None:
     pass
 
 def press(key_comb: str) -> None:
-    """Press a key combination."""
+    """Press a key combination.
+
+    Args:
+    ----
+        key_comb (str): The key combination to press. For example, "Ctrl+C". This is system specific.
+
+    """
     pass
+
 
 def scroll(direction: str) -> None:
     """Scroll the page up or down."""
@@ -35,7 +42,13 @@ def close_tab() -> None:
     pass
 
 def goto(url: str) -> None:
-    """Navigate to a URL."""
+    """Navigate to the given URL.
+
+    Args:
+    ----
+        url (str): The URL to navigate to.
+
+    """
     pass
 
 def go_back() -> None:
