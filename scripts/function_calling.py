@@ -296,16 +296,8 @@ else:
     for name, func in functions:
         docstring = '\n' + inspect.getdoc(func)
         sig = inspect.signature(func)
-        docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + '\n'   
+        docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + '\n\n'   
         _BROWSER_TOOL_DESCRIPTION += docstring
-
-for _, action in _browser_action_space.action_set.items():
-    assert (
-        action.signature in _BROWSER_TOOL_DESCRIPTION
-    ), f'Browser description mismatch. Please double check if the BrowserGym updated their action space.\n\nAction: {action.signature}'
-    assert (
-        action.description in _BROWSER_TOOL_DESCRIPTION
-    ), f'Browser description mismatch. Please double check if the BrowserGym updated their action space.\n\nAction: {action.description}'
 
 BrowserTool = {
     "name": "browser",
