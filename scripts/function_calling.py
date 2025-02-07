@@ -4,9 +4,15 @@ This is similar to the functionality of `CodeActResponseParser`.
 """
 
 import json
-
+import os
 from browsergym.core.action.highlevel import HighLevelActionSet
+import inspect
+import importlib.util
 
+dataset = os.getenv("MY_DATASET")
+assert dataset, "Please set the environment variable MY_DATASET"
+
+    
 _BASH_DESCRIPTION = """Execute a bash command in the terminal.
 * Long running commands: For commands that may run indefinitely, it should be run in the background and the output should be redirected to a file, e.g. command = `python3 app.py > server.log 2>&1 &`.
 * Interactive: If a bash command returns exit code `-1`, this means the process is not yet finished. The assistant must then send a second call to terminal with an empty `command` (which will retrieve any additional logs), or it can send additional text (set `command` to the text) to STDIN of the running process, or it can send command like `C-c` (Ctrl+C) to interrupt the process.
@@ -277,109 +283,21 @@ click('48', button='middle', modifiers=['Shift'])
 """
 
 _BROWSER_TOOL_DESCRIPTION = """
-The following 15 functions are available. Nothing else is supported.
+The following functions are available. Nothing else is supported.
 
-goto(url: str)
-    Description: Navigate to a url.
-    Examples:
-        goto('http://www.example.com')
-
-go_back()
-    Description: Navigate to the previous page in history.
-    Examples:
-        go_back()
-
-go_forward()
-    Description: Navigate to the next page in history.
-    Examples:
-        go_forward()
-
-noop(wait_ms: float = 1000)
-    Description: Do nothing, and optionally wait for the given time (in milliseconds).
-    You can use this to get the current page content and/or wait for the page to load.
-    Examples:
-        noop()
-
-        noop(500)
-
-scroll(delta_x: float, delta_y: float)
-    Description: Scroll horizontally and vertically. Amounts in pixels, positive for right or down scrolling, negative for left or up scrolling. Dispatches a wheel event.
-    Examples:
-        scroll(0, 200)
-
-        scroll(-50.2, -100.5)
-
-fill(bid: str, value: str)
-    Description: Fill out a form field. It focuses the element and triggers an input event with the entered text. It works for <input>, <textarea> and [contenteditable] elements.
-    Examples:
-        fill('237', 'example value')
-
-        fill('45', 'multi-line\nexample')
-
-        fill('a12', 'example with "quotes"')
-
-select_option(bid: str, options: str | list[str])
-    Description: Select one or multiple options in a <select> element. You can specify option value or label to select. Multiple options can be selected.
-    Examples:
-        select_option('a48', 'blue')
-
-        select_option('c48', ['red', 'green', 'blue'])
-
-click(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = [])
-    Description: Click an element.
-    Examples:
-        click('a51')
-
-        click('b22', button='right')
-
-        click('48', button='middle', modifiers=['Shift'])
-
-dblclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = [])
-    Description: Double click an element.
-    Examples:
-        dblclick('12')
-
-        dblclick('ca42', button='right')
-
-        dblclick('178', button='middle', modifiers=['Shift'])
-
-hover(bid: str)
-    Description: Hover over an element.
-    Examples:
-        hover('b8')
-
-press(bid: str, key_comb: str)
-    Description: Focus the matching element and press a combination of keys. It accepts the logical key names that are emitted in the keyboardEvent.key property of the keyboard events: Backquote, Minus, Equal, Backslash, Backspace, Tab, Delete, Escape, ArrowDown, End, Enter, Home, Insert, PageDown, PageUp, ArrowRight, ArrowUp, F1 - F12, Digit0 - Digit9, KeyA - KeyZ, etc. You can alternatively specify a single character you'd like to produce such as "a" or "#". Following modification shortcuts are also supported: Shift, Control, Alt, Meta, ShiftLeft, ControlOrMeta. ControlOrMeta resolves to Control on Windows and Linux and to Meta on macOS.
-    Examples:
-        press('88', 'Backspace')
-
-        press('a26', 'ControlOrMeta+a')
-
-        press('a61', 'Meta+Shift+t')
-
-focus(bid: str)
-    Description: Focus the matching element.
-    Examples:
-        focus('b455')
-
-clear(bid: str)
-    Description: Clear the input field.
-    Examples:
-        clear('996')
-
-drag_and_drop(from_bid: str, to_bid: str)
-    Description: Perform a drag & drop. Hover the element that will be dragged. Press left mouse button. Move mouse to the element that will receive the drop. Release left mouse button.
-    Examples:
-        drag_and_drop('56', '498')
-
-upload_file(bid: str, file: str | list[str])
-    Description: Click an element and wait for a "filechooser" event, then select one or multiple input files for upload. Relative file paths are resolved relative to the current working directory. An empty list clears the selected files.
-    Examples:
-        upload_file('572', '/home/user/my_receipt.pdf')
-
-        upload_file('63', ['/home/bob/Documents/image.jpg', '/home/bob/Documents/file.zip'])
 """
-
+api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
+if not os.path.exists(api_file_path): _BROWSER_TOOL_DESCRIPTION = ""
+else:
+    spec = importlib.util.spec_from_file_location("api", api_file_path)
+    api_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(api_module)
+    functions = inspect.getmembers(api_module, inspect.isfunction)
+    for name, func in functions:
+        docstring = '\n' + inspect.getdoc(func)
+        sig = inspect.signature(func)
+        docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + '\n'   
+        _BROWSER_TOOL_DESCRIPTION += docstring
 
 for _, action in _browser_action_space.action_set.items():
     assert (
@@ -391,7 +309,7 @@ for _, action in _browser_action_space.action_set.items():
 
 BrowserTool = {
     "name": "browser",
-    "description": _BROWSER_DESCRIPTION + _BROWSER_TOOL_DESCRIPTION,
+    "description": _BROWSER_DESCRIPTION,
     "parameters": {
         "type": "object",
         "properties": {
@@ -413,14 +331,6 @@ FinishTool = {
         'name':'finish',
         'description':_FINISH_DESCRIPTION,
 }
-
-
-# def combine_thought(action: Action, thought: str) -> Action:
-#     if not hasattr(action, 'thought'):
-#         return action
-#     if thought:
-#         action.thought = thought
-#     return action
 
 
 def get_tools(
