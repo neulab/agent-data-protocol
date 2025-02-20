@@ -67,7 +67,7 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         else:
             axtree = generate_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, previous_actions)
-        return {"from": "human", "value": prompt}
+        return {"from": "observation", "value": prompt}
     
     if isinstance(event, ApiAction):
         thought = "THOUGHT: " + event.description + "\n\n" if event.description else ""
@@ -158,17 +158,22 @@ def process_row(line):
                     continue
                 try: 
                     message = standardized_event_to_openhands_message(id, event, details, previous_actions)
-                    if len(conversations) == 0: conversations.extend([message])
+                    if len(conversations) == 0: 
+                        conversations.extend([message])
+                        continue
                     # code to process multiple consecutive function calls + observations
                     elif message['from'] == 'function_call' and conversations[-1]['from'] == 'function_call':
-                        conversations[-1]['value'] = conversations[-1]['value'] + '\n' + message['value']
+                        conversations[-1]['value'] = conversations[-1]['value'] + '\n' + message['value'].replace('THOUGHT: ', '')
                         # if the previous event contains only one function call
                         if isinstance(conversations[-1]['function_call'], str): 
                             conversations[-1]['function_call'] = [conversations[-1]['function_call'], message['function_call']]
                         # if the previous event already contains multiple function calls
                         elif isinstance(conversations[-1]['function_call'], list): conversations[-1]['function_call'].append(message['function_call'])
                         else: raise ValueError(f"Unknown function_call type: {type(conversations[-1]['function_call'])}\n{conversations[-1]['function_call']}")
-                    else: conversations.extend([message])
+                        continue
+                    if conversations[-1]['from'] == 'function_call' and isinstance(event, TextObservation):
+                        message['from'] = 'observation'
+                    conversations.extend([message])
                 except Exception as e: 
                     traceback.print_exc()
                     print(e)
