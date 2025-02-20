@@ -153,28 +153,22 @@ def process_row(line):
                     strict=False,  # less strict on the parsing of the actions
                     multiaction=True,  # enable to agent to take multiple actions at once
                 )
-            pre_event = None
             for event in events:
                 if hasattr(event, 'source') and event.source == 'system': # Ignore dataset specific system messages since we have a unified system prompt
                     continue
                 try: 
                     message = standardized_event_to_openhands_message(id, event, details, previous_actions)
+                    if len(conversations) == 0: conversations.extend([message])
                     # code to process multiple consecutive function calls + observations
-                    if isinstance(event, ApiAction) and isinstance(pre_event, ApiAction):
+                    elif message['from'] == 'function_call' and conversations[-1]['from'] == 'function_call':
                         conversations[-1]['value'] = conversations[-1]['value'] + '\n' + message['value']
                         # if the previous event contains only one function call
                         if isinstance(conversations[-1]['function_call'], str): 
                             conversations[-1]['function_call'] = [conversations[-1]['function_call'], message['function_call']]
                         # if the previous event already contains multiple function calls
-                        else: conversations[-1]['function_call'].append(message['function_call'])
-                    elif isinstance(event, TextObservation) and isinstance(pre_event, TextObservation):
-                        # if the previous event contains only one observation
-                        if isinstance(conversations[-1]['value'], str): 
-                            conversations[-1]['value'] = [conversations[-1]['value'], message['value']]
-                        # if the previous event already contains multiple observations
-                        else: conversations[-1]['value'].append(message['value'])
+                        elif isinstance(conversations[-1]['function_call'], list): conversations[-1]['function_call'].append(message['function_call'])
+                        else: raise ValueError(f"Unknown function_call type: {type(conversations[-1]['function_call'])}\n{conversations[-1]['function_call']}")
                     else: conversations.extend([message])
-                    pre_event = event
                 except Exception as e: 
                     traceback.print_exc()
                     print(e)
