@@ -32,25 +32,46 @@ CmdRunTool = {'name' : 'execute_bash',
         },
 }
 
+api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
+_API_TOOL_DESCRIPTION = ""
+if os.path.exists(api_file_path):
+    spec = importlib.util.spec_from_file_location("api", api_file_path)
+    api_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(api_module)
+    functions = inspect.getmembers(api_module, inspect.isfunction)
+    for name, func in functions:
+        docstring = '\n' + inspect.getdoc(func)
+        sig = inspect.signature(func)
+        docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + '\n\n'   
+        _API_TOOL_DESCRIPTION += docstring
+
 _IPYTHON_DESCRIPTION = """Run a cell of Python code in an IPython environment.
 * The assistant should define variables and import packages before using them.
 * The variable defined in the IPython environment will not be available outside the IPython environment (e.g., in terminal).
 """
 
-IPythonTool = {
-    "name": "execute_ipython_cell",
-    "description": _IPYTHON_DESCRIPTION,
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "code": {
-                "type": "string",
-                "description": "The Python code to execute. Supports magic commands like %pip.",
+def getIPythonTool(is_web: bool):
+    if is_web and _API_TOOL_DESCRIPTION != '':
+        _IPYTHON_TOOL_DESCRIPTION = """
+        The following pre-defined functions are also available. 
+
+        """ + _API_TOOL_DESCRIPTION
+    else: _IPYTHON_TOOL_DESCRIPTION = ''
+    IPythonTool = {
+        "name": "execute_ipython_cell",
+        "description": _IPYTHON_DESCRIPTION,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "The Python code to execute. Supports magic commands like %pip.\n" + _IPYTHON_TOOL_DESCRIPTION,
+                },
             },
-        },
-        "required": ["code"],
+            "required": ["code"],
+        }
     }
-}
+    return IPythonTool
 
 
 _FILE_EDIT_DESCRIPTION = """Edit a file.
@@ -282,39 +303,30 @@ click('a51')
 click('48', button='middle', modifiers=['Shift'])
 """
 
-_BROWSER_TOOL_DESCRIPTION = """
-The following functions are available. Nothing else is supported.
+def getBrowserTool(is_web: bool):
+    if is_web and _API_TOOL_DESCRIPTION != '':
+        _BROWSER_TOOL_DESCRIPTION = """
+        The following functions are available. Nothing else is supported.
 
-"""
-api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
-if not os.path.exists(api_file_path): _BROWSER_TOOL_DESCRIPTION = ""
-else:
-    spec = importlib.util.spec_from_file_location("api", api_file_path)
-    api_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(api_module)
-    functions = inspect.getmembers(api_module, inspect.isfunction)
-    for name, func in functions:
-        docstring = '\n' + inspect.getdoc(func)
-        sig = inspect.signature(func)
-        docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + '\n\n'   
-        _BROWSER_TOOL_DESCRIPTION += docstring
-
-BrowserTool = {
-    "name": "browser",
-    "description": _BROWSER_DESCRIPTION,
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "code": {
-                "type": "string",
-                "description": (
-                    "The Python code that interacts with the browser.\n" + _BROWSER_TOOL_DESCRIPTION
-                ),
+        """ + _API_TOOL_DESCRIPTION
+    else: _BROWSER_TOOL_DESCRIPTION = ''
+    BrowserTool = {
+        "name": "browser",
+        "description": _BROWSER_DESCRIPTION,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": (
+                        "The Python code that interacts with the browser.\n" + _BROWSER_TOOL_DESCRIPTION
+                    ),
+                },
             },
+            "required": ["code"],
         },
-        "required": ["code"],
-    },
-}
+    }
+    return BrowserTool
 
 
 _FINISH_DESCRIPTION = """Finish the interaction when the task is complete OR if the assistant cannot proceed further with the task."""
@@ -329,13 +341,14 @@ def get_tools(
     codeact_enable_browsing: bool = False,
     codeact_enable_llm_editor: bool = False,
     codeact_enable_jupyter: bool = False,
+    is_web: bool = False,
 ) -> list:
     tools = [CmdRunTool, FinishTool, StrReplaceEditorTool]
     if codeact_enable_browsing:
         tools.append(WebReadTool)
-        tools.append(BrowserTool)
+        tools.append(getBrowserTool(is_web))
     if codeact_enable_llm_editor:
         tools.append(LLMBasedFileEditTool)
     if codeact_enable_jupyter:
-        tools.append(IPythonTool)
+        tools.append(getIPythonTool(is_web))
     return tools
