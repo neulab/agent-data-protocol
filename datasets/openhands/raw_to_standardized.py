@@ -191,20 +191,11 @@ def process_data(data, keep_all=False):
             action = item.args.browser_actions.strip()
             if not action:
                 continue
-            if '\n' in action:
-                # if there are multiple actions, simply pass them to the browse_interactive function
-                content.append(
-                    ApiAction(
-                        function="browse_interactive",
-                        description=item.args.thought,
-                        kwargs={
-                             "browser_actions": action,
-                        },
-                    )
-                )
-            else:
+            actions = [a.strip() for a in action.split("\n") if a.strip()]
+            for action in actions:
                 function_name, args, kwargs = parse_browser_action(action)
                 if not function_name:
+                    print(f"Invalid browser action: {action}", file=sys.stderr)
                     continue
                 function_name = ACTION_MAP.get(function_name, function_name)
                 api_args = list(inspect.signature(getattr(api, function_name)).parameters.keys())
