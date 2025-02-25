@@ -186,34 +186,7 @@ def process_row(line):
         print(e)
         return None
 
-with open(f'datasets/{dataset}/full_std.jsonl') as f: data = f.readlines()
-
-output = []
-# for i in range(len(data)):
-#     line = data[i]
-#     output_line = process_row(line)
-#     if output_line is not None: 
-#         output.append(output_line)
-#         print(i)
-with ThreadPoolExecutor(max_workers=64) as executor:   
-    futures = [
-        executor.submit(process_row, line)
-        for line in data
-    ]
-    for future in tqdm(as_completed(futures), total=len(futures)):
-        output_line = future.result()
-        if output_line is not None: output.append(output_line)
-
-# remove duplicate values
-temp = []
-for i in range(len(output)):
-    appeared = False
-    for j in range(0, i):
-        if output[i] == output[j]: 
-            appeared = True
-            break
-    if not appeared: temp.append(output[i])
-output = temp
-
-print(len(output))
-with open(f'datasets/{dataset}/{dataset}.json', 'w') as f: json.dump(output, f, indent=2, ensure_ascii=False)
+for line in sys.stdin:
+    output_line = process_row(line)
+    if output_line:
+        print(json.dumps(output_line))
