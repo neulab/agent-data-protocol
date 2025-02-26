@@ -51,6 +51,13 @@ parser.add_argument('--chunk', type=str, help='Dataset name', required=True)
 parser.add_argument('--is_web', type=str, choices=['yes', 'no'], help='Is Dataset type web api', required=True)
 args = parser.parse_args()
 
+tools = codeact_function_calling.get_tools(
+            codeact_enable_browsing= True,
+            codeact_enable_jupyter=True,
+            codeact_enable_llm_editor=True,
+            is_web=args.is_web == 'yes'
+        )
+
 def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previous_actions: list) -> dict:
     # NOTE for KETAN: deal with the different types of events later
     # The Web and API Actions are based on Browsergym's schema. So use normal actions if the style is different to HTML/AXTree
