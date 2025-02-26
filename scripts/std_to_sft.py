@@ -24,11 +24,6 @@ from scripts.browsing_prompts.user import get_web_user_message
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
-tools = codeact_function_calling.get_tools(
-            codeact_enable_browsing= True,
-            codeact_enable_jupyter=True,
-            codeact_enable_llm_editor=True,
-        )
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
