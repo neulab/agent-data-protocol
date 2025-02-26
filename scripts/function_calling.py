@@ -51,7 +51,7 @@ _IPYTHON_DESCRIPTION = """Run a cell of Python code in an IPython environment.
 """
 
 def getIPythonTool(is_web: bool):
-    if is_web and _API_TOOL_DESCRIPTION != '':
+    if not is_web and _API_TOOL_DESCRIPTION != '':
         _IPYTHON_TOOL_DESCRIPTION = """
         The following pre-defined functions are also available. 
 
