@@ -1,5 +1,5 @@
 import os
-from get_tools import get_tools, convert_tools_to_description
+from scripts.system_prompt.get_tools import get_tools, convert_tools_to_description
 
 _script_dir = os.path.dirname(os.path.realpath(__file__))
 prompt_file = os.path.join(_script_dir, 'system_prefix.txt')

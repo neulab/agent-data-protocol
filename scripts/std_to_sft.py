@@ -18,8 +18,8 @@ from schema.trajectory import Trajectory
 import function_calling as codeact_function_calling
 
 from scripts.html_to_axtree import HTMLToAXTree
-from scripts.browsing_prompts.system import get_system_message
-from scripts.browsing_prompts.user import get_web_user_message
+from scripts.system_prompt.system import get_system_message
+from scripts.system_prompt.user import get_web_user_message
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm

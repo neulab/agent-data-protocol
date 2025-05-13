@@ -1,4 +1,4 @@
-from tools import (
+from scripts.system_prompt.tools import (
     BrowserTool,
     FinishTool,
     IPythonTool,
