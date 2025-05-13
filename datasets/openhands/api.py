@@ -186,18 +186,18 @@ def rag_search(query: str):
     pass
 
 
-def browse_interactive(browser_actions: str):
-    """Interact with the browser using Python code (BrowserGym action space).
+# def browse_interactive(browser_actions: str):
+#     """Interact with the browser using Python code (BrowserGym action space).
 
-    Use this only if the command string contains multiple browser actions.
-    Otherwise, use the specific browser action functions below.
+#     Use this only if the command string contains multiple browser actions.
+#     Otherwise, use the specific browser action functions below.
 
-    Args:
-    ----
-        browser_actions (str): The python code to execute.
+#     Args:
+#     ----
+#         browser_actions (str): The python code to execute.
 
-    """
-    pass
+#     """
+#     pass
 
 
 # all browsergym actions supported by OpenHands
