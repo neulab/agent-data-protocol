@@ -3,7 +3,6 @@ import os
 import sys
 import argparse
 import traceback
-import re
 
 from browsergym.core.action.highlevel import HighLevelActionSet
 
@@ -21,7 +20,7 @@ import function_calling as codeact_function_calling
 from scripts.html_to_axtree import HTMLToAXTree
 from scripts.system_prompt.system import get_system_message
 from scripts.system_prompt.user import get_web_user_message
-from scripts.api import get_api_tool_description
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
@@ -58,25 +57,6 @@ tools = codeact_function_calling.get_tools(
             codeact_enable_llm_editor=True,
             is_web=args.is_web == 'yes'
         )
-
-'''
-<function=example_function_name>
-<parameter=example_parameter_1>value_1</parameter>
-<parameter=example_parameter_2>
-This is the value for the second parameter
-that can span
-multiple lines
-</parameter>
-</function>
-'''
-def format_function(function, parameters):
-    function_call = ''
-    for parameter in parameters:
-        value = parameters[parameter]
-        function_call += f"<parameter={parameter}>\n{value}\n</parameter>\n"
-    function_call = f"<function={function}>\n{function_call}</function>"
-    return function_call
-
 
 def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previous_actions: list) -> dict:
     # NOTE for KETAN: deal with the different types of events later
@@ -134,11 +114,6 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
     
     elif isinstance(event, MessageAction):
         thought = event.description + "\n\n" if event.description else ""
-        if '<solution>' in event.content and '</solution>' in event.content:
-            match = re.search(r"<solution>(.*?)</solution>", event.content, re.DOTALL)
-            content = match.group(1).strip()
-            finish_function_call = format_function('finish', {'message': content, 'task_completed': 'true'})
-            return {'from': 'gpt', 'value': f"{thought}{finish_function_call}"}
         return {"from": "gpt", "value": f"{thought}{event.content}"}
     
     elif isinstance(event, TextObservation):
@@ -207,13 +182,7 @@ def process_row(line):
                     return None
 
             system_message = get_system_message()
-            output = []
-            for conv in conversations:
-                role = 'user' if conv['role'] == 'human' or conv['role'] == 'observation' else 'assistant'
-                content = conv['value']
-                output.append({'role': role, 'content': content})
-                
-            return {"id": trajectory.id, "conversations": output, 'system': system_message}
+            return {"id": trajectory.id, "conversations": conversations, 'system': system_message,'tools': json.dumps(tools)}
     except Exception as e: 
         traceback.print_exc()
         print(e)

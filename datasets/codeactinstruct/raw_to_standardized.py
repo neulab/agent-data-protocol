@@ -1,6 +1,7 @@
 import json
 import sys
 import re
+import random
 
 from schema.action.action import Action
 from schema.action.code import CodeAction
@@ -91,6 +92,23 @@ for line in sys.stdin:
     content = []
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
+    if (isinstance(content[-1], TextObservation) and content[-1].source == 'assistant') or isinstance(content[-1], CodeAction):
+        user_end_message = random.choice([
+            [TextObservation(content='Congratulations! You have successfully solved the task.', source="user"),],
+            [TextObservation(content='Your solution has been verified as correct. ', source="user"),],
+            [TextObservation(content='Well done on successfully completing the task!', source="user"),],
+            [TextObservation(content='Your implementation satisfies the task requirements.', source="user"),],
+            [TextObservation(content='Task completed successfully.', source="user"),],
+        ])
+        content.extend(user_end_message)
+        assistant_end_message = random.choice([
+            [MessageAction(content=f"<solution> I have successfully completed the task. </solution>", description=''),],
+            [MessageAction(content=f"<solution> I did it! The task is now complete. </solution>", description=''),],
+            [MessageAction(content=f"<solution> The objective has been achieved with no outstanding issues. </solution>", description=''),],
+            [MessageAction(content=f"<solution> I have fulfilled all the requirements of the task. </solution>", description=''),],
+            [MessageAction(content=f"<solution> I've wrapped up the task successfully. </solution>", description=''),]
+        ])
+        content.extend(assistant_end_message)
 
     traj: Trajectory = Trajectory(
         id=raw_data["id"],
