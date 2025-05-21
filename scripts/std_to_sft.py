@@ -89,15 +89,17 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         else:
             axtree = generate_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, previous_actions)
-        return {"from": "observation", "value": prompt}
+        return {"from": "human", "value": prompt}
     
     if isinstance(event, ApiAction):
-        thought = "THOUGHT: " + event.description + "\n\n" if event.description else ""
+        thought = event.description + "\n\n" if event.description else ""
 
         if event.function == 'goto': # could add more or condtions here for actions that don't require bid
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
             previous_actions.extend([api_action])
-            return {"from": "function_call", "value": f"{thought}", "function_call": f"{{\"name\": \"browser\", \"arguments\": {{\"code\": \"{api_action}\"}}}}"}
+            call = json.loads(f"{{\"name\": \"browser\", \"arguments\": {{\"code\": \"{api_action}\"}}}}")
+            function_call = format_function(call['name'], call['arguments'])
+            return {"from": "gpt", "value": f"{thought}{function_call}"}
 
         arguments = None
         # try to directly get the browsergym_id from the event kwargs
@@ -113,24 +115,30 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         # for tool calls that are not browser based
         if not browsergym_id:
             arguments = {k: v for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']}
-            api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in arguments.items()])})"
+            #api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in arguments.items()])})"
+            api_action = format_function(event.function, arguments)
         # for tool calls that are browser based
         elif len(event.kwargs)==1 and 'element_id' in event.kwargs:
-            api_action = f"{event.function}(bid={browsergym_id})"
+            api_action = format_function(event.function, {'bid': browsergym_id})
         else:
             api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
+            #arguments = {k: v for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']}
+            arguments['bid'] = browsergym_id
+            api_action = format_function(event.function, arguments)
         previous_actions.extend([api_action])
+        # think about this
         for tool in tools:
             if event.function == tool['name']:
-                return {"from": "function_call", "value": f"{thought}", "function_call": f"{{\"name\": \"{event.function}\", \"arguments\": {json.dumps(arguments)}}}"}
-        return {"from": "function_call", "value": f"{thought}", "function_call": f"{{\"name\": \"browser\", \"arguments\": {{\"code\": \"{api_action}\"}}}}"}
+                return {"from": "gpt", "value": f"{thought}{api_action}"}
+        return {"from": "gpt", "value": f"{thought}{api_action}"}
 
     if isinstance(event, CodeAction):
 
-        thought = "THOUGHT: " + event.description + "\n\n" if event.description else ""
+        thought = event.description + "\n\n" if event.description else ""
         function_name = action_function.get(event.language, f'execute_{event.language}')
         arg = function_args.get(function_name, 'code')
-        return {"from": "function_call", "value": f"{thought}", "function_call": f"{{\"name\": \"{function_name}\", \"arguments\": {{\"{arg}\": \"{event.content}\"}}}}"}
+        api_action = format_function(function_name, {arg: event.content})
+        return {"from": "gpt", "value": f"{thought}{api_action}"}
     
     elif isinstance(event, MessageAction):
         thought = event.description + "\n\n" if event.description else ""
@@ -151,7 +159,7 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
         if event.source == 'assistant':
             event.source = 'gpt'
 
-        return {"from": event.source, "value": event.content} if event.source in ["human", "gpt"] else {"from": "observation", "value":  f"{event.content}"}
+        return {"from": event.source, "value": event.content} if event.source in ["human", "gpt"] else {"from": "human", "value":  f"{event.content}"}
 
     else:
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
@@ -205,15 +213,8 @@ def process_row(line):
                     traceback.print_exc()
                     print(e)
                     return None
-
-            system_message = get_system_message()
-            output = []
-            for conv in conversations:
-                role = 'user' if conv['role'] == 'human' or conv['role'] == 'observation' else 'assistant'
-                content = conv['value']
-                output.append({'role': role, 'content': content})
                 
-            return {"id": trajectory.id, "conversations": output, 'system': system_message}
+            return {"id": trajectory.id, "conversations": conversations, 'system': get_system_message()}
     except Exception as e: 
         traceback.print_exc()
         print(e)
