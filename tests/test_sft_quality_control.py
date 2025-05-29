@@ -160,19 +160,21 @@ def test_analyze_sft_data(test_environment):
 
 def test_find_sft_files(test_environment):
     """Test finding SFT files."""
-    # Create a JSON file to test both extensions
+    # Create additional test files
     with open(os.path.join(test_environment['dataset1_dir'], 'test_sft.json'), 'w') as f:
         f.write('{"test": "data"}')
+    with open(os.path.join(test_environment['dataset1_dir'], 'sample.json'), 'w') as f:
+        f.write('{"test": "sample data"}')
+    with open(os.path.join(test_environment['dataset2_dir'], 'sample_raw.json'), 'w') as f:
+        f.write('{"test": "raw sample data"}')
     
-    # Find all SFT files with both extensions
-    sft_files = find_sft_files([test_environment['test_dir']], '*_sft.{json,jsonl}')
-    assert len(sft_files) == 3  # 2 jsonl + 1 json
+    # Find all SFT files with our predefined patterns
+    sft_files = find_sft_files([test_environment['test_dir']], '*')
+    assert len(sft_files) == 5  # 2 jsonl + 3 json
     
-    # Find files with specific pattern
-    sft_files = find_sft_files([test_environment['dataset1_dir']], '*_sft.{json,jsonl}')
-    assert len(sft_files) == 2  # 1 jsonl + 1 json
-    
-    # Test with just jsonl pattern
-    sft_files = find_sft_files([test_environment['dataset1_dir']], '*_sft.jsonl')
-    assert len(sft_files) == 1
-    assert sft_files[0].endswith('dataset1/test_sft.jsonl')
+    # Verify specific files are found
+    file_endings = [os.path.basename(f) for f in sft_files]
+    assert 'test_sft.json' in file_endings
+    assert 'test_sft.jsonl' in file_endings
+    assert 'sample.json' in file_endings
+    assert 'sample_raw.json' in file_endings

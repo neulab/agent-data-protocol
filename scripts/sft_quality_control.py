@@ -26,8 +26,8 @@ def parse_args():
                         help='List of dataset directories to analyze')
     parser.add_argument('--output_dir', type=str, default='/workspace/quality_control_results',
                         help='Directory to save the output charts and CSV')
-    parser.add_argument('--sft_file_pattern', type=str, default='*_sft.{json,jsonl}',
-                        help='Pattern to match SFT files (default: *_sft.{json,jsonl})')
+    parser.add_argument('--sft_file_pattern', type=str, default='*',
+                        help='Pattern to match SFT files (default: uses predefined patterns)')
     return parser.parse_args()
 
 
@@ -93,6 +93,18 @@ def analyze_sft_data(file_path):
             with open(file_path, 'r') as f:
                 try:
                     data = json.load(f)
+                    
+                    # Handle nested arrays (like in screenagent dataset)
+                    if isinstance(data, list) and len(data) > 0 and isinstance(data[0], list):
+                        # Flatten the nested structure
+                        flattened_data = []
+                        for item in data:
+                            if isinstance(item, list):
+                                flattened_data.extend(item)
+                            else:
+                                flattened_data.append(item)
+                        data = flattened_data
+                    
                     if isinstance(data, list):
                         # Array of conversations
                         for conv in data:
@@ -142,24 +154,66 @@ def process_conversation(data, dataset_name, conversation_stats, function_calls_
     conv_function_calls = 0
     conv_calls_without_thought = 0
     
-    for turn in data.get('conversations', []):
-        role = turn.get('role', '')
-        role_counts[role] += 1
+    # Handle different conversation formats
+    if 'conversations' in data:
+        # Standard format with 'conversations' field
+        for turn in data.get('conversations', []):
+            role = turn.get('role', '')
+            role_counts[role] += 1
+            
+            # Extract function calls
+            content = turn.get('content', '')
+            if isinstance(content, list):
+                content = ' '.join([item.get('text', '') for item in content if item.get('type') == 'text'])
+            
+            if role == 'assistant':
+                function_calls = extract_function_calls(content)
+                for func in function_calls:
+                    function_calls_in_conv[func] += 1
+                    conv_function_calls += 1
+                    
+                    # Check if there's a thought
+                    if not has_thought(content):
+                        conv_calls_without_thought += 1
+    elif 'messages' in data:
+        # Format with 'messages' field
+        for turn in data.get('messages', []):
+            role = turn.get('role', '')
+            role_counts[role] += 1
+            
+            # Extract function calls
+            content = turn.get('content', '')
+            if isinstance(content, list):
+                content = ' '.join([item.get('text', '') for item in content if item.get('type') == 'text'])
+            
+            if role == 'assistant':
+                function_calls = extract_function_calls(content)
+                for func in function_calls:
+                    function_calls_in_conv[func] += 1
+                    conv_function_calls += 1
+                    
+                    # Check if there's a thought
+                    if not has_thought(content):
+                        conv_calls_without_thought += 1
+    elif 'task_prompt' in data and 'LLM_response' in data:
+        # Screenagent-like format
+        # Add human turn
+        role_counts['user'] += 1
         
-        # Extract function calls
-        content = turn.get('content', '')
+        # Add assistant turn and check for function calls
+        role_counts['assistant'] += 1
+        content = data.get('LLM_response', '')
         if isinstance(content, list):
-            content = ' '.join([item.get('text', '') for item in content if item.get('type') == 'text'])
+            content = ' '.join([str(item) for item in content])
         
-        if role == 'assistant':
-            function_calls = extract_function_calls(content)
-            for func in function_calls:
-                function_calls_in_conv[func] += 1
-                conv_function_calls += 1
-                
-                # Check if there's a thought
-                if not has_thought(content):
-                    conv_calls_without_thought += 1
+        function_calls = extract_function_calls(content)
+        for func in function_calls:
+            function_calls_in_conv[func] += 1
+            conv_function_calls += 1
+            
+            # Check if there's a thought
+            if not has_thought(content):
+                conv_calls_without_thought += 1
     
     # Store conversation stats
     conversation_stats.append({
@@ -191,21 +245,15 @@ def find_sft_files(input_dirs, pattern):
     import glob
     sft_files = set()  # Use a set to avoid duplicates
     
+    # Define the patterns we want to match
+    patterns = ['sample.json', 'sample.jsonl', 'sample_raw.json', 'sample_raw.jsonl', '*_sft.json', '*_sft.jsonl']
+    
     for input_dir in input_dirs:
-        for root, _, files in os.walk(input_dir):
-            # If the pattern contains {json,jsonl}, handle both extensions
-            if '{json,jsonl}' in pattern:
-                for ext in ['json', 'jsonl']:
-                    # Replace {json,jsonl} with the current extension
-                    current_pattern = pattern.replace('{json,jsonl}', ext)
-                    # Use glob to match the pattern
-                    matches = glob.glob(os.path.join(root, current_pattern))
-                    sft_files.update(matches)
-            else:
-                # Use the pattern as is
+        for root, _, _ in os.walk(input_dir):
+            for pattern in patterns:
                 matches = glob.glob(os.path.join(root, pattern))
                 sft_files.update(matches)
-                
+    
     return sorted(list(sft_files))  # Convert back to sorted list
 
 
