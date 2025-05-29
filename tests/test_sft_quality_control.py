@@ -93,7 +93,7 @@ def test_extract_function_calls():
     """Test extracting function calls from content."""
     # Test with code block
     content1 = "ACTION: \n```execute_bash(command='ls -la')```\n"
-    assert extract_function_calls(content1) == ['execute_bash']
+    assert extract_function_calls(content1) == ['bash']
     
     # Test with execute tag
     content2 = "ACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>"
@@ -101,7 +101,7 @@ def test_extract_function_calls():
     
     # Test with multiple function calls
     content3 = "ACTION: \n```click(bid='123')```\n\nACTION: \n```hover(bid='456')```\n"
-    assert extract_function_calls(content3) == ['click', 'hover']
+    assert extract_function_calls(content3) == ['browser', 'browser']
     
     # Test with no function calls
     content4 = "This is a regular message with no function calls."

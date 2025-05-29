@@ -43,12 +43,33 @@ def extract_function_calls(content):
         # Extract function name (assuming it's at the beginning of the line)
         function_match = re.search(r"^(\w+)\(", block.strip())
         if function_match:
-            function_calls.append(function_match.group(1))
+            # Just extract the tool name
+            tool_name = function_match.group(1)
+            # Map common function names to their tool types
+            if tool_name.startswith("execute_"):
+                tool_name = "bash"
+            elif tool_name in ["click", "hover", "fill", "goto"]:
+                tool_name = "browser"
+            function_calls.append(tool_name)
     
     # Pattern for execute tags
     execute_pattern = r"<execute_(\w+)>"
     execute_matches = re.findall(execute_pattern, content)
     function_calls.extend(execute_matches)
+    
+    # Pattern for antml function calls
+    antml_pattern = r"<invoke name=\"([^\"]+)\">"
+    antml_matches = re.findall(antml_pattern, content)
+    for match in antml_matches:
+        # Map to simplified tool names
+        if match.startswith("execute_"):
+            function_calls.append("bash")
+        elif match in ["browser"]:
+            function_calls.append("browser")
+        elif match in ["execute_ipython_cell"]:
+            function_calls.append("ipython")
+        else:
+            function_calls.append(match)
     
     return function_calls
 
