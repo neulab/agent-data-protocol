@@ -26,8 +26,8 @@ def parse_args():
                         help='List of dataset directories to analyze')
     parser.add_argument('--output_dir', type=str, default='/workspace/quality_control_results',
                         help='Directory to save the output charts and CSV')
-    parser.add_argument('--sft_file_pattern', type=str, default='*_sft.jsonl',
-                        help='Pattern to match SFT files (default: *_sft.jsonl)')
+    parser.add_argument('--sft_file_pattern', type=str, default='*_sft.{json,jsonl}',
+                        help='Pattern to match SFT files (default: *_sft.{json,jsonl})')
     return parser.parse_args()
 
 
@@ -68,58 +68,54 @@ def analyze_sft_data(file_path):
     function_calls_without_thought = 0
     total_function_calls = 0
     
-    with open(file_path, 'r') as f:
-        for line in f:
-            try:
-                data = json.loads(line)
-                
-                # Count roles per conversation
-                role_counts = Counter()
-                function_calls_in_conv = defaultdict(int)
-                
-                for turn in data.get('conversations', []):
-                    role = turn.get('role', '')
-                    role_counts[role] += 1
-                    
-                    # Extract function calls
-                    content = turn.get('content', '')
-                    if isinstance(content, list):
-                        content = ' '.join([item.get('text', '') for item in content if item.get('type') == 'text'])
-                    
-                    if role == 'assistant':
-                        function_calls = extract_function_calls(content)
-                        for func in function_calls:
-                            function_calls_in_conv[func] += 1
-                            total_function_calls += 1
-                            
-                            # Check if there's a thought
-                            if not has_thought(content):
-                                function_calls_without_thought += 1
-                
-                # Store conversation stats
-                conversation_stats.append({
-                    'dataset': dataset_name,
-                    'id': data.get('id', ''),
-                    'system_turns': role_counts.get('system', 0),
-                    'user_turns': role_counts.get('user', 0),
-                    'assistant_turns': role_counts.get('assistant', 0),
-                    'total_turns': sum(role_counts.values())
-                })
-                
-                # Store function calls per turn
-                if role_counts.get('assistant', 0) > 0:
-                    for func, count in function_calls_in_conv.items():
-                        function_calls_per_turn.append({
-                            'dataset': dataset_name,
-                            'id': data.get('id', ''),
-                            'function': func,
-                            'count': count,
-                            'per_turn': count / role_counts.get('assistant', 1)
-                        })
-            
-            except json.JSONDecodeError:
-                print(f"Warning: Could not parse line in {file_path}")
-                continue
+    # Check if the file is JSON or JSONL
+    is_jsonl = file_path.endswith('.jsonl')
+    
+    try:
+        if is_jsonl:
+            # Process JSONL file (one JSON object per line)
+            with open(file_path, 'r') as f:
+                for line in f:
+                    try:
+                        data = json.loads(line.strip())
+                        calls, without_thought = process_conversation(
+                            data, dataset_name, conversation_stats, 
+                            function_calls_per_turn, function_calls_without_thought,
+                            total_function_calls
+                        )
+                        total_function_calls += calls
+                        function_calls_without_thought += without_thought
+                    except json.JSONDecodeError:
+                        print(f"Warning: Could not parse line in {file_path}")
+                        continue
+        else:
+            # Process JSON file (array of objects or single object)
+            with open(file_path, 'r') as f:
+                try:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        # Array of conversations
+                        for conv in data:
+                            calls, without_thought = process_conversation(
+                                conv, dataset_name, conversation_stats, 
+                                function_calls_per_turn, function_calls_without_thought,
+                                total_function_calls
+                            )
+                            total_function_calls += calls
+                            function_calls_without_thought += without_thought
+                    else:
+                        # Single conversation
+                        calls, without_thought = process_conversation(
+                            data, dataset_name, conversation_stats, 
+                            function_calls_per_turn, function_calls_without_thought,
+                            total_function_calls
+                        )
+                        total_function_calls += calls
+                        function_calls_without_thought += without_thought
+                except json.JSONDecodeError:
+                    print(f"Warning: Could not parse JSON in {file_path}")
+    except Exception as e:
+        print(f"Error processing file {file_path}: {str(e)}")
     
     # Calculate percentage of function calls without thought
     thought_percentage = 0
@@ -135,15 +131,82 @@ def analyze_sft_data(file_path):
     }
 
 
+def process_conversation(data, dataset_name, conversation_stats, function_calls_per_turn, 
+                         function_calls_without_thought, total_function_calls):
+    """Process a single conversation data object."""
+    # Count roles per conversation
+    role_counts = Counter()
+    function_calls_in_conv = defaultdict(int)
+    
+    # Track function calls and thoughts for this conversation
+    conv_function_calls = 0
+    conv_calls_without_thought = 0
+    
+    for turn in data.get('conversations', []):
+        role = turn.get('role', '')
+        role_counts[role] += 1
+        
+        # Extract function calls
+        content = turn.get('content', '')
+        if isinstance(content, list):
+            content = ' '.join([item.get('text', '') for item in content if item.get('type') == 'text'])
+        
+        if role == 'assistant':
+            function_calls = extract_function_calls(content)
+            for func in function_calls:
+                function_calls_in_conv[func] += 1
+                conv_function_calls += 1
+                
+                # Check if there's a thought
+                if not has_thought(content):
+                    conv_calls_without_thought += 1
+    
+    # Store conversation stats
+    conversation_stats.append({
+        'dataset': dataset_name,
+        'id': data.get('id', ''),
+        'system_turns': role_counts.get('system', 0),
+        'user_turns': role_counts.get('user', 0),
+        'assistant_turns': role_counts.get('assistant', 0),
+        'total_turns': sum(role_counts.values())
+    })
+    
+    # Store function calls per turn
+    if role_counts.get('assistant', 0) > 0:
+        for func, count in function_calls_in_conv.items():
+            function_calls_per_turn.append({
+                'dataset': dataset_name,
+                'id': data.get('id', ''),
+                'function': func,
+                'count': count,
+                'per_turn': count / role_counts.get('assistant', 1)
+            })
+            
+    # Return the counts for this conversation
+    return conv_function_calls, conv_calls_without_thought
+
+
 def find_sft_files(input_dirs, pattern):
     """Find all SFT files in the input directories."""
-    sft_files = []
+    import glob
+    sft_files = set()  # Use a set to avoid duplicates
+    
     for input_dir in input_dirs:
         for root, _, files in os.walk(input_dir):
-            for file in files:
-                if re.match(pattern.replace('*', '.*'), file):
-                    sft_files.append(os.path.join(root, file))
-    return sft_files
+            # If the pattern contains {json,jsonl}, handle both extensions
+            if '{json,jsonl}' in pattern:
+                for ext in ['json', 'jsonl']:
+                    # Replace {json,jsonl} with the current extension
+                    current_pattern = pattern.replace('{json,jsonl}', ext)
+                    # Use glob to match the pattern
+                    matches = glob.glob(os.path.join(root, current_pattern))
+                    sft_files.update(matches)
+            else:
+                # Use the pattern as is
+                matches = glob.glob(os.path.join(root, pattern))
+                sft_files.update(matches)
+                
+    return sorted(list(sft_files))  # Convert back to sorted list
 
 
 def generate_charts(all_results, output_dir):

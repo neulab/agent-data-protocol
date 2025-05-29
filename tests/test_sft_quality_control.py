@@ -160,11 +160,19 @@ def test_analyze_sft_data(test_environment):
 
 def test_find_sft_files(test_environment):
     """Test finding SFT files."""
-    # Find all SFT files
-    sft_files = find_sft_files([test_environment['test_dir']], '*_sft.jsonl')
-    assert len(sft_files) == 2
+    # Create a JSON file to test both extensions
+    with open(os.path.join(test_environment['dataset1_dir'], 'test_sft.json'), 'w') as f:
+        f.write('{"test": "data"}')
+    
+    # Find all SFT files with both extensions
+    sft_files = find_sft_files([test_environment['test_dir']], '*_sft.{json,jsonl}')
+    assert len(sft_files) == 3  # 2 jsonl + 1 json
     
     # Find files with specific pattern
+    sft_files = find_sft_files([test_environment['dataset1_dir']], '*_sft.{json,jsonl}')
+    assert len(sft_files) == 2  # 1 jsonl + 1 json
+    
+    # Test with just jsonl pattern
     sft_files = find_sft_files([test_environment['dataset1_dir']], '*_sft.jsonl')
     assert len(sft_files) == 1
     assert sft_files[0].endswith('dataset1/test_sft.jsonl')
