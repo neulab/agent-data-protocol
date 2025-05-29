@@ -43,11 +43,13 @@ def extract_function_calls(content):
         # Extract function name (assuming it's at the beginning of the line)
         function_match = re.search(r"^(\w+)\(", block.strip())
         if function_match:
-            # Just extract the tool name
+            # Just extract the raw tool name
             tool_name = function_match.group(1)
-            # Map execute functions to bash, but keep other function names as is
-            if tool_name.startswith("execute_"):
+            # Only map execute_* functions to bash for consistency with tests
+            if tool_name.startswith("execute_") and tool_name != "execute_ipython_cell":
                 tool_name = "bash"
+            elif tool_name == "execute_ipython_cell":
+                tool_name = "ipython"
             function_calls.append(tool_name)
     
     # Pattern for execute tags
@@ -59,12 +61,13 @@ def extract_function_calls(content):
     antml_pattern = r"<invoke name=\"([^\"]+)\">"
     antml_matches = re.findall(antml_pattern, content)
     for match in antml_matches:
-        # Map to simplified tool names
-        if match.startswith("execute_"):
+        # Map execute_* functions to bash/ipython for consistency
+        if match.startswith("execute_") and match != "execute_ipython_cell":
             function_calls.append("bash")
-        elif match in ["execute_ipython_cell"]:
+        elif match == "execute_ipython_cell":
             function_calls.append("ipython")
         else:
+            # Just use the raw function name
             function_calls.append(match)
     
     return function_calls
