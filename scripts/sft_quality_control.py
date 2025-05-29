@@ -333,6 +333,13 @@ def generate_charts(all_results, output_dir):
     plt.ylabel('Function Calls per Turn')
     plt.title('Function Calls per Turn by Dataset')
     plt.legend(title='Function Type', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    # Rotate x-axis labels by 45 degrees
+    plt.xticks(rotation=45, ha='right', fontsize=9)
+    
+    # Adjust y-axis to fit the whole bar
+    plt.ylim(0, max(bottom) * 1.2)  # Add 20% padding
+    
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, 'function_calls_per_turn.png'))
     plt.close()
@@ -351,6 +358,10 @@ def generate_charts(all_results, output_dir):
     plt.ylabel('Turns per Conversation')
     plt.title('Role Turns per Conversation by Dataset')
     plt.legend(title='Role', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    # Rotate x-axis labels by 45 degrees
+    plt.xticks(rotation=45, ha='right')
+    
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, 'role_turns_per_conversation.png'))
     plt.close()
@@ -366,6 +377,10 @@ def generate_charts(all_results, output_dir):
     plt.ylabel('Percentage (%)')
     plt.title('Percentage of Function Calls Without Thoughts')
     plt.ylim(0, 100)
+    
+    # Rotate x-axis labels by 45 degrees
+    plt.xticks(rotation=45, ha='right')
+    
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, 'function_calls_without_thoughts.png'))
     plt.close()
