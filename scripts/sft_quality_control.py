@@ -45,11 +45,9 @@ def extract_function_calls(content):
         if function_match:
             # Just extract the tool name
             tool_name = function_match.group(1)
-            # Map common function names to their tool types
+            # Map execute functions to bash, but keep other function names as is
             if tool_name.startswith("execute_"):
                 tool_name = "bash"
-            elif tool_name in ["click", "hover", "fill", "goto"]:
-                tool_name = "browser"
             function_calls.append(tool_name)
     
     # Pattern for execute tags
@@ -64,8 +62,6 @@ def extract_function_calls(content):
         # Map to simplified tool names
         if match.startswith("execute_"):
             function_calls.append("bash")
-        elif match in ["browser"]:
-            function_calls.append("browser")
         elif match in ["execute_ipython_cell"]:
             function_calls.append("ipython")
         else:

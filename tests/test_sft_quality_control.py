@@ -101,7 +101,7 @@ def test_extract_function_calls():
     
     # Test with multiple function calls
     content3 = "ACTION: \n```click(bid='123')```\n\nACTION: \n```hover(bid='456')```\n"
-    assert extract_function_calls(content3) == ['browser', 'browser']
+    assert extract_function_calls(content3) == ['click', 'hover']
     
     # Test with no function calls
     content4 = "This is a regular message with no function calls."
