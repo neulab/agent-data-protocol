@@ -120,18 +120,3 @@ The script generates several visualizations and a CSV file with metrics:
 - `sft_quality_metrics.csv`: Detailed metrics for each dataset
 
 These metrics help identify datasets with missing function calls, low thought usage, or other quality issues.
-
-# Run quality control on specific datasets
-python scripts/sft_quality_control.py --input_dirs datasets/mind2web datasets/synatra --output_dir quality_control_results
-```
-
-This will generate:
-- CSV file with quality metrics for each dataset
-- Visualizations of function calls per turn
-- Visualizations of function calls without thoughts
-- Visualizations of role turns per conversation
-
-The script analyzes:
-- Function call distribution across datasets
-- Presence of thought processes before function calls
-- Conversation structure and turn distribution
