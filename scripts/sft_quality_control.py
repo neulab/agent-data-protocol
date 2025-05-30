@@ -70,12 +70,35 @@ def extract_function_calls(content):
             # Just use the raw function name
             function_calls.append(match)
     
+    # Pattern for function= format
+    function_pattern = r"<function=([^>]+)>"
+    function_matches = re.findall(function_pattern, content)
+    for match in function_matches:
+        # Map execute_* functions to bash/ipython for consistency
+        if match.startswith("execute_") and match != "execute_ipython_cell":
+            function_calls.append("bash")
+        elif match == "execute_ipython_cell":
+            function_calls.append("ipython")
+        else:
+            # Just use the raw function name
+            function_calls.append(match)
+    
     return function_calls
 
 
 def has_thought(content):
     """Check if the content has a thought section."""
-    return "THOUGHT:" in content or "thought:" in content.lower()
+    # Check for various thought patterns
+    thought_patterns = [
+        "THOUGHT:", "thought:", "# thought", "# THOUGHT",
+        "REASONING:", "reasoning:", "# reasoning", "# REASONING",
+        "<invoke name=\"think\">", "<function=think>",
+        "I need to think", "Let me think", "Let's think",
+        "First, I'll", "First I'll", "First, I will", "First I will",
+        "I should", "I'll start by", "I will start by"
+    ]
+    
+    return any(pattern in content.lower() for pattern in [p.lower() for p in thought_patterns])
 
 
 def analyze_sft_data(file_path):
@@ -92,10 +115,25 @@ def analyze_sft_data(file_path):
     is_jsonl = file_path.endswith('.jsonl')
     
     try:
+        # First check if the file contains error messages
+        with open(file_path, 'r') as f:
+            first_line = f.readline().strip()
+            if first_line.startswith("Unknown event type") or not first_line:
+                print(f"Skipping file {file_path}: Contains error messages or is empty")
+                return {
+                    'conversation_stats': conversation_stats,
+                    'function_calls_per_turn': function_calls_per_turn,
+                    'function_calls_without_thought': function_calls_without_thought,
+                    'total_function_calls': total_function_calls,
+                    'thought_percentage': 0
+                }
+        
         if is_jsonl:
             # Process JSONL file (one JSON object per line)
             with open(file_path, 'r') as f:
                 for line in f:
+                    if not line.strip():
+                        continue
                     try:
                         data = json.loads(line.strip())
                         calls, without_thought = process_conversation(
@@ -179,14 +217,18 @@ def process_conversation(data, dataset_name, conversation_stats, function_calls_
         # Standard format with 'conversations' field
         for turn in data.get('conversations', []):
             role = turn.get('role', '')
+            # Map 'from' field to 'role' if present
+            if not role and 'from' in turn:
+                role = turn.get('from', '')
             role_counts[role] += 1
             
             # Extract function calls
-            content = turn.get('content', '')
+            content = turn.get('content', '') or turn.get('value', '')
             if isinstance(content, list):
                 content = ' '.join([item.get('text', '') for item in content if item.get('type') == 'text'])
             
-            if role == 'assistant':
+            # Check for function calls in assistant or function_call turns
+            if role == 'assistant' or role == 'gpt' or role == 'function_call':
                 function_calls = extract_function_calls(content)
                 for func in function_calls:
                     function_calls_in_conv[func] += 1
@@ -199,14 +241,18 @@ def process_conversation(data, dataset_name, conversation_stats, function_calls_
         # Format with 'messages' field
         for turn in data.get('messages', []):
             role = turn.get('role', '')
+            # Map 'from' field to 'role' if present
+            if not role and 'from' in turn:
+                role = turn.get('from', '')
             role_counts[role] += 1
             
             # Extract function calls
-            content = turn.get('content', '')
+            content = turn.get('content', '') or turn.get('value', '')
             if isinstance(content, list):
                 content = ' '.join([item.get('text', '') for item in content if item.get('type') == 'text'])
             
-            if role == 'assistant':
+            # Check for function calls in assistant or function_call turns
+            if role == 'assistant' or role == 'gpt' or role == 'function_call':
                 function_calls = extract_function_calls(content)
                 for func in function_calls:
                     function_calls_in_conv[func] += 1
@@ -226,6 +272,29 @@ def process_conversation(data, dataset_name, conversation_stats, function_calls_
         if isinstance(content, list):
             content = ' '.join([str(item) for item in content])
         
+        function_calls = extract_function_calls(content)
+        for func in function_calls:
+            function_calls_in_conv[func] += 1
+            conv_function_calls += 1
+            
+            # Check if there's a thought
+            if not has_thought(content):
+                conv_calls_without_thought += 1
+                
+    # Handle any other format with function_call field
+    elif any(key in data for key in ['function_call', 'function_calls']):
+        # Add human turn if there's a prompt
+        if 'prompt' in data or 'user_prompt' in data:
+            role_counts['user'] += 1
+            
+        # Add assistant/function_call turn
+        role_counts['function_call'] += 1
+        
+        # Extract function calls from function_call field
+        content = data.get('function_call', '') or data.get('function_calls', '')
+        if isinstance(content, list):
+            content = ' '.join([str(item) for item in content])
+            
         function_calls = extract_function_calls(content)
         for func in function_calls:
             function_calls_in_conv[func] += 1
@@ -266,7 +335,8 @@ def find_sft_files(input_dirs, pattern):
     sft_files = set()  # Use a set to avoid duplicates
     
     # Define the patterns we want to match
-    patterns = ['sample.json', 'sample.jsonl', 'sample_raw.json', 'sample_raw.jsonl', '*_sft.json', '*_sft.jsonl']
+    patterns = ['sample.json', 'sample.jsonl', 'sample_raw.json', 'sample_raw.jsonl', 
+                'sample_sft.json', 'sample_sft.jsonl', '*_sft.json', '*_sft.jsonl']
     
     for input_dir in input_dirs:
         for root, _, _ in os.walk(input_dir):
