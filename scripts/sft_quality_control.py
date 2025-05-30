@@ -83,6 +83,26 @@ def extract_function_calls(content):
             # Just use the raw function name
             function_calls.append(match)
     
+    # Pattern for ACTION: format (common in agent datasets)
+    action_pattern = r"ACTION:\s*([^\n]+)"
+    action_matches = re.findall(action_pattern, content)
+    if action_matches:
+        function_calls.append("action")
+    
+    # Pattern for THOUGHT: format (common in agent datasets)
+    thought_pattern = r"THOUGHT:\s*([^\n]+)"
+    thought_matches = re.findall(thought_pattern, content)
+    if thought_matches:
+        function_calls.append("thought")
+    
+    # Check for parameter= format
+    parameter_pattern = r"<parameter=([^>]+)>"
+    parameter_matches = re.findall(parameter_pattern, content)
+    if parameter_matches:
+        # If we have parameters but no function detected yet, add a generic function
+        if not function_calls:
+            function_calls.append("function_call")
+    
     return function_calls
 
 
@@ -95,10 +115,62 @@ def has_thought(content):
         "<invoke name=\"think\">", "<function=think>",
         "I need to think", "Let me think", "Let's think",
         "First, I'll", "First I'll", "First, I will", "First I will",
-        "I should", "I'll start by", "I will start by"
+        "I should", "I'll start by", "I will start by",
+        "I plan to", "My plan is", "Here's my plan", "Here is my plan",
+        "Let's analyze", "Let me analyze", "I'll analyze", "I will analyze",
+        "Let's examine", "Let me examine", "I'll examine", "I will examine",
+        "Let's consider", "Let me consider", "I'll consider", "I will consider",
+        "Let's understand", "Let me understand", "I'll understand", "I will understand",
+        "Let's break down", "Let me break down", "I'll break down", "I will break down",
+        "Let's approach", "Let me approach", "I'll approach", "I will approach",
+        "Let's solve", "Let me solve", "I'll solve", "I will solve",
+        "Let's implement", "Let me implement", "I'll implement", "I will implement",
+        "Let's create", "Let me create", "I'll create", "I will create",
+        "Let's design", "Let me design", "I'll design", "I will design",
+        "Let's develop", "Let me develop", "I'll develop", "I will develop",
+        "Let's build", "Let me build", "I'll build", "I will build",
+        "Let's code", "Let me code", "I'll code", "I will code",
+        "Let's write", "Let me write", "I'll write", "I will write",
+        "Let's program", "Let me program", "I'll program", "I will program",
+        "Let's debug", "Let me debug", "I'll debug", "I will debug",
+        "Let's fix", "Let me fix", "I'll fix", "I will fix",
+        "Let's test", "Let me test", "I'll test", "I will test",
+        "Let's verify", "Let me verify", "I'll verify", "I will verify",
+        "Let's check", "Let me check", "I'll check", "I will check",
+        "Let's validate", "Let me validate", "I'll validate", "I will validate",
+        "Let's review", "Let me review", "I'll review", "I will review",
+        "Let's assess", "Let me assess", "I'll assess", "I will assess",
+        "Let's evaluate", "Let me evaluate", "I'll evaluate", "I will evaluate",
+        "Let's explore", "Let me explore", "I'll explore", "I will explore",
+        "Let's investigate", "Let me investigate", "I'll investigate", "I will investigate",
+        "Let's research", "Let me research", "I'll research", "I will research",
+        "Let's study", "Let me study", "I'll study", "I will study",
+        "Let's learn", "Let me learn", "I'll learn", "I will learn",
+        "Let's understand", "Let me understand", "I'll understand", "I will understand",
+        "Let's comprehend", "Let me comprehend", "I'll comprehend", "I will comprehend",
+        "Let's grasp", "Let me grasp", "I'll grasp", "I will grasp",
+        "Let's figure out", "Let me figure out", "I'll figure out", "I will figure out",
+        "Let's determine", "Let me determine", "I'll determine", "I will determine",
+        "Let's decide", "Let me decide", "I'll decide", "I will decide",
+        "Let's choose", "Let me choose", "I'll choose", "I will choose",
+        "Let's select", "Let me select", "I'll select", "I will select",
+        "Let's pick", "Let me pick", "I'll pick", "I will pick",
+        "Let's opt", "Let me opt", "I'll opt", "I will opt",
+        "Let's go with", "Let me go with", "I'll go with", "I will go with",
+        "Let's proceed with", "Let me proceed with", "I'll proceed with", "I will proceed with",
+        "Let's continue with", "Let me continue with", "I'll continue with", "I will continue with",
+        "Let's move forward with", "Let me move forward with", "I'll move forward with", "I will move forward with",
+        "Let's advance with", "Let me advance with", "I'll advance with", "I will advance with",
+        "Let's progress with", "Let me progress with", "I'll progress with", "I will progress with",
+        "Let's proceed", "Let me proceed", "I'll proceed", "I will proceed",
+        "Let's continue", "Let me continue", "I'll continue", "I will continue",
+        "Let's move forward", "Let me move forward", "I'll move forward", "I will move forward",
+        "Let's advance", "Let me advance", "I'll advance", "I will advance",
+        "Let's progress", "Let me progress", "I'll progress", "I will progress"
     ]
     
-    return any(pattern in content.lower() for pattern in [p.lower() for p in thought_patterns])
+    # Check if any of the patterns are in the content (case-insensitive)
+    return any(pattern.lower() in content.lower() for pattern in thought_patterns)
 
 
 def analyze_sft_data(file_path):
