@@ -46,15 +46,22 @@ def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
     else:
         raise ValueError(f"Unknown function: {function}")
     
-    description = {
-        "sub_task": step.next_action.subtask,
-        "CoT": step.next_action.cot,
-        "action_description": step.next_action.action_description,
-    }
+    # description = {
+    #     "sub_task": step.next_action.subtask,
+    #     "CoT": step.next_action.cot,
+    #     "action_description": step.next_action.action_description,
+    # }
+    description = ''
+    if step.next_action.subtask:
+        description += f'{step.next_action.subtask}.\n\n'
+    if step.next_action.cot:
+        description += f'{step.next_action.cot}\n\n'
+    if step.next_action.action_description:
+        description += f'{step.next_action.action_description}\n\n'
     api_action = ApiAction(
         function=function,
         kwargs=kwargs,
-        description=json.dumps(description)
+        description=description
     )
     return web_observation, api_action
 

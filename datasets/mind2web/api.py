@@ -33,11 +33,11 @@ def type(xpath: str, value: str) -> None:
     pass
 
 def goto(url: str) -> None:
-    """Type some text into an input element.
+    """Navigate to the given URL.
 
     Args:
     ----
-        url (str): The url of the website to go to.
+        url (str): The URL to navigate to.
 
     """
     pass

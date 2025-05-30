@@ -195,6 +195,7 @@ Review the current state of the page and all other information to find the best 
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
 
+
     if isinstance(content[-1], TextObservation) and content[-1].source == 'assistant':
         user_end_message = random.choice([
             [TextObservation(content='Congratulations! You have successfully solved the task.', source="user"),],
@@ -212,7 +213,7 @@ Review the current state of the page and all other information to find the best 
             [MessageAction(content=f"<solution> I've wrapped up the task successfully. </solution>", description=''),]
         ])
         content.extend(assistant_end_message)
-   # Standardize the data
+    # Standardize the data
     standardize_data = Trajectory(
         id=raw_data["id"],
         content=content,

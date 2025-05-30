@@ -13,6 +13,7 @@ def process_data(data):
     for msg in data.messages:
         if msg.role in ["system", "user", "tool"]:
             _msg = f"[{msg.name}] {msg.content}" if msg.role == "tool" else msg.content
+            _msg = '\n'.join(_msg.split('] OBSERVATION:\n')[1:])
             content.append(
                 TextObservation(
                     content=_msg,

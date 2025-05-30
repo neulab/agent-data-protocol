@@ -1,22 +1,17 @@
-def noop() -> None:
-    """Do nothing."""
-    pass
-
 def type(id: str, text: str, press_enter_after: bool = True) -> None:
     """Type text into an element and optionally press enter afterwards."""
     pass
 
-def click(id: str) -> None:
-    """Click on an element."""
-    pass
-
-def hover(id: str) -> None:
-    """Hover over an element."""
-    pass
-
 def press(key_comb: str) -> None:
-    """Press a key combination."""
+    """Press a key combination.
+
+    Args:
+    ----
+        key_comb (str): The key combination to press. For example, "Ctrl+C". This is system specific.
+
+    """
     pass
+
 
 def scroll(direction: str) -> None:
     """Scroll the page up or down."""
@@ -32,18 +27,6 @@ def tab_focus(tab_index: int) -> None:
 
 def close_tab() -> None:
     """Close the current tab."""
-    pass
-
-def goto(url: str) -> None:
-    """Navigate to a URL."""
-    pass
-
-def go_back() -> None:
-    """Navigate to the previous page."""
-    pass
-
-def go_forward() -> None:
-    """Navigate to the next page."""
     pass
 
 def stop(answer: str = None) -> None:
