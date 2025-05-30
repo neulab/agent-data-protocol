@@ -1,14 +1,3 @@
-def click(element_id: str) -> None:
-    """Click on an element with the given id.
-
-    Args:
-    ----
-        element_id (str): The id of the element to click.
-
-    """
-    pass
-
-
 def type(element_id: str, text: str) -> None:
     """Type the given text into an element with the given id.
 
@@ -19,20 +8,6 @@ def type(element_id: str, text: str) -> None:
 
     """
     pass
-
-
-def scroll(dx: float, dy: float) -> None:
-    """Scroll the page. Scroll horizontally dx pixels, vertically dy pixels. Positive for right or down scrolling, negative for left or up scrolling.
-
-    Args:
-    ----
-        dx: the distance to scroll in the x direction.
-        dy: the distance to scroll in the y direction.
-
-    """
-    pass
-
-
 
 def press(key_comb: str) -> None:
     """Press a key combination.
@@ -51,17 +26,6 @@ def stop(answer: str = "") -> None:
     Args:
     ----
         answer (str): The answer to the question. This is optional since a task may not require an answer.
-
-    """
-    pass
-
-
-def goto(url: str) -> None:
-    """Navigate to the given URL.
-
-    Args:
-    ----
-        url (str): The URL to navigate to.
 
     """
     pass
@@ -91,14 +55,4 @@ def tab_focus(page_number: int) -> None:
 
 def close_tab() -> None:
     """Close the current tab."""
-    pass
-
-
-def go_back() -> None:
-    """Navigate to the previous page."""
-    pass
-
-
-def go_forward() -> None:
-    """Navigate to the next page."""
     pass

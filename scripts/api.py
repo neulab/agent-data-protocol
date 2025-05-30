@@ -2,9 +2,9 @@ import inspect
 import importlib.util
 import os
 
-def get_api_tool_description(dataset):
+def get_api_tool_description(dataset, env=None):
     api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
-    API_TOOL_DESCRIPTION = "The following pre-defined functions are also available. \n\n"
+    API_TOOL_DESCRIPTION = f"The following pre-defined functions are available in {env}. \n\n"
     if os.path.exists(api_file_path):
         spec = importlib.util.spec_from_file_location("api", api_file_path)
         api_module = importlib.util.module_from_spec(spec)

@@ -38,8 +38,8 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             bash_subs = re.sub(r'\"bash\"', '<execute_bash>', system_regex.group(1))
             bash_subs = re.sub(r'Act: bash\n\n```bash\n(.*?)\n```', r'ACTION: <execute_bash>\n# put your bash code here\n</execute_bash>', bash_subs, flags=re.DOTALL)
 
-            finish_subs = re.sub(r'\"finish\"', r'exit', bash_subs)
-            finish_subs = re.sub(r'Act: finish', 'ACTION: <execute_bash>\nexit\n</execute_bash>', finish_subs)
+            #finish_subs = re.sub(r'\"finish\"', r'exit', bash_subs)
+            finish_subs = re.sub(r'Act: finish', r'ACTION: finish', bash_subs)
 
             answer_subs = re.sub(r'\"answer\"', r'<solution>', finish_subs)
             answer_subs = re.sub(r'Act: answer\(.*\)', r'ACTION: <solution> Your solution here </solution>', answer_subs)
@@ -134,8 +134,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         elif finish_extract_regex:
             return [
                 MessageAction(
-                    # content=finish_extract_regex.group(0),
-                    content="<execute_bash>\nexit\n</execute_bash>",
+                    content="ACTION: finish",
                     description=code_act_regex.group(1)
                 ),
             ]
@@ -195,6 +194,7 @@ Review the current state of the page and all other information to find the best 
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
 
+    # Handle finish actions for natural language based tasks
     if isinstance(content[-1], TextObservation) and content[-1].source == 'assistant':
         user_end_message = random.choice([
             [TextObservation(content='Congratulations! You have successfully solved the task.', source="user"),],
@@ -205,14 +205,23 @@ Review the current state of the page and all other information to find the best 
         ])
         content.extend(user_end_message)
         assistant_end_message = random.choice([
-            [MessageAction(content=f"<solution> I have successfully completed the task. </solution>", description=''),],
-            [MessageAction(content=f"<solution> I did it! The task is now complete. </solution>", description=''),],
-            [MessageAction(content=f"<solution> The objective has been achieved with no outstanding issues. </solution>", description=''),],
-            [MessageAction(content=f"<solution> I have fulfilled all the requirements of the task. </solution>", description=''),],
-            [MessageAction(content=f"<solution> I've wrapped up the task successfully. </solution>", description=''),]
+            [MessageAction(content=f"<finish> I have successfully completed the task. </finish>", description=''),],
+            [MessageAction(content=f"<finish> I did it! The task is now complete. </finish>", description=''),],
+            [MessageAction(content=f"<finish> The objective has been achieved with no outstanding issues. </finish>", description=''),],
+            [MessageAction(content=f"<finish> I have fulfilled all the requirements of the task. </finish>", description=''),],
+            [MessageAction(content=f"<finish> I've wrapped up the task successfully. </finish>", description=''),]
         ])
         content.extend(assistant_end_message)
-   # Standardize the data
+    
+    # Handle finish actions for message actions 
+    if isinstance(content[-1], MessageAction) and '<finish>' not in content[-1].content:
+        content[-1].content = f"<finish> {content[-1].content} </finish>"
+    
+    # Handle finish actions for code actions: Should not have a code action without an observation, skip
+    if isinstance(content[-1], CodeAction): continue
+    
+    
+    # Standardize the data
     standardize_data = Trajectory(
         id=raw_data["id"],
         content=content,

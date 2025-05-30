@@ -29,6 +29,17 @@ from tqdm import tqdm
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
 
+openhands_default_tools = [
+    'execute_bash',
+    'think',
+    'finish',
+    'web_read',
+    'browser',
+    'execute_ipython_cell',
+    'str_replace_editor',
+    'edit_file'
+]
+
 action_function = {
     'python': 'execute_ipython_cell',
     'bash': 'execute_bash',
@@ -50,6 +61,8 @@ parser = argparse.ArgumentParser(description='Convert standardized data to SFT f
 # parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
 parser.add_argument('--chunk', type=str, help='Dataset name', required=True)
 parser.add_argument('--is_web', type=str, choices=['yes', 'no'], help='Is Dataset type web api', required=True)
+parser.add_argument('--keep_system', type=str, choices=['yes', 'no'], help='Keep system prompt in first user message or not', required=True)
+parser.add_argument('--api_env', type=str, choices=openhands_default_tools+[None], help='The environment in which the APIs are pre-defined', default=None)
 args = parser.parse_args()
 
 tools = codeact_function_calling.get_tools(
@@ -59,6 +72,7 @@ tools = codeact_function_calling.get_tools(
             is_web=args.is_web == 'yes'
         )
 
+# Example OH function format:
 '''
 <function=example_function_name>
 <parameter=example_parameter_1>value_1</parameter>
@@ -69,7 +83,9 @@ multiple lines
 </parameter>
 </function>
 '''
+
 def format_function(function, parameters):
+    if function not in openhands_default_tools: return None
     function_call = ''
     for parameter in parameters:
         value = parameters[parameter]
@@ -77,8 +93,12 @@ def format_function(function, parameters):
     function_call = f"<function={function}>\n{function_call}</function>"
     return function_call
 
+def extract_function_call(content):
+    for tool in openhands_default_tools:
+        if f'<function={tool}' in content: return tool
+    return None
 
-def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation, details: dict, previous_actions: list) -> dict:
+def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation, details: dict, previous_web_actions: list) -> dict:
     # NOTE for KETAN: deal with the different types of events later
     # The Web and API Actions are based on Browsergym's schema. So use normal actions if the style is different to HTML/AXTree
     if isinstance(event, WebObservation):
@@ -88,18 +108,18 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
             axtree = generate_axtree.build_axtree(id, event.html, args.chunk)
         else:
             axtree = generate_axtree.last_xtree
-        prompt = get_web_user_message("", event.url, axtree, previous_actions)
+        prompt = get_web_user_message("", event.url, axtree, previous_web_actions)
         return {"from": "human", "value": prompt}
     
     if isinstance(event, ApiAction):
         thought = event.description + "\n\n" if event.description else ""
 
-        if event.function == 'goto': # could add more or condtions here for actions that don't require bid
+        if event.function == 'goto': # could add more or conditions here for actions that don't require bid
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
-            previous_actions.extend([api_action])
+            previous_web_actions.extend([api_action])
             call = json.loads(f"{{\"name\": \"browser\", \"arguments\": {{\"code\": \"{api_action}\"}}}}")
             function_call = format_function(call['name'], call['arguments'])
-            return {"from": "gpt", "value": f"{thought}{function_call}"}
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         arguments = None
         # try to directly get the browsergym_id from the event kwargs
@@ -113,37 +133,39 @@ def standardized_event_to_openhands_message(id, event: ApiAction | CodeAction | 
             if event_xpath:
                 browsergym_id = generate_axtree.get_bid(id, event_xpath, args.chunk)
         # for tool calls that are not browser based
-        if not browsergym_id:
+        if not browsergym_id and event.function in openhands_default_tools:
             arguments = {k: v for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']}
-            #api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in arguments.items()])})"
-            api_action = format_function(event.function, arguments)
+            function_call = format_function(event.function, arguments)
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
+        if not browsergym_id:
+            assert args.api_env
+            arg = function_args.get(args.api_env, 'code')
+            api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
+            function_call = format_function(args.api_env, {arg: api_action})
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
         # for tool calls that are browser based
         elif len(event.kwargs)==1 and 'element_id' in event.kwargs:
-            api_action = format_function(event.function, {'bid': browsergym_id})
+            api_action = f"{event.function}(bid={browsergym_id})"     
         else:
-            api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
-            #arguments = {k: v for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']}
-            arguments['bid'] = browsergym_id
-            api_action = format_function(event.function, arguments)
-        previous_actions.extend([api_action])
-        # think about this
-        for tool in tools:
-            if event.function == tool['name']:
-                return {"from": "gpt", "value": f"{thought}{api_action}"}
-        return {"from": "gpt", "value": f"{thought}{api_action}"}
+            api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"            
+        previous_web_actions.extend([api_action])
+        call = json.loads(f"{{\"name\": \"browser\", \"arguments\": {{\"code\": \"{api_action}\"}}}}")
+        call = format_function(call['name'], call['arguments'])
+        return {"from": "function_call", "value": f"{thought}{call}"}
 
     if isinstance(event, CodeAction):
 
         thought = event.description + "\n\n" if event.description else ""
         function_name = action_function.get(event.language, f'execute_{event.language}')
         arg = function_args.get(function_name, 'code')
-        api_action = format_function(function_name, {arg: event.content})
-        return {"from": "gpt", "value": f"{thought}{api_action}"}
+        code_action = format_function(function_name, {arg: event.content})
+        if not code_action: raise ValueError(f"Event with unknown code action type: {type(event)}\n{function_name}")
+        return {"from": "function_call", "value": f"{thought}{code_action}"}
     
     elif isinstance(event, MessageAction):
         thought = event.description + "\n\n" if event.description else ""
-        if '<solution>' in event.content and '</solution>' in event.content:
-            match = re.search(r"<solution>(.*?)</solution>", event.content, re.DOTALL)
+        if '<finish>' in event.content and '</finish>' in event.content:
+            match = re.search(r"<finish>(.*?)</finish>", event.content, re.DOTALL)
             content = match.group(1).strip()
             finish_function_call = format_function('finish', {'message': content, 'task_completed': 'true'})
             return {'from': 'gpt', 'value': f"{thought}{finish_function_call}"}
@@ -176,7 +198,7 @@ def process_row(line):
             details = trajectory.details
 
             conversations = []
-            previous_actions = []
+            previous_web_actions = []
 
             # Add system message similar to OH Browsing Agent if the dataset is web dataset
             if args.is_web=='yes':
@@ -188,12 +210,19 @@ def process_row(line):
                     strict=False,  # less strict on the parsing of the actions
                     multiaction=True,  # enable to agent to take multiple actions at once
                 )
-            for event in events:
+            for i in range(len(events)):
+                event = events[i]
                 if hasattr(event, 'source') and event.source == 'system': # Ignore dataset specific system messages since we have a unified system prompt
                     continue
                 try: 
-                    message = standardized_event_to_openhands_message(id, event, details, previous_actions)
+                    message = standardized_event_to_openhands_message(id, event, details, previous_web_actions)
+                    # prepend original system message to first user message if want to keep original system message from std
+                    if args.keep_system and i == 1 and hasattr(events[0], 'source') and events[0].source == 'system':
+                        message['value'] = events[0].content + '\n\n' + message['value']
                     if len(conversations) == 0: 
+                        # append api function docs to first user message when available
+                        if args.api_env: 
+                            message['value'] += '\n\n' + get_api_tool_description(dataset, args.api_env) 
                         conversations.extend([message])
                         continue
                     # code to process multiple consecutive function calls + observations
@@ -208,6 +237,8 @@ def process_row(line):
                         continue
                     if conversations[-1]['from'] == 'function_call' and isinstance(event, TextObservation):
                         message['from'] = 'observation'
+                        function_name = extract_function_call(conversations[-1]['value'])
+                        if function_name: message['value'] = f"EXECUTION RESULT of [{function_name}]:\n" + message['value']
                     conversations.extend([message])
                 except Exception as e: 
                     traceback.print_exc()
@@ -223,4 +254,11 @@ def process_row(line):
 for line in sys.stdin:
     output_line = process_row(line)
     if output_line:
-        print(json.dumps(output_line))
+        with open(f'datasets/{dataset}/full_sft.jsonl', 'a') as f:
+            try: 
+                temp = json.loads(json.dumps(output_line))
+                f.write(json.dumps(output_line) + '\n')
+            except Exception as e: 
+                traceback.print_exc()
+                print(e)
+                continue

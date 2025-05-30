@@ -24,8 +24,8 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             splited = system_msg.split(TOOL_DESCRIPTION, maxsplit=1)
             system_msg = splited[0].rstrip()
             APIS.add(splited[1])
-        system_msg = re.sub(r'<execute>', r'<execute_ipython>', system_msg)
-        system_msg = re.sub(r'</execute>', r'</execute_ipython>', system_msg)
+        system_msg = re.sub(r'<execute>', r'<execute_ipython_cell>', system_msg)
+        system_msg = re.sub(r'</execute>', r'</execute_ipython_cell>', system_msg)
         return [
             TextObservation(content=system_msg, source=step["role"]),
         ]
@@ -44,16 +44,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         assert step["role"] == "assistant", f"Expected assistant role, got {step['role']}. {json.dumps(step, indent=2)}"
         thought = solution_regex.group(1).strip()
         solution = solution_regex.group(2).strip()
-        if "<execute>" not in thought:
-            return [
-                MessageAction(content=f'<solution> {solution} </solution>', description=thought or ''),
-            ]
-        else:
-            # some of the thoughts contains <execute> tag which could be confusing
-            # to model for training, so i did not include thought for solution
-            return [
-                MessageAction(content=f'<solution> {solution} </solution>', description=''),
-            ]
+        return [MessageAction(content=f'<solution> {solution} </solution>', description=thought or ''),]
 
     elif execute_regex:
         assert step["role"] == "assistant", f"Expected assistant role, got {step['role']}"
@@ -62,7 +53,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         assert code, f"Empty code in {json.dumps(step, indent=2)}"
         return [
             CodeAction(
-                language="python3",
+                language="python",
                 content=code,
                 description=thought or '',
             ),
@@ -102,14 +93,18 @@ for line in sys.stdin:
         ])
         content.extend(user_end_message)
         assistant_end_message = random.choice([
-            [MessageAction(content=f"<solution> I have successfully completed the task. </solution>", description=''),],
-            [MessageAction(content=f"<solution> I did it! The task is now complete. </solution>", description=''),],
-            [MessageAction(content=f"<solution> The objective has been achieved with no outstanding issues. </solution>", description=''),],
-            [MessageAction(content=f"<solution> I have fulfilled all the requirements of the task. </solution>", description=''),],
-            [MessageAction(content=f"<solution> I've wrapped up the task successfully. </solution>", description=''),]
+            [MessageAction(content=f"<finish> I have successfully completed the task. </finish>", description=''),],
+            [MessageAction(content=f"<finish> I did it! The task is now complete. </finish>", description=''),],
+            [MessageAction(content=f"<finish> The objective has been achieved with no outstanding issues. </finish>", description=''),],
+            [MessageAction(content=f"<finish> I have fulfilled all the requirements of the task. </finish>", description=''),],
+            [MessageAction(content=f"<finish> I've wrapped up the task successfully. </finish>", description=''),]
         ])
         content.extend(assistant_end_message)
 
+    # Handle finish actions for message actions 
+    if isinstance(content[-1], MessageAction) and '<finish>' not in content[-1].content:
+        content[-1].content = f"<finish> {content[-1].content} </finish>"
+        
     traj: Trajectory = Trajectory(
         id=raw_data["id"],
         content=content,
