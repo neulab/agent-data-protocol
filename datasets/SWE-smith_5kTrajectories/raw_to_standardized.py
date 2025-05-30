@@ -1,40 +1,26 @@
-import json
 import sys
+import json
 import re
 
-from schema.action.action import Action
-from schema.action.code import CodeAction
+from schema.action.api import ApiAction
 from schema.action.message import MessageAction
-from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 from schema_raw import SchemaRaw
 
 
-def convert_step(step: dict[str, str]) -> list[dict]:
+def convert_step(step: dict[str, str]) -> list:
     if step["role"] == "user":
         # Check if it's an observation (starts with OBSERVATION:)
         if step["content"].startswith("OBSERVATION:"):
             # Remove "OBSERVATION:" prefix and clean up
             content = step["content"][len("OBSERVATION:"):].strip()
-            return [{
-                "class_": "text_observation",
-                "content": content,
-                "source": "system"
-            }]
+            return [TextObservation(content=content, source="system")]
         else:
-            return [{
-                "class_": "text_observation", 
-                "content": step["content"],
-                "source": "user"
-            }]
+            return [TextObservation(content=step["content"], source="user")]
     
     elif step["role"] == "system":
-        return [{
-            "class_": "text_observation",
-            "content": step["content"],
-            "source": "system"
-        }]
+        return [TextObservation(content=step["content"], source="system")]
     
     elif step["role"] == "assistant":
         result = []
@@ -51,11 +37,7 @@ def convert_step(step: dict[str, str]) -> list[dict]:
                 # Add any text before this function call as a text observation
                 before_text = content[current_pos:match.start()].strip()
                 if before_text:
-                    result.append({
-                        "class_": "text_observation",
-                        "content": before_text,
-                        "source": "system"
-                    })
+                    result.append(TextObservation(content=before_text, source="system"))
                 
                 # Parse the function call
                 function_name = match.group(1)
@@ -86,23 +68,15 @@ def convert_step(step: dict[str, str]) -> list[dict]:
                     else:
                         kwargs[param_name] = param_value
                 
-                # Add the function call
-                result.append({
-                    "function": function_name,
-                    "kwargs": kwargs,
-                    "description": None
-                })
+                # Add the API action
+                result.append(ApiAction(function=function_name, kwargs=kwargs))
                 
                 current_pos = match.end()
             
             # Add any remaining text after the last function call
             remaining_text = content[current_pos:].strip()
             if remaining_text:
-                result.append({
-                    "class_": "text_observation",
-                    "content": remaining_text,
-                    "source": "system"
-                })
+                result.append(TextObservation(content=remaining_text, source="system"))
         
         # Check for traditional code blocks if no function calls found
         elif '```' in content:
@@ -110,52 +84,41 @@ def convert_step(step: dict[str, str]) -> list[dict]:
             if code_block_regex:
                 description_text = content[:code_block_regex.start()].strip()
                 if description_text:
-                    result.append({
-                        "class_": "text_observation",
-                        "content": description_text,
-                        "source": "system"
-                    })
+                    result.append(TextObservation(content=description_text, source="system"))
                 
-                # For code blocks, we'll treat them as function calls to a code execution function
-                result.append({
-                    "function": "code_execution",
-                    "kwargs": {
+                # For code blocks, treat as API action
+                result.append(ApiAction(
+                    function="code_execution",
+                    kwargs={
                         "language": code_block_regex.group(1).lower(),
                         "code": code_block_regex.group(2)
-                    },
-                    "description": description_text if description_text else None
-                })
+                    }
+                ))
             else:
                 # Regular message content
-                result.append({
-                    "class_": "text_observation",
-                    "content": content,
-                    "source": "system"
-                })
+                result.append(TextObservation(content=content, source="system"))
         else:
             # Regular message content
-            result.append({
-                "class_": "text_observation",
-                "content": content,
-                "source": "system"
-            })
+            result.append(TextObservation(content=content, source="system"))
         
         return result
     else:
         raise Exception("Invalid role.")
 
-for line in sys.stdin:
-    raw_data = json.loads(line)
 
+def process_data(raw_data):
     content = []
     for step in raw_data["messages"]:
         content.extend(convert_step(step))
 
-    # Standardize the data - use instance_id as the id
-    standardize_data = {
-        "id": raw_data["instance_id"],
-        "content": content
-    }
+    return Trajectory(
+        id=raw_data["instance_id"],
+        content=content
+    )
 
-    # Print the standardized data
-    print(json.dumps(standardize_data))
+
+if __name__ == "__main__":
+    for line in sys.stdin:
+        raw_data = json.loads(line)
+        standardized_data = process_data(raw_data)
+        print(standardized_data.model_dump_json())
