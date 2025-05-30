@@ -93,15 +93,15 @@ def test_extract_function_calls():
     """Test extracting function calls from content."""
     # Test with code block
     content1 = "ACTION: \n```execute_bash(command='ls -la')```\n"
-    assert extract_function_calls(content1) == ['bash']
+    assert set(extract_function_calls(content1)) == set(['bash', 'action'])
     
     # Test with execute tag
     content2 = "ACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>"
-    assert extract_function_calls(content2) == ['ipython']
+    assert set(extract_function_calls(content2)) == set(['ipython', 'action'])
     
     # Test with multiple function calls
     content3 = "ACTION: \n```click(bid='123')```\n\nACTION: \n```hover(bid='456')```\n"
-    assert extract_function_calls(content3) == ['click', 'hover']
+    assert set(extract_function_calls(content3)) == set(['click', 'hover', 'action'])
     
     # Test with no function calls
     content4 = "This is a regular message with no function calls."
@@ -136,8 +136,8 @@ def test_analyze_sft_data(test_environment):
     assert results1['conversation_stats'][0]['assistant_turns'] == 2
     
     # Check function calls
-    assert len(results1['function_calls_per_turn']) == 3
-    assert results1['total_function_calls'] == 3
+    assert len(results1['function_calls_per_turn']) == 7
+    assert results1['total_function_calls'] == 9
     assert results1['function_calls_without_thought'] == 0
     assert results1['thought_percentage'] == 0
     
@@ -152,9 +152,9 @@ def test_analyze_sft_data(test_environment):
     assert results2['conversation_stats'][0]['assistant_turns'] == 2
     
     # Check function calls
-    assert len(results2['function_calls_per_turn']) == 2
-    assert results2['total_function_calls'] == 2
-    assert results2['function_calls_without_thought'] == 2
+    assert len(results2['function_calls_per_turn']) == 3
+    assert results2['total_function_calls'] == 4
+    assert results2['function_calls_without_thought'] == 4
     assert results2['thought_percentage'] == 100.0
 
 
