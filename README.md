@@ -8,11 +8,10 @@ This is a repository for agent training data collection by CMU, OSU, and HKU.
   - `sample_standardized.json`: 2-5 samples from the corpus in our standardized format
   - `extract_raw.py`: A script that extracts a raw jsonl file from the corpus
   - `raw_to_standardized.py`: A script that converts the raw jsonl file to our standardized format jsonl
-- `validator/`: Contains scripts that validate the dataset format
+- `validator/`: Contains scripts that validate the dataset format and analyze data quality
 - `scripts/`:
   - `jsonl_to_indented_json.py`: Converts a jsonl file to an indented json file for easier viewing
   - `json_to_jsonl.py`: Converts a JSON file to a JSONL file
-  - `sft_quality_control.py`: Analyzes SFT data quality and generates metrics and visualizations
   - `std_to_sft.py`: Converts standardized data to SFT format
 
 ## Adding a new dataset
@@ -80,43 +79,4 @@ Use `--is_web=yes` for web only based datasets like `mind2web, synatra`
 
 ## Running Quality Control Analysis
 
-The repository includes a script to analyze the quality of SFT data and generate metrics and visualizations. This is useful for understanding the distribution of function calls, thought usage, and other quality metrics across datasets.
-
-### Step 1: Generate Sample SFT Files
-
-Before running quality control, ensure you have sample_sft.json files for your datasets:
-
-```bash
-export MY_DATASET=dataset_name
-export PYTHONPATH=`pwd`:$PYTHONPATH
-
-# Determine if this is a web-based dataset
-IS_WEB="no"
-if [[ "$MY_DATASET" == "mind2web" || "$MY_DATASET" == "synatra" || "$MY_DATASET" == "webarena_successful" || "$MY_DATASET" == "weblinx" ]]; then
-    IS_WEB="yes"
-fi
-
-# Convert sample.json to sample_sft.json
-cat datasets/$MY_DATASET/sample.json | python scripts/json_to_jsonl.py | python scripts/std_to_sft.py --is_web=$IS_WEB --chunk=all | python scripts/jsonl_to_indented_json.py > datasets/$MY_DATASET/sample_sft.json
-```
-
-### Step 2: Run Quality Control Analysis
-
-```bash
-# Analyze all datasets and save results to the output directory
-python scripts/sft_quality_control.py --input_dirs datasets --output_dir quality_control_results
-
-# Analyze a specific dataset
-python scripts/sft_quality_control.py --input_dirs datasets/dataset_name --output_dir quality_control_results
-```
-
-### Step 3: Review Quality Control Results
-
-The script generates several visualizations and a CSV file with metrics:
-
-- `function_calls_per_turn.png`: Distribution of function calls per turn across datasets
-- `function_calls_without_thoughts.png`: Percentage of function calls without preceding thoughts
-- `role_turns_per_conversation.png`: Distribution of role turns per conversation
-- `sft_quality_metrics.csv`: Detailed metrics for each dataset
-
-These metrics help identify datasets with missing function calls, low thought usage, or other quality issues.
+For information on running quality control analysis on SFT data, see the [validator README](validator/README.md).
