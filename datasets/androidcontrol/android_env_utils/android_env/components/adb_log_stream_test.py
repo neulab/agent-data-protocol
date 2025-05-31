@@ -23,47 +23,46 @@ from android_env.components import adb_log_stream
 
 
 class FakeAdbSubprocess:
+    @property
+    def stdout(self):
+        return [f"line_{i}" for i in range(100)]
 
-  @property
-  def stdout(self):
-    return [f'line_{i}' for i in range(100)]
-
-  def kill(self):
-    pass
+    def kill(self):
+        pass
 
 
 class AdbLogStreamTest(absltest.TestCase):
+    @mock.patch.object(subprocess, "check_output", return_value=b"")
+    @mock.patch.object(subprocess, "Popen", return_value=FakeAdbSubprocess())
+    def test_get_stream_output(self, mock_popen, unused_mock_check_output):
+        stream = adb_log_stream.AdbLogStream(adb_command_prefix=["foo"])
+        stream.set_log_filters(["bar"])
+        stream_output = stream.get_stream_output()
 
-  @mock.patch.object(subprocess, 'check_output', return_value=b'')
-  @mock.patch.object(subprocess, 'Popen', return_value=FakeAdbSubprocess())
-  def test_get_stream_output(self, mock_popen, unused_mock_check_output):
-    stream = adb_log_stream.AdbLogStream(adb_command_prefix=['foo'])
-    stream.set_log_filters(['bar'])
-    stream_output = stream.get_stream_output()
+        for i, line in enumerate(stream_output):
+            self.assertEqual(line, f"line_{i}")
 
-    for i, line in enumerate(stream_output):
-      self.assertEqual(line, f'line_{i}')
+        mock_popen.assert_called_with(
+            ["foo", "logcat", "-v", "epoch", "bar", "*:S"],
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+            bufsize=1,
+            universal_newlines=True,
+        )
 
-    mock_popen.assert_called_with(
-        ['foo', 'logcat', '-v', 'epoch', 'bar', '*:S'],
-        stderr=subprocess.STDOUT,
-        stdout=subprocess.PIPE,
-        bufsize=1,
-        universal_newlines=True)
+    def test_stop_stream_before_get_stream_output(self):
+        """Calling `stop_stream()` before `get_stream_output()` should not crash."""
 
-  def test_stop_stream_before_get_stream_output(self):
-    """Calling `stop_stream()` before `get_stream_output()` should not crash."""
+        # Arrange.
+        stream = adb_log_stream.AdbLogStream(adb_command_prefix=["foo"])
 
-    # Arrange.
-    stream = adb_log_stream.AdbLogStream(adb_command_prefix=['foo'])
+        # Act.
+        stream.stop_stream()
 
-    # Act.
-    stream.stop_stream()
-
-    # Assert.
-    # Nothing to assert. The test should just finish without raising an
-    # exception.
+        # Assert.
+        # Nothing to assert. The test should just finish without raising an
+        # exception.
 
 
-if __name__ == '__main__':
-  absltest.main()
+if __name__ == "__main__":
+    absltest.main()

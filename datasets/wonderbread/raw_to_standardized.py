@@ -1,16 +1,11 @@
-import collections
 import json
 import os
 import sys
-from typing import Any
 
-from schema.action.action import Action
 from schema.action.api import ApiAction
-from schema.action.message import MessageAction
-from schema.observation.observation import Observation
+from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.observation.image import BoundingBox, ImageObservation, ImageAnnotation
 from schema.trajectory import Trajectory
 
 root = "datasets/wonderbread"
@@ -30,7 +25,7 @@ def map_keypress(key: str) -> str:
     if len(key) == 1:
         return key
     if key.startswith("Key."):
-        key = key[len("Key."):]
+        key = key[len("Key.") :]
         if key.endswith("_r"):
             key = key[:-2]
         # capitalize the first letter
@@ -51,9 +46,7 @@ for line in sys.stdin:
     traj: Trajectory = Trajectory(
         id=task_stamp,
         # task=task,
-        content=[
-            TextObservation(content=task, source="user")
-        ],  # first message is the task
+        content=[TextObservation(content=task, source="user")],  # first message is the task
     )
     for element in raw_traj["trace"]:
         if element["type"] == "state":
@@ -105,13 +98,15 @@ for line in sys.stdin:
                     case "keystroke":
                         kwargs = {
                             "xpath": element["data"]["element_attributes"]["element"]["xpath"],
-                            "value": ''.join(element["data"]["key"].strip("'").split("' '")), # "'h' 'e' 'l' 'l' 'o'" --> "hello"
+                            "value": "".join(
+                                element["data"]["key"].strip("'").split("' '")
+                            ),  # "'h' 'e' 'l' 'l' 'o'" --> "hello"
                         }
                         function_name = "type"
                     case "keypress":
                         kwargs = {
                             "xpath": element["data"]["element_attributes"]["element"]["xpath"],
-                            "value": map_keypress(element["data"]["key"])
+                            "value": map_keypress(element["data"]["key"]),
                         }
                         function_name = "keyboard_press"
                     case "scroll":
@@ -125,7 +120,7 @@ for line in sys.stdin:
 
                 action = ApiAction(function=function_name, kwargs=kwargs)
                 traj.content.append(action)
-            except TypeError as e:
+            except TypeError:
                 continue
         else:
             raise ValueError(f"Unknown element type: {element['type']}")

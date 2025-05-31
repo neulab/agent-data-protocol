@@ -1,9 +1,10 @@
 import importlib.util
-import os
 import json
-from pydantic import ValidationError
-import pytest
+import os
 from pathlib import Path
+
+import pytest
+from pydantic import ValidationError
 
 from schema.action.api import ApiAction
 from schema.trajectory import Trajectory
@@ -42,9 +43,7 @@ def test_sample_raw_against_schema(sample_path):
                     if dataset_api is None:
                         api_path = os.path.join(os.path.dirname(sample_path), "api.py")
                         assert os.path.exists(api_path)
-                        spec = importlib.util.spec_from_file_location(
-                            "dataset_api", api_path
-                        )
+                        spec = importlib.util.spec_from_file_location("dataset_api", api_path)
                         dataset_api = importlib.util.module_from_spec(spec)
                         spec.loader.exec_module(dataset_api)
                     assert hasattr(dataset_api, content.function), (

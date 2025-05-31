@@ -1,8 +1,8 @@
-from datasets import load_dataset
 import json
 
-ds = load_dataset("microsoft/orca-agentinstruct-1M-v1")
+from datasets import load_dataset
 
+ds = load_dataset("microsoft/orca-agentinstruct-1M-v1")
 
 
 for category in ds:
@@ -14,4 +14,3 @@ for category in ds:
         sample["conversations"] = json.loads(sample["messages"])
         del sample["messages"]
         print(json.dumps(sample))
-

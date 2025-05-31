@@ -15,70 +15,67 @@
 
 """Tests for specs.py."""
 
-from absl.testing import absltest
-from absl.testing import parameterized
-from android_env.components import specs
-from android_env.proto import task_pb2
-from dm_env import specs as dm_env_specs
 import numpy as np
+from absl.testing import absltest, parameterized
+from android_env.components import specs
+from dm_env import specs as dm_env_specs
 
 
 class SpecsTest(parameterized.TestCase):
+    def test_base_action_spec(self):
+        action_spec = specs.base_action_spec(num_fingers=1)
+        for spec in action_spec.values():
+            self.assertIsInstance(spec, dm_env_specs.Array)
+        self.assertEqual(action_spec["action_type"].shape, ())
+        self.assertEqual(action_spec["action_type"].dtype, np.int32)
+        self.assertEqual(action_spec["touch_position"].shape, (2,))
+        self.assertEqual(action_spec["touch_position"].dtype, np.float32)
 
-  def test_base_action_spec(self):
-    action_spec = specs.base_action_spec(num_fingers=1)
-    for spec in action_spec.values():
-      self.assertIsInstance(spec, dm_env_specs.Array)
-    self.assertEqual(action_spec['action_type'].shape, ())
-    self.assertEqual(action_spec['action_type'].dtype, np.int32)
-    self.assertEqual(action_spec['touch_position'].shape, (2,))
-    self.assertEqual(action_spec['touch_position'].dtype, np.float32)
+    def test_base_action_spec_with_key_events(self):
+        action_spec = specs.base_action_spec(num_fingers=1, enable_key_events=True)
+        for spec in action_spec.values():
+            self.assertIsInstance(spec, dm_env_specs.Array)
+        self.assertEqual(action_spec["action_type"].shape, ())
+        self.assertEqual(action_spec["action_type"].dtype, np.int32)
+        self.assertEqual(action_spec["touch_position"].shape, (2,))
+        self.assertEqual(action_spec["touch_position"].dtype, np.float32)
+        self.assertEqual(action_spec["keycode"].shape, ())
+        self.assertEqual(action_spec["keycode"].dtype, np.int32)
 
-  def test_base_action_spec_with_key_events(self):
-    action_spec = specs.base_action_spec(num_fingers=1, enable_key_events=True)
-    for spec in action_spec.values():
-      self.assertIsInstance(spec, dm_env_specs.Array)
-    self.assertEqual(action_spec['action_type'].shape, ())
-    self.assertEqual(action_spec['action_type'].dtype, np.int32)
-    self.assertEqual(action_spec['touch_position'].shape, (2,))
-    self.assertEqual(action_spec['touch_position'].dtype, np.float32)
-    self.assertEqual(action_spec['keycode'].shape, ())
-    self.assertEqual(action_spec['keycode'].dtype, np.int32)
+    def test_base_action_spec_multitouch(self):
+        action_spec = specs.base_action_spec(num_fingers=3)
+        self.assertLen(action_spec.keys(), 6)
+        for spec in action_spec.values():
+            self.assertIsInstance(spec, dm_env_specs.Array)
+        self.assertEqual(action_spec["action_type"].shape, ())
+        self.assertEqual(action_spec["action_type"].dtype, np.int32)
+        self.assertEqual(action_spec["touch_position"].shape, (2,))
+        self.assertEqual(action_spec["touch_position"].dtype, np.float32)
+        self.assertEqual(action_spec["action_type_2"].shape, ())
+        self.assertEqual(action_spec["action_type_2"].dtype, np.int32)
+        self.assertEqual(action_spec["touch_position_2"].shape, (2,))
+        self.assertEqual(action_spec["touch_position_2"].dtype, np.float32)
+        self.assertEqual(action_spec["action_type_3"].shape, ())
+        self.assertEqual(action_spec["action_type_3"].dtype, np.int32)
+        self.assertEqual(action_spec["touch_position_3"].shape, (2,))
+        self.assertEqual(action_spec["touch_position_3"].dtype, np.float32)
 
-  def test_base_action_spec_multitouch(self):
-    action_spec = specs.base_action_spec(num_fingers=3)
-    self.assertLen(action_spec.keys(), 6)
-    for spec in action_spec.values():
-      self.assertIsInstance(spec, dm_env_specs.Array)
-    self.assertEqual(action_spec['action_type'].shape, ())
-    self.assertEqual(action_spec['action_type'].dtype, np.int32)
-    self.assertEqual(action_spec['touch_position'].shape, (2,))
-    self.assertEqual(action_spec['touch_position'].dtype, np.float32)
-    self.assertEqual(action_spec['action_type_2'].shape, ())
-    self.assertEqual(action_spec['action_type_2'].dtype, np.int32)
-    self.assertEqual(action_spec['touch_position_2'].shape, (2,))
-    self.assertEqual(action_spec['touch_position_2'].dtype, np.float32)
-    self.assertEqual(action_spec['action_type_3'].shape, ())
-    self.assertEqual(action_spec['action_type_3'].dtype, np.int32)
-    self.assertEqual(action_spec['touch_position_3'].shape, (2,))
-    self.assertEqual(action_spec['touch_position_3'].dtype, np.float32)
-
-  @parameterized.parameters(
-      (480, 320),
-      (100, 100),
-      (1440, 1960),
-  )
-  def test_base_observation_spec(self, height, width):
-    observation_spec = specs.base_observation_spec(height, width)
-    for spec in observation_spec.values():
-      self.assertIsInstance(spec, dm_env_specs.Array)
-    self.assertEqual(observation_spec['pixels'].shape, (height, width, 3))
-    self.assertEqual(observation_spec['pixels'].dtype, np.uint8)
-    self.assertEqual(observation_spec['timedelta'].shape, ())
-    self.assertEqual(observation_spec['timedelta'].dtype, np.int64)
-    self.assertEqual(observation_spec['orientation'].shape, (4,))
-    self.assertEqual(observation_spec['orientation'].dtype, np.uint8)
+    @parameterized.parameters(
+        (480, 320),
+        (100, 100),
+        (1440, 1960),
+    )
+    def test_base_observation_spec(self, height, width):
+        observation_spec = specs.base_observation_spec(height, width)
+        for spec in observation_spec.values():
+            self.assertIsInstance(spec, dm_env_specs.Array)
+        self.assertEqual(observation_spec["pixels"].shape, (height, width, 3))
+        self.assertEqual(observation_spec["pixels"].dtype, np.uint8)
+        self.assertEqual(observation_spec["timedelta"].shape, ())
+        self.assertEqual(observation_spec["timedelta"].dtype, np.int64)
+        self.assertEqual(observation_spec["orientation"].shape, (4,))
+        self.assertEqual(observation_spec["orientation"].dtype, np.uint8)
 
 
-if __name__ == '__main__':
-  absltest.main()
+if __name__ == "__main__":
+    absltest.main()

@@ -1,6 +1,5 @@
-import os
 import json
-import pathlib
+
 from datasets import load_dataset
 
 ds = load_dataset("xingyaoww/code-act")

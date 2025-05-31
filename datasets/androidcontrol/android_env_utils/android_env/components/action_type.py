@@ -28,25 +28,25 @@ import enum
 
 @enum.unique
 class ActionType(enum.IntEnum):
-  """Integer values to describe each supported action in AndroidEnv.
+    """Integer values to describe each supported action in AndroidEnv.
 
-  Note for KEY* types:
-  - Only meaningful if connected to a _physical_ keyboard, _not_ virtual
-    keyboard.
-  - Added afterwards so they did not appear in the paper.
+    Note for KEY* types:
+    - Only meaningful if connected to a _physical_ keyboard, _not_ virtual
+      keyboard.
+    - Added afterwards so they did not appear in the paper.
 
-  Attributes:
-    TOUCH: Touching the screen at a location.
-    LIFE: Lifting the (imaginary) pointer from the screen at a location.
-    REPEAT: Repeating the last chosen action.
-    KEYDOWN: Sending a key down event.
-    KEYUP: Sending a key up event.
-    KEYPRESS: Sending a key down event, immediately followed by a key up event.
-  """
+    Attributes:
+      TOUCH: Touching the screen at a location.
+      LIFE: Lifting the (imaginary) pointer from the screen at a location.
+      REPEAT: Repeating the last chosen action.
+      KEYDOWN: Sending a key down event.
+      KEYUP: Sending a key up event.
+      KEYPRESS: Sending a key down event, immediately followed by a key up event.
+    """
 
-  TOUCH = 0
-  LIFT = 1
-  REPEAT = 2
-  KEYDOWN = 3
-  KEYUP = 4
-  KEYPRESS = 5
+    TOUCH = 0
+    LIFT = 1
+    REPEAT = 2
+    KEYDOWN = 3
+    KEYUP = 4
+    KEYPRESS = 5

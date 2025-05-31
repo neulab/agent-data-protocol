@@ -1,10 +1,8 @@
 import json
-import subprocess
-import sys
 import os
-import zipfile
+import subprocess
 import urllib.parse
-
+import zipfile
 
 root = "datasets/wonderbread"
 zenodo_link = "https://zenodo.org/records/12671568/files/demos.zip?download=1"

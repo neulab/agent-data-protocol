@@ -22,154 +22,151 @@ from absl import logging
 
 @dataclasses.dataclass
 class BoundingBox:
-  """Class for representing a bounding box."""
+    """Class for representing a bounding box."""
 
-  x_min: float | int
-  x_max: float | int
-  y_min: float | int
-  y_max: float | int
+    x_min: float | int
+    x_max: float | int
+    y_min: float | int
+    y_max: float | int
 
-  @property
-  def center(self) -> tuple[float, float]:
-    """Gets center of bounding box."""
-    return (self.x_min + self.x_max) / 2.0, (self.y_min + self.y_max) / 2.0
+    @property
+    def center(self) -> tuple[float, float]:
+        """Gets center of bounding box."""
+        return (self.x_min + self.x_max) / 2.0, (self.y_min + self.y_max) / 2.0
 
-  @property
-  def width(self) -> float | int:
-    """Gets width of bounding box."""
-    return self.x_max - self.x_min
+    @property
+    def width(self) -> float | int:
+        """Gets width of bounding box."""
+        return self.x_max - self.x_min
 
-  @property
-  def height(self) -> float | int:
-    """Gets height of bounding box."""
-    return self.y_max - self.y_min
+    @property
+    def height(self) -> float | int:
+        """Gets height of bounding box."""
+        return self.y_max - self.y_min
 
-  @property
-  def area(self) -> float | int:
-    return self.width * self.height
+    @property
+    def area(self) -> float | int:
+        return self.width * self.height
 
-  def to_dict(self):
-      """Converts the BoundingBox to a dictionary for JSON serialization."""
-      return {
-          "x_min": self.x_min,
-          "x_max": self.x_max,
-          "y_min": self.y_min,
-          "y_max": self.y_max,
-          "center": self.center,
-          "width": self.width,
-          "height": self.height,
-          # "area": self.area,
-      }
+    def to_dict(self):
+        """Converts the BoundingBox to a dictionary for JSON serialization."""
+        return {
+            "x_min": self.x_min,
+            "x_max": self.x_max,
+            "y_min": self.y_min,
+            "y_max": self.y_max,
+            "center": self.center,
+            "width": self.width,
+            "height": self.height,
+            # "area": self.area,
+        }
 
 
 @dataclasses.dataclass
 class UIElement:
-  """Represents a UI element."""
+    """Represents a UI element."""
 
-  text: Optional[str] = None
-  content_description: Optional[str] = None
-  class_name: Optional[str] = None
-  bbox: Optional[BoundingBox] = None
-  bbox_pixels: Optional[BoundingBox] = None
-  hint_text: Optional[str] = None
-  is_checked: Optional[bool] = None
-  is_checkable: Optional[bool] = None
-  is_clickable: Optional[bool] = None
-  is_editable: Optional[bool] = None
-  is_enabled: Optional[bool] = None
-  is_focused: Optional[bool] = None
-  is_focusable: Optional[bool] = None
-  is_long_clickable: Optional[bool] = None
-  is_scrollable: Optional[bool] = None
-  is_selected: Optional[bool] = None
-  is_visible: Optional[bool] = None
-  package_name: Optional[str] = None
-  resource_name: Optional[str] = None
-  tooltip: Optional[str] = None
-  resource_id: Optional[str] = None
+    text: Optional[str] = None
+    content_description: Optional[str] = None
+    class_name: Optional[str] = None
+    bbox: Optional[BoundingBox] = None
+    bbox_pixels: Optional[BoundingBox] = None
+    hint_text: Optional[str] = None
+    is_checked: Optional[bool] = None
+    is_checkable: Optional[bool] = None
+    is_clickable: Optional[bool] = None
+    is_editable: Optional[bool] = None
+    is_enabled: Optional[bool] = None
+    is_focused: Optional[bool] = None
+    is_focusable: Optional[bool] = None
+    is_long_clickable: Optional[bool] = None
+    is_scrollable: Optional[bool] = None
+    is_selected: Optional[bool] = None
+    is_visible: Optional[bool] = None
+    package_name: Optional[str] = None
+    resource_name: Optional[str] = None
+    tooltip: Optional[str] = None
+    resource_id: Optional[str] = None
 
-  def to_dict(self):
-      """Converts the UIElement to a dictionary for JSON serialization."""
-      return {
-          "text": self.text,
-          "content_description": self.content_description,
-          "hint_text": self.hint_text,
-          "tooltip": self.tooltip,
-          "class_name": self.class_name,
-          "resource_id": self.resource_id,
-          # "bbox": self.bbox.to_dict() if self.bbox else None,
-          "is_visible": self.is_visible,
-          "is_enabled": self.is_enabled,
-          "is_focused": self.is_focused,
-          "is_selected": self.is_selected,
-          "is_checked": self.is_checked,
-          "is_checkable": self.is_checkable,
-          "is_clickable": self.is_clickable,
-          "is_editable": self.is_editable,
-          "is_focusable": self.is_focusable,
-          "is_long_clickable": self.is_long_clickable,
-          "is_scrollable": self.is_scrollable,
-          # "package_name": self.package_name,
-          # "resource_name": self.resource_name,
-
-          "bbox_pixels": self.bbox_pixels.to_dict() if self.bbox_pixels else None,
-      }
+    def to_dict(self):
+        """Converts the UIElement to a dictionary for JSON serialization."""
+        return {
+            "text": self.text,
+            "content_description": self.content_description,
+            "hint_text": self.hint_text,
+            "tooltip": self.tooltip,
+            "class_name": self.class_name,
+            "resource_id": self.resource_id,
+            # "bbox": self.bbox.to_dict() if self.bbox else None,
+            "is_visible": self.is_visible,
+            "is_enabled": self.is_enabled,
+            "is_focused": self.is_focused,
+            "is_selected": self.is_selected,
+            "is_checked": self.is_checked,
+            "is_checkable": self.is_checkable,
+            "is_clickable": self.is_clickable,
+            "is_editable": self.is_editable,
+            "is_focusable": self.is_focusable,
+            "is_long_clickable": self.is_long_clickable,
+            "is_scrollable": self.is_scrollable,
+            # "package_name": self.package_name,
+            # "resource_name": self.resource_name,
+            "bbox_pixels": self.bbox_pixels.to_dict() if self.bbox_pixels else None,
+        }
 
 
 def _accessibility_node_to_ui_element(
     node: Any,
     screen_size: Optional[tuple[int, int]] = None,
 ) -> UIElement:
-  """Converts a node from an accessibility tree to a UIElement."""
+    """Converts a node from an accessibility tree to a UIElement."""
 
-  def text_or_none(text: Optional[str]) -> Optional[str]:
-    """Returns None if text is None or 0 length."""
-    return text if text else None
+    def text_or_none(text: Optional[str]) -> Optional[str]:
+        """Returns None if text is None or 0 length."""
+        return text if text else None
 
-  node_bbox = node.bounds_in_screen
-  bbox_pixels = BoundingBox(
-      node_bbox.left, node_bbox.right, node_bbox.top, node_bbox.bottom
-  )
+    node_bbox = node.bounds_in_screen
+    bbox_pixels = BoundingBox(node_bbox.left, node_bbox.right, node_bbox.top, node_bbox.bottom)
 
-  if screen_size is not None:
-    bbox_normalized = _normalize_bounding_box(bbox_pixels, screen_size)
-  else:
-    bbox_normalized = None
+    if screen_size is not None:
+        bbox_normalized = _normalize_bounding_box(bbox_pixels, screen_size)
+    else:
+        bbox_normalized = None
 
-  return UIElement(
-      text=text_or_none(node.text),
-      content_description=text_or_none(node.content_description),
-      class_name=text_or_none(node.class_name),
-      bbox=bbox_normalized,
-      bbox_pixels=bbox_pixels,
-      hint_text=text_or_none(node.hint_text),
-      is_checked=node.is_checked,
-      is_checkable=node.is_checkable,
-      is_clickable=node.is_clickable,
-      is_editable=node.is_editable,
-      is_enabled=node.is_enabled,
-      is_focused=node.is_focused,
-      is_focusable=node.is_focusable,
-      is_long_clickable=node.is_long_clickable,
-      is_scrollable=node.is_scrollable,
-      is_selected=node.is_selected,
-      is_visible=node.is_visible_to_user,
-      package_name=text_or_none(node.package_name),
-      resource_name=text_or_none(node.view_id_resource_name),
-  )
+    return UIElement(
+        text=text_or_none(node.text),
+        content_description=text_or_none(node.content_description),
+        class_name=text_or_none(node.class_name),
+        bbox=bbox_normalized,
+        bbox_pixels=bbox_pixels,
+        hint_text=text_or_none(node.hint_text),
+        is_checked=node.is_checked,
+        is_checkable=node.is_checkable,
+        is_clickable=node.is_clickable,
+        is_editable=node.is_editable,
+        is_enabled=node.is_enabled,
+        is_focused=node.is_focused,
+        is_focusable=node.is_focusable,
+        is_long_clickable=node.is_long_clickable,
+        is_scrollable=node.is_scrollable,
+        is_selected=node.is_selected,
+        is_visible=node.is_visible_to_user,
+        package_name=text_or_none(node.package_name),
+        resource_name=text_or_none(node.view_id_resource_name),
+    )
 
 
 def _normalize_bounding_box(
     node_bbox: BoundingBox,
     screen_height_width_px: tuple[int, int],
 ) -> BoundingBox:
-  width, height = screen_height_width_px
-  return BoundingBox(
-      node_bbox.x_min / width,
-      node_bbox.x_max / width,
-      node_bbox.y_min / height,
-      node_bbox.y_max / height,
-  )
+    width, height = screen_height_width_px
+    return BoundingBox(
+        node_bbox.x_min / width,
+        node_bbox.x_max / width,
+        node_bbox.y_min / height,
+        node_bbox.y_max / height,
+    )
 
 
 def forest_to_ui_elements(
@@ -177,31 +174,31 @@ def forest_to_ui_elements(
     exclude_invisible_elements: bool = False,
     screen_size: Optional[tuple[int, int]] = None,
 ) -> list[UIElement]:
-  """Extracts nodes from accessibility forest and converts to UI elements.
+    """Extracts nodes from accessibility forest and converts to UI elements.
 
-  We extract all nodes that are either leaf nodes or have content descriptions
-  or is scrollable.
+    We extract all nodes that are either leaf nodes or have content descriptions
+    or is scrollable.
 
-  Args:
-    forest: The forest to extract leaf nodes from.
-    exclude_invisible_elements: True if invisible elements should not be
-      returned.
-    screen_size: The size of the device screen in pixels.
+    Args:
+      forest: The forest to extract leaf nodes from.
+      exclude_invisible_elements: True if invisible elements should not be
+        returned.
+      screen_size: The size of the device screen in pixels.
 
-  Returns:
-    The extracted UI elements.
-  """
+    Returns:
+      The extracted UI elements.
+    """
 
-  logging.info('Converting forest to Ui Elements.')
-  if screen_size is None:
-    logging.warning('screen_size=None, no normalized bbox for elements.')
+    logging.info("Converting forest to Ui Elements.")
+    if screen_size is None:
+        logging.warning("screen_size=None, no normalized bbox for elements.")
 
-  elements = []
-  for window in forest.windows:
-    for node in window.tree.nodes:
-      if not node.child_ids or node.content_description or node.is_scrollable:
-        if exclude_invisible_elements and not node.is_visible_to_user:
-          continue
-        else:
-          elements.append(_accessibility_node_to_ui_element(node, screen_size))
-  return elements
+    elements = []
+    for window in forest.windows:
+        for node in window.tree.nodes:
+            if not node.child_ids or node.content_description or node.is_scrollable:
+                if exclude_invisible_elements and not node.is_visible_to_user:
+                    continue
+                else:
+                    elements.append(_accessibility_node_to_ui_element(node, screen_size))
+    return elements

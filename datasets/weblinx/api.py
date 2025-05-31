@@ -21,7 +21,6 @@ def type(xpath: str, value: str) -> None:
     pass
 
 
-
 def scroll(dx: float, dy: float) -> None:
     """Scroll the page. Scroll horizontally dx pixels, vertically dy pixels. Positive for right or down scrolling, negative for left or up scrolling.
 

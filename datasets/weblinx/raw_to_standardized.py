@@ -1,15 +1,16 @@
-import sys
 import json
+import sys
 from pathlib import Path
 from typing import Any
-from schema.action.api import ApiAction
-from schema.action.message import MessageAction
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.observation.image import ImageObservation
-from schema.trajectory import Trajectory
+
 from schema_raw import SchemaRaw
 
+from schema.action.api import ApiAction
+from schema.action.message import MessageAction
+from schema.observation.image import ImageObservation
+from schema.observation.text import TextObservation
+from schema.observation.web import WebObservation
+from schema.trajectory import Trajectory
 
 DOWNLOAD_INSTRUCTIONS = """
     # Please download the raw dumps first:
@@ -64,11 +65,17 @@ def convert_step(
         image_observation = None
         if step.state.screenshot:
             img_path = (
-                WEBLINX_DUMP / "demonstrations" / shortcode / "screenshots" / step.state.screenshot
-            ).relative_to(Path.cwd()).as_posix()
-            image_observation = ImageObservation(
-                content=img_path, source="browser"
+                (
+                    WEBLINX_DUMP
+                    / "demonstrations"
+                    / shortcode
+                    / "screenshots"
+                    / step.state.screenshot
+                )
+                .relative_to(Path.cwd())
+                .as_posix()
             )
+            image_observation = ImageObservation(content=img_path, source="browser")
         web_observation = WebObservation(
             html=(
                 WEBLINX_DUMP / "demonstrations" / shortcode / "pages" / step.state.page
@@ -89,9 +96,7 @@ def convert_step(
                 ),
             ]
         _elid = args["element"]["attributes"].get("data-webtasks-id")
-        xpath = (
-            f"//*[@data-webtasks-id='{_elid}']" if _elid else args["element"]["xpath"]
-        )
+        xpath = f"//*[@data-webtasks-id='{_elid}']" if _elid else args["element"]["xpath"]
         if step.action["intent"] in ["click", "submit"]:
             return [
                 web_observation,

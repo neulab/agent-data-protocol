@@ -17,128 +17,122 @@
 
 import abc
 
-from absl import logging
-from android_env.components import adb_controller
-from android_env.components import errors
-from android_env.components import log_stream
-from android_env.proto import state_pb2
 import numpy as np
+from absl import logging
+from android_env.components import adb_controller, errors, log_stream
+from android_env.proto import state_pb2
 
 
 class BaseSimulator(metaclass=abc.ABCMeta):
-  """An interface for communicating with an Android simulator."""
+    """An interface for communicating with an Android simulator."""
 
-  def __init__(self, verbose_logs: bool = False):
-    """Instantiates a BaseSimulator object.
+    def __init__(self, verbose_logs: bool = False):
+        """Instantiates a BaseSimulator object.
 
-    The simulator may be an emulator, virtual machine or even a physical device.
-    Each simulator has its own AdbController that is used for internal
-    bookkeeping.
+        The simulator may be an emulator, virtual machine or even a physical device.
+        Each simulator has its own AdbController that is used for internal
+        bookkeeping.
 
-    Args:
-      verbose_logs: If true, the log stream of the simulator will be verbose.
-    """
+        Args:
+          verbose_logs: If true, the log stream of the simulator will be verbose.
+        """
 
-    self._verbose_logs = verbose_logs
+        self._verbose_logs = verbose_logs
 
-    # An increasing number that tracks the attempt at launching the simulator.
-    self._num_launch_attempts: int = 0
+        # An increasing number that tracks the attempt at launching the simulator.
+        self._num_launch_attempts: int = 0
 
-  def get_logs(self) -> str:
-    """Returns logs recorded by the simulator (if provided)."""
-    return 'No simulator logs provided.'
+    def get_logs(self) -> str:
+        """Returns logs recorded by the simulator (if provided)."""
+        return "No simulator logs provided."
 
-  @abc.abstractmethod
-  def adb_device_name(self) -> str:
-    """Returns the device name that the adb client will connect to."""
+    @abc.abstractmethod
+    def adb_device_name(self) -> str:
+        """Returns the device name that the adb client will connect to."""
 
-  @abc.abstractmethod
-  def create_adb_controller(self) -> adb_controller.AdbController:
-    """Returns an ADB controller which can communicate with this simulator."""
+    @abc.abstractmethod
+    def create_adb_controller(self) -> adb_controller.AdbController:
+        """Returns an ADB controller which can communicate with this simulator."""
 
-  @abc.abstractmethod
-  def create_log_stream(self) -> log_stream.LogStream:
-    """Creates a stream of logs from the simulator."""
+    @abc.abstractmethod
+    def create_log_stream(self) -> log_stream.LogStream:
+        """Creates a stream of logs from the simulator."""
 
-  def launch(self) -> None:
-    """Starts the simulator."""
+    def launch(self) -> None:
+        """Starts the simulator."""
 
-    self._num_launch_attempts += 1
-    try:
-      self._launch_impl()
-    except Exception as error:
-      for line in self.get_logs().splitlines():
-        logging.error(line)
-      raise errors.SimulatorError(
-          'Exception caught in simulator. Please see the simulator logs '
-          'above for more details.'
-      ) from error
+        self._num_launch_attempts += 1
+        try:
+            self._launch_impl()
+        except Exception as error:
+            for line in self.get_logs().splitlines():
+                logging.error(line)
+            raise errors.SimulatorError(
+                "Exception caught in simulator. Please see the simulator logs "
+                "above for more details."
+            ) from error
 
-  @abc.abstractmethod
-  def _launch_impl(self) -> None:
-    """Platform specific launch implementation."""
+    @abc.abstractmethod
+    def _launch_impl(self) -> None:
+        """Platform specific launch implementation."""
 
-  @abc.abstractmethod
-  def send_touch(self, touches: list[tuple[int, int, bool, int]]) -> None:
-    """Sends a touch event to be executed on the simulator.
+    @abc.abstractmethod
+    def send_touch(self, touches: list[tuple[int, int, bool, int]]) -> None:
+        """Sends a touch event to be executed on the simulator.
 
-    Args:
-      touches: A list of touch events. Each element in the list corresponds to a
-          single touch event. Each touch event tuple should have:
-          0 x: The horizontal coordinate of this event.
-          1 y: The vertical coordinate of this event.
-          2 is_down: Whether the finger is touching or not the screen.
-          3 identifier: Identifies a particular finger in a multitouch event.
-    """
+        Args:
+          touches: A list of touch events. Each element in the list corresponds to a
+              single touch event. Each touch event tuple should have:
+              0 x: The horizontal coordinate of this event.
+              1 y: The vertical coordinate of this event.
+              2 is_down: Whether the finger is touching or not the screen.
+              3 identifier: Identifies a particular finger in a multitouch event.
+        """
 
-  @abc.abstractmethod
-  def send_key(self, keycode: np.int32, event_type: str) -> None:
-    """Sends a keyboard event.
+    @abc.abstractmethod
+    def send_key(self, keycode: np.int32, event_type: str) -> None:
+        """Sends a keyboard event.
 
-    Args:
-      keycode: Represents a specific keyboard key. This is platform and
-        simulator-specific.
-      event_type: Type of key event to be sent.
-    """
+        Args:
+          keycode: Represents a specific keyboard key. This is platform and
+            simulator-specific.
+          event_type: Type of key event to be sent.
+        """
 
-  def load_state(
-      self, request: state_pb2.LoadStateRequest
-  ) -> state_pb2.LoadStateResponse:
-    """Loads a state.
+    def load_state(self, request: state_pb2.LoadStateRequest) -> state_pb2.LoadStateResponse:
+        """Loads a state.
 
-    Args:
-      request: A `LoadStateRequest` containing any parameters necessary to
-        specify how/what state to load.
+        Args:
+          request: A `LoadStateRequest` containing any parameters necessary to
+            specify how/what state to load.
 
-    Returns:
-      A `LoadStateResponse` containing the status, error message (if
-      applicable), and any other relevant information.
-    """
-    raise NotImplementedError('This simulator does not support load_state()')
+        Returns:
+          A `LoadStateResponse` containing the status, error message (if
+          applicable), and any other relevant information.
+        """
+        raise NotImplementedError("This simulator does not support load_state()")
 
-  def save_state(
-      self, request: state_pb2.SaveStateRequest
-  ) -> state_pb2.SaveStateResponse:
-    """Saves a state.
+    def save_state(self, request: state_pb2.SaveStateRequest) -> state_pb2.SaveStateResponse:
+        """Saves a state.
 
-    Args:
-      request: A `SaveStateRequest` containing any parameters necessary to
-        specify how/what state to save.
+        Args:
+          request: A `SaveStateRequest` containing any parameters necessary to
+            specify how/what state to save.
 
-    Returns:
-      A `SaveStateResponse` containing the status, error message (if
-      applicable), and any other relevant information.
-    """
-    raise NotImplementedError('This simulator does not support save_state()')
+        Returns:
+          A `SaveStateResponse` containing the status, error message (if
+          applicable), and any other relevant information.
+        """
+        raise NotImplementedError("This simulator does not support save_state()")
 
-  @abc.abstractmethod
-  def get_screenshot(self) -> np.ndarray:
-    """Returns pixels representing the current screenshot of the simulator.
+    @abc.abstractmethod
+    def get_screenshot(self) -> np.ndarray:
+        """Returns pixels representing the current screenshot of the simulator.
 
-    The output numpy array should have shape [height, width, num_channels] and
-    can be loaded into PIL using Image.fromarray(img, mode='RGB') and be saved
-    as a PNG file using my_pil.save('/tmp/my_screenshot.png', 'PNG').
-    """
+        The output numpy array should have shape [height, width, num_channels] and
+        can be loaded into PIL using Image.fromarray(img, mode='RGB') and be saved
+        as a PNG file using my_pil.save('/tmp/my_screenshot.png', 'PNG').
+        """
 
-  def close(self):
-    """Frees up resources allocated by this object."""
+    def close(self):
+        """Frees up resources allocated by this object."""

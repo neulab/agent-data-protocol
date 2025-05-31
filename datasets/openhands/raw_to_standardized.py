@@ -1,22 +1,21 @@
 import ast
-import sys
-import json
-import api
 import inspect
-import markdown
-
+import json
+import sys
 import time
-from schema.action.api import ApiAction
-from schema.observation.observation import Observation
-from schema.observation.web import WebObservation
-from schema.observation.image import ImageObservation
-from schema.action.message import MessageAction
-from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
-from schema_raw import SchemaRaw, Args
 
+import api
+import markdown
 from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
+from schema_raw import Args, SchemaRaw
 
+from schema.action.api import ApiAction
+from schema.action.message import MessageAction
+from schema.observation.image import ImageObservation
+from schema.observation.observation import Observation
+from schema.observation.text import TextObservation
+from schema.observation.web import WebObservation
+from schema.trajectory import Trajectory
 
 ACTION_MAP = {
     "fill": "type",
@@ -35,7 +34,7 @@ KWARGS_MAP = {
 # click('48', 'example with "quotes" and, a comma', 10, button='middle', modifiers=['Shift', 'Alt'])
 def parse_browser_action(action_str):
     try:
-        action_ast = ast.parse(action_str, mode='eval')
+        action_ast = ast.parse(action_str, mode="eval")
     except Exception:
         print(f"Invalid action string: {action_str}", file=sys.stderr)
         return None, [], {}
@@ -45,7 +44,9 @@ def parse_browser_action(action_str):
     call_node = action_ast.body
     function_name = call_node.func.id
     args = [ast.literal_eval(arg) for arg in call_node.args]
-    kwargs = {KWARGS_MAP.get(kw.arg, kw.arg): ast.literal_eval(kw.value) for kw in call_node.keywords}
+    kwargs = {
+        KWARGS_MAP.get(kw.arg, kw.arg): ast.literal_eval(kw.value) for kw in call_node.keywords
+    }
     return function_name, args, kwargs
 
 
@@ -54,15 +55,27 @@ def process_data(data, keep_all=False):
     for item in data.trajectory:
         # In the huggingface dataset, args have been moved to extras
         if item.extras:
-            item.args = Args(**{
-                **(item.args.dict() if item.args else {}),
-                **(item.extras.dict() if item.extras else {}),
-            })
+            item.args = Args(
+                **{
+                    **(item.args.dict() if item.args else {}),
+                    **(item.extras.dict() if item.extras else {}),
+                }
+            )
         if not keep_all and item.source == "environment":
             continue
-        if not item.action and (item.observation or item.log or item.message or item.content or item.error or item.error_code or item.status):
+        if not item.action and (
+            item.observation
+            or item.log
+            or item.message
+            or item.content
+            or item.error
+            or item.error_code
+            or item.status
+        ):
             if item.observation == "browse":
-                _html = flatten_dom_to_str(item.extras.dom_object) if item.extras.dom_object else None
+                _html = (
+                    flatten_dom_to_str(item.extras.dom_object) if item.extras.dom_object else None
+                )
                 if not _html and item.content.strip():
                     _html = markdown.markdown(item.content)
                 content.append(
@@ -70,10 +83,14 @@ def process_data(data, keep_all=False):
                         source=item.source,
                         url=item.extras.url,
                         html=_html,
-                        axtree=None if not item.extras.axtree_object else flatten_axtree_to_str(item.extras.axtree_object),
-                        image_observation=None if not item.extras.screenshot else ImageObservation(
+                        axtree=None
+                        if not item.extras.axtree_object
+                        else flatten_axtree_to_str(item.extras.axtree_object),
+                        image_observation=None
+                        if not item.extras.screenshot
+                        else ImageObservation(
                             source=item.source,
-                            content=item.extras.screenshot, # Base64-encoded image data, not a path
+                            content=item.extras.screenshot,  # Base64-encoded image data, not a path
                         ),
                         viewport_size=None,
                     )
@@ -113,14 +130,30 @@ def process_data(data, keep_all=False):
                         content=item.content if item.content else item.extras.outputs.content,
                     )
                 )
-            elif item.observation in ["edit", "write", "read", "rag_search", "crawl", "task_plan", "error", "user_rejected"]:
+            elif item.observation in [
+                "edit",
+                "write",
+                "read",
+                "rag_search",
+                "crawl",
+                "task_plan",
+                "error",
+                "user_rejected",
+            ]:
                 # avoid outputting consecutive TextObservations
-                if not keep_all and item.observation == "error" and content and isinstance(content[-1], Observation):
+                if (
+                    not keep_all
+                    and item.observation == "error"
+                    and content
+                    and isinstance(content[-1], Observation)
+                ):
                     continue
                 content.append(
                     TextObservation(
                         source=item.source,
-                        content=f"{item.message}\n{item.content}" if item.message != item.content else item.message,
+                        content=f"{item.message}\n{item.content}"
+                        if item.message != item.content
+                        else item.message,
                     )
                 )
             else:
@@ -128,7 +161,12 @@ def process_data(data, keep_all=False):
                     continue
                 # just print all non-empty fields
                 keys = ["observation", "message", "content", "log", "status", "error", "error_code"]
-                obs = [f"{k}: {getattr(item, k)}" for k in keys if getattr(item, k, None) and not (isinstance(getattr(item, k), str) and not getattr(item, k).strip())]
+                obs = [
+                    f"{k}: {getattr(item, k)}"
+                    for k in keys
+                    if getattr(item, k, None)
+                    and not (isinstance(getattr(item, k), str) and not getattr(item, k).strip())
+                ]
                 print(f'Unknown observation: {"\n".join(obs)}', file=sys.stderr)
                 content.append(
                     TextObservation(
@@ -149,7 +187,7 @@ def process_data(data, keep_all=False):
                 )
             else:
                 if item.args.content.startswith("USER (assistant): "):
-                    item.args.content = item.args.content[len("USER (assistant): "):]
+                    item.args.content = item.args.content[len("USER (assistant): ") :]
                 content.append(
                     MessageAction(
                         content=item.args.content,
@@ -166,26 +204,26 @@ def process_data(data, keep_all=False):
                 )
             )
         elif item.action == "run":
-                content.append(
-                    ApiAction(
-                        function=item.action,
-                        description=item.args.thought,
-                        kwargs={
-                            "command": item.args.command,
-                        },
-                    )
+            content.append(
+                ApiAction(
+                    function=item.action,
+                    description=item.args.thought,
+                    kwargs={
+                        "command": item.args.command,
+                    },
                 )
+            )
         elif item.action == "run_ipython":
-                content.append(
-                    ApiAction(
-                        function=item.action,
-                        description=item.args.thought,
-                        kwargs={
-                            "code": item.args.code,
-                            "kernel_init_code": item.args.kernel_init_code,
-                        },
-                    )
+            content.append(
+                ApiAction(
+                    function=item.action,
+                    description=item.args.thought,
+                    kwargs={
+                        "code": item.args.code,
+                        "kernel_init_code": item.args.kernel_init_code,
+                    },
                 )
+            )
         elif item.action == "browse_interactive":
             # fill('a12', 'example with "quotes" and, a comma')\nclick('a51')\nclick('48', button='middle', modifiers=['Shift', 'Alt'])
             action = item.args.browser_actions.strip()
@@ -291,7 +329,12 @@ def process_data(data, keep_all=False):
         elif item.action == "task_plan":
             plan = item.args.plan
             if isinstance(plan, dict):
-                plan = "\n".join([f"Subtask {n}:\nDescription: {s["description"]}\nTool: {s["tool"]}" for n, s in enumerate(plan["subtasks"], 1)])
+                plan = "\n".join(
+                    [
+                        f"Subtask {n}:\nDescription: {s["description"]}\nTool: {s["tool"]}"
+                        for n, s in enumerate(plan["subtasks"], 1)
+                    ]
+                )
             content.append(
                 ApiAction(
                     function=item.action,
@@ -372,10 +415,14 @@ def process_data(data, keep_all=False):
         },
     )
 
+
 def get_args():
     import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--keep_all", action="store_true", help="Do not filter out any trajectory items")
+    parser.add_argument(
+        "--keep_all", action="store_true", help="Do not filter out any trajectory items"
+    )
     return parser.parse_args()
 
 

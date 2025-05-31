@@ -1,5 +1,6 @@
-from pydantic import BaseModel, RootModel
 from typing import List
+
+from pydantic import BaseModel, RootModel
 
 
 class ScreenAgentItem(BaseModel):

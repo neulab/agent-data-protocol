@@ -4,7 +4,7 @@
 import os
 
 USE_CONCISE_ANSWER = (
-    os.environ.get('USE_CONCISE_ANSWER', 'false') == 'true'
+    os.environ.get("USE_CONCISE_ANSWER", "false") == "true"
 )  # only return concise answer when running webarena and miniwob benchmarks
 
 CONCISE_INSTRUCTION = """\
@@ -20,7 +20,11 @@ In order to accomplish my goal I need to send the information asked back to the 
 def get_web_user_message(
     error_prefix: str, cur_url: str, cur_axtree_txt: str, prev_action_str: str
 ) -> str:
-    previous_actions = f"# Previous Actions\n{prev_action_str}" if not "\n# Previous Actions" in cur_axtree_txt else ""
+    previous_actions = (
+        f"# Previous Actions\n{prev_action_str}"
+        if "\n# Previous Actions" not in cur_axtree_txt
+        else ""
+    )
     prompt = f"""\
 {error_prefix}
 

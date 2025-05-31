@@ -33,7 +33,6 @@ def scroll(dx: float, dy: float) -> None:
     pass
 
 
-
 def press(key_comb: str) -> None:
     """Press a key combination.
 

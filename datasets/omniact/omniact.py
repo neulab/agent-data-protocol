@@ -1,9 +1,11 @@
+import base64
+import io
 import json
 import logging
 import os
-import io
-import base64
+
 from PIL import Image
+
 import datasets
 
 logger = logging.getLogger(__name__)
@@ -87,9 +89,7 @@ class OmniACT(datasets.GeneratorBasedBuilder):
                         datasets.Features(
                             {
                                 "top_left": datasets.Sequence(datasets.Value("float")),
-                                "bottom_right": datasets.Sequence(
-                                    datasets.Value("float")
-                                ),
+                                "bottom_right": datasets.Sequence(datasets.Value("float")),
                                 "label": datasets.Value("string"),
                             }
                         )
@@ -147,15 +147,12 @@ class OmniACT(datasets.GeneratorBasedBuilder):
             ),
         ]
 
-    def _generate_examples(
-        self, split, filepath, datapath, ocrpath, iconpath, colorpath
-    ):
+    def _generate_examples(self, split, filepath, datapath, ocrpath, iconpath, colorpath):
         logger.info("Generating examples from = %s", filepath)
         with open(filepath, "r") as f:
             data = json.load(f)
 
         for example_id, doc in data.items():
-
             doc = fix_file_names(doc)
 
             with open(os.path.join(datapath, doc["task"]), "r") as f:
@@ -216,12 +213,15 @@ class OmniACT(datasets.GeneratorBasedBuilder):
                     )
                 color_data = new_color_data
 
-            yield f"{split}_{example_id}", {
-                "id": f"{split}_{example_id}",
-                "task": task,
-                "box": box_data,
-                "image": image,
-                "ocr": ocr_data,
-                "icon": icon_data,
-                "color": color_data,
-            }
+            yield (
+                f"{split}_{example_id}",
+                {
+                    "id": f"{split}_{example_id}",
+                    "task": task,
+                    "box": box_data,
+                    "image": image,
+                    "ocr": ocr_data,
+                    "icon": icon_data,
+                    "color": color_data,
+                },
+            )

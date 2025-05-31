@@ -3,33 +3,34 @@
 This is similar to the functionality of `CodeActResponseParser`.
 """
 
-import json
-import os
-from browsergym.core.action.highlevel import HighLevelActionSet
-import inspect
 import importlib.util
+import inspect
+import os
+
+from browsergym.core.action.highlevel import HighLevelActionSet
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
 
-    
+
 _BASH_DESCRIPTION = """Execute a bash command in the terminal.
 * Long running commands: For commands that may run indefinitely, it should be run in the background and the output should be redirected to a file, e.g. command = `python3 app.py > server.log 2>&1 &`.
 * Interactive: If a bash command returns exit code `-1`, this means the process is not yet finished. The assistant must then send a second call to terminal with an empty `command` (which will retrieve any additional logs), or it can send additional text (set `command` to the text) to STDIN of the running process, or it can send command like `C-c` (Ctrl+C) to interrupt the process.
 """
 
-CmdRunTool = {'name' : 'execute_bash',
-        'description' : _BASH_DESCRIPTION,
-        'parameters' : {
-            'type': 'object',
-            'properties': {
-                'command': {
-                    'type': 'string',
-                    'description': 'The bash command to execute. Can be empty to view additional logs when previous exit code is `-1`. Can be `ctrl+c` to interrupt the currently running process.',
-                },
+CmdRunTool = {
+    "name": "execute_bash",
+    "description": _BASH_DESCRIPTION,
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "command": {
+                "type": "string",
+                "description": "The bash command to execute. Can be empty to view additional logs when previous exit code is `-1`. Can be `ctrl+c` to interrupt the currently running process.",
             },
-            'required': ['command'],
         },
+        "required": ["command"],
+    },
 }
 
 api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
@@ -40,9 +41,9 @@ if os.path.exists(api_file_path):
     spec.loader.exec_module(api_module)
     functions = inspect.getmembers(api_module, inspect.isfunction)
     for name, func in functions:
-        docstring = '\n' + inspect.getdoc(func)
+        docstring = "\n" + inspect.getdoc(func)
         sig = inspect.signature(func)
-        docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + '\n\n'   
+        docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
         _API_TOOL_DESCRIPTION += docstring
 
 _IPYTHON_DESCRIPTION = """Run a cell of Python code in an IPython environment.
@@ -50,13 +51,18 @@ _IPYTHON_DESCRIPTION = """Run a cell of Python code in an IPython environment.
 * The variable defined in the IPython environment will not be available outside the IPython environment (e.g., in terminal).
 """
 
-def getIPythonTool(is_web: bool):
-    if not is_web and _API_TOOL_DESCRIPTION != '':
-        _IPYTHON_TOOL_DESCRIPTION = """
-        The following pre-defined functions are also available. 
 
-        """ + _API_TOOL_DESCRIPTION
-    else: _IPYTHON_TOOL_DESCRIPTION = ''
+def getIPythonTool(is_web: bool):
+    if not is_web and _API_TOOL_DESCRIPTION != "":
+        _IPYTHON_TOOL_DESCRIPTION = (
+            """
+        The following pre-defined functions are also available.
+
+        """
+            + _API_TOOL_DESCRIPTION
+        )
+    else:
+        _IPYTHON_TOOL_DESCRIPTION = ""
     IPythonTool = {
         "name": "execute_ipython_cell",
         "description": _IPYTHON_DESCRIPTION,
@@ -65,11 +71,12 @@ def getIPythonTool(is_web: bool):
             "properties": {
                 "code": {
                     "type": "string",
-                    "description": "The Python code to execute. Supports magic commands like %pip.\n" + _IPYTHON_TOOL_DESCRIPTION,
+                    "description": "The Python code to execute. Supports magic commands like %pip.\n"
+                    + _IPYTHON_TOOL_DESCRIPTION,
                 },
             },
             "required": ["code"],
-        }
+        },
     }
     return IPythonTool
 
@@ -286,7 +293,7 @@ WebReadTool = {
 
 # from browsergym/core/action/highlevel.py
 _browser_action_space = HighLevelActionSet(
-    subsets=['bid', 'nav'],
+    subsets=["bid", "nav"],
     strict=False,  # less strict on the parsing of the actions
     multiaction=True,  # enable to agent to take multiple actions at once
 )
@@ -303,13 +310,18 @@ click('a51')
 click('48', button='middle', modifiers=['Shift'])
 """
 
+
 def getBrowserTool(is_web: bool):
-    if is_web and _API_TOOL_DESCRIPTION != '':
-        _BROWSER_TOOL_DESCRIPTION = """
+    if is_web and _API_TOOL_DESCRIPTION != "":
+        _BROWSER_TOOL_DESCRIPTION = (
+            """
         The following functions are available. Nothing else is supported.
 
-        """ + _API_TOOL_DESCRIPTION
-    else: _BROWSER_TOOL_DESCRIPTION = ''
+        """
+            + _API_TOOL_DESCRIPTION
+        )
+    else:
+        _BROWSER_TOOL_DESCRIPTION = ""
     BrowserTool = {
         "name": "browser",
         "description": _BROWSER_DESCRIPTION,
@@ -319,7 +331,8 @@ def getBrowserTool(is_web: bool):
                 "code": {
                     "type": "string",
                     "description": (
-                        "The Python code that interacts with the browser.\n" + _BROWSER_TOOL_DESCRIPTION
+                        "The Python code that interacts with the browser.\n"
+                        + _BROWSER_TOOL_DESCRIPTION
                     ),
                 },
             },
@@ -332,8 +345,8 @@ def getBrowserTool(is_web: bool):
 _FINISH_DESCRIPTION = """Finish the interaction when the task is complete OR if the assistant cannot proceed further with the task."""
 
 FinishTool = {
-        'name':'finish',
-        'description':_FINISH_DESCRIPTION,
+    "name": "finish",
+    "description": _FINISH_DESCRIPTION,
 }
 
 

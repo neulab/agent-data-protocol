@@ -20,26 +20,26 @@
 3. **Set Up Latest android_env**
    - Navigate to the `android_env_utils` directory and install it (have included there):
      ```sh
-     
+
      cd agent-data-collection/datasets/androidcontrol/android_env_utils
      python setup.py install
-     
+
      # or (Windows)
-     
+
      cd agent-data-collection/datasets/androidcontrol/android_env_utils
       setup.py install
-     
+
      # or
-     
+
      cd agent-data-collection/datasets/androidcontrol/android_env_utils
        pip install .
         ```
-     
+
 If you encouter an error about loading from the google package, please update protobuf to the latest version:
 
 ```sh
 pip install --upgrade protobuf
-     
+
   ```
 
 

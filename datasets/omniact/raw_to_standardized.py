@@ -1,18 +1,20 @@
 import json
-import sys
 import re
+import sys
 
 from schema.action.action import Action
 from schema.action.code import CodeAction
+from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.observation.image import BoundingBox, ImageObservation, ImageAnnotation
 from schema.trajectory import Trajectory
 
 
 def convert_example(example: dict[str, str]) -> list[Action | Observation]:
     task_regex = re.match(
-        r"Task: (.*)\nOutput Script:\n(.*)|Task: (.*)\nOutput Script: \n(.*)|Task: (.*)\nOutput Script: (.*)|Task: (.*)\n(.*)\n|Task: (.*)\n(.*)", example["task"], re.DOTALL
+        r"Task: (.*)\nOutput Script:\n(.*)|Task: (.*)\nOutput Script: \n(.*)|Task: (.*)\nOutput Script: (.*)|Task: (.*)\n(.*)\n|Task: (.*)\n(.*)",
+        example["task"],
+        re.DOTALL,
     )
     try:
         annotations = [
@@ -28,27 +30,40 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
                     - example["box"]["top_left"][index][1],
                 ),
             )
-            for index in range(len(example["box"]['label']))
+            for index in range(len(example["box"]["label"]))
         ]
     except:
         raise Exception(f"Error in example: {example['id'], example['task'], example['box']}")
 
     try:
-        return [ 
+        return [
             ImageObservation(
                 content=example["image"],
                 annotations=annotations,
                 source="os",
             ),
-            TextObservation(content=task_regex.group(1) or task_regex.group(3) or task_regex.group(5) or task_regex.group(7) or task_regex.group(9), source="user"),
+            TextObservation(
+                content=task_regex.group(1)
+                or task_regex.group(3)
+                or task_regex.group(5)
+                or task_regex.group(7)
+                or task_regex.group(9),
+                source="user",
+            ),
             CodeAction(
                 language="python",
-                content=task_regex.group(2) or task_regex.group(4) or task_regex.group(6) or task_regex.group(8) or task_regex.group(10),
+                content=task_regex.group(2)
+                or task_regex.group(4)
+                or task_regex.group(6)
+                or task_regex.group(8)
+                or task_regex.group(10),
                 description="Output Script",
             ),
         ]
     except:
-        raise Exception(f"Error in example: {example['id'], example['task'], task_regex}") #task_regex.group(9), task_regex.group(10)
+        raise Exception(
+            f"Error in example: {example['id'], example['task'], task_regex}"
+        )  # task_regex.group(9), task_regex.group(10)
 
 
 for line in sys.stdin:

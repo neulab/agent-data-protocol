@@ -1,50 +1,43 @@
 import argparse
+import collections
 import json
-import sys
 import os
+import re
+import sys
+
+import tqdm
+from lxml import etree, html
+from playwright.sync_api import CDPSession, Page, sync_playwright
+from schema_raw import Action as RawAction
+from schema_raw import SchemaRaw
+from webarena_utils import (
+    BrowserConfig,
+    BrowserInfo,
+)
 
 from schema.action.api import ApiAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-from schema_raw import SchemaRaw, Action as RawAction
-from bs4 import BeautifulSoup
-from lxml import etree
-import collections
-import re
-import tqdm
 
-from playwright.sync_api import CDPSession, Page, ViewportSize, sync_playwright
-
-from webarena_utils import (
-    AccessibilityTree,
-    AccessibilityTreeNode,
-    BrowserConfig,
-    BrowserInfo,
-    DOMNode,
-    DOMTree,
-    Observation,
-    png_bytes_to_numpy,
-)
-from lxml import html
 
 def fix_iframes(html_str: str) -> str:
     """
     Fix iframes by moving their HTML child elements to the srcdoc attribute.
-    
+
     Args:
         html_str (str): HTML string
-    
+
     """
     document = html.fromstring(html_str)
-    for iframe in document.xpath('//iframe'):
-        if iframe.attrib.get('src') or iframe.attrib.get('srcdoc'):
+    for iframe in document.xpath("//iframe"):
+        if iframe.attrib.get("src") or iframe.attrib.get("srcdoc"):
             continue
-        iframe_content = ''.join(html.tostring(e, encoding='unicode') for e in iframe)
-        iframe.attrib['srcdoc'] = f"{iframe_content}"
+        iframe_content = "".join(html.tostring(e, encoding="unicode") for e in iframe)
+        iframe.attrib["srcdoc"] = f"{iframe_content}"
         for child in iframe:
             iframe.remove(child)
-    return etree.tostring(document, pretty_print=True, encoding='unicode', method='html')
+    return etree.tostring(document, pretty_print=True, encoding="unicode", method="html")
 
 
 def fetch_browser_info(
@@ -97,9 +90,7 @@ def fetch_browser_info(
 
 def get_bounding_client_rect(client: CDPSession, backend_node_id: str):
     try:
-        remote_object = client.send(
-            "DOM.resolveNode", {"backendNodeId": int(backend_node_id)}
-        )
+        remote_object = client.send("DOM.resolveNode", {"backendNodeId": int(backend_node_id)})
         remote_object_id = remote_object["object"]["objectId"]
         response = client.send(
             "Runtime.callFunctionOn",
@@ -122,7 +113,7 @@ def get_bounding_client_rect(client: CDPSession, backend_node_id: str):
             },
         )
         return response
-    except Exception as e:
+    except Exception:
         return {"result": {"subtype": "error"}}
 
 
@@ -168,9 +159,7 @@ def process_trace(trace_file, page, record):
             if os.path.exists(record):
                 with open(record, "r") as file:
                     content = file.read()
-                    if (
-                        trace_file + "-" + action_uid + "-" + f"{action_idx:03d}"
-                    ) in content:
+                    if (trace_file + "-" + action_uid + "-" + f"{action_idx:03d}") in content:
                         continue
             action_seq = action_mapping[action_uid]
             action_seq[action_idx].click()
@@ -212,9 +201,7 @@ def process_trace(trace_file, page, record):
                 backend_node_id = -1
                 for idx in range(len(node_names)):
                     if tgt_idx in attributes[idx]:
-                        action_uid_idx = attributes[idx][
-                            attributes[idx].index(tgt_idx) + 1
-                        ]
+                        action_uid_idx = attributes[idx][attributes[idx].index(tgt_idx) + 1]
                         if strings[action_uid_idx] == action_uid:
                             backend_node_id = backend_node_ids[idx]
                             break
@@ -227,9 +214,9 @@ def process_trace(trace_file, page, record):
     return info_mapping
 
 
-def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[WebObservation, ApiAction]:
-    
-
+def convert_step(
+    step: RawAction, info_mapping: dict, annotation_id
+) -> tuple[WebObservation, ApiAction]:
     web_observation = WebObservation(
         axtree=None,
         html=fix_iframes(step.raw_html),
@@ -247,21 +234,22 @@ def convert_step(step: RawAction, info_mapping: dict, annotation_id) -> tuple[We
     elements = tree.xpath(label_xpath)
     backend_node_id = elements[0].get("backend_node_id")
 
-    dom_nodeid = info_mapping.get(f'{annotation_id}-{step.action_uid}', 'not found')
-    if dom_nodeid == 'not found' and backend_node_id:
+    dom_nodeid = info_mapping.get(f"{annotation_id}-{step.action_uid}", "not found")
+    if dom_nodeid == "not found" and backend_node_id:
         dom_nodeid = backend_node_id
     xpath = f"//*[@backend_node_id='{dom_nodeid}']"
 
     api_action = ApiAction(
         function=step.operation.op.lower(),
-        kwargs={"xpath": xpath, "value": step.operation.value} if step.operation.value else {"xpath": xpath},
+        kwargs={"xpath": xpath, "value": step.operation.value}
+        if step.operation.value
+        else {"xpath": xpath},
         description=None,
     )
     return web_observation, api_action
 
 
 if __name__ == "__main__":
-
     # add argparse to get location of raw_dump
     parser = argparse.ArgumentParser()
     parser.add_argument("--raw-dump", type=str)
@@ -307,22 +295,29 @@ if __name__ == "__main__":
                     print(f"Failed to process {trace_file}")
             browser.close()
 
-
     for line in sys.stdin:
-
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
 
         content: list = [
             TextObservation(
-                content= f"Go to the website https://www.{data.website}.com and {data.confirmed_task}", source="user"
+                content=f"Go to the website https://www.{data.website}.com and {data.confirmed_task}",
+                source="user",
             )
         ]
 
-        content.extend([ApiAction(function="goto", kwargs={"url": f"https://www.{data.website}.com" }, description=None)])
+        content.extend(
+            [
+                ApiAction(
+                    function="goto",
+                    kwargs={"url": f"https://www.{data.website}.com"},
+                    description=None,
+                )
+            ]
+        )
 
         for action in data.actions:
-            content.extend(convert_step(action,info_mapping,data.annotation_id))
+            content.extend(convert_step(action, info_mapping, data.annotation_id))
 
         standardized_data = Trajectory(
             id=data.annotation_id,
@@ -336,4 +331,3 @@ if __name__ == "__main__":
         )
         # Print the standardized data
         print(standardized_data.model_dump_json())
-        

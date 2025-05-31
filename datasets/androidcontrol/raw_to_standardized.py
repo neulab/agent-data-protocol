@@ -2,17 +2,17 @@ import json
 import sys
 from typing import Any
 
-import sys
 sys.path.append(".")
+
+from typing import List, Union
 
 from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
+from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.observation import Observation
-from schema.observation.image import BoundingBox, ImageObservation, ImageAnnotation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
-from typing import Any, List, Union
 
 prev_id = None
 content: list[Action | Observation] = []
@@ -28,15 +28,14 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
     for i, (screenshot, tree) in enumerate(zip(data["screenshots"], data["accessibility_trees"])):
         annotations = []
         for element in tree:
-
             element_text = ""
             if element["text"]:
                 element_text = element["text"]
                 # Special handling of single character labels.
                 if (
-                        len(element_text) == 1
-                        and element["content_description"]
-                        and len(element["content_description"]) > 1
+                    len(element_text) == 1
+                    and element["content_description"]
+                    and len(element["content_description"]) > 1
                 ):
                     element_text = element["content_description"]
             elif element["content_description"]:
@@ -46,47 +45,38 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
             elif element["tooltip"]:
                 element_text = element["tooltip"]
 
-            elif element["class_name"] and element["class_name"].endswith('Switch'):
-                element_text = 'Switch:' + ('on' if element["is_checked"] else 'off')
+            elif element["class_name"] and element["class_name"].endswith("Switch"):
+                element_text = "Switch:" + ("on" if element["is_checked"] else "off")
             elif element["resource_id"]:
-                element_text = element.resource_id.split('/')[-1]
-            elif element["class_name"] and element["class_name"].endswith(
-                    'EditText'
-            ):
+                element_text = element.resource_id.split("/")[-1]
+            elif element["class_name"] and element["class_name"].endswith("EditText"):
                 element_text = element["edit text"]
             else:
                 element_text = ""
             image_annotation = ImageAnnotation(
                 # text=element["text"],
                 # element_type=element["class_name"],
-
                 text=element_text if element_text else "",
                 element_type=element["class_name"] if element["class_name"] else "",
                 bounding_box=BoundingBox(
                     x=element["bbox_pixels"]["x_min"],
                     y=element["bbox_pixels"]["y_min"],
                     width=element["bbox_pixels"]["width"],
-                    height=element["bbox_pixels"]["height"]
-                )
+                    height=element["bbox_pixels"]["height"],
+                ),
             )
             annotations.append(image_annotation)
-        content.append(
-            ImageObservation(
-                content=screenshot,
-                annotations=annotations,
-                source="user"
-            )
-        )
-        if i!=len(data["screenshots"])-1:
-            action=data["actions"][i]
-            step_inst=data["step_instructions"][i]
+        content.append(ImageObservation(content=screenshot, annotations=annotations, source="user"))
+        if i != len(data["screenshots"]) - 1:
+            action = data["actions"][i]
+            step_inst = data["step_instructions"][i]
             if action["action_type"] == "click":
                 # print("click")
                 content.append(
                     ApiAction(
                         function="click",
                         kwargs={"x": action["x"], "y": action["y"]},
-                        description=step_inst
+                        description=step_inst,
                     )
                 )
             elif action["action_type"] == "long_press":
@@ -94,7 +84,7 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
                     ApiAction(
                         function="click",
                         kwargs={"x": action["x"], "y": action["y"]},
-                        description=step_inst
+                        description=step_inst,
                     )
                 )
             elif action["action_type"] == "scroll":
@@ -102,7 +92,7 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
                     ApiAction(
                         function="scroll",
                         kwargs={"direction": action["direction"]},
-                        description=step_inst
+                        description=step_inst,
                     )
                 )
             elif action["action_type"] == "input_text":
@@ -110,45 +100,27 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
                     ApiAction(
                         function="input_text",
                         kwargs={"text": action["text"]},
-                        description=step_inst
+                        description=step_inst,
                     )
                 )
             elif action["action_type"] == "navigate_home":
                 content.append(
-                    ApiAction(
-                        function="navigate_home",
-                        kwargs={},
-                        description=step_inst
-                    )
+                    ApiAction(function="navigate_home", kwargs={}, description=step_inst)
                 )
             elif action["action_type"] == "navigate_back":
-                content.append(
-                    ApiAction(
-                        function="back",
-                        kwargs={},
-                        description=step_inst
-                    )
-                )
+                content.append(ApiAction(function="back", kwargs={}, description=step_inst))
             elif action["action_type"] == "open_app":
                 content.append(
                     ApiAction(
                         function="open_app",
                         kwargs={"app_name": action["app_name"]},
-                        description=step_inst
+                        description=step_inst,
                     )
                 )
             elif action["action_type"] == "wait":
-                content.append(
-                    ApiAction(
-                        function="wait",
-                        kwargs={},
-                        description=step_inst
-                    )
-                )
+                content.append(ApiAction(function="wait", kwargs={}, description=step_inst))
     # print(content)
     return Trajectory(id=str(data["episode_id"]), content=content)
-
-
 
 
 for line in sys.stdin:
@@ -156,10 +128,6 @@ for line in sys.stdin:
     trajectory = convert_to_trajectory(raw_data)
     output_file = "output_trajectory.json"
     print(trajectory.model_dump_json())
-
-
-
-
 
 
 #

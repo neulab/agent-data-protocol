@@ -1,8 +1,9 @@
-import os
-import json
-import pytest
 import importlib.util
+import json
+import os
 from pathlib import Path
+
+import pytest
 from pydantic import ValidationError
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
@@ -11,7 +12,9 @@ DATASET_PATH = Path(__file__).parent.parent / "datasets"
 def get_subdirectories(directory):
     ignore_dirs = ["__pycache__"]
     return [
-        d for d in os.listdir(directory) if os.path.isdir(os.path.join(directory, d)) and d not in ignore_dirs
+        d
+        for d in os.listdir(directory)
+        if os.path.isdir(os.path.join(directory, d)) and d not in ignore_dirs
     ]
 
 
@@ -34,12 +37,8 @@ def test_sample_raw_against_schema(subdir):
     schema_path = os.path.join(subdir_path, "schema_raw.py")
     sample_path = os.path.join(subdir_path, "sample_raw.json")
 
-    assert os.path.exists(
-        schema_path
-    ), f"schema_raw.py not found in {subdir_path}"
-    assert os.path.exists(
-        sample_path
-    ), f"sample_raw.json not found in {subdir_path}"
+    assert os.path.exists(schema_path), f"schema_raw.py not found in {subdir_path}"
+    assert os.path.exists(sample_path), f"sample_raw.json not found in {subdir_path}"
 
     SchemaRaw = load_schema_class(schema_path)
     samples = load_json(sample_path)

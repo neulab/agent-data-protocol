@@ -1,11 +1,12 @@
-import sys
 import json
+import sys
+
+from schema_raw import SchemaRaw
 
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
-from schema_raw import SchemaRaw
 
 
 def process_data(data):
@@ -13,7 +14,7 @@ def process_data(data):
     for msg in data.messages:
         if msg.role in ["system", "user", "tool"]:
             _msg = f"[{msg.name}] {msg.content}" if msg.role == "tool" else msg.content
-            _msg = '\n'.join(_msg.split('] OBSERVATION:\n')[1:])
+            _msg = "\n".join(_msg.split("] OBSERVATION:\n")[1:])
             content.append(
                 TextObservation(
                     content=_msg,

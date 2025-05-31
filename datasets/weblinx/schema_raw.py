@@ -1,4 +1,5 @@
 from typing import Any, List, Optional
+
 from pydantic import BaseModel
 
 
@@ -8,6 +9,7 @@ class State(BaseModel):
     frame_resized: Optional[bool] = None
     screenshot_status: Optional[str] = None
 
+
 class Step(BaseModel):
     timestamp: float
     speaker: Optional[str] = None
@@ -15,6 +17,7 @@ class Step(BaseModel):
     type: str
     state: Optional[State] = None
     action: Optional[dict[str, Any]] = None
+
 
 class SchemaRaw(BaseModel):
     shortcode: str

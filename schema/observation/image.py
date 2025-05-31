@@ -13,9 +13,7 @@ class BoundingBox(BaseModel):
 class ImageAnnotation(BaseModel):
     text: str = Field(..., description="The text annotation")
     element_type: str = Field(..., description="The type of element")
-    bounding_box: BoundingBox = Field(
-        ..., description="The boxes of the annotation"
-    )
+    bounding_box: BoundingBox = Field(..., description="The boxes of the annotation")
 
 
 class ImageObservation(Observation):

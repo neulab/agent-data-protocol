@@ -1,6 +1,3 @@
-from typing import Any
-
-
 def click(xpath: str) -> None:
     """Click on the element.
 
