@@ -13,7 +13,7 @@ import csv
 
 # Add the parent directory to the path so we can import the script
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from scripts.sft_quality_control import (
+from validator.sft_quality_control import (
     extract_function_calls,
     has_thought,
     analyze_sft_data,
