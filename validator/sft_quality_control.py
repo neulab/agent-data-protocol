@@ -35,77 +35,26 @@ def extract_function_calls(content):
     """Extract function calls from the content."""
     function_calls = []
     
-    # Pattern for code blocks with function calls
-    code_block_pattern = r"```([^`]+)```"
-    if re.search(code_block_pattern, content):
-        function_calls.append("code_block")
+    # Pattern for ACTION: followed by code block with function name
+    # This matches patterns like: ACTION: \n```function_name
+    action_code_pattern = r"ACTION:\s*\n```([a-zA-Z0-9_]+)"
     
-    # Pattern for execute tags
-    execute_pattern = r"<execute_(\w+)>"
-    if re.search(execute_pattern, content):
-        function_calls.append("execute")
+    # Find all matches
+    matches = re.findall(action_code_pattern, content)
     
-    # Pattern for antml function calls
-    antml_pattern = r"<invoke name=\"([^\"]+)\">"
-    if re.search(antml_pattern, content):
-        function_calls.append("invoke")
-    
-    # Pattern for function= format
-    function_pattern = r"<function=([^>]+)>"
-    if re.search(function_pattern, content):
-        function_calls.append("function")
-    
-    # Pattern for ACTION: format (common in agent datasets)
-    action_pattern = r"ACTION:"
-    if re.search(action_pattern, content):
-        function_calls.append("action")
-    
-    # Pattern for THOUGHT: format (common in agent datasets)
-    thought_pattern = r"THOUGHT:"
-    if re.search(thought_pattern, content):
-        function_calls.append("thought")
-    
-    # Check for parameter= format
-    parameter_pattern = r"<parameter="
-    if re.search(parameter_pattern, content):
-        function_calls.append("parameter")
+    # Add all found function names to the list
+    function_calls.extend(matches)
     
     return function_calls
 
 
 def has_thought(content):
     """Check if the content has any text besides function calls."""
-    # Simply check if there's any text content besides the function call patterns
-    # This is a simplified approach as requested in the review
+    # Check for function call pattern
+    has_function_call = bool(re.search(r"ACTION:\s*\n```[a-zA-Z0-9_]+", content))
     
-    # Check for function call patterns
-    has_function_call = False
-    
-    # Check for code blocks
-    if re.search(r"```[^`]+```", content):
-        has_function_call = True
-    
-    # Check for other function call patterns
-    function_patterns = [
-        r"<execute_\w+>",
-        r"<invoke name=",
-        r"<function=",
-        r"ACTION:",
-        r"<parameter="
-    ]
-    
-    for pattern in function_patterns:
-        if re.search(pattern, content):
-            has_function_call = True
-            break
-    
-    # If there's no function call, or if there's text besides the function call
-    # (determined by checking if removing function calls still leaves content)
-    cleaned_content = content
-    for pattern in [r"```[^`]+```", r"<execute_\w+>.*?</execute_\w+>", 
-                   r"<invoke name=.*?</invoke>", r"<function=.*?>", 
-                   r"ACTION:.*?\n", r"<parameter=.*?>"]:
-        cleaned_content = re.sub(pattern, "", cleaned_content, flags=re.DOTALL)
+    # Remove the function call pattern from the content
+    cleaned_content = re.sub(r"ACTION:\s*\n```[a-zA-Z0-9_]+.*?```", "", content, flags=re.DOTALL)
     
     # Remove whitespace and check if there's any content left
     cleaned_content = cleaned_content.strip()
