@@ -46,6 +46,8 @@ def convert_step(step: dict[str, str]) -> list:
                 # Map function names
                 if function_name == "bash":
                     function_name = "execute_bash"
+                if function_name == "submit":
+                    function_name = "finish"
                 
                 # Parse parameters
                 kwargs = {}
