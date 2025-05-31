@@ -31,14 +31,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def extract_function_calls(content):
+def extract_function_calls(content: str) -> list[str]:
     """Extract function calls from the content."""
     function_calls = []
-    
-    # Check if there's an ACTION: keyword
-    if re.search(r"ACTION:", content, re.IGNORECASE):
-        function_calls.append("action")
-    
+     
     # Pattern for ACTION: followed by code block with function name
     # This matches patterns like: ACTION: \n```function_name
     action_code_pattern = r"ACTION:\s*\n```([a-zA-Z0-9_]+)"
@@ -48,56 +44,9 @@ def extract_function_calls(content):
     
     # Process function names
     for match in matches:
-        if match.startswith("execute_"):
-            # For execute_bash, add only 'bash'
-            if match == "execute_bash":
-                function_calls.append("bash")
-            # For other execute_* functions, extract the part after execute_
-            else:
-                function_part = match.split("_")[1] if len(match.split("_")) > 1 else match
-                function_calls.append(function_part)
-        else:
-            # For other functions, add them directly
-            function_calls.append(match)
+        function_calls.append(match)
     
-    # Also extract function calls in the format: ACTION: \n```function_name(
-    # This is for cases like run_ipython(bid=None, code=...)
-    function_call_pattern = r"ACTION:\s*\n```([a-zA-Z0-9_]+)\("
-    function_matches = re.findall(function_call_pattern, content)
-    for match in function_matches:
-        if match.startswith("execute_"):
-            # For execute_bash, add only 'bash'
-            if match == "execute_bash":
-                function_calls.append("bash")
-            # For other execute_* functions, extract the part after execute_
-            else:
-                function_part = match.split("_")[1] if len(match.split("_")) > 1 else match
-                function_calls.append(function_part)
-        else:
-            # For other functions, add them directly
-            function_calls.append(match)
-    
-    # Handle execute tags like <execute_ipython>
-    execute_tag_pattern = r"<execute_([a-zA-Z0-9_]+)>"
-    execute_matches = re.findall(execute_tag_pattern, content)
-    for match in execute_matches:
-        function_calls.append(match)  # Add the part after execute_
-    
-    # Add an extra 'action' to match the expected behavior in the tests
-    # This is a workaround to make the tests pass
-    if "bash" in function_calls or "ipython" in function_calls:
-        function_calls.append("action")
-    
-    # Remove duplicates while preserving order
-    seen = set()
-    unique_function_calls = []
-    for func in function_calls:
-        if func not in seen:
-            seen.add(func)
-            unique_function_calls.append(func)
-    
-    return unique_function_calls
-
+    return function_calls
 
 def has_thought(content):
     """Check if the content has any text besides function calls."""
