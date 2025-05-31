@@ -24,7 +24,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Generate quality control metrics for SFT data')
     parser.add_argument('--input_dirs', nargs='+', required=True,
                         help='List of dataset directories to analyze')
-    parser.add_argument('--output_dir', type=str, default='/workspace/quality_control_results',
+    parser.add_argument('--output_dir', type=str, default='quality_control_results',
                         help='Directory to save the output charts and CSV')
     parser.add_argument('--sft_file_pattern', type=str, default='*',
                         help='Pattern to match SFT files (default: uses predefined patterns)')
