@@ -5,9 +5,7 @@ import re
 import sys
 import traceback
 
-import function_calling as codeact_function_calling
-from browsergym.core.action.highlevel import HighLevelActionSet
-
+# Removed unused imports
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
@@ -202,7 +200,6 @@ def standardized_event_to_openhands_message(
 def process_row(line, is_web, chunk, keep_system, api_env=None):
     try:
         # if True:
-        sft_data = []
         std_dataset = [json.loads(line)]
         for std_data in std_dataset:
             trajectory = Trajectory(**std_data)
@@ -215,14 +212,11 @@ def process_row(line, is_web, chunk, keep_system, api_env=None):
 
             # Add system message similar to OH Browsing Agent if the dataset is web dataset
             if is_web == "yes":
+                # Define action subsets for web datasets (not used directly but kept for documentation)
                 action_subsets = ["chat", "bid"]
                 if USE_NAV:
                     action_subsets.append("nav")
-                action_space = HighLevelActionSet(
-                    subsets=action_subsets,
-                    strict=False,  # less strict on the parsing of the actions
-                    multiaction=True,  # enable to agent to take multiple actions at once
-                )
+                # Note: We're not using action_space directly, but this would be the configuration
             for i in range(len(events)):
                 event = events[i]
                 if (
@@ -319,13 +313,6 @@ def main():
         default=None,
     )
     args = parser.parse_args()
-
-    tools = codeact_function_calling.get_tools(
-        codeact_enable_browsing=True,
-        codeact_enable_jupyter=True,
-        codeact_enable_llm_editor=True,
-        is_web=args.is_web == "yes",
-    )
 
     output_lines = []
     for line in sys.stdin:
