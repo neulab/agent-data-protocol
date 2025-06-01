@@ -66,14 +66,33 @@ parser.add_argument(
     help="The environment in which the APIs are pre-defined",
     default=None,
 )
-args = parser.parse_args()
 
-tools = codeact_function_calling.get_tools(
-    codeact_enable_browsing=True,
-    codeact_enable_jupyter=True,
-    codeact_enable_llm_editor=True,
-    is_web=args.is_web == "yes",
-)
+# Only parse arguments when run as the main program
+if __name__ == "__main__":
+    args = parser.parse_args()
+
+    tools = codeact_function_calling.get_tools(
+        codeact_enable_browsing=True,
+        codeact_enable_jupyter=True,
+        codeact_enable_llm_editor=True,
+        is_web=args.is_web == "yes",
+    )
+else:
+    # For testing purposes
+    import argparse
+
+    args = argparse.Namespace()
+    args.chunk = "0"
+    args.is_web = "no"
+    args.keep_system = "yes"
+    args.api_env = None
+
+    tools = codeact_function_calling.get_tools(
+        codeact_enable_browsing=True,
+        codeact_enable_jupyter=True,
+        codeact_enable_llm_editor=True,
+        is_web=False,
+    )
 
 # Example OH function format:
 """
@@ -385,16 +404,18 @@ def process_row(line):
         return None
 
 
-output_lines = []
-for line in sys.stdin:
-    print(f"Processing line: {line[:100]}...", file=sys.stderr)
-    output_line = process_row(line)
-    if output_line:
-        print("Successfully processed line", file=sys.stderr)
-        output_lines.append(output_line)
-    else:
-        print("Failed to process line", file=sys.stderr)
+# Only process stdin when run as the main program
+if __name__ == "__main__":
+    output_lines = []
+    for line in sys.stdin:
+        print(f"Processing line: {line[:100]}...", file=sys.stderr)
+        output_line = process_row(line)
+        if output_line:
+            print("Successfully processed line", file=sys.stderr)
+            output_lines.append(output_line)
+        else:
+            print("Failed to process line", file=sys.stderr)
 
-# Print the output as a JSON array
-if output_lines:
-    print(json.dumps(output_lines, indent=2))
+    # Print the output as a JSON array
+    if output_lines:
+        print(json.dumps(output_lines, indent=2))
