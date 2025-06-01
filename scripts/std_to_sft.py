@@ -132,9 +132,23 @@ def standardized_event_to_openhands_message(
         ):  # could add more or conditions here for actions that don't require bid
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
             previous_web_actions.extend([api_action])
-            call = json.loads(f'{{"name": "browser", "arguments": {{"code": "{api_action}"}}}}')
+            # Properly escape special characters in api_action
+            escaped_api_action = (
+                api_action.replace("\\", "\\\\")
+                .replace('"', '\\"')
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+            )
+            call = json.loads(
+                f'{{"name": "browser", "arguments": {{"code": "{escaped_api_action}"}}}}'
+            )
             function_call = format_function(call["name"], call["arguments"])
-            return {"from": "function_call", "value": f"{thought}{function_call}"}
+            return {
+                "from": "function_call",
+                "value": f"{thought}{function_call}",
+                "function_call": function_call,
+            }
 
         arguments = None
         # try to directly get the browsergym_id from the event kwargs
@@ -151,7 +165,11 @@ def standardized_event_to_openhands_message(
         if not browsergym_id and event.function in openhands_default_tools:
             arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
             function_call = format_function(event.function, arguments)
-            return {"from": "function_call", "value": f"{thought}{function_call}"}
+            return {
+                "from": "function_call",
+                "value": f"{thought}{function_call}",
+                "function_call": function_call,
+            }
         if not browsergym_id:
             if not hasattr(args, "api_env") or not args.api_env:
                 # Default to 'execute_bash' if api_env is not specified
@@ -159,16 +177,32 @@ def standardized_event_to_openhands_message(
             arg = function_args.get(args.api_env, "code")
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
             function_call = format_function(args.api_env, {arg: api_action})
-            return {"from": "function_call", "value": f"{thought}{function_call}"}
+            return {
+                "from": "function_call",
+                "value": f"{thought}{function_call}",
+                "function_call": function_call,
+            }
         # for tool calls that are browser based
         elif len(event.kwargs) == 1 and "element_id" in event.kwargs:
             api_action = f"{event.function}(bid={browsergym_id})"
         else:
             api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
         previous_web_actions.extend([api_action])
-        call = json.loads(f'{{"name": "browser", "arguments": {{"code": "{api_action}"}}}}')
-        call = format_function(call["name"], call["arguments"])
-        return {"from": "function_call", "value": f"{thought}{call}"}
+        # Properly escape special characters in api_action
+        escaped_api_action = (
+            api_action.replace("\\", "\\\\")
+            .replace('"', '\\"')
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+        )
+        call = json.loads(f'{{"name": "browser", "arguments": {{"code": "{escaped_api_action}"}}}}')
+        formatted_call = format_function(call["name"], call["arguments"])
+        return {
+            "from": "function_call",
+            "value": f"{thought}{formatted_call}",
+            "function_call": formatted_call,
+        }
 
     if isinstance(event, CodeAction):
         thought = event.description + "\n\n" if event.description else ""
@@ -177,7 +211,11 @@ def standardized_event_to_openhands_message(
         code_action = format_function(function_name, {arg: event.content})
         if not code_action:
             raise ValueError(f"Event with unknown code action type: {type(event)}\n{function_name}")
-        return {"from": "function_call", "value": f"{thought}{code_action}"}
+        return {
+            "from": "function_call",
+            "value": f"{thought}{code_action}",
+            "function_call": code_action,
+        }
 
     elif isinstance(event, MessageAction):
         thought = event.description + "\n\n" if event.description else ""
@@ -187,7 +225,11 @@ def standardized_event_to_openhands_message(
             finish_function_call = format_function(
                 "finish", {"message": content, "task_completed": "true"}
             )
-            return {"from": "function_call", "value": f"{thought}{finish_function_call}"}
+            return {
+                "from": "function_call",
+                "value": f"{thought}{finish_function_call}",
+                "function_call": finish_function_call,
+            }
         return {"from": "gpt", "value": f"{thought}{event.content}"}
 
     elif isinstance(event, TextObservation):
