@@ -5,9 +5,7 @@ import re
 import sys
 import traceback
 
-import function_calling as codeact_function_calling
-from browsergym.core.action.highlevel import HighLevelActionSet
-
+# Removed unused imports
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
@@ -46,35 +44,6 @@ USE_NAV = (
 
 generate_axtree = HTMLToAXTree(dataset)
 
-parser = argparse.ArgumentParser(description="Convert standardized data to SFT format")
-# parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
-parser.add_argument("--chunk", type=str, help="Dataset name", required=True)
-parser.add_argument(
-    "--is_web", type=str, choices=["yes", "no"], help="Is Dataset type web api", required=True
-)
-parser.add_argument(
-    "--keep_system",
-    type=str,
-    choices=["yes", "no"],
-    help="Keep system prompt in first user message or not",
-    required=True,
-)
-parser.add_argument(
-    "--api_env",
-    type=str,
-    choices=openhands_default_tools + [None],
-    help="The environment in which the APIs are pre-defined",
-    default=None,
-)
-args = parser.parse_args()
-
-tools = codeact_function_calling.get_tools(
-    codeact_enable_browsing=True,
-    codeact_enable_jupyter=True,
-    codeact_enable_llm_editor=True,
-    is_web=args.is_web == "yes",
-)
-
 # Example OH function format:
 """
 <function=example_function_name>
@@ -111,6 +80,9 @@ def standardized_event_to_openhands_message(
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
     details: dict,
     previous_web_actions: list,
+    is_web: str,
+    chunk: str,
+    api_env: str = None,
 ) -> dict:
     # NOTE for KETAN: deal with the different types of events later
     # The Web and API Actions are based on Browsergym's schema. So use normal actions if the style is different to HTML/AXTree
@@ -118,7 +90,7 @@ def standardized_event_to_openhands_message(
         if event.axtree is not None:
             axtree = event.axtree
         elif generate_axtree.last_html != event.html:
-            axtree = generate_axtree.build_axtree(id, event.html, args.chunk)
+            axtree = generate_axtree.build_axtree(id, event.html, chunk)
         else:
             axtree = generate_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, previous_web_actions)
@@ -160,7 +132,7 @@ def standardized_event_to_openhands_message(
         if not browsergym_id:
             event_xpath = event.kwargs.get("xpath", None)
             if event_xpath:
-                browsergym_id = generate_axtree.get_bid(id, event_xpath, args.chunk)
+                browsergym_id = generate_axtree.get_bid(id, event_xpath, chunk)
         # for tool calls that are not browser based
         if not browsergym_id and event.function in openhands_default_tools:
             arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
@@ -171,27 +143,14 @@ def standardized_event_to_openhands_message(
                 "function_call": function_call,
             }
         if not browsergym_id:
-            if not hasattr(args, "api_env") or not args.api_env:
+            local_api_env = api_env
+            if not local_api_env:
                 # Default to 'execute_bash' if api_env is not specified
-                args.api_env = "execute_bash"
-            arg = function_args.get(args.api_env, "code")
-
-            # Create a dictionary of kwargs, excluding element_id and xpath
-            kwargs_dict = {
-                k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]
-            }
-
-            # Format the API action using proper string formatting with repr() for values
-            api_action = (
-                f"{event.function}({', '.join([f'{k}={repr(v)}' for k, v in kwargs_dict.items()])})"
-            )
-
-            function_call = format_function(args.api_env, {arg: api_action})
-            return {
-                "from": "function_call",
-                "value": f"{thought}{function_call}",
-                "function_call": function_call,
-            }
+                local_api_env = "execute_bash"
+            arg = function_args.get(local_api_env, "code")
+            api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
+            function_call = format_function(local_api_env, {arg: api_action})
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
         # for tool calls that are browser based
         elif len(event.kwargs) == 1 and "element_id" in event.kwargs:
             api_action = f"{event.function}(bid={browsergym_id})"
@@ -280,10 +239,9 @@ def standardized_event_to_openhands_message(
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
 
 
-def process_row(line):
+def process_row(line, is_web, chunk, keep_system, api_env=None):
     try:
         # if True:
-        sft_data = []
         std_dataset = [json.loads(line)]
         for std_data in std_dataset:
             trajectory = Trajectory(**std_data)
@@ -295,15 +253,12 @@ def process_row(line):
             previous_web_actions = []
 
             # Add system message similar to OH Browsing Agent if the dataset is web dataset
-            if args.is_web == "yes":
+            if is_web == "yes":
+                # Define action subsets for web datasets (not used directly but kept for documentation)
                 action_subsets = ["chat", "bid"]
                 if USE_NAV:
                     action_subsets.append("nav")
-                action_space = HighLevelActionSet(
-                    subsets=action_subsets,
-                    strict=False,  # less strict on the parsing of the actions
-                    multiaction=True,  # enable to agent to take multiple actions at once
-                )
+                # Note: We're not using action_space directly, but this would be the configuration
             for i in range(len(events)):
                 event = events[i]
                 if (
@@ -312,11 +267,11 @@ def process_row(line):
                     continue
                 try:
                     message = standardized_event_to_openhands_message(
-                        id, event, details, previous_web_actions
+                        id, event, details, previous_web_actions, is_web, chunk, api_env
                     )
                     # prepend original system message to first user message if want to keep original system message from std
                     if (
-                        args.keep_system
+                        keep_system == "yes"
                         and i == 1
                         and hasattr(events[0], "source")
                         and events[0].source == "system"
@@ -324,10 +279,8 @@ def process_row(line):
                         message["value"] = events[0].content + "\n\n" + message["value"]
                     if len(conversations) == 0:
                         # append api function docs to first user message when available
-                        if args.api_env:
-                            message["value"] += "\n\n" + get_api_tool_description(
-                                dataset, args.api_env
-                            )
+                        if api_env:
+                            message["value"] += "\n\n" + get_api_tool_description(dataset, api_env)
                         conversations.extend([message])
                         continue
                     # code to process multiple consecutive function calls + observations
@@ -383,16 +336,49 @@ def process_row(line):
         return None
 
 
-output_lines = []
-for line in sys.stdin:
-    print(f"Processing line: {line[:100]}...", file=sys.stderr)
-    output_line = process_row(line)
-    if output_line:
-        print("Successfully processed line", file=sys.stderr)
-        output_lines.append(output_line)
-    else:
-        print("Failed to process line", file=sys.stderr)
+def main():
+    parser = argparse.ArgumentParser(description="Convert standardized data to SFT format")
+    # parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
+    parser.add_argument("--chunk", type=str, help="Dataset name", required=True)
+    parser.add_argument(
+        "--is_web", type=str, choices=["yes", "no"], help="Is Dataset type web api", required=True
+    )
+    parser.add_argument(
+        "--keep_system",
+        type=str,
+        choices=["yes", "no"],
+        help="Keep system prompt in first user message or not",
+        required=True,
+    )
+    parser.add_argument(
+        "--api_env",
+        type=str,
+        choices=openhands_default_tools + [None],
+        help="The environment in which the APIs are pre-defined",
+        default=None,
+    )
+    args = parser.parse_args()
 
-# Print the output as a JSON array
-if output_lines:
-    print(json.dumps(output_lines, indent=2))
+    output_lines = []
+    for line in sys.stdin:
+        print(f"Processing line: {line[:100]}...", file=sys.stderr)
+        output_line = process_row(
+            line,
+            is_web=args.is_web,
+            chunk=args.chunk,
+            keep_system=args.keep_system,
+            api_env=args.api_env,
+        )
+        if output_line:
+            print("Successfully processed line", file=sys.stderr)
+            output_lines.append(output_line)
+        else:
+            print("Failed to process line", file=sys.stderr)
+
+    # Print the output as a JSON array
+    if output_lines:
+        print(json.dumps(output_lines, indent=2))
+
+
+if __name__ == "__main__":
+    main()
