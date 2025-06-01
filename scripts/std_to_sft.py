@@ -175,7 +175,17 @@ def standardized_event_to_openhands_message(
                 # Default to 'execute_bash' if api_env is not specified
                 args.api_env = "execute_bash"
             arg = function_args.get(args.api_env, "code")
-            api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
+
+            # Create a dictionary of kwargs, excluding element_id and xpath
+            kwargs_dict = {
+                k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]
+            }
+
+            # Format the API action using proper string formatting with repr() for values
+            api_action = (
+                f"{event.function}({', '.join([f'{k}={repr(v)}' for k, v in kwargs_dict.items()])})"
+            )
+
             function_call = format_function(args.api_env, {arg: api_action})
             return {
                 "from": "function_call",
@@ -186,17 +196,21 @@ def standardized_event_to_openhands_message(
         elif len(event.kwargs) == 1 and "element_id" in event.kwargs:
             api_action = f"{event.function}(bid={browsergym_id})"
         else:
-            api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
+            # Create a dictionary of kwargs, excluding element_id and xpath
+            kwargs_dict = {
+                k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]
+            }
+
+            # Format the API action using proper string formatting with repr() for values
+            api_action = f"{event.function}(bid={browsergym_id}, {', '.join([f'{k}={repr(v)}' for k, v in kwargs_dict.items()])})"
+
         previous_web_actions.extend([api_action])
-        # Properly escape special characters in api_action
-        escaped_api_action = (
-            api_action.replace("\\", "\\\\")
-            .replace('"', '\\"')
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-        )
-        call = json.loads(f'{{"name": "browser", "arguments": {{"code": "{escaped_api_action}"}}}}')
+
+        # Create the browser call using proper JSON serialization
+        call_dict = {"name": "browser", "arguments": {"code": api_action}}
+        call_json = json.dumps(call_dict)
+        call = json.loads(call_json)
+
         formatted_call = format_function(call["name"], call["arguments"])
         return {
             "from": "function_call",
@@ -326,8 +340,11 @@ def process_row(line):
                             + "\n"
                             + message["value"].replace("THOUGHT: ", "")
                         )
+                        # Ensure function_call key exists in the conversation dictionary
+                        if "function_call" not in conversations[-1]:
+                            conversations[-1]["function_call"] = message["function_call"]
                         # if the previous event contains only one function call
-                        if isinstance(conversations[-1]["function_call"], str):
+                        elif isinstance(conversations[-1]["function_call"], str):
                             conversations[-1]["function_call"] = [
                                 conversations[-1]["function_call"],
                                 message["function_call"],
