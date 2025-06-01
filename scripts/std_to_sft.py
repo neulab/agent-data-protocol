@@ -46,35 +46,6 @@ USE_NAV = (
 
 generate_axtree = HTMLToAXTree(dataset)
 
-parser = argparse.ArgumentParser(description="Convert standardized data to SFT format")
-# parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
-parser.add_argument("--chunk", type=str, help="Dataset name", required=True)
-parser.add_argument(
-    "--is_web", type=str, choices=["yes", "no"], help="Is Dataset type web api", required=True
-)
-parser.add_argument(
-    "--keep_system",
-    type=str,
-    choices=["yes", "no"],
-    help="Keep system prompt in first user message or not",
-    required=True,
-)
-parser.add_argument(
-    "--api_env",
-    type=str,
-    choices=openhands_default_tools + [None],
-    help="The environment in which the APIs are pre-defined",
-    default=None,
-)
-args = parser.parse_args()
-
-tools = codeact_function_calling.get_tools(
-    codeact_enable_browsing=True,
-    codeact_enable_jupyter=True,
-    codeact_enable_llm_editor=True,
-    is_web=args.is_web == "yes",
-)
-
 # Example OH function format:
 """
 <function=example_function_name>
@@ -111,6 +82,7 @@ def standardized_event_to_openhands_message(
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
     details: dict,
     previous_web_actions: list,
+    args,
 ) -> dict:
     # NOTE for KETAN: deal with the different types of events later
     # The Web and API Actions are based on Browsergym's schema. So use normal actions if the style is different to HTML/AXTree
@@ -224,7 +196,7 @@ def standardized_event_to_openhands_message(
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
 
 
-def process_row(line):
+def process_row(line, args):
     try:
         # if True:
         sft_data = []
@@ -256,7 +228,7 @@ def process_row(line):
                     continue
                 try:
                     message = standardized_event_to_openhands_message(
-                        id, event, details, previous_web_actions
+                        id, event, details, previous_web_actions, args
                     )
                     # prepend original system message to first user message if want to keep original system message from std
                     if (
@@ -324,16 +296,51 @@ def process_row(line):
         return None
 
 
-output_lines = []
-for line in sys.stdin:
-    print(f"Processing line: {line[:100]}...", file=sys.stderr)
-    output_line = process_row(line)
-    if output_line:
-        print("Successfully processed line", file=sys.stderr)
-        output_lines.append(output_line)
-    else:
-        print("Failed to process line", file=sys.stderr)
+def main():
+    parser = argparse.ArgumentParser(description="Convert standardized data to SFT format")
+    # parser.add_argument('--output_dataset', type=str, help='Output Dataset name', default='sample_sft.json')
+    parser.add_argument("--chunk", type=str, help="Dataset name", required=True)
+    parser.add_argument(
+        "--is_web", type=str, choices=["yes", "no"], help="Is Dataset type web api", required=True
+    )
+    parser.add_argument(
+        "--keep_system",
+        type=str,
+        choices=["yes", "no"],
+        help="Keep system prompt in first user message or not",
+        required=True,
+    )
+    parser.add_argument(
+        "--api_env",
+        type=str,
+        choices=openhands_default_tools + [None],
+        help="The environment in which the APIs are pre-defined",
+        default=None,
+    )
+    args = parser.parse_args()
 
-# Print the output as a JSON array
-if output_lines:
-    print(json.dumps(output_lines, indent=2))
+    global tools
+    tools = codeact_function_calling.get_tools(
+        codeact_enable_browsing=True,
+        codeact_enable_jupyter=True,
+        codeact_enable_llm_editor=True,
+        is_web=args.is_web == "yes",
+    )
+
+    output_lines = []
+    for line in sys.stdin:
+        print(f"Processing line: {line[:100]}...", file=sys.stderr)
+        output_line = process_row(line, args)
+        if output_line:
+            print("Successfully processed line", file=sys.stderr)
+            output_lines.append(output_line)
+        else:
+            print("Failed to process line", file=sys.stderr)
+
+    # Print the output as a JSON array
+    if output_lines:
+        print(json.dumps(output_lines, indent=2))
+
+
+if __name__ == "__main__":
+    main()
