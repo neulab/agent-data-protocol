@@ -336,8 +336,36 @@ def process_row(line):
                             message["function_call"] = extract_full_function_call(message["value"])
                         conversations.extend([message])
                         continue
+                    # Check if the previous message is a function call by looking at its content
+                    prev_value = conversations[-1].get("value", "")
+                    prev_is_function_call = any(
+                        [
+                            "<function=" in prev_value,
+                            "<function_calls>" in prev_value,
+                            "<invoke name=" in prev_value,
+                        ]
+                    )
+
+                    # If the previous message contains function call syntax but is not marked as function_call, fix it
+                    if prev_is_function_call and conversations[-1]["from"] != "function_call":
+                        conversations[-1]["from"] = "function_call"
+
+                    # Check if the current message is a function call by looking at its content
+                    value = message.get("value", "")
+                    is_function_call = any(
+                        [
+                            "<function=" in value,
+                            "<function_calls>" in value,
+                            "<invoke name=" in value,
+                        ]
+                    )
+
+                    # If it contains function call syntax but is not marked as function_call, fix it
+                    if is_function_call and message["from"] != "function_call":
+                        message["from"] = "function_call"
+
                     # code to process multiple consecutive function calls + observations
-                    elif (
+                    if (
                         message["from"] == "function_call"
                         and conversations[-1]["from"] == "function_call"
                     ):
@@ -387,6 +415,7 @@ def process_row(line):
                     # Add function_call key if this is a function call message
                     if message["from"] == "function_call" and "function_call" not in message:
                         message["function_call"] = extract_full_function_call(message["value"])
+
                     conversations.extend([message])
                 except Exception as e:
                     traceback.print_exc()
