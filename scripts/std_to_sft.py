@@ -153,7 +153,9 @@ def standardized_event_to_openhands_message(
             function_call = format_function(event.function, arguments)
             return {"from": "function_call", "value": f"{thought}{function_call}"}
         if not browsergym_id:
-            assert args.api_env
+            if not hasattr(args, "api_env") or not args.api_env:
+                # Default to 'execute_bash' if api_env is not specified
+                args.api_env = "execute_bash"
             arg = function_args.get(args.api_env, "code")
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
             function_call = format_function(args.api_env, {arg: api_action})
@@ -203,6 +205,20 @@ def standardized_event_to_openhands_message(
             if event.source in ["human", "gpt"]
             else {"from": "human", "value": f"{event.content}"}
         )
+
+    elif hasattr(event, "__class__") and event.__class__.__name__ == "ImageObservation":
+        # Handle ImageObservation
+        annotations_text = ""
+        if hasattr(event, "annotations") and event.annotations:
+            annotations = []
+            for annotation in event.annotations:
+                if hasattr(annotation, "text") and annotation.text:
+                    annotations.append(f"{annotation.text} ({annotation.element_type})")
+            if annotations:
+                annotations_text = "Elements detected: " + ", ".join(annotations)
+
+        image_path = getattr(event, "content", "unknown_image_path")
+        return {"from": "observation", "value": f"[Image: {image_path}]\n{annotations_text}"}
 
     else:
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
@@ -308,14 +324,16 @@ def process_row(line):
         return None
 
 
+output_lines = []
 for line in sys.stdin:
+    print(f"Processing line: {line[:100]}...", file=sys.stderr)
     output_line = process_row(line)
     if output_line:
-        with open(f"datasets/{dataset}/full_sft.jsonl", "a") as f:
-            try:
-                temp = json.loads(json.dumps(output_line))
-                f.write(json.dumps(output_line) + "\n")
-            except Exception as e:
-                traceback.print_exc()
-                print(e)
-                continue
+        print("Successfully processed line", file=sys.stderr)
+        output_lines.append(output_line)
+    else:
+        print("Failed to process line", file=sys.stderr)
+
+# Print the output as a JSON array
+if output_lines:
+    print(json.dumps(output_lines, indent=2))
