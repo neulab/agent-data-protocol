@@ -339,18 +339,22 @@ def process_row(line):
                             )
 
                         # if the previous event contains only one function call
-                        if isinstance(conversations[-1]["function_call"], str):
-                            conversations[-1]["function_call"] = [
-                                conversations[-1]["function_call"],
-                                message["function_call"],
-                            ]
-                        # if the previous event already contains multiple function calls
-                        elif isinstance(conversations[-1]["function_call"], list):
-                            conversations[-1]["function_call"].append(message["function_call"])
+                        if "function_call" in conversations[-1]:
+                            if isinstance(conversations[-1]["function_call"], str):
+                                conversations[-1]["function_call"] = [
+                                    conversations[-1]["function_call"],
+                                    message["function_call"],
+                                ]
+                            # if the previous event already contains multiple function calls
+                            elif isinstance(conversations[-1]["function_call"], list):
+                                conversations[-1]["function_call"].append(message["function_call"])
+                            else:
+                                raise ValueError(
+                                    f"Unknown function_call type: {type(conversations[-1]['function_call'])}\n{conversations[-1]['function_call']}"
+                                )
                         else:
-                            raise ValueError(
-                                f"Unknown function_call type: {type(conversations[-1]['function_call'])}\n{conversations[-1]['function_call']}"
-                            )
+                            # If function_call key doesn't exist, initialize it with the current message's function_call
+                            conversations[-1]["function_call"] = message["function_call"]
                         continue
                     if conversations[-1]["from"] == "function_call" and isinstance(
                         event, TextObservation
