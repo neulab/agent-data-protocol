@@ -187,7 +187,7 @@ def standardized_event_to_openhands_message(
             finish_function_call = format_function(
                 "finish", {"message": content, "task_completed": "true"}
             )
-            return {"from": "gpt", "value": f"{thought}{finish_function_call}"}
+            return {"from": "function_call", "value": f"{thought}{finish_function_call}"}
         return {"from": "gpt", "value": f"{thought}{event.content}"}
 
     elif isinstance(event, TextObservation):
