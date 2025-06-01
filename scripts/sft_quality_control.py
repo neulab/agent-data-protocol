@@ -41,25 +41,24 @@ def analyze_dataset(file_path):
             # Count roles
             roles[role] += 1
 
-            # Check for function calls
-            if role == "function_call":
-                match = FUNCTION_PATTERN.search(content)
+            # Check for function calls in any message content
+            match = FUNCTION_PATTERN.search(content)
+            if match:
+                function_name = match.group(1)
+                function_calls += 1
+                function_names[function_name] += 1
+
+                # Check for thoughts before function call
+                thought_match = THOUGHT_PATTERN.search(content)
+                if thought_match and thought_match.group(1).strip():
+                    function_thoughts += 1
+            elif "<function=" in content:
+                # Alternative pattern for function calls without </function> closing tag
+                match = re.search(r"<function=([^>]+)>", content)
                 if match:
                     function_name = match.group(1)
                     function_calls += 1
                     function_names[function_name] += 1
-
-                    # Check for thoughts before function call
-                    thought_match = THOUGHT_PATTERN.search(content)
-                    if thought_match and thought_match.group(1).strip():
-                        function_thoughts += 1
-                else:
-                    # Alternative pattern for function calls without </function> closing tag
-                    match = re.search(r"<function=([^>]+)>", content)
-                    if match:
-                        function_name = match.group(1)
-                        function_calls += 1
-                        function_names[function_name] += 1
 
     return {
         "dataset": dataset_name,
