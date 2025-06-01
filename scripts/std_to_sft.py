@@ -319,7 +319,6 @@ def main():
     )
     args = parser.parse_args()
 
-    global tools
     tools = codeact_function_calling.get_tools(
         codeact_enable_browsing=True,
         codeact_enable_jupyter=True,
