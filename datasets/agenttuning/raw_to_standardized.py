@@ -178,7 +178,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             ]
         else:
             raise ValueError(
-                "Could not extract code from code action in" f" {json.dumps(step, indent=2)}"
+                f"Could not extract code from code action in {json.dumps(step, indent=2)}"
             )
     elif sql_act_regex:
         return [

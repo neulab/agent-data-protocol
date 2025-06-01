@@ -104,7 +104,7 @@ class AdbCallParser:
         if request.timeout_sec < 0:
             response.status = adb_pb2.AdbResponse.Status.FAILED_PRECONDITION
             response.error_message = (
-                "AdbRequest.timeout_sec cannot be negative. " f"Got: {request.timeout_sec}"
+                f"AdbRequest.timeout_sec cannot be negative. Got: {request.timeout_sec}"
             )
             return response
 
@@ -208,7 +208,7 @@ class AdbCallParser:
         current_task_id = self._fetch_current_task_id(full_activity, timeout)
         if current_task_id == -1:
             response.status = adb_pb2.AdbResponse.Status.INTERNAL_ERROR
-            response.error_message = "Could not find task ID for activity " f"[{full_activity}]"
+            response.error_message = f"Could not find task ID for activity [{full_activity}]"
             return response
 
         response, _ = self._execute_command(
@@ -440,7 +440,7 @@ class AdbCallParser:
                 ["shell", "am", "stack", "list"], timeout=timeout
             )
             response.status = adb_pb2.AdbResponse.Status.INTERNAL_ERROR
-            response.error_message = "Empty visible_task. `am stack list`: " f"{am_stack_list}"
+            response.error_message = f"Empty visible_task. `am stack list`: {am_stack_list}"
             return response
 
         visible_task = visible_task.decode("utf-8")
@@ -523,7 +523,7 @@ class AdbCallParser:
 
         response.status = adb_pb2.AdbResponse.Status.INTERNAL_ERROR
         response.error_message = (
-            "Could not find SurfaceOrientation/InputDeviceOrientation in dumpsys " "output"
+            "Could not find SurfaceOrientation/InputDeviceOrientation in dumpsys output"
         )
         return response
 
@@ -847,7 +847,7 @@ class AdbCallParser:
             response = adb_pb2.AdbResponse()
             response.status = adb_pb2.AdbResponse.Status.FAILED_PRECONDITION
             response.error_message = (
-                "DumpsysRequest.timeout_{sec, ms} should be non-negative. " f"Got: {request}."
+                f"DumpsysRequest.timeout_{{sec, ms}} should be non-negative. Got: {request}."
             )
             return response
 

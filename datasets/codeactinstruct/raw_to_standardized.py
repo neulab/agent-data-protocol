@@ -41,9 +41,9 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             TextObservation(content=step["content"], source=step["role"]),
         ]
     elif solution_regex:
-        assert (
-            step["role"] == "assistant"
-        ), f"Expected assistant role, got {step['role']}. {json.dumps(step, indent=2)}"
+        assert step["role"] == "assistant", (
+            f"Expected assistant role, got {step['role']}. {json.dumps(step, indent=2)}"
+        )
         thought = solution_regex.group(1).strip()
         solution = solution_regex.group(2).strip()
         return [

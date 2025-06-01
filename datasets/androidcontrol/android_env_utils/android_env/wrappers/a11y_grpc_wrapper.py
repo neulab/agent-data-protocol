@@ -173,7 +173,7 @@ class A11yGrpcWrapper(base_wrapper.BaseWrapper):
         start_service_response = self._env.execute_adb_call(start_service_request)
         if start_service_response.status != adb_pb2.AdbResponse.Status.OK:
             raise RuntimeError(
-                "Could not start accessibility forwarder " "service: " f"{start_service_response}."
+                f"Could not start accessibility forwarder service: {start_service_response}."
             )
 
     def _install_a11y_forwarding_apk(self) -> None:
@@ -192,7 +192,7 @@ class A11yGrpcWrapper(base_wrapper.BaseWrapper):
     def _enable_a11y_tree_logs(self) -> None:
         enable_tree_logs_request = adb_pb2.AdbRequest(
             send_broadcast=adb_pb2.AdbRequest.SendBroadcast(
-                action=("accessibility_forwarder.intent.action." "ENABLE_ACCESSIBILITY_TREE_LOGS"),
+                action=("accessibility_forwarder.intent.action.ENABLE_ACCESSIBILITY_TREE_LOGS"),
                 component=(
                     "com.google.androidenv.accessibilityforwarder/com.google.androidenv.accessibilityforwarder.FlagsBroadcastReceiver"
                 ),
@@ -201,7 +201,7 @@ class A11yGrpcWrapper(base_wrapper.BaseWrapper):
         enable_tree_logs_response = self._env.execute_adb_call(enable_tree_logs_request)
         if enable_tree_logs_response.status != adb_pb2.AdbResponse.Status.OK:
             raise ValueError(
-                "Could not enable accessibility tree logging: " f"{enable_tree_logs_response}."
+                f"Could not enable accessibility tree logging: {enable_tree_logs_response}."
             )
 
     def _reset_enable_networking_attempts(self) -> None:
@@ -307,8 +307,7 @@ class A11yGrpcWrapper(base_wrapper.BaseWrapper):
             adb_pb2.AdbRequest(
                 send_broadcast=adb_pb2.AdbRequest.SendBroadcast(
                     action=(
-                        "accessibility_forwarder.intent.action.SET_GRPC --ei"
-                        f' "port" {self._port}'
+                        f'accessibility_forwarder.intent.action.SET_GRPC --ei "port" {self._port}'
                     ),
                     component=(
                         "com.google.androidenv.accessibilityforwarder/com.google.androidenv.accessibilityforwarder.FlagsBroadcastReceiver"
@@ -443,7 +442,7 @@ class A11yGrpcWrapper(base_wrapper.BaseWrapper):
                 self._enabling_networking_future = executor.submit(self.attempt_enable_networking)
             else:
                 raise EnableNetworkingError(
-                    "A11y service failed multiple times with" f" exception.{self._a11y_exception}."
+                    f"A11y service failed multiple times with exception.{self._a11y_exception}."
                 )
 
         if self._enabling_networking_future is not None and self._enabling_networking_future.done():

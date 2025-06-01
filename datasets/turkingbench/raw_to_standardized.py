@@ -242,9 +242,9 @@ def process_data(data: dict) -> Trajectory:
             continue
         v = data["Answer"][el.get("name")].strip()
         if get_element_type(el) in ["checkbox", "crowd-checkbox", "radio"]:
-            type_filter = f'and @type="{el.get('type')}"' if el.get("type") else ""
-            value_filter = f'and @value="{el.get('value')}"' if el.get("value") else ""
-            xpath = f'//{el.tag}[@name="{el.get('name')}" {type_filter} {value_filter}]'
+            type_filter = f'and @type="{el.get("type")}"' if el.get("type") else ""
+            value_filter = f'and @value="{el.get("value")}"' if el.get("value") else ""
+            xpath = f'//{el.tag}[@name="{el.get("name")}" {type_filter} {value_filter}]'
             if not verify_xpath(data["Task"], tree, el, xpath):
                 continue
             if not v and el.get("checked"):
@@ -294,8 +294,8 @@ def process_data(data: dict) -> Trajectory:
                 )
         elif get_element_type(el) in ["range", "crowd-slider"]:
             if v and not numeric_equal(v, el.get("value", "")):
-                type_filter = f'and @type="{el.get('type')}"' if el.get("type") else ""
-                xpath = f'//{el.tag}[@name="{el.get('name')}" {type_filter}]'
+                type_filter = f'and @type="{el.get("type")}"' if el.get("type") else ""
+                xpath = f'//{el.tag}[@name="{el.get("name")}" {type_filter}]'
                 if not verify_xpath(data["Task"], tree, el, xpath):
                     continue
                 content.append(
@@ -314,7 +314,7 @@ def process_data(data: dict) -> Trajectory:
                     )
                 )
         elif get_element_type(el) == "select":
-            xpath = f'//{el.tag}[@name="{el.get('name')}"]'
+            xpath = f'//{el.tag}[@name="{el.get("name")}"]'
             if not verify_xpath(data["Task"], tree, el, xpath):
                 continue
             if el.get("multiple") is not None:
@@ -357,8 +357,8 @@ def process_data(data: dict) -> Trajectory:
                     )
                 )
         elif get_element_type(el) in ["text", "textarea", "crowd-input"]:
-            type_filter = f'and @type="{el.get('type')}"' if el.get("type") else ""
-            xpath = f'//{el.tag}[@name="{el.get('name')}" {type_filter}]'
+            type_filter = f'and @type="{el.get("type")}"' if el.get("type") else ""
+            xpath = f'//{el.tag}[@name="{el.get("name")}" {type_filter}]'
             if not verify_xpath(data["Task"], tree, el, xpath):
                 continue
             text = el.text or "" if el.tag == "textarea" else el.get("value", "")

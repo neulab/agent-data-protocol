@@ -167,7 +167,7 @@ def process_data(data, keep_all=False):
                     if getattr(item, k, None)
                     and not (isinstance(getattr(item, k), str) and not getattr(item, k).strip())
                 ]
-                print(f'Unknown observation: {"\n".join(obs)}', file=sys.stderr)
+                print(f"Unknown observation: {'\n'.join(obs)}", file=sys.stderr)
                 content.append(
                     TextObservation(
                         source=item.source,
@@ -331,7 +331,7 @@ def process_data(data, keep_all=False):
             if isinstance(plan, dict):
                 plan = "\n".join(
                     [
-                        f"Subtask {n}:\nDescription: {s["description"]}\nTool: {s["tool"]}"
+                        f"Subtask {n}:\nDescription: {s['description']}\nTool: {s['tool']}"
                         for n, s in enumerate(plan["subtasks"], 1)
                     ]
                 )
