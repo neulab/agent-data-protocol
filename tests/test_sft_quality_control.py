@@ -1,15 +1,14 @@
 import json
 import os
-import tempfile
 from unittest.mock import patch
 
 import pytest
 
 from scripts.sft_quality_control import (
     analyze_dataset,
-    create_roles_chart,
     create_function_names_chart,
     create_function_thought_chart,
+    create_roles_chart,
 )
 
 
@@ -43,7 +42,7 @@ def sample_data():
                     "value": "Let me think about this more.<function=search>query=another test</function>",
                 },
             ]
-        }
+        },
     ]
 
 
@@ -53,13 +52,13 @@ def test_analyze_dataset(sample_data, tmp_path):
     dataset_dir = tmp_path / "test_dataset"
     dataset_dir.mkdir()
     dataset_file = dataset_dir / "sample_sft.json"
-    
+
     with open(dataset_file, "w") as f:
         json.dump(sample_data, f)
-    
+
     # Analyze the dataset
     result = analyze_dataset(str(dataset_file))
-    
+
     # Check the results
     assert result["dataset"] == "test_dataset"
     assert result["conversation_count"] == 2
@@ -73,11 +72,10 @@ def test_analyze_dataset(sample_data, tmp_path):
     assert result["function_thoughts"] == 2  # Two function calls have thoughts before them
 
 
-@pytest.mark.parametrize("chart_function", [
-    create_roles_chart,
-    create_function_names_chart,
-    create_function_thought_chart
-])
+@pytest.mark.parametrize(
+    "chart_function",
+    [create_roles_chart, create_function_names_chart, create_function_thought_chart],
+)
 def test_chart_creation(chart_function, tmp_path, monkeypatch):
     """Test that chart creation functions run without errors."""
     # Mock the results
@@ -88,20 +86,20 @@ def test_chart_creation(chart_function, tmp_path, monkeypatch):
             "roles": {"human": 2, "assistant": 3, "function_call": 3, "function_result": 2},
             "function_calls": 3,
             "function_names": {"search": 2, "calculate": 1},
-            "function_thoughts": 1
+            "function_thoughts": 1,
         }
     ]
-    
+
     # Change to the temporary directory
     monkeypatch.chdir(tmp_path)
-    
+
     # Create the output directory
     os.makedirs("quality-control-results", exist_ok=True)
-    
+
     # Run the chart function
     with patch("matplotlib.pyplot.savefig"):  # Mock savefig to avoid actual file creation
         chart_function(results)
-    
+
     # Check that CSV files are created
     if chart_function == create_roles_chart:
         assert os.path.exists("quality-control-results/roles_per_conversation.csv")
@@ -114,25 +112,25 @@ def test_chart_creation(chart_function, tmp_path, monkeypatch):
 def test_function_pattern_matching():
     """Test the regular expression patterns for function calls."""
     from scripts.sft_quality_control import FUNCTION_PATTERN, THOUGHT_PATTERN
-    
+
     # Test function pattern with content
     content = "<function=search>query=test</function>"
     match = FUNCTION_PATTERN.search(content)
     assert match
     assert match.group(1) == "search"
     assert match.group(2) == "query=test"
-    
+
     # Test function pattern without closing tag
     content = "<function=search>query=test"
     match = FUNCTION_PATTERN.search(content)
     assert not match  # Should not match without closing tag
-    
+
     # Test thought pattern
     content = "I need to search for information.<function=search>query=test</function>"
     match = THOUGHT_PATTERN.search(content)
     assert match
     assert match.group(1).strip() == "I need to search for information."
-    
+
     # Test thought pattern with no thought
     content = "<function=search>query=test</function>"
     match = THOUGHT_PATTERN.search(content)
