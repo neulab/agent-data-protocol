@@ -68,8 +68,15 @@ def convert_step(step: dict[str, str]) -> list:
                     else:
                         kwargs[param_name] = param_value
 
-                # Add the API action
-                result.append(ApiAction(function=function_name, kwargs=kwargs))
+                # Extract the full function call text
+                full_function_call = content[match.start() : match.end()]
+
+                # Add the API action with the full function call text
+                result.append(
+                    ApiAction(
+                        function=function_name, kwargs=kwargs, function_call=full_function_call
+                    )
+                )
 
                 current_pos = match.end()
 

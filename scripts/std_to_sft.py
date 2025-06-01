@@ -125,6 +125,8 @@ def extract_function_call(content):
     return None
 
 
+# This function is no longer needed as we now get the function_call directly from the ApiAction
+# It's kept here for backward compatibility with existing data
 def extract_full_function_call(content):
     """Extract the full function call from the content."""
     for tool in openhands_default_tools:
@@ -193,7 +195,11 @@ def standardized_event_to_openhands_message(
             previous_web_actions.extend([api_action])
             call = json.loads(f'{{"name": "browser", "arguments": {{"code": "{api_action}"}}}}')
             function_call = format_function(call["name"], call["arguments"])
-            return {"from": "function_call", "value": f"{thought}{function_call}"}
+            result = {"from": "function_call", "value": f"{thought}{function_call}"}
+            # Add function_call field if available
+            if hasattr(event, "function_call") and event.function_call:
+                result["function_call"] = event.function_call
+            return result
 
         arguments = None
         # try to directly get the browsergym_id from the event kwargs
@@ -210,7 +216,11 @@ def standardized_event_to_openhands_message(
         if not browsergym_id and event.function in openhands_default_tools:
             arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
             function_call = format_function(event.function, arguments)
-            return {"from": "function_call", "value": f"{thought}{function_call}"}
+            result = {"from": "function_call", "value": f"{thought}{function_call}"}
+            # Add function_call field if available
+            if hasattr(event, "function_call") and event.function_call:
+                result["function_call"] = event.function_call
+            return result
         if not browsergym_id:
             if not hasattr(args, "api_env") or not args.api_env:
                 # Default to 'execute_bash' if api_env is not specified
@@ -218,7 +228,11 @@ def standardized_event_to_openhands_message(
             arg = function_args.get(args.api_env, "code")
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
             function_call = format_function(args.api_env, {arg: api_action})
-            return {"from": "function_call", "value": f"{thought}{function_call}"}
+            result = {"from": "function_call", "value": f"{thought}{function_call}"}
+            # Add function_call field if available
+            if hasattr(event, "function_call") and event.function_call:
+                result["function_call"] = event.function_call
+            return result
         # for tool calls that are browser based
         elif len(event.kwargs) == 1 and "element_id" in event.kwargs:
             api_action = f"{event.function}(bid={browsergym_id})"
@@ -227,7 +241,11 @@ def standardized_event_to_openhands_message(
         previous_web_actions.extend([api_action])
         call = json.loads(f'{{"name": "browser", "arguments": {{"code": "{api_action}"}}}}')
         call = format_function(call["name"], call["arguments"])
-        return {"from": "function_call", "value": f"{thought}{call}"}
+        result = {"from": "function_call", "value": f"{thought}{call}"}
+        # Add function_call field if available
+        if hasattr(event, "function_call") and event.function_call:
+            result["function_call"] = event.function_call
+        return result
 
     if isinstance(event, CodeAction):
         thought = event.description + "\n\n" if event.description else ""
@@ -236,7 +254,11 @@ def standardized_event_to_openhands_message(
         code_action = format_function(function_name, {arg: event.content})
         if not code_action:
             raise ValueError(f"Event with unknown code action type: {type(event)}\n{function_name}")
-        return {"from": "function_call", "value": f"{thought}{code_action}"}
+        result = {"from": "function_call", "value": f"{thought}{code_action}"}
+        # Add function_call field if available
+        if hasattr(event, "function_call") and event.function_call:
+            result["function_call"] = event.function_call
+        return result
 
     elif isinstance(event, MessageAction):
         thought = event.description + "\n\n" if event.description else ""
@@ -246,7 +268,10 @@ def standardized_event_to_openhands_message(
             finish_function_call = format_function(
                 "finish", {"message": content, "task_completed": "true"}
             )
-            return {"from": "function_call", "value": f"{thought}{finish_function_call}"}
+            result = {"from": "function_call", "value": f"{thought}{finish_function_call}"}
+            # Add function_call field
+            result["function_call"] = finish_function_call
+            return result
         return {"from": "gpt", "value": f"{thought}{event.content}"}
 
     elif isinstance(event, TextObservation):
@@ -331,38 +356,8 @@ def process_row(line):
                             message["value"] += "\n\n" + get_api_tool_description(
                                 dataset, args.api_env
                             )
-                        # Add function_call key if this is a function call message
-                        if message["from"] == "function_call":
-                            message["function_call"] = extract_full_function_call(message["value"])
                         conversations.extend([message])
                         continue
-                    # Check if the previous message is a function call by looking at its content
-                    prev_value = conversations[-1].get("value", "")
-                    prev_is_function_call = any(
-                        [
-                            "<function=" in prev_value,
-                            "<function_calls>" in prev_value,
-                            "<invoke name=" in prev_value,
-                        ]
-                    )
-
-                    # If the previous message contains function call syntax but is not marked as function_call, fix it
-                    if prev_is_function_call and conversations[-1]["from"] != "function_call":
-                        conversations[-1]["from"] = "function_call"
-
-                    # Check if the current message is a function call by looking at its content
-                    value = message.get("value", "")
-                    is_function_call = any(
-                        [
-                            "<function=" in value,
-                            "<function_calls>" in value,
-                            "<invoke name=" in value,
-                        ]
-                    )
-
-                    # If it contains function call syntax but is not marked as function_call, fix it
-                    if is_function_call and message["from"] != "function_call":
-                        message["from"] = "function_call"
 
                     # code to process multiple consecutive function calls + observations
                     if (
@@ -375,15 +370,7 @@ def process_row(line):
                             + message["value"].replace("THOUGHT: ", "")
                         )
 
-                        # Extract function call from message if not already present
-                        if "function_call" not in message:
-                            message["function_call"] = extract_full_function_call(message["value"])
-
-                        # Ensure function_call exists in the previous conversation
-                        if "function_call" not in conversations[-1]:
-                            conversations[-1]["function_call"] = extract_full_function_call(
-                                conversations[-1]["value"]
-                            )
+                        # No need to extract function calls anymore as they are provided directly
 
                         # if the previous event contains only one function call
                         if "function_call" in conversations[-1]:
@@ -412,9 +399,7 @@ def process_row(line):
                             message["value"] = (
                                 f"EXECUTION RESULT of [{function_name}]:\n" + message["value"]
                             )
-                    # Add function_call key if this is a function call message
-                    if message["from"] == "function_call" and "function_call" not in message:
-                        message["function_call"] = extract_full_function_call(message["value"])
+                    # No need to extract function calls anymore as they are provided directly
 
                     conversations.extend([message])
                 except Exception as e:

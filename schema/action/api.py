@@ -11,3 +11,4 @@ class ApiAction(Action):
     description: str | None = Field(
         None, description="The description/thought provided for the action"
     )
+    function_call: str | None = Field(None, description="The full function call text")
