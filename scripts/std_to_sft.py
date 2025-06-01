@@ -82,7 +82,9 @@ def standardized_event_to_openhands_message(
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
     details: dict,
     previous_web_actions: list,
-    args,
+    is_web: str,
+    chunk: str,
+    api_env: str = None,
 ) -> dict:
     # NOTE for KETAN: deal with the different types of events later
     # The Web and API Actions are based on Browsergym's schema. So use normal actions if the style is different to HTML/AXTree
@@ -90,7 +92,7 @@ def standardized_event_to_openhands_message(
         if event.axtree is not None:
             axtree = event.axtree
         elif generate_axtree.last_html != event.html:
-            axtree = generate_axtree.build_axtree(id, event.html, args.chunk)
+            axtree = generate_axtree.build_axtree(id, event.html, chunk)
         else:
             axtree = generate_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, previous_web_actions)
@@ -118,19 +120,20 @@ def standardized_event_to_openhands_message(
         if not browsergym_id:
             event_xpath = event.kwargs.get("xpath", None)
             if event_xpath:
-                browsergym_id = generate_axtree.get_bid(id, event_xpath, args.chunk)
+                browsergym_id = generate_axtree.get_bid(id, event_xpath, chunk)
         # for tool calls that are not browser based
         if not browsergym_id and event.function in openhands_default_tools:
             arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
             function_call = format_function(event.function, arguments)
             return {"from": "function_call", "value": f"{thought}{function_call}"}
         if not browsergym_id:
-            if not hasattr(args, "api_env") or not args.api_env:
+            local_api_env = api_env
+            if not local_api_env:
                 # Default to 'execute_bash' if api_env is not specified
-                args.api_env = "execute_bash"
-            arg = function_args.get(args.api_env, "code")
+                local_api_env = "execute_bash"
+            arg = function_args.get(local_api_env, "code")
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
-            function_call = format_function(args.api_env, {arg: api_action})
+            function_call = format_function(local_api_env, {arg: api_action})
             return {"from": "function_call", "value": f"{thought}{function_call}"}
         # for tool calls that are browser based
         elif len(event.kwargs) == 1 and "element_id" in event.kwargs:
@@ -196,7 +199,7 @@ def standardized_event_to_openhands_message(
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
 
 
-def process_row(line, args):
+def process_row(line, is_web, chunk, keep_system, api_env=None):
     try:
         # if True:
         sft_data = []
@@ -211,7 +214,7 @@ def process_row(line, args):
             previous_web_actions = []
 
             # Add system message similar to OH Browsing Agent if the dataset is web dataset
-            if args.is_web == "yes":
+            if is_web == "yes":
                 action_subsets = ["chat", "bid"]
                 if USE_NAV:
                     action_subsets.append("nav")
@@ -228,11 +231,11 @@ def process_row(line, args):
                     continue
                 try:
                     message = standardized_event_to_openhands_message(
-                        id, event, details, previous_web_actions, args
+                        id, event, details, previous_web_actions, is_web, chunk, api_env
                     )
                     # prepend original system message to first user message if want to keep original system message from std
                     if (
-                        args.keep_system
+                        keep_system == "yes"
                         and i == 1
                         and hasattr(events[0], "source")
                         and events[0].source == "system"
@@ -240,10 +243,8 @@ def process_row(line, args):
                         message["value"] = events[0].content + "\n\n" + message["value"]
                     if len(conversations) == 0:
                         # append api function docs to first user message when available
-                        if args.api_env:
-                            message["value"] += "\n\n" + get_api_tool_description(
-                                dataset, args.api_env
-                            )
+                        if api_env:
+                            message["value"] += "\n\n" + get_api_tool_description(dataset, api_env)
                         conversations.extend([message])
                         continue
                     # code to process multiple consecutive function calls + observations
@@ -329,7 +330,13 @@ def main():
     output_lines = []
     for line in sys.stdin:
         print(f"Processing line: {line[:100]}...", file=sys.stderr)
-        output_line = process_row(line, args)
+        output_line = process_row(
+            line,
+            is_web=args.is_web,
+            chunk=args.chunk,
+            keep_system=args.keep_system,
+            api_env=args.api_env,
+        )
         if output_line:
             print("Successfully processed line", file=sys.stderr)
             output_lines.append(output_line)
