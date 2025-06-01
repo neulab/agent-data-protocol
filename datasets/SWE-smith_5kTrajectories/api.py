@@ -15,6 +15,7 @@ def execute_bash(
 
     Returns:
         Dict containing the command output.
+
     """
     return {"output": ""}
 
@@ -27,6 +28,7 @@ def think(thought: str) -> Dict:
 
     Returns:
         Dict containing acknowledgment.
+
     """
     return {"output": ""}
 
@@ -35,11 +37,13 @@ def finish(**kwargs) -> Dict:
     """Signal the completion of the current task.
 
     Args:
-        message: Final message to send to the user.
-        task_completed: Whether the task was completed.
+        **kwargs: Keyword arguments including:
+            message: Final message to send to the user.
+            task_completed: Whether the task was completed.
 
     Returns:
         Dict containing acknowledgment.
+
     """
     return {"output": ""}
 
@@ -52,6 +56,7 @@ def browser(code: str) -> Dict:
 
     Returns:
         Dict containing the browser interaction results.
+
     """
     return {"output": ""}
 
@@ -64,6 +69,7 @@ def execute_ipython_cell(code: str) -> Dict:
 
     Returns:
         Dict containing the execution results.
+
     """
     return {"output": ""}
 
@@ -77,7 +83,7 @@ def str_replace_editor(
     insert_line: Optional[int] = None,
     view_range: Optional[List[int]] = None,
 ) -> Dict:
-    """Custom editing tool for viewing, creating and editing files.
+    """Use this tool for viewing, creating and editing files.
 
     Args:
         command: The command to run (view, create, str_replace, insert, undo_edit).
@@ -90,5 +96,6 @@ def str_replace_editor(
 
     Returns:
         Dict containing the operation results.
+
     """
     return {"output": ""}
