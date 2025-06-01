@@ -17,6 +17,16 @@ import pandas as pd
 FUNCTION_PATTERN = re.compile(r"<function=([^>]+)>(.*?)</function>", re.DOTALL)
 THOUGHT_PATTERN = re.compile(r"(.*?)<function=", re.DOTALL)
 
+# List of valid tools from the system_prompt/tools directory
+VALID_TOOLS = [
+    "execute_bash",
+    "think",
+    "finish",
+    "browser",
+    "execute_ipython_cell",
+    "str_replace_editor",
+]
+
 
 def analyze_dataset(file_path):
     """Analyze a single dataset file and return statistics."""
@@ -32,8 +42,11 @@ def analyze_dataset(file_path):
     function_calls = 0
     function_names = Counter()
     function_thoughts = 0
+    has_finish_action = False
+    invalid_tools = set()
 
     for conversation in data:
+        conversation_has_finish = False
         for message in conversation.get("conversations", []):
             role = message.get("from", "unknown")
             content = message.get("value", "")
@@ -49,6 +62,14 @@ def analyze_dataset(file_path):
                     function_calls += 1
                     function_names[function_name] += 1
 
+                    # Check if it's a finish action
+                    if function_name == "finish":
+                        conversation_has_finish = True
+
+                    # Check if it's a valid tool
+                    if function_name not in VALID_TOOLS:
+                        invalid_tools.add(function_name)
+
                     # Check for thoughts before function call
                     thought_match = THOUGHT_PATTERN.search(content)
                     if thought_match and thought_match.group(1).strip():
@@ -61,6 +82,33 @@ def analyze_dataset(file_path):
                         function_calls += 1
                         function_names[function_name] += 1
 
+                        # Check if it's a finish action
+                        if function_name == "finish":
+                            conversation_has_finish = True
+
+                        # Check if it's a valid tool
+                        if function_name not in VALID_TOOLS:
+                            invalid_tools.add(function_name)
+
+        # Update has_finish_action if this conversation has a finish action
+        if conversation_has_finish:
+            has_finish_action = True
+
+    # Calculate function names sum to check if close to 1.0
+    function_names_sum = (
+        sum(function_names.values()) / roles.get("function_call", 1)
+        if roles.get("function_call", 0) > 0
+        else 0
+    )
+
+    # Calculate thought percentage
+    thought_percentage = (function_thoughts / function_calls * 100) if function_calls > 0 else 0
+
+    # Check if all roles are valid
+    valid_roles = all(
+        role in ["human", "gpt", "function_call", "observation"] for role in roles.keys()
+    )
+
     return {
         "dataset": dataset_name,
         "conversation_count": conversation_count,
@@ -68,6 +116,11 @@ def analyze_dataset(file_path):
         "function_calls": function_calls,
         "function_names": dict(function_names),
         "function_thoughts": function_thoughts,
+        "function_names_sum": function_names_sum,
+        "has_finish_action": has_finish_action,
+        "invalid_tools": list(invalid_tools),
+        "thought_percentage": thought_percentage,
+        "valid_roles": valid_roles,
     }
 
 
@@ -178,6 +231,51 @@ def create_function_thought_chart(results):
     plt.close()
 
 
+def generate_markdown_table(results):
+    """Generate a markdown table checking the specified conditions for each dataset."""
+    # Table header
+    markdown = "# SFT Quality Control Results\n\n"
+    markdown += "| Dataset | Function Names Sum to 1.0 | Has Finish Action | Only Valid Tools | >80% Functions Have Thoughts | Valid Roles |\n"
+    markdown += "|---------|-------------------------|-------------------|-----------------|----------------------------|------------|\n"
+
+    for result in results:
+        dataset = result["dataset"]
+
+        # Check if function_names.csv adds up to close to 1.0
+        function_names_sum = result["function_names_sum"]
+        function_names_check = "✅" if 0.95 <= function_names_sum <= 1.05 else "❌"
+        if function_names_sum == 0:
+            function_names_check = "❌ (No functions)"
+
+        # Check if finish actions are included
+        has_finish = "✅" if result["has_finish_action"] else "❌"
+
+        # Check if only valid tools are used
+        valid_tools = (
+            "✅" if not result["invalid_tools"] else f"❌ ({', '.join(result['invalid_tools'])})"
+        )
+        if result["function_calls"] == 0:
+            valid_tools = "❌ (No functions)"
+
+        # Check if >80% of functions have thoughts
+        thought_percentage = result["thought_percentage"]
+        thought_check = "✅" if thought_percentage >= 80 else f"❌ ({thought_percentage:.1f}%)"
+        if result["function_calls"] == 0:
+            thought_check = "❌ (No functions)"
+
+        # Check if roles are valid
+        valid_roles = "✅" if result["valid_roles"] else "❌"
+
+        # Add row to table
+        markdown += f"| {dataset} | {function_names_check} | {has_finish} | {valid_tools} | {thought_check} | {valid_roles} |\n"
+
+    # Write to file
+    with open("quality-control-results/sft_quality_check.md", "w") as f:
+        f.write(markdown)
+
+    return markdown
+
+
 def main():
     # Find all sample_sft.json files
     files = glob.glob("datasets/*/sample_sft.json")
@@ -193,16 +291,27 @@ def main():
         print(f"  Roles: {result['roles']}")
         print(f"  Function calls: {result['function_calls']}")
         print(f"  Function thoughts: {result['function_thoughts']}")
+        print(f"  Function names sum: {result['function_names_sum']:.2f}")
+        print(f"  Has finish action: {result['has_finish_action']}")
+        print(f"  Invalid tools: {result['invalid_tools']}")
+        print(f"  Thought percentage: {result['thought_percentage']:.1f}%")
+        print(f"  Valid roles: {result['valid_roles']}")
 
     # Create visualizations
     create_roles_chart(results)
     create_function_names_chart(results)
     create_function_thought_chart(results)
 
+    # Generate markdown table
+    markdown_table = generate_markdown_table(results)
+    print("\nMarkdown table generated:")
+    print(markdown_table)
+
     print("\nAnalysis complete. Generated files in quality-control-results/:")
     print("- roles_per_conversation.png and roles_per_conversation.csv")
     print("- function_names.png and function_names.csv")
     print("- function_thought_percentage.png and function_thought_percentage.csv")
+    print("- sft_quality_check.md")
 
 
 if __name__ == "__main__":
