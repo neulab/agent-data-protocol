@@ -29,16 +29,16 @@ def test_dataset_structure(subdir):
     sample_std_path = os.path.join(subdir_path, "sample_std.json")
 
     if os.path.exists(raw_to_std_path):
-        assert os.path.exists(
-            sample_std_path
-        ), f"raw_to_standardized.py exists but sample_std.json not found in {subdir_path}"
+        assert os.path.exists(sample_std_path), (
+            f"raw_to_standardized.py exists but sample_std.json not found in {subdir_path}"
+        )
 
     # If sample_std.json exists, then sample_sft.json should exist
     if os.path.exists(sample_std_path):
         sample_sft_path = os.path.join(subdir_path, "sample_sft.json")
-        assert os.path.exists(
-            sample_sft_path
-        ), f"sample_std.json exists but sample_sft.json not found in {subdir_path}"
+        assert os.path.exists(sample_sft_path), (
+            f"sample_std.json exists but sample_sft.json not found in {subdir_path}"
+        )
 
     # Check for other JSON files that shouldn't be there
     allowed_jsons = ["sample_raw.json", "sample_std.json", "sample_sft.json"]
