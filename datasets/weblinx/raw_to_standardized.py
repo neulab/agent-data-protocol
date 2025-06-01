@@ -1,7 +1,7 @@
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Union
 
 from schema_raw import SchemaRaw
 
@@ -35,9 +35,41 @@ WEBLINX_DUMP = Path(__file__).parent / "WebLINX-full"
 intents_skipped = set()
 
 
+def sanitize_value(value: Any) -> Any:
+    """Sanitize values to ensure they can be safely used in API actions and JSON.
+
+    Args:
+    ----
+        value: The value to sanitize.
+
+    Returns:
+    -------
+        The sanitized value.
+    """
+    if isinstance(value, str):
+        # For strings, we'll just use json.dumps to properly escape everything
+        # This handles quotes, backslashes, newlines, and control characters
+        return json.dumps(value)[1:-1]  # Remove the outer quotes added by json.dumps
+    return value
+
+
+def sanitize_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    """Sanitize all values in a kwargs dictionary.
+
+    Args:
+    ----
+        kwargs: The kwargs dictionary to sanitize.
+
+    Returns:
+    -------
+        The sanitized kwargs dictionary.
+    """
+    return {k: sanitize_value(v) for k, v in kwargs.items()}
+
+
 def convert_step(
     step: Any, shortcode: str
-) -> list[TextObservation | MessageAction | WebObservation | ApiAction]:
+) -> list[Union[TextObservation, MessageAction, WebObservation, ApiAction]]:
     """Convert a step in the raw data to a list of standardized actions.
 
     Args:
@@ -54,10 +86,11 @@ def convert_step(
         else:
             print(f"Unknown speaker: {step.speaker}", file=sys.stderr)
     elif step.action["intent"] == "load":
+        kwargs = {"url": step.action["arguments"]["metadata"]["url"]}
         return [
             ApiAction(
                 function=INTENT_MAP[step.action["intent"]],
-                kwargs={"url": step.action["arguments"]["metadata"]["url"]},
+                kwargs=sanitize_kwargs(kwargs),
             )
         ]
     elif step.action["intent"] in INTENT_MAP:
@@ -88,21 +121,23 @@ def convert_step(
             image_observation=image_observation,
         )
         if step.action["intent"] == "scroll":
+            kwargs = {"dx": args["scrollX"], "dy": args["scrollY"]}
             return [
                 web_observation,
                 ApiAction(
                     function=INTENT_MAP[step.action["intent"]],
-                    kwargs={"dx": args["scrollX"], "dy": args["scrollY"]},
+                    kwargs=sanitize_kwargs(kwargs),
                 ),
             ]
         _elid = args["element"]["attributes"].get("data-webtasks-id")
         xpath = f"//*[@data-webtasks-id='{_elid}']" if _elid else args["element"]["xpath"]
         if step.action["intent"] in ["click", "submit"]:
+            kwargs = {"xpath": xpath}
             return [
                 web_observation,
                 ApiAction(
                     function=INTENT_MAP[step.action["intent"]],
-                    kwargs={"xpath": xpath},
+                    kwargs=sanitize_kwargs(kwargs),
                 ),
             ]
         elif step.action["intent"] in ["textInput", "paste", "change"]:
@@ -112,11 +147,12 @@ def convert_step(
                 "change": "value",
             }
             value = args[value_key[step.action["intent"]]]
+            kwargs = {"xpath": xpath, "value": value}
             return [
                 web_observation,
                 ApiAction(
                     function=INTENT_MAP[step.action["intent"]],
-                    kwargs={"xpath": xpath, "value": value},
+                    kwargs=sanitize_kwargs(kwargs),
                 ),
             ]
         else:
