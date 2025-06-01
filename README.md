@@ -11,6 +11,19 @@ This is a repository for agent training data collection by CMU, OSU, and HKU.
 - `validator/`: Contains scripts that validate the dataset format
 - `scripts/`:
   - `jsonl_to_indented_json.py`: Converts a jsonl file to an indented json file for easier viewing
+  - `install_hooks.sh`: Script to install pre-commit hooks
+
+## Development Setup
+
+### Pre-commit Hooks
+
+This repository uses pre-commit hooks to ensure code quality. To install the hooks, run:
+
+```bash
+./scripts/install_hooks.sh
+```
+
+This will install pre-commit and set up the hooks defined in `.pre-commit-config.yaml`.
 
 ## Adding a new dataset
 
