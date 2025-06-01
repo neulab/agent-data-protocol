@@ -33,7 +33,7 @@ openhands_default_tools = [
     "edit_file",
 ]
 
-action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "broswer"}
+action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 
 function_args = {
     "execute_ipython_cell": "code",
@@ -187,7 +187,7 @@ def standardized_event_to_openhands_message(
             finish_function_call = format_function(
                 "finish", {"message": content, "task_completed": "true"}
             )
-            return {"from": "gpt", "value": f"{thought}{finish_function_call}"}
+            return {"from": "function_call", "value": f"{thought}{finish_function_call}"}
         return {"from": "gpt", "value": f"{thought}{event.content}"}
 
     elif isinstance(event, TextObservation):

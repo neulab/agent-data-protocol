@@ -136,3 +136,45 @@ def test_function_pattern_matching():
     match = THOUGHT_PATTERN.search(content)
     assert match
     assert match.group(1).strip() == ""
+
+    # Test orca_agentinstruct style function pattern
+    content = """<function=finish>
+<parameter=message>Test response</parameter>
+<parameter=task_completed>true</parameter>
+</function>"""
+    match = FUNCTION_PATTERN.search(content)
+    assert match
+    assert match.group(1) == "finish"
+
+
+def test_analyze_dataset_with_gpt_role_functions(tmp_path):
+    """Test analyzing a dataset with function calls in 'gpt' role messages."""
+    # Create a sample dataset with function calls in 'gpt' role
+    sample_data = [
+        {
+            "conversations": [
+                {"from": "human", "value": "Test question"},
+                {
+                    "from": "gpt",
+                    "value": "<function=finish>\n<parameter=message>Test response</parameter>\n<parameter=task_completed>true</parameter>\n</function>",
+                },
+            ]
+        }
+    ]
+
+    # Create a temporary dataset file
+    dataset_dir = tmp_path / "test_gpt_role"
+    dataset_dir.mkdir()
+    dataset_file = dataset_dir / "sample_sft.json"
+
+    with open(dataset_file, "w") as f:
+        json.dump(sample_data, f)
+
+    # Analyze the dataset
+    result = analyze_dataset(str(dataset_file))
+
+    # Check that the function call was detected
+    assert result["function_calls"] == 1, "Should detect 1 function call in 'gpt' role message"
+    assert result["function_names"]["finish"] == 1, (
+        "Should detect 'finish' function in 'gpt' role message"
+    )

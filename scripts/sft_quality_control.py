@@ -54,9 +54,28 @@ def analyze_dataset(file_path):
             # Count roles
             roles[role] += 1
 
-            # Check for function calls
-            if role == "function_call":
-                match = FUNCTION_PATTERN.search(content)
+            # Check for function calls in any message content
+            match = FUNCTION_PATTERN.search(content)
+            if match:
+                function_name = match.group(1)
+                function_calls += 1
+                function_names[function_name] += 1
+
+                # Check if it's a finish action
+                if function_name == "finish":
+                    conversation_has_finish = True
+
+                # Check if it's a valid tool
+                if function_name not in VALID_TOOLS:
+                    invalid_tools.add(function_name)
+
+                # Check for thoughts before function call
+                thought_match = THOUGHT_PATTERN.search(content)
+                if thought_match and thought_match.group(1).strip():
+                    function_thoughts += 1
+            elif "<function=" in content:
+                # Alternative pattern for function calls without </function> closing tag
+                match = re.search(r"<function=([^>]+)>", content)
                 if match:
                     function_name = match.group(1)
                     function_calls += 1
@@ -70,36 +89,12 @@ def analyze_dataset(file_path):
                     if function_name not in VALID_TOOLS:
                         invalid_tools.add(function_name)
 
-                    # Check for thoughts before function call
-                    thought_match = THOUGHT_PATTERN.search(content)
-                    if thought_match and thought_match.group(1).strip():
-                        function_thoughts += 1
-                else:
-                    # Alternative pattern for function calls without </function> closing tag
-                    match = re.search(r"<function=([^>]+)>", content)
-                    if match:
-                        function_name = match.group(1)
-                        function_calls += 1
-                        function_names[function_name] += 1
-
-                        # Check if it's a finish action
-                        if function_name == "finish":
-                            conversation_has_finish = True
-
-                        # Check if it's a valid tool
-                        if function_name not in VALID_TOOLS:
-                            invalid_tools.add(function_name)
-
         # Update has_finish_action if this conversation has a finish action
         if conversation_has_finish:
             has_finish_action = True
 
     # Calculate function names sum to check if close to 1.0
-    function_names_sum = (
-        sum(function_names.values()) / roles.get("function_call", 1)
-        if roles.get("function_call", 0) > 0
-        else 0
-    )
+    function_names_sum = sum(function_names.values()) / function_calls if function_calls > 0 else 0
 
     # Calculate thought percentage
     thought_percentage = (function_thoughts / function_calls * 100) if function_calls > 0 else 0
@@ -108,7 +103,6 @@ def analyze_dataset(file_path):
     valid_roles = all(
         role in ["human", "gpt", "function_call", "observation"] for role in roles.keys()
     )
-
     return {
         "dataset": dataset_name,
         "conversation_count": conversation_count,
@@ -174,10 +168,13 @@ def create_function_names_chart(results):
     data = []
     for r in results:
         row = {"dataset": r["dataset"]}
-        assistant_msgs = r["roles"].get("function_call", 0)
+        # Use the actual function_calls count instead of just function_call role messages
+        function_calls_count = r["function_calls"]
         for func in all_functions:
             row[func] = (
-                r["function_names"].get(func, 0) / assistant_msgs if assistant_msgs > 0 else 0
+                r["function_names"].get(func, 0) / function_calls_count
+                if function_calls_count > 0
+                else 0
             )
         data.append(row)
 
@@ -189,7 +186,7 @@ def create_function_names_chart(results):
 
     # Create stacked bar chart
     ax = df.plot(kind="bar", stacked=True, figsize=(12, 8))
-    plt.title("Function Names as Proportion of Assistant Messages")
+    plt.title("Function Names as Proportion of Total Function Calls")
     plt.xlabel("Dataset")
     plt.ylabel("Proportion")
     plt.legend(title="Function Name", bbox_to_anchor=(1.05, 1), loc="upper left")
@@ -277,6 +274,9 @@ def generate_markdown_table(results):
 
 
 def main():
+    # Create output directory if it doesn't exist
+    os.makedirs("quality-control-results", exist_ok=True)
+
     # Find all sample_sft.json files
     files = glob.glob("datasets/*/sample_sft.json")
     print(f"Found {len(files)} dataset files")
