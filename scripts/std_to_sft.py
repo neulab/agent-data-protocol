@@ -106,6 +106,46 @@ def extract_function_call(content):
     return None
 
 
+def extract_full_function_call(content):
+    """Extract the full function call from the content."""
+    for tool in openhands_default_tools:
+        # Use a non-greedy pattern with balanced matching for nested tags
+        start_tag = f"<function={tool}>"
+        end_tag = "</function>"
+
+        # Find the start position of the function tag
+        start_pos = content.find(start_tag)
+        if start_pos == -1:
+            continue
+
+        # Find the matching end tag using a balanced approach
+        pos = start_pos + len(start_tag)
+        nesting = 1
+        while pos < len(content) and nesting > 0:
+            next_start = content.find(start_tag, pos)
+            next_end = content.find(end_tag, pos)
+
+            # If no more tags are found, break
+            if next_start == -1 and next_end == -1:
+                break
+
+            # If the next tag is a start tag
+            if next_start != -1 and (next_end == -1 or next_start < next_end):
+                nesting += 1
+                pos = next_start + len(start_tag)
+            # If the next tag is an end tag
+            elif next_end != -1:
+                nesting -= 1
+                pos = next_end + len(end_tag)
+
+        # If we found a balanced match
+        if nesting == 0:
+            end_pos = pos - len(end_tag)
+            return content[start_pos:pos]
+
+    return None
+
+
 def standardized_event_to_openhands_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
@@ -272,6 +312,9 @@ def process_row(line):
                             message["value"] += "\n\n" + get_api_tool_description(
                                 dataset, args.api_env
                             )
+                        # Add function_call key if this is a function call message
+                        if message["from"] == "function_call":
+                            message["function_call"] = extract_full_function_call(message["value"])
                         conversations.extend([message])
                         continue
                     # code to process multiple consecutive function calls + observations
@@ -284,6 +327,17 @@ def process_row(line):
                             + "\n"
                             + message["value"].replace("THOUGHT: ", "")
                         )
+
+                        # Extract function call from message if not already present
+                        if "function_call" not in message:
+                            message["function_call"] = extract_full_function_call(message["value"])
+
+                        # Ensure function_call exists in the previous conversation
+                        if "function_call" not in conversations[-1]:
+                            conversations[-1]["function_call"] = extract_full_function_call(
+                                conversations[-1]["value"]
+                            )
+
                         # if the previous event contains only one function call
                         if isinstance(conversations[-1]["function_call"], str):
                             conversations[-1]["function_call"] = [
@@ -307,6 +361,9 @@ def process_row(line):
                             message["value"] = (
                                 f"EXECUTION RESULT of [{function_name}]:\n" + message["value"]
                             )
+                    # Add function_call key if this is a function call message
+                    if message["from"] == "function_call" and "function_call" not in message:
+                        message["function_call"] = extract_full_function_call(message["value"])
                     conversations.extend([message])
                 except Exception as e:
                     traceback.print_exc()
