@@ -120,10 +120,13 @@ def create_function_names_chart(results):
     data = []
     for r in results:
         row = {"dataset": r["dataset"]}
-        assistant_msgs = r["roles"].get("function_call", 0)
+        # Use the actual function_calls count instead of just function_call role messages
+        function_calls_count = r["function_calls"]
         for func in all_functions:
             row[func] = (
-                r["function_names"].get(func, 0) / assistant_msgs if assistant_msgs > 0 else 0
+                r["function_names"].get(func, 0) / function_calls_count
+                if function_calls_count > 0
+                else 0
             )
         data.append(row)
 
@@ -135,7 +138,7 @@ def create_function_names_chart(results):
 
     # Create stacked bar chart
     ax = df.plot(kind="bar", stacked=True, figsize=(12, 8))
-    plt.title("Function Names as Proportion of Assistant Messages")
+    plt.title("Function Names as Proportion of Total Function Calls")
     plt.xlabel("Dataset")
     plt.ylabel("Proportion")
     plt.legend(title="Function Name", bbox_to_anchor=(1.05, 1), loc="upper left")
