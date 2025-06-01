@@ -120,8 +120,6 @@ def analyze_dataset(file_path):
 
 def create_roles_chart(results):
     """Create a stacked bar chart of roles per conversation."""
-    datasets = [r["dataset"] for r in results]
-
     # Get all unique roles across datasets
     all_roles = set()
     for r in results:
@@ -143,7 +141,7 @@ def create_roles_chart(results):
     df.to_csv("quality-control-results/roles_per_conversation.csv")
 
     # Create stacked bar chart
-    ax = df.plot(kind="bar", stacked=True, figsize=(12, 8))
+    df.plot(kind="bar", stacked=True, figsize=(12, 8))
     plt.title("Roles per Conversation by Dataset")
     plt.xlabel("Dataset")
     plt.ylabel("Average Count per Conversation")
@@ -157,8 +155,6 @@ def create_roles_chart(results):
 
 def create_function_names_chart(results):
     """Create a stacked bar chart of function names."""
-    datasets = [r["dataset"] for r in results]
-
     # Get all unique function names across datasets
     all_functions = set()
     for r in results:
@@ -185,7 +181,7 @@ def create_function_names_chart(results):
     df.to_csv("quality-control-results/function_names.csv")
 
     # Create stacked bar chart
-    ax = df.plot(kind="bar", stacked=True, figsize=(12, 8))
+    df.plot(kind="bar", stacked=True, figsize=(12, 8))
     plt.title("Function Names as Proportion of Total Function Calls")
     plt.xlabel("Dataset")
     plt.ylabel("Proportion")

@@ -137,7 +137,11 @@ def process_trace(trace_file, page, record):
         action = page.locator(".action-title").nth(idx)
         action_repr = action.text_content()
         if action_repr.startswith("Keyboard.type"):
-            action_uid = [action_uid]
+            # For keyboard actions, use the last action_uid if available
+            if action_uids:
+                action_uid = [action_uids[-1]]
+            else:
+                action_uid = [""]
         else:
             action_uid = re.findall(r"get_by_test_id\(\"(.+?)\"\)", action_repr)
         if (
