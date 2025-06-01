@@ -3,21 +3,21 @@
 Tests for the SFT quality control script.
 """
 
-import os
 import json
-import tempfile
+import os
 import shutil
-import pytest
 import sys
-import csv
+import tempfile
+
+import pytest
 
 # Add the parent directory to the path so we can import the script
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from validator.sft_quality_control import (
-    extract_function_calls,
-    has_thought,
     analyze_sft_data,
-    find_sft_files
+    extract_function_calls,
+    find_sft_files,
+    has_thought,
 )
 
 
@@ -26,13 +26,13 @@ def test_environment():
     """Set up test environment."""
     # Create a temporary directory
     test_dir = tempfile.mkdtemp()
-    
+
     # Create test datasets
-    dataset1_dir = os.path.join(test_dir, 'dataset1')
-    dataset2_dir = os.path.join(test_dir, 'dataset2')
+    dataset1_dir = os.path.join(test_dir, "dataset1")
+    dataset2_dir = os.path.join(test_dir, "dataset2")
     os.makedirs(dataset1_dir, exist_ok=True)
     os.makedirs(dataset2_dir, exist_ok=True)
-    
+
     # Create test SFT files
     # Dataset 1 - with thoughts
     dataset1_data = [
@@ -41,50 +41,58 @@ def test_environment():
             "conversations": [
                 {"role": "system", "content": "System message"},
                 {"role": "user", "content": "User message"},
-                {"role": "assistant", "content": "THOUGHT: I need to execute a command\n\nACTION: \n```execute_bash(command='ls -la')```\n"},
+                {
+                    "role": "assistant",
+                    "content": "THOUGHT: I need to execute a command\n\nACTION: \n```execute_bash(command='ls -la')```\n",
+                },
                 {"role": "user", "content": "Another user message"},
-                {"role": "assistant", "content": "THOUGHT: I'll use Python\n\nACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>"}
-            ]
+                {
+                    "role": "assistant",
+                    "content": "THOUGHT: I'll use Python\n\nACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>",
+                },
+            ],
         },
         {
             "id": "test2",
             "conversations": [
                 {"role": "system", "content": "System message"},
                 {"role": "user", "content": "User message"},
-                {"role": "assistant", "content": "THOUGHT: I'll check the file\n\nACTION: \n```click(bid='123')```\n"}
-            ]
-        }
+                {
+                    "role": "assistant",
+                    "content": "THOUGHT: I'll check the file\n\nACTION: \n```click(bid='123')```\n",
+                },
+            ],
+        },
     ]
-    
+
     # Dataset 2 - without thoughts
     dataset2_data = [
         {
             "id": "test3",
             "conversations": [
                 {"role": "user", "content": "User message"},
-                {"role": "assistant", "content": "ACTION: \n```execute_bash(command='echo hello')```\n"},
+                {
+                    "role": "assistant",
+                    "content": "ACTION: \n```execute_bash(command='echo hello')```\n",
+                },
                 {"role": "user", "content": "Another message"},
-                {"role": "assistant", "content": "ACTION: \n```click(bid='456')```\n"}
-            ]
+                {"role": "assistant", "content": "ACTION: \n```click(bid='456')```\n"},
+            ],
         }
     ]
-    
+
     # Write to files
-    with open(os.path.join(dataset1_dir, 'test_sft.jsonl'), 'w') as f:
+    with open(os.path.join(dataset1_dir, "test_sft.jsonl"), "w") as f:
         for item in dataset1_data:
-            f.write(json.dumps(item) + '\n')
-    
-    with open(os.path.join(dataset2_dir, 'test_sft.jsonl'), 'w') as f:
+            f.write(json.dumps(item) + "\n")
+
+    with open(os.path.join(dataset2_dir, "test_sft.jsonl"), "w") as f:
         for item in dataset2_data:
-            f.write(json.dumps(item) + '\n')
-    
+            f.write(json.dumps(item) + "\n")
+
     # Return the test directories
-    yield {
-        'test_dir': test_dir,
-        'dataset1_dir': dataset1_dir,
-        'dataset2_dir': dataset2_dir
-    }
-    
+    yield {"test_dir": test_dir, "dataset1_dir": dataset1_dir, "dataset2_dir": dataset2_dir}
+
     # Clean up after the test
     shutil.rmtree(test_dir)
 
@@ -93,16 +101,16 @@ def test_extract_function_calls():
     """Test extracting function calls from content."""
     # Test with code block
     content1 = "ACTION: \n```execute_bash(command='ls -la')```\n"
-    assert set(extract_function_calls(content1)) == set(['bash', 'action'])
-    
+    assert set(extract_function_calls(content1)) == set(["bash", "action"])
+
     # Test with execute tag
     content2 = "ACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>"
-    assert set(extract_function_calls(content2)) == set(['ipython', 'action'])
-    
+    assert set(extract_function_calls(content2)) == set(["ipython", "action"])
+
     # Test with multiple function calls
     content3 = "ACTION: \n```click(bid='123')```\n\nACTION: \n```hover(bid='456')```\n"
-    assert set(extract_function_calls(content3)) == set(['click', 'hover', 'action'])
-    
+    assert set(extract_function_calls(content3)) == set(["click", "hover", "action"])
+
     # Test with no function calls
     content4 = "This is a regular message with no function calls."
     assert extract_function_calls(content4) == []
@@ -111,13 +119,17 @@ def test_extract_function_calls():
 def test_has_thought():
     """Test checking if content has a thought section."""
     # Test with thought
-    content1 = "THOUGHT: I need to execute a command\n\nACTION: \n```execute_bash(command='ls -la')```\n"
+    content1 = (
+        "THOUGHT: I need to execute a command\n\nACTION: \n```execute_bash(command='ls -la')```\n"
+    )
     assert has_thought(content1) is True
-    
+
     # Test with lowercase thought
-    content2 = "thought: I'll use Python\n\nACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>"
+    content2 = (
+        "thought: I'll use Python\n\nACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>"
+    )
     assert has_thought(content2) is True
-    
+
     # Test without thought
     content3 = "ACTION: \n```click(bid='123')```\n"
     assert has_thought(content3) is False
@@ -126,55 +138,55 @@ def test_has_thought():
 def test_analyze_sft_data(test_environment):
     """Test analyzing SFT data."""
     # Analyze dataset1
-    results1 = analyze_sft_data(os.path.join(test_environment['dataset1_dir'], 'test_sft.jsonl'))
-    
+    results1 = analyze_sft_data(os.path.join(test_environment["dataset1_dir"], "test_sft.jsonl"))
+
     # Check conversation stats
-    assert len(results1['conversation_stats']) == 2
-    assert results1['conversation_stats'][0]['dataset'] == 'dataset1'
-    assert results1['conversation_stats'][0]['system_turns'] == 1
-    assert results1['conversation_stats'][0]['user_turns'] == 2
-    assert results1['conversation_stats'][0]['assistant_turns'] == 2
-    
+    assert len(results1["conversation_stats"]) == 2
+    assert results1["conversation_stats"][0]["dataset"] == "dataset1"
+    assert results1["conversation_stats"][0]["system_turns"] == 1
+    assert results1["conversation_stats"][0]["user_turns"] == 2
+    assert results1["conversation_stats"][0]["assistant_turns"] == 2
+
     # Check function calls
-    assert len(results1['function_calls_per_turn']) == 7
-    assert results1['total_function_calls'] == 9
-    assert results1['function_calls_without_thought'] == 0
-    assert results1['thought_percentage'] == 0
-    
+    assert len(results1["function_calls_per_turn"]) == 7
+    assert results1["total_function_calls"] == 9
+    assert results1["function_calls_without_thought"] == 0
+    assert results1["thought_percentage"] == 0
+
     # Analyze dataset2
-    results2 = analyze_sft_data(os.path.join(test_environment['dataset2_dir'], 'test_sft.jsonl'))
-    
+    results2 = analyze_sft_data(os.path.join(test_environment["dataset2_dir"], "test_sft.jsonl"))
+
     # Check conversation stats
-    assert len(results2['conversation_stats']) == 1
-    assert results2['conversation_stats'][0]['dataset'] == 'dataset2'
-    assert results2['conversation_stats'][0]['system_turns'] == 0
-    assert results2['conversation_stats'][0]['user_turns'] == 2
-    assert results2['conversation_stats'][0]['assistant_turns'] == 2
-    
+    assert len(results2["conversation_stats"]) == 1
+    assert results2["conversation_stats"][0]["dataset"] == "dataset2"
+    assert results2["conversation_stats"][0]["system_turns"] == 0
+    assert results2["conversation_stats"][0]["user_turns"] == 2
+    assert results2["conversation_stats"][0]["assistant_turns"] == 2
+
     # Check function calls
-    assert len(results2['function_calls_per_turn']) == 3
-    assert results2['total_function_calls'] == 4
-    assert results2['function_calls_without_thought'] == 4
-    assert results2['thought_percentage'] == 100.0
+    assert len(results2["function_calls_per_turn"]) == 3
+    assert results2["total_function_calls"] == 4
+    assert results2["function_calls_without_thought"] == 4
+    assert results2["thought_percentage"] == 100.0
 
 
 def test_find_sft_files(test_environment):
     """Test finding SFT files."""
     # Create additional test files
-    with open(os.path.join(test_environment['dataset1_dir'], 'test_sft.json'), 'w') as f:
+    with open(os.path.join(test_environment["dataset1_dir"], "test_sft.json"), "w") as f:
         f.write('{"test": "data"}')
-    with open(os.path.join(test_environment['dataset1_dir'], 'sample.json'), 'w') as f:
+    with open(os.path.join(test_environment["dataset1_dir"], "sample.json"), "w") as f:
         f.write('{"test": "sample data"}')
-    with open(os.path.join(test_environment['dataset2_dir'], 'sample_raw.json'), 'w') as f:
+    with open(os.path.join(test_environment["dataset2_dir"], "sample_raw.json"), "w") as f:
         f.write('{"test": "raw sample data"}')
-    
+
     # Find all SFT files with our predefined patterns
-    sft_files = find_sft_files([test_environment['test_dir']], '*')
+    sft_files = find_sft_files([test_environment["test_dir"]], "*")
     assert len(sft_files) == 5  # 2 jsonl + 3 json
-    
+
     # Verify specific files are found
     file_endings = [os.path.basename(f) for f in sft_files]
-    assert 'test_sft.json' in file_endings
-    assert 'test_sft.jsonl' in file_endings
-    assert 'sample.json' in file_endings
-    assert 'sample_raw.json' in file_endings
+    assert "test_sft.json" in file_endings
+    assert "test_sft.jsonl" in file_endings
+    assert "sample.json" in file_endings
+    assert "sample_raw.json" in file_endings

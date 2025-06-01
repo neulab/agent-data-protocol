@@ -1,4 +1,12 @@
-def str_replace_editor(command: str, path: str, old_str: str = None, new_str: str = None, file_text: str = None, insert_line: int = None, view_range: list = None) -> None:
+def str_replace_editor(
+    command: str,
+    path: str,
+    old_str: str = None,
+    new_str: str = None,
+    file_text: str = None,
+    insert_line: int = None,
+    view_range: list = None,
+) -> None:
     """Edit files using string replacement.
 
     Args:
@@ -14,6 +22,7 @@ def str_replace_editor(command: str, path: str, old_str: str = None, new_str: st
     """
     pass
 
+
 def execute_bash(command: str, is_input: bool = False, timeout: int = None) -> None:
     """Execute a bash command in the terminal.
 
@@ -25,6 +34,7 @@ def execute_bash(command: str, is_input: bool = False, timeout: int = None) -> N
 
     """
     pass
+
 
 def finish(message: str = "", task_completed: bool = True) -> None:
     """Signals the completion of the current task or conversation.
