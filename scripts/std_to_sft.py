@@ -5,9 +5,11 @@ import re
 import sys
 import traceback
 
-import function_calling as codeact_function_calling
+# Set environment variable for function_calling.py
+os.environ["MY_DATASET"] = "SWE-smith_5kTrajectories"
 from browsergym.core.action.highlevel import HighLevelActionSet
 
+import function_calling as codeact_function_calling
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
@@ -66,33 +68,14 @@ parser.add_argument(
     help="The environment in which the APIs are pre-defined",
     default=None,
 )
+args = parser.parse_args()
 
-# Only parse arguments when run as the main program
-if __name__ == "__main__":
-    args = parser.parse_args()
-
-    tools = codeact_function_calling.get_tools(
-        codeact_enable_browsing=True,
-        codeact_enable_jupyter=True,
-        codeact_enable_llm_editor=True,
-        is_web=args.is_web == "yes",
-    )
-else:
-    # For testing purposes
-    import argparse
-
-    args = argparse.Namespace()
-    args.chunk = "0"
-    args.is_web = "no"
-    args.keep_system = "yes"
-    args.api_env = None
-
-    tools = codeact_function_calling.get_tools(
-        codeact_enable_browsing=True,
-        codeact_enable_jupyter=True,
-        codeact_enable_llm_editor=True,
-        is_web=False,
-    )
+tools = codeact_function_calling.get_tools(
+    codeact_enable_browsing=True,
+    codeact_enable_jupyter=True,
+    codeact_enable_llm_editor=True,
+    is_web=args.is_web == "yes",
+)
 
 # Example OH function format:
 """
@@ -125,48 +108,6 @@ def extract_function_call(content):
     return None
 
 
-# This function is no longer needed as we now get the function_call directly from the ApiAction
-# It's kept here for backward compatibility with existing data
-def extract_full_function_call(content):
-    """Extract the full function call from the content."""
-    for tool in openhands_default_tools:
-        # Use a non-greedy pattern with balanced matching for nested tags
-        start_tag = f"<function={tool}>"
-        end_tag = "</function>"
-
-        # Find the start position of the function tag
-        start_pos = content.find(start_tag)
-        if start_pos == -1:
-            continue
-
-        # Find the matching end tag using a balanced approach
-        pos = start_pos + len(start_tag)
-        nesting = 1
-        while pos < len(content) and nesting > 0:
-            next_start = content.find(start_tag, pos)
-            next_end = content.find(end_tag, pos)
-
-            # If no more tags are found, break
-            if next_start == -1 and next_end == -1:
-                break
-
-            # If the next tag is a start tag
-            if next_start != -1 and (next_end == -1 or next_start < next_end):
-                nesting += 1
-                pos = next_start + len(start_tag)
-            # If the next tag is an end tag
-            elif next_end != -1:
-                nesting -= 1
-                pos = next_end + len(end_tag)
-
-        # If we found a balanced match
-        if nesting == 0:
-            end_pos = pos - len(end_tag)
-            return content[start_pos:pos]
-
-    return None
-
-
 def standardized_event_to_openhands_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
@@ -195,11 +136,7 @@ def standardized_event_to_openhands_message(
             previous_web_actions.extend([api_action])
             call = json.loads(f'{{"name": "browser", "arguments": {{"code": "{api_action}"}}}}')
             function_call = format_function(call["name"], call["arguments"])
-            result = {"from": "function_call", "value": f"{thought}{function_call}"}
-            # Add function_call field if available
-            if hasattr(event, "function_call") and event.function_call:
-                result["function_call"] = event.function_call
-            return result
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         arguments = None
         # try to directly get the browsergym_id from the event kwargs
@@ -216,11 +153,7 @@ def standardized_event_to_openhands_message(
         if not browsergym_id and event.function in openhands_default_tools:
             arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
             function_call = format_function(event.function, arguments)
-            result = {"from": "function_call", "value": f"{thought}{function_call}"}
-            # Add function_call field if available
-            if hasattr(event, "function_call") and event.function_call:
-                result["function_call"] = event.function_call
-            return result
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
         if not browsergym_id:
             if not hasattr(args, "api_env") or not args.api_env:
                 # Default to 'execute_bash' if api_env is not specified
@@ -228,11 +161,7 @@ def standardized_event_to_openhands_message(
             arg = function_args.get(args.api_env, "code")
             api_action = f"{event.function}({', '.join([f'{k}={v}' for k, v in event.kwargs.items() if k not in ['element_id', 'xpath']])})"
             function_call = format_function(args.api_env, {arg: api_action})
-            result = {"from": "function_call", "value": f"{thought}{function_call}"}
-            # Add function_call field if available
-            if hasattr(event, "function_call") and event.function_call:
-                result["function_call"] = event.function_call
-            return result
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
         # for tool calls that are browser based
         elif len(event.kwargs) == 1 and "element_id" in event.kwargs:
             api_action = f"{event.function}(bid={browsergym_id})"
@@ -241,11 +170,7 @@ def standardized_event_to_openhands_message(
         previous_web_actions.extend([api_action])
         call = json.loads(f'{{"name": "browser", "arguments": {{"code": "{api_action}"}}}}')
         call = format_function(call["name"], call["arguments"])
-        result = {"from": "function_call", "value": f"{thought}{call}"}
-        # Add function_call field if available
-        if hasattr(event, "function_call") and event.function_call:
-            result["function_call"] = event.function_call
-        return result
+        return {"from": "function_call", "value": f"{thought}{call}"}
 
     if isinstance(event, CodeAction):
         thought = event.description + "\n\n" if event.description else ""
@@ -254,11 +179,7 @@ def standardized_event_to_openhands_message(
         code_action = format_function(function_name, {arg: event.content})
         if not code_action:
             raise ValueError(f"Event with unknown code action type: {type(event)}\n{function_name}")
-        result = {"from": "function_call", "value": f"{thought}{code_action}"}
-        # Add function_call field if available
-        if hasattr(event, "function_call") and event.function_call:
-            result["function_call"] = event.function_call
-        return result
+        return {"from": "function_call", "value": f"{thought}{code_action}"}
 
     elif isinstance(event, MessageAction):
         thought = event.description + "\n\n" if event.description else ""
@@ -268,10 +189,7 @@ def standardized_event_to_openhands_message(
             finish_function_call = format_function(
                 "finish", {"message": content, "task_completed": "true"}
             )
-            result = {"from": "function_call", "value": f"{thought}{finish_function_call}"}
-            # Add function_call field
-            result["function_call"] = finish_function_call
-            return result
+            return {"from": "function_call", "value": f"{thought}{finish_function_call}"}
         return {"from": "gpt", "value": f"{thought}{event.content}"}
 
     elif isinstance(event, TextObservation):
@@ -358,9 +276,8 @@ def process_row(line):
                             )
                         conversations.extend([message])
                         continue
-
                     # code to process multiple consecutive function calls + observations
-                    if (
+                    elif (
                         message["from"] == "function_call"
                         and conversations[-1]["from"] == "function_call"
                     ):
@@ -370,25 +287,28 @@ def process_row(line):
                             + message["value"].replace("THOUGHT: ", "")
                         )
 
-                        # No need to extract function calls anymore as they are provided directly
+                        # Check if message has function_call field
+                        if "function_call" not in message:
+                            # Skip function_call handling if not present
+                            continue
 
                         # if the previous event contains only one function call
-                        if "function_call" in conversations[-1]:
-                            if isinstance(conversations[-1]["function_call"], str):
-                                conversations[-1]["function_call"] = [
-                                    conversations[-1]["function_call"],
-                                    message["function_call"],
-                                ]
-                            # if the previous event already contains multiple function calls
-                            elif isinstance(conversations[-1]["function_call"], list):
-                                conversations[-1]["function_call"].append(message["function_call"])
-                            else:
-                                raise ValueError(
-                                    f"Unknown function_call type: {type(conversations[-1]['function_call'])}\n{conversations[-1]['function_call']}"
-                                )
-                        else:
-                            # If function_call key doesn't exist, initialize it with the current message's function_call
-                            conversations[-1]["function_call"] = message["function_call"]
+                        if "function_call" in conversations[-1] and isinstance(
+                            conversations[-1]["function_call"], str
+                        ):
+                            conversations[-1]["function_call"] = [
+                                conversations[-1]["function_call"],
+                                message["function_call"],
+                            ]
+                        # if the previous event already contains multiple function calls
+                        elif "function_call" in conversations[-1] and isinstance(
+                            conversations[-1]["function_call"], list
+                        ):
+                            conversations[-1]["function_call"].append(message["function_call"])
+                        # if the previous event doesn't have function_call
+                        elif "function_call" in message:
+                            # Initialize function_call as a list with the current message's function_call
+                            conversations[-1]["function_call"] = [message["function_call"]]
                         continue
                     if conversations[-1]["from"] == "function_call" and isinstance(
                         event, TextObservation
@@ -399,8 +319,6 @@ def process_row(line):
                             message["value"] = (
                                 f"EXECUTION RESULT of [{function_name}]:\n" + message["value"]
                             )
-                    # No need to extract function calls anymore as they are provided directly
-
                     conversations.extend([message])
                 except Exception as e:
                     traceback.print_exc()
@@ -418,18 +336,16 @@ def process_row(line):
         return None
 
 
-# Only process stdin when run as the main program
-if __name__ == "__main__":
-    output_lines = []
-    for line in sys.stdin:
-        print(f"Processing line: {line[:100]}...", file=sys.stderr)
-        output_line = process_row(line)
-        if output_line:
-            print("Successfully processed line", file=sys.stderr)
-            output_lines.append(output_line)
-        else:
-            print("Failed to process line", file=sys.stderr)
+output_lines = []
+for line in sys.stdin:
+    print(f"Processing line: {line[:100]}...", file=sys.stderr)
+    output_line = process_row(line)
+    if output_line:
+        print("Successfully processed line", file=sys.stderr)
+        output_lines.append(output_line)
+    else:
+        print("Failed to process line", file=sys.stderr)
 
-    # Print the output as a JSON array
-    if output_lines:
-        print(json.dumps(output_lines, indent=2))
+# Print the output as a JSON array
+if output_lines:
+    print(json.dumps(output_lines, indent=2))
