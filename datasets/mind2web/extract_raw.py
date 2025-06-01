@@ -8,8 +8,11 @@ from globus_sdk.scopes import TransferScopes
 
 from datasets import load_dataset
 
+# Initialize auth_client globally
+auth_client = globus_sdk.NativeAppAuthClient("7414f0b4-7d05-4bb6-bb00-076fa3f17cf5")
 
-def do_submit(client):
+
+def do_submit(client, task_data):
     task_doc = client.submit_transfer(task_data)
     task_id = task_doc["task_id"]
     return task_id
