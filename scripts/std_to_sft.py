@@ -33,7 +33,7 @@ openhands_default_tools = [
     "edit_file",
 ]
 
-action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "broswer"}
+action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 
 function_args = {
     "execute_ipython_cell": "code",
