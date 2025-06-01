@@ -8,6 +8,7 @@ def sam(boxes: list[list]) -> None:
     """
     pass
 
+
 def inpainting(prompt: str) -> None:
     """Call stable diffusion inpainting model to edit images.
 

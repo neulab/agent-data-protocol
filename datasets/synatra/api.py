@@ -9,6 +9,7 @@ def type(element_id: str, text: str) -> None:
     """
     pass
 
+
 def press(key_comb: str) -> None:
     """Press a key combination.
 

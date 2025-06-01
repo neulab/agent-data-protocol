@@ -1,7 +1,7 @@
 import json
-import sys
-import re
 import random
+import re
+import sys
 
 from schema.action.action import Action
 from schema.action.code import CodeAction
@@ -10,22 +10,22 @@ from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
-
 TOOL_DESCRIPTION = "Tool function available (already imported in <execute> environment):"
 WARNING_MSG = "Observation:\nI don't understand your input. \nIf you want to execute code, please use <execute> YOUR_CODE_HERE </execute>.\nIf you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>.\nFor example: The answer to the question is <solution> 42 </solution>."
+
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     global APIS
 
     if step["role"] == "system":
         system_msg = step["content"]
-        
+
         if TOOL_DESCRIPTION in system_msg:
             splited = system_msg.split(TOOL_DESCRIPTION, maxsplit=1)
             system_msg = splited[0].rstrip()
             APIS.add(splited[1])
-        system_msg = re.sub(r'<execute>', r'<execute_ipython_cell>', system_msg)
-        system_msg = re.sub(r'</execute>', r'</execute_ipython_cell>', system_msg)
+        system_msg = re.sub(r"<execute>", r"<execute_ipython_cell>", system_msg)
+        system_msg = re.sub(r"</execute>", r"</execute_ipython_cell>", system_msg)
         return [
             TextObservation(content=system_msg, source=step["role"]),
         ]
@@ -41,10 +41,14 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             TextObservation(content=step["content"], source=step["role"]),
         ]
     elif solution_regex:
-        assert step["role"] == "assistant", f"Expected assistant role, got {step['role']}. {json.dumps(step, indent=2)}"
+        assert (
+            step["role"] == "assistant"
+        ), f"Expected assistant role, got {step['role']}. {json.dumps(step, indent=2)}"
         thought = solution_regex.group(1).strip()
         solution = solution_regex.group(2).strip()
-        return [MessageAction(content=f'<solution> {solution} </solution>', description=thought or ''),]
+        return [
+            MessageAction(content=f"<solution> {solution} </solution>", description=thought or ""),
+        ]
 
     elif execute_regex:
         assert step["role"] == "assistant", f"Expected assistant role, got {step['role']}"
@@ -55,7 +59,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             CodeAction(
                 language="python",
                 content=code,
-                description=thought or '',
+                description=thought or "",
             ),
         ]
 
@@ -75,6 +79,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             MessageAction(content=step["content"], description=None),
         ]
 
+
 APIS = set()
 
 for line in sys.stdin:
@@ -83,28 +88,79 @@ for line in sys.stdin:
     content = []
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
-    if (isinstance(content[-1], TextObservation) and content[-1].source == 'assistant') or isinstance(content[-1], CodeAction):
-        user_end_message = random.choice([
-            [TextObservation(content='Congratulations! You have successfully solved the task.', source="user"),],
-            [TextObservation(content='Your solution has been verified as correct. ', source="user"),],
-            [TextObservation(content='Well done on successfully completing the task!', source="user"),],
-            [TextObservation(content='Your implementation satisfies the task requirements.', source="user"),],
-            [TextObservation(content='Task completed successfully.', source="user"),],
-        ])
+    if (
+        isinstance(content[-1], TextObservation) and content[-1].source == "assistant"
+    ) or isinstance(content[-1], CodeAction):
+        user_end_message = random.choice(
+            [
+                [
+                    TextObservation(
+                        content="Congratulations! You have successfully solved the task.",
+                        source="user",
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Your solution has been verified as correct. ", source="user"
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Well done on successfully completing the task!", source="user"
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Your implementation satisfies the task requirements.",
+                        source="user",
+                    ),
+                ],
+                [
+                    TextObservation(content="Task completed successfully.", source="user"),
+                ],
+            ]
+        )
         content.extend(user_end_message)
-        assistant_end_message = random.choice([
-            [MessageAction(content=f"<finish> I have successfully completed the task. </finish>", description=''),],
-            [MessageAction(content=f"<finish> I did it! The task is now complete. </finish>", description=''),],
-            [MessageAction(content=f"<finish> The objective has been achieved with no outstanding issues. </finish>", description=''),],
-            [MessageAction(content=f"<finish> I have fulfilled all the requirements of the task. </finish>", description=''),],
-            [MessageAction(content=f"<finish> I've wrapped up the task successfully. </finish>", description=''),]
-        ])
+        assistant_end_message = random.choice(
+            [
+                [
+                    MessageAction(
+                        content="<finish> I have successfully completed the task. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I did it! The task is now complete. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> The objective has been achieved with no outstanding issues. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I have fulfilled all the requirements of the task. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I've wrapped up the task successfully. </finish>",
+                        description="",
+                    ),
+                ],
+            ]
+        )
         content.extend(assistant_end_message)
 
-    # Handle finish actions for message actions 
-    if isinstance(content[-1], MessageAction) and '<finish>' not in content[-1].content:
+    # Handle finish actions for message actions
+    if isinstance(content[-1], MessageAction) and "<finish>" not in content[-1].content:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
-        
+
     traj: Trajectory = Trajectory(
         id=raw_data["id"],
         content=content,

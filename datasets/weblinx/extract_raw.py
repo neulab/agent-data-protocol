@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-
 download_instructions = """
     cd datasets/weblinx/
     git clone https://huggingface.co/datasets/McGill-NLP/WebLINX-full

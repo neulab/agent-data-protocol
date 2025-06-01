@@ -4,51 +4,49 @@
 # source: android_env/proto/a11y/a11y.proto
 # Protobuf Python Version: 5.27.2
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    5,
-    27,
-    2,
-    '',
-    'android_env/proto/a11y/a11y.proto'
+    _runtime_version.Domain.PUBLIC, 5, 27, 2, "", "android_env/proto/a11y/a11y.proto"
 )
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-from android_env.proto.a11y import android_accessibility_forest_pb2 as android__env_dot_proto_dot_a11y_dot_android__accessibility__forest__pb2
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!android_env/proto/a11y/a11y.proto\x12\x0b\x61ndroid_env\x1a\x39\x61ndroid_env/proto/a11y/android_accessibility_forest.proto\"\x1f\n\x0e\x46orestResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"q\n\x0c\x45ventRequest\x12\x33\n\x05\x65vent\x18\x01 \x03(\x0b\x32$.android_env.EventRequest.EventEntry\x1a,\n\nEventEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1e\n\rEventResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t\"\x82\x01\n\x0e\x43lientToServer\x12*\n\x05\x65vent\x18\x01 \x01(\x0b\x32\x19.android_env.EventRequestH\x00\x12\x39\n\x06\x66orest\x18\x02 \x01(\x0b\x32\'.android_env.AndroidAccessibilityForestH\x00\x42\t\n\x07payload\"m\n\x0eServerToClient\x12?\n\nget_forest\x18\x01 \x01(\x0b\x32).android_env.ServerToClient.GetA11yForestH\x00\x1a\x0f\n\rGetA11yForestB\t\n\x07payload2\xf1\x01\n\x0b\x41\x31\x31yService\x12T\n\nSendForest\x12\'.android_env.AndroidAccessibilityForest\x1a\x1b.android_env.ForestResponse\"\x00\x12\x44\n\tSendEvent\x12\x19.android_env.EventRequest\x1a\x1a.android_env.EventResponse\"\x00\x12\x46\n\x04\x42idi\x12\x1b.android_env.ClientToServer\x1a\x1b.android_env.ServerToClient\"\x00(\x01\x30\x01\x42\x30\n,com.google.androidenv.accessibilityforwarderP\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n!android_env/proto/a11y/a11y.proto\x12\x0b\x61ndroid_env\x1a\x39\x61ndroid_env/proto/a11y/android_accessibility_forest.proto"\x1f\n\x0e\x46orestResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t"q\n\x0c\x45ventRequest\x12\x33\n\x05\x65vent\x18\x01 \x03(\x0b\x32$.android_env.EventRequest.EventEntry\x1a,\n\nEventEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01"\x1e\n\rEventResponse\x12\r\n\x05\x65rror\x18\x01 \x01(\t"\x82\x01\n\x0e\x43lientToServer\x12*\n\x05\x65vent\x18\x01 \x01(\x0b\x32\x19.android_env.EventRequestH\x00\x12\x39\n\x06\x66orest\x18\x02 \x01(\x0b\x32\'.android_env.AndroidAccessibilityForestH\x00\x42\t\n\x07payload"m\n\x0eServerToClient\x12?\n\nget_forest\x18\x01 \x01(\x0b\x32).android_env.ServerToClient.GetA11yForestH\x00\x1a\x0f\n\rGetA11yForestB\t\n\x07payload2\xf1\x01\n\x0b\x41\x31\x31yService\x12T\n\nSendForest\x12\'.android_env.AndroidAccessibilityForest\x1a\x1b.android_env.ForestResponse"\x00\x12\x44\n\tSendEvent\x12\x19.android_env.EventRequest\x1a\x1a.android_env.EventResponse"\x00\x12\x46\n\x04\x42idi\x12\x1b.android_env.ClientToServer\x1a\x1b.android_env.ServerToClient"\x00(\x01\x30\x01\x42\x30\n,com.google.androidenv.accessibilityforwarderP\x01\x62\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'android_env.proto.a11y.a11y_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "android_env.proto.a11y.a11y_pb2", _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'\n,com.google.androidenv.accessibilityforwarderP\001'
-  _globals['_EVENTREQUEST_EVENTENTRY']._loaded_options = None
-  _globals['_EVENTREQUEST_EVENTENTRY']._serialized_options = b'8\001'
-  _globals['_FORESTRESPONSE']._serialized_start=109
-  _globals['_FORESTRESPONSE']._serialized_end=140
-  _globals['_EVENTREQUEST']._serialized_start=142
-  _globals['_EVENTREQUEST']._serialized_end=255
-  _globals['_EVENTREQUEST_EVENTENTRY']._serialized_start=211
-  _globals['_EVENTREQUEST_EVENTENTRY']._serialized_end=255
-  _globals['_EVENTRESPONSE']._serialized_start=257
-  _globals['_EVENTRESPONSE']._serialized_end=287
-  _globals['_CLIENTTOSERVER']._serialized_start=290
-  _globals['_CLIENTTOSERVER']._serialized_end=420
-  _globals['_SERVERTOCLIENT']._serialized_start=422
-  _globals['_SERVERTOCLIENT']._serialized_end=531
-  _globals['_SERVERTOCLIENT_GETA11YFOREST']._serialized_start=505
-  _globals['_SERVERTOCLIENT_GETA11YFOREST']._serialized_end=520
-  _globals['_A11YSERVICE']._serialized_start=534
-  _globals['_A11YSERVICE']._serialized_end=775
+    _globals["DESCRIPTOR"]._loaded_options = None
+    _globals[
+        "DESCRIPTOR"
+    ]._serialized_options = b"\n,com.google.androidenv.accessibilityforwarderP\001"
+    _globals["_EVENTREQUEST_EVENTENTRY"]._loaded_options = None
+    _globals["_EVENTREQUEST_EVENTENTRY"]._serialized_options = b"8\001"
+    _globals["_FORESTRESPONSE"]._serialized_start = 109
+    _globals["_FORESTRESPONSE"]._serialized_end = 140
+    _globals["_EVENTREQUEST"]._serialized_start = 142
+    _globals["_EVENTREQUEST"]._serialized_end = 255
+    _globals["_EVENTREQUEST_EVENTENTRY"]._serialized_start = 211
+    _globals["_EVENTREQUEST_EVENTENTRY"]._serialized_end = 255
+    _globals["_EVENTRESPONSE"]._serialized_start = 257
+    _globals["_EVENTRESPONSE"]._serialized_end = 287
+    _globals["_CLIENTTOSERVER"]._serialized_start = 290
+    _globals["_CLIENTTOSERVER"]._serialized_end = 420
+    _globals["_SERVERTOCLIENT"]._serialized_start = 422
+    _globals["_SERVERTOCLIENT"]._serialized_end = 531
+    _globals["_SERVERTOCLIENT_GETA11YFOREST"]._serialized_start = 505
+    _globals["_SERVERTOCLIENT_GETA11YFOREST"]._serialized_end = 520
+    _globals["_A11YSERVICE"]._serialized_start = 534
+    _globals["_A11YSERVICE"]._serialized_end = 775
 # @@protoc_insertion_point(module_scope)

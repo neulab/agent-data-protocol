@@ -1,17 +1,22 @@
-from pydantic import BaseModel
-from typing import List, Optional, Union
 from datetime import datetime
+from typing import List, Optional, Union
+
+from pydantic import BaseModel
 
 
 class Inputs(BaseModel):
     task: str = ""
+
     class Config:
         extra = "allow"
 
+
 class Outputs(BaseModel):
     content: str = ""
+
     class Config:
         extra = "allow"
+
 
 class Args(BaseModel):
     action_suffix: Optional[str] = None
@@ -39,8 +44,9 @@ class Args(BaseModel):
     plan: Optional[Union[str, list, dict]] = None
     start: Optional[int] = None
     thought: Optional[str] = None
-    timestamp: Optional[datetime] = None # 2024-10-31T19:35:13.242Z
+    timestamp: Optional[datetime] = None  # 2024-10-31T19:35:13.242Z
     wait_for_response: Optional[bool] = None
+
     class Config:
         extra = "allow"
 
@@ -70,9 +76,9 @@ class Extras(BaseModel):
     screenshot: Optional[str] = None
     status_code: Optional[int] = None
     url: Optional[str] = None
+
     class Config:
         extra = "allow"
-
 
 
 class ToolCallMetadata(BaseModel):
@@ -88,7 +94,7 @@ class TrajectoryItem(BaseModel):
     token: Optional[str] = None
     status: Optional[str] = None
     id: Optional[int] = None
-    timestamp: Optional[datetime] = None # 2024-11-11T13:09:26.404714
+    timestamp: Optional[datetime] = None  # 2024-11-11T13:09:26.404714
     source: str
     message: Optional[str] = ""
     observation: Optional[str] = None

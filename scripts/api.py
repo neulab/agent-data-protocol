@@ -1,6 +1,7 @@
-import inspect
 import importlib.util
+import inspect
 import os
+
 
 def get_api_tool_description(dataset, env=None):
     api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
@@ -11,9 +12,10 @@ def get_api_tool_description(dataset, env=None):
         spec.loader.exec_module(api_module)
         functions = inspect.getmembers(api_module, inspect.isfunction)
         for name, func in functions:
-            docstring = '\n' + inspect.getdoc(func)
+            docstring = "\n" + inspect.getdoc(func)
             sig = inspect.signature(func)
-            docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + '\n\n'   
+            docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
             API_TOOL_DESCRIPTION += docstring
         return API_TOOL_DESCRIPTION
-    else: return ''
+    else:
+        return ""

@@ -5,10 +5,9 @@ from typing import Any
 from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
+from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.observation import Observation
-from schema.observation.image import BoundingBox, ImageObservation, ImageAnnotation
 from schema.trajectory import Trajectory
-
 
 prev_id = None
 content: list[Action | Observation] = []
@@ -72,26 +71,17 @@ for line in sys.stdin:
             )
         )
     elif data["results/action_type"] == "type":
-        content.append(
-                ApiAction(
-                    function="type"
-                  , kwargs={"text": data["results/type_action"]}
-                  )
-              )
+        content.append(ApiAction(function="type", kwargs={"text": data["results/type_action"]}))
     elif data["results/action_type"] in {"go_back", "go_home", "enter"}:
         content.append(
-                ApiAction(
-                    function="press"
-                  , kwargs={"key_name": data["results/action_type"]}
-                  )
-              )
+            ApiAction(function="press", kwargs={"key_name": data["results/action_type"]})
+        )
     elif data["results/action_type"] in {"task_complete", "task_impossible"}:
         content.append(
-                ApiAction(
-                    function="end"
-                  , kwargs={"succeeds": data["results/action_type"]=="task_complete"}
-                  )
-              )
+            ApiAction(
+                function="end", kwargs={"succeeds": data["results/action_type"] == "task_complete"}
+            )
+        )
     else:
         raise ValueError(f"Unknown action type: {data['results/action_type']}")
 

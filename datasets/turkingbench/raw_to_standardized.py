@@ -1,17 +1,15 @@
-import os
-import sys
 import json
-
-from schema.action.api import ApiAction
-from schema.observation.web import WebObservation
-from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
-from schema_raw import SchemaRaw
-from playwright.sync_api import sync_playwright
-from lxml import etree
+import sys
 import urllib.parse
 
+from lxml import etree
+from playwright.sync_api import sync_playwright
+from schema_raw import SchemaRaw
 
+from schema.action.api import ApiAction
+from schema.observation.text import TextObservation
+from schema.observation.web import WebObservation
+from schema.trajectory import Trajectory
 
 INPUT_ELEMENTS = [
     "input",
@@ -37,9 +35,7 @@ ACTIONS = {
 }
 
 
-RESERVED_FIELDS = set(
-    ["_id", "Task", "Title", "Description", "Keywords", "Template", "Answer"]
-)
+RESERVED_FIELDS = set(["_id", "Task", "Title", "Description", "Keywords", "Template", "Answer"])
 NULL_VALUES = set(["", "none", "null", "na", "n/a", "no", "empty", "false"])
 
 DYNAMICALLY_GENERATED_TASKS = set(
@@ -73,7 +69,12 @@ def get_element_type(el: any) -> str:
 
     """
     if el.tag == "input":
-        if el.get("type") in ["radio", "checkbox", "range"] + ["hidden", "submit", "reset", "button"]:
+        if el.get("type") in ["radio", "checkbox", "range"] + [
+            "hidden",
+            "submit",
+            "reset",
+            "button",
+        ]:
             return el.get("type")
         else:
             return "text"
@@ -129,6 +130,7 @@ class PlaywrightLoader:
         self.page.close()
         self.browser.close()
         self.playwright.stop()
+
 
 playwright_loader = PlaywrightLoader()
 
@@ -222,11 +224,13 @@ def process_data(data: dict) -> Trajectory:
 
     fake_url = f"https://turkingbench.github.io/tasks/{urllib.parse.quote(data['_id'])}"
     content: list = [
-        TextObservation(content=f"Go to {fake_url} and follow the instructions on the page", source="user"),
+        TextObservation(
+            content=f"Go to {fake_url} and follow the instructions on the page", source="user"
+        ),
         ApiAction(function="goto", kwargs={"url": fake_url}),
         WebObservation(
             html=html_template, axtree=None, url=None, viewport_size=None, image_observation=None
-        )
+        ),
     ]
 
     for el in input_elements:
@@ -248,24 +252,46 @@ def process_data(data: dict) -> Trajectory:
                 # but no answer was recorded, that means we need to uncheck it
                 content.append(ApiAction(function="click", kwargs={"xpath": xpath}))
                 del el.attrib["checked"]
-                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+                content.append(
+                    WebObservation(
+                        html=etree.tostring(tree).decode(),
+                        url=None,
+                        viewport_size=None,
+                        image_observation=None,
+                    )
+                )
             values_are_equal = numeric_equal(v, el.get("value", "on"))
-            if not values_are_equal and get_element_type(el) in ["checkbox", "crowd-checkbox"] and '|' in v:
+            if (
+                not values_are_equal
+                and get_element_type(el) in ["checkbox", "crowd-checkbox"]
+                and "|" in v
+            ):
                 # turkingbench represents multiple selected checkboxes with the same name
                 # but different values as a single string of values separated by '|'
-                values_are_equal = any([numeric_equal(value, el.get("value", "on")) for value in v.split('|')])
+                values_are_equal = any(
+                    [numeric_equal(value, el.get("value", "on")) for value in v.split("|")]
+                )
             if v and not el.get("checked") and values_are_equal:
                 # this was a radio/checkbox that was initially unchecked
                 # but an answer was recorded, that means we need to check it
                 content.append(ApiAction(function="click", kwargs={"xpath": xpath}))
                 if get_element_type(el) == "radio":
                     # uncheck all other radios in the group
-                    other_radios = tree.xpath(f"//input[@name='{el.get('name')}' and @type='radio']")
+                    other_radios = tree.xpath(
+                        f"//input[@name='{el.get('name')}' and @type='radio']"
+                    )
                     for radio in other_radios:
                         if radio.get("checked"):
                             del radio.attrib["checked"]
                 el.attrib["checked"] = "checked"
-                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+                content.append(
+                    WebObservation(
+                        html=etree.tostring(tree).decode(),
+                        url=None,
+                        viewport_size=None,
+                        image_observation=None,
+                    )
+                )
         elif get_element_type(el) in ["range", "crowd-slider"]:
             if v and not numeric_equal(v, el.get("value", "")):
                 type_filter = f'and @type="{el.get('type')}"' if el.get("type") else ""
@@ -279,19 +305,35 @@ def process_data(data: dict) -> Trajectory:
                     )
                 )
                 el.attrib["value"] = v
-                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+                content.append(
+                    WebObservation(
+                        html=etree.tostring(tree).decode(),
+                        url=None,
+                        viewport_size=None,
+                        image_observation=None,
+                    )
+                )
         elif get_element_type(el) == "select":
             xpath = f'//{el.tag}[@name="{el.get('name')}"]'
             if not verify_xpath(data["Task"], tree, el, xpath):
                 continue
             if el.get("multiple") is not None:
-                print_error_once(f"Found select element with 'multiple' attribute in Task {data['Task']}:\n{etree.tostring(el).decode()}")
+                print_error_once(
+                    f"Found select element with 'multiple' attribute in Task {data['Task']}:\n{etree.tostring(el).decode()}"
+                )
             options = el.xpath("./option")
             # if the option is already selected, no need to select it again
-            if any([o.get("selected") is not None and numeric_equal(o.get("value", o.text or ""), v) for o in options]):
+            if any(
+                [
+                    o.get("selected") is not None and numeric_equal(o.get("value", o.text or ""), v)
+                    for o in options
+                ]
+            ):
                 continue
             # if no option has 'selected' attribute, that means the first option is selected by default
-            if all([o.get("selected") is None for o in options]) and numeric_equal(options[0].get("value", options[0].text or ""), v):
+            if all([o.get("selected") is None for o in options]) and numeric_equal(
+                options[0].get("value", options[0].text or ""), v
+            ):
                 continue
             if any([numeric_equal(o.get("value", o.text or ""), v) for o in options]):
                 content.append(
@@ -306,7 +348,14 @@ def process_data(data: dict) -> Trajectory:
                         option.attrib["selected"] = "selected"
                     elif option.get("selected"):
                         del option.attrib["selected"]
-                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+                content.append(
+                    WebObservation(
+                        html=etree.tostring(tree).decode(),
+                        url=None,
+                        viewport_size=None,
+                        image_observation=None,
+                    )
+                )
         elif get_element_type(el) in ["text", "textarea", "crowd-input"]:
             type_filter = f'and @type="{el.get('type')}"' if el.get("type") else ""
             xpath = f'//{el.tag}[@name="{el.get('name')}" {type_filter}]'
@@ -324,7 +373,14 @@ def process_data(data: dict) -> Trajectory:
                     el.text = v
                 else:
                     el.attrib["value"] = v
-                content.append(WebObservation(html=etree.tostring(tree).decode(), url=None, viewport_size=None, image_observation=None))
+                content.append(
+                    WebObservation(
+                        html=etree.tostring(tree).decode(),
+                        url=None,
+                        viewport_size=None,
+                        image_observation=None,
+                    )
+                )
         else:
             print_error_once(f"Unhandled input element type: {get_element_type(el)}")
 

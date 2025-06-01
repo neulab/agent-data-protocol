@@ -11,12 +11,7 @@ from schema.observation.web import WebObservation
 class Trajectory(BaseModel):
     id: str
     content: list[
-        ApiAction
-        | CodeAction
-        | MessageAction
-        | TextObservation
-        | ImageObservation
-        | WebObservation
+        ApiAction | CodeAction | MessageAction | TextObservation | ImageObservation | WebObservation
     ]
     details: dict[str, str] = Field(
         default_factory=dict,

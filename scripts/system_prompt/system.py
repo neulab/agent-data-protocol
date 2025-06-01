@@ -1,8 +1,9 @@
 import os
-from scripts.system_prompt.get_tools import get_tools, convert_tools_to_description
+
+from scripts.system_prompt.get_tools import convert_tools_to_description, get_tools
 
 _script_dir = os.path.dirname(os.path.realpath(__file__))
-prompt_file = os.path.join(_script_dir, 'system_prefix.txt')
+prompt_file = os.path.join(_script_dir, "system_prefix.txt")
 
 SYSTEM_PROMPT_SUFFIX_TEMPLATE = """
 You have access to the following functions:
@@ -36,14 +37,14 @@ def get_system_message(
     codeact_enable_llm_editor: bool = False,
     codeact_enable_jupyter: bool = True,
 ):
-    with open(prompt_file, 'r') as f:
+    with open(prompt_file, "r") as f:
         system_prompt = f.read()
-    tools = get_tools(codeact_enable_browsing=codeact_enable_browsing,
-                      codeact_enable_llm_editor=codeact_enable_llm_editor,
-                      codeact_enable_jupyter=codeact_enable_jupyter)
-    formatted_tools = convert_tools_to_description(tools)
-    system_prompt_suffix = SYSTEM_PROMPT_SUFFIX_TEMPLATE.format(
-        description=formatted_tools
+    tools = get_tools(
+        codeact_enable_browsing=codeact_enable_browsing,
+        codeact_enable_llm_editor=codeact_enable_llm_editor,
+        codeact_enable_jupyter=codeact_enable_jupyter,
     )
+    formatted_tools = convert_tools_to_description(tools)
+    system_prompt_suffix = SYSTEM_PROMPT_SUFFIX_TEMPLATE.format(description=formatted_tools)
     system_prompt += system_prompt_suffix
     return system_prompt

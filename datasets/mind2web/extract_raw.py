@@ -1,10 +1,12 @@
-from datasets import load_dataset
 import json
-import globus_sdk
-from globus_sdk.scopes import TransferScopes
 import os
-import tqdm
 import time
+
+import globus_sdk
+import tqdm
+from globus_sdk.scopes import TransferScopes
+
+from datasets import load_dataset
 
 
 def do_submit(client):
@@ -56,6 +58,7 @@ def monitor_transfer(client, task_id):
             if task["subtasks_succeeded"] == task["subtasks_total"]:
                 break
             time.sleep(5)  # wait for 5 seconds before checking again
+
 
 dataset = load_dataset("osunlp/Mind2Web", split="train")
 

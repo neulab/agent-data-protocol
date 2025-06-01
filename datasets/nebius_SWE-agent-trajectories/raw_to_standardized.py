@@ -1,16 +1,16 @@
-import sys
-import json
-import api
 import inspect
+import json
 import re
 import shlex
+import sys
+
+import api
+from schema_raw import SchemaRaw
 
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
-from schema_raw import SchemaRaw
-
 
 ACTIONS = [f[0] for f in inspect.getmembers(api, inspect.isfunction) if f[0] != "run"]
 
@@ -18,26 +18,22 @@ ACTIONS = [f[0] for f in inspect.getmembers(api, inspect.isfunction) if f[0] != 
 def parse_edit_action(action_str):
     first_arg = action_str.split()[1]
     if re.match(r"^\d+:\d+$", first_arg):
-        start_line, end_line = map(int, first_arg.split(':'))
+        start_line, end_line = map(int, first_arg.split(":"))
         replacement_text = action_str.split(None, 2)[-1].strip()
     else:
         # sometimes agent outputs "edit filename.py 1:10 replacement_text" instead of "edit 1:10 replacement_text"
-        start_line, end_line = map(int, action_str.split()[2].split(':'))
+        start_line, end_line = map(int, action_str.split()[2].split(":"))
         replacement_text = action_str.split(None, 3)[-1].strip()
     if replacement_text.endswith("end_of_edit"):
-        replacement_text = replacement_text[:-len("end_of_edit")]
-    return {
-        "start_line": start_line,
-        "end_line": end_line,
-        "replacement_text": replacement_text
-    }
+        replacement_text = replacement_text[: -len("end_of_edit")]
+    return {"start_line": start_line, "end_line": end_line, "replacement_text": replacement_text}
 
 
 def parse_api_action(item):
     thought, action_str, remainder = item.text.rsplit("```", 2)
     thought, remainder = thought.strip(), remainder.strip()
-    thought = thought[len("DISCUSSION"):].strip() if thought.startswith("DISCUSSION") else thought
-    thought = thought[:-len("COMMAND")].strip() if thought.endswith("COMMAND") else thought
+    thought = thought[len("DISCUSSION") :].strip() if thought.startswith("DISCUSSION") else thought
+    thought = thought[: -len("COMMAND")].strip() if thought.endswith("COMMAND") else thought
     thought = thought + " " + remainder if remainder else thought
     codeblock_lang = re.fullmatch(r"\w+\s*", action_str.splitlines()[0])
     if codeblock_lang:
@@ -58,7 +54,11 @@ def parse_api_action(item):
 
 def process_item(item):
     if item.role == "system":
-        return TextObservation(content=item.system_prompt, source="system") if item.system_prompt else None
+        return (
+            TextObservation(content=item.system_prompt, source="system")
+            if item.system_prompt
+            else None
+        )
     elif item.role == "user":
         return TextObservation(content=item.text, source="user")
     elif item.role == "ai" and "```" in item.text:
@@ -71,7 +71,6 @@ def process_item(item):
     else:
         print(f"Unknown role: {item.role}", file=sys.stderr)
         return None
-
 
 
 def process_data(data):

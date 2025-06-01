@@ -1,6 +1,6 @@
-from enum import Enum
-import json
 import re
+from enum import Enum
+
 
 class ActionType(Enum):
     CLICK = 1
@@ -19,11 +19,20 @@ class ActionType(Enum):
     def to_string(self):
         return self.name.lower()
 
+
 class Action:
-    def __init__(self, cot="", action_description="", action_type=None, axt_node_id=-1, subtask="", typed_string=""):
-        self._cot = cot  
-        self._action_description = action_description  
-        self._action_type = action_type  
+    def __init__(
+        self,
+        cot="",
+        action_description="",
+        action_type=None,
+        axt_node_id=-1,
+        subtask="",
+        typed_string="",
+    ):
+        self._cot = cot
+        self._action_description = action_description
+        self._action_type = action_type
         self._axt_node_id = axt_node_id
         self._subtask = subtask
         self._typed_string = typed_string
@@ -84,72 +93,77 @@ class Action:
 
     @classmethod
     def from_string(cls, action_str):
-        action_str_lines = action_str.split('\n')
+        action_str_lines = action_str.split("\n")
         action = cls()
         for line in action_str_lines:
-            if line.strip().startswith('# sub-task '):
+            if line.strip().startswith("# sub-task "):
                 action.subtask = line.strip()
-            elif line.strip().startswith('# step') and not line.strip().startswith('# step summary:'):
-                action.cot = line.strip()
-            elif line.strip().startswith('# step summary:'):
-                action.action_description = line.strip()
-            elif '(' in line and ')' in line and '# step' not in line and '# step summary:' not in line and(
-                ('click(' in line and '(element_id=' in line)
-                or ('type(' in line and '(element_id=' in line)
-                or ('hover(' in line and '(element_id=' in line)
-                or 'key_press(' in line 
-                or 'goto(' in line 
-                or 'go_back(' in line 
-                or 'go_forward(' in line 
-                or 'new_tab(' in line 
-                or 'close_tab(' in line 
-                or 'switch_tab(' in line 
-                or 'stop(' in line 
-                or 'scroll(' in line
+            elif line.strip().startswith("# step") and not line.strip().startswith(
+                "# step summary:"
             ):
-
+                action.cot = line.strip()
+            elif line.strip().startswith("# step summary:"):
+                action.action_description = line.strip()
+            elif (
+                "(" in line
+                and ")" in line
+                and "# step" not in line
+                and "# step summary:" not in line
+                and (
+                    ("click(" in line and "(element_id=" in line)
+                    or ("type(" in line and "(element_id=" in line)
+                    or ("hover(" in line and "(element_id=" in line)
+                    or "key_press(" in line
+                    or "goto(" in line
+                    or "go_back(" in line
+                    or "go_forward(" in line
+                    or "new_tab(" in line
+                    or "close_tab(" in line
+                    or "switch_tab(" in line
+                    or "stop(" in line
+                    or "scroll(" in line
+                )
+            ):
                 response = line
-                response = response.replace('element_id=','').replace('string=','')
-                response = response.replace("'","")
-                response = response.replace('"','')
-                items = re.split('[(),]', response)
+                response = response.replace("element_id=", "").replace("string=", "")
+                response = response.replace("'", "")
+                response = response.replace('"', "")
+                items = re.split("[(),]", response)
                 items = [item.strip() for item in items]
-                if 'click(' in line:
+                if "click(" in line:
                     action.action_type = ActionType.CLICK
                     action.axt_node_id = int(items[1])
-                elif 'type(' in line:
+                elif "type(" in line:
                     action.action_type = ActionType.TYPE
                     action.axt_node_id = int(items[1])
                     action.typed_string = str(items[2])
-                elif 'hover(' in line:
+                elif "hover(" in line:
                     action.action_type = ActionType.HOVER
                     action.axt_node_id = int(items[1])
-                elif 'key_press(' in line:
+                elif "key_press(" in line:
                     action.action_type = ActionType.PRESS
                     action.typed_string = str(items[1])
-                elif 'goto(' in line:
+                elif "goto(" in line:
                     action.action_type = ActionType.GOTO
                     action.typed_string = str(items[1])
-                elif 'go_back(' in line:
+                elif "go_back(" in line:
                     action.action_type = ActionType.GO_BACK
-                elif 'go_forward(' in line:
+                elif "go_forward(" in line:
                     action.action_type = ActionType.GO_FORWARD
-                elif 'new_tab(' in line:
+                elif "new_tab(" in line:
                     action.action_type = ActionType.NEW_TAB
-                elif 'close_tab(' in line:
+                elif "close_tab(" in line:
                     action.action_type = ActionType.CLOSE_TAB
-                elif 'switch_tab(' in line:
+                elif "switch_tab(" in line:
                     action.action_type = ActionType.SWITCH_TAB
-                elif 'stop(' in line:
+                elif "stop(" in line:
                     action.action_type = ActionType.STOP
                     action.typed_string = str(items[1])
-                elif 'scroll(' in line:
+                elif "scroll(" in line:
                     action.action_type = ActionType.SCROLL
                     action.typed_string = str(items[1])
                 else:
-                    raise(
-                        f'Cannot parse action'
-                    )
+                    raise ("Cannot parse action")
         return action
 
     def __str__(self):
@@ -158,52 +172,61 @@ class Action:
             result_list.append(self._subtask)
         if self._cot:
             result_list.append(self._cot)
-        action = self._action_type.to_string() + '('
+        action = self._action_type.to_string() + "("
         if self._axt_node_id != -1:
-            action+=f'element_id="{self._axt_node_id}"'
+            action += f'element_id="{self._axt_node_id}"'
         if self._axt_node_id != -1 and self._typed_string:
-            action+=','
+            action += ","
         if self._typed_string:
             if self._action_type == ActionType.TYPE:
-                action+=f'string="{self._typed_string}"'
+                action += f'string="{self._typed_string}"'
             else:
-                action+=f"'{self._typed_string}'"
-        action += ')'
+                action += f"'{self._typed_string}'"
+        action += ")"
         if action:
             result_list.append(action)
         if self._action_description:
             result_list.append(self._action_description)
-        return '\n'.join(result_list)
+        return "\n".join(result_list)
+
 
 class Trajectory:
-    def __init__(self, entry=None, next_action=Action(), history="", obs="", objective="", website=""):
+    def __init__(
+        self, entry=None, next_action=Action(), history="", obs="", objective="", website=""
+    ):
         if entry:
             prompt_string = entry.prompt
-            lines = prompt_string.split('\n')
+            lines = prompt_string.split("\n")
             extracted_parts = {
-                'objective': [],
-                'past_actions': [],
-                'website': [],
-                'observation': []
+                "objective": [],
+                "past_actions": [],
+                "website": [],
+                "observation": [],
             }
-            
+
             current_category = None
             for line in lines:
-                if line.startswith('# website'):
-                    current_category = 'website'
-                elif line.startswith('# objective'):
-                    current_category = 'objective'
-                elif line.startswith('# observation of the current web page'):
-                    current_category = 'observation'
-                elif line.startswith('# past actions'):
-                    current_category = 'past_actions'
+                if line.startswith("# website"):
+                    current_category = "website"
+                elif line.startswith("# objective"):
+                    current_category = "objective"
+                elif line.startswith("# observation of the current web page"):
+                    current_category = "observation"
+                elif line.startswith("# past actions"):
+                    current_category = "past_actions"
                 elif current_category:
                     extracted_parts[current_category].append(line)
             for category in extracted_parts:
-                extracted_parts[category] = '\n'.join(extracted_parts[category])
-            extracted_parts['objective'] = re.search(r'objective = "(.*?)"\n', extracted_parts['objective'], re.DOTALL).group(1)
-            extracted_parts['website'] = re.search(r'website = "(.*?)"', extracted_parts['website']).group(1)
-            extracted_parts['observation'] = re.search(r'observation = """([\s\S]*?)"""\n', extracted_parts['observation']).group(1)
+                extracted_parts[category] = "\n".join(extracted_parts[category])
+            extracted_parts["objective"] = re.search(
+                r'objective = "(.*?)"\n', extracted_parts["objective"], re.DOTALL
+            ).group(1)
+            extracted_parts["website"] = re.search(
+                r'website = "(.*?)"', extracted_parts["website"]
+            ).group(1)
+            extracted_parts["observation"] = re.search(
+                r'observation = """([\s\S]*?)"""\n', extracted_parts["observation"]
+            ).group(1)
             self._next_action = Action.from_string(entry.response)
 
             # history_lines  = extracted_parts['past_actions'].split('\n')[1:]
@@ -214,14 +237,14 @@ class Trajectory:
             #         ('click(' in history_lines[ed] and '(element_id=' in history_lines[ed])
             #         or ('type(' in history_lines[ed] and '(element_id=' in line)
             #         or ('hover(' in history_lines[ed] and '(element_id=' in history_lines[ed])
-            #         or 'key_press(' in history_lines[ed] 
-            #         or 'goto(' in history_lines[ed] 
-            #         or 'go_back(' in history_lines[ed] 
-            #         or 'go_forward(' in history_lines[ed] 
-            #         or 'new_tab(' in history_lines[ed] 
-            #         or 'close_tab(' in history_lines[ed] 
-            #         or 'switch_tab(' in history_lines[ed] 
-            #         or 'stop(' in history_lines[ed] 
+            #         or 'key_press(' in history_lines[ed]
+            #         or 'goto(' in history_lines[ed]
+            #         or 'go_back(' in history_lines[ed]
+            #         or 'go_forward(' in history_lines[ed]
+            #         or 'new_tab(' in history_lines[ed]
+            #         or 'close_tab(' in history_lines[ed]
+            #         or 'switch_tab(' in history_lines[ed]
+            #         or 'stop(' in history_lines[ed]
             #         or 'scroll(' in history_lines[ed]
             #     ):
             #         try:
@@ -235,10 +258,10 @@ class Trajectory:
             #     ed+=1
             # extracted_parts['past_actions'] = history_list
 
-            self._history = extracted_parts['past_actions']
-            self._obs = extracted_parts['observation']
-            self._objective = extracted_parts['objective']
-            self._website = extracted_parts['website']
+            self._history = extracted_parts["past_actions"]
+            self._obs = extracted_parts["observation"]
+            self._objective = extracted_parts["objective"]
+            self._website = extracted_parts["website"]
         else:
             self._next_action = next_action
             # self._history = history if history is not None else []
@@ -305,5 +328,3 @@ class Trajectory:
             self._website = value
         else:
             raise ValueError("website must be a string")
-
-        

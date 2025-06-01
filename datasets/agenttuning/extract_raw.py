@@ -1,8 +1,7 @@
-import os
 import json
-import argparse
+
 import pandas as pd
-from collections import Counter
+
 from datasets import load_dataset
 
 dataset = load_dataset("THUDM/AgentInstruct")
@@ -18,15 +17,14 @@ ROLE_MAP = {
     # user
     "user": "user",
     "human": "user",
-
     # assistant
     "chatgpt": "assistant",
     "gpt": "assistant",
     "bard": "assistant",
-
     # system
-    "system": "system"
+    "system": "system",
 }
+
 
 def normalize_conv_turn(conv_turn):
     role = conv_turn["from"]
@@ -37,16 +35,15 @@ def normalize_conv_turn(conv_turn):
     else:
         raise NotImplementedError(f"Unrecognized role: {role}")
 
-    return {
-        "role": role,
-        "content": content
-    }
+    return {"role": role, "content": content}
+
 
 def normalize_conv(conv):
     res_conv = []
     for turn in conv:
         res_conv.append(normalize_conv_turn(turn))
     return res_conv
+
 
 # print(
 #     "Role count (once per turn):",
@@ -66,9 +63,13 @@ df = df[df["conversations"].apply(lambda x: x[0]["role"] != "assistant")]
 # print(f"Dataset size after filtering (first turn is not assistant): {len(df)}")
 
 # find if there are consecutive assistant turns
-df = df[df["conversations"].apply(
-    lambda x: 
-    not any(x[i]["role"] == "assistant" and x[i+1]["role"] == "assistant" for i in range(len(x)-1)))
+df = df[
+    df["conversations"].apply(
+        lambda x: not any(
+            x[i]["role"] == "assistant" and x[i + 1]["role"] == "assistant"
+            for i in range(len(x) - 1)
+        )
+    )
 ]
 # print(f"Dataset size after filtering (no conv with consecutive assistant turns): {len(df)}")
 # print(

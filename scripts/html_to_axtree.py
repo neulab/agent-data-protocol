@@ -1,14 +1,11 @@
+import json
 import os
 import sys
-import glob
-import argparse
-import json
-
-from lxml import etree
 
 import gymnasium as gym
-import browsergym.core  # register the openended task as a gym environment
 from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
+from lxml import etree
+
 
 class HTMLToAXTree:
     def __init__(self, dataset: str):
@@ -27,7 +24,7 @@ class HTMLToAXTree:
 
     def build_axtree(self, id, html_content: str, chunk) -> str:
         self.last_html = html_content
-        temp_file = os.path.abspath(f'./temp_{self.dataset}_{id}.html')
+        temp_file = os.path.abspath(f"./temp_{self.dataset}_{id}.html")
         with open(temp_file, "w") as f:
             f.write(html_content)
 
@@ -39,7 +36,7 @@ class HTMLToAXTree:
         self.last_xtree = flatten_axtree_to_str(obs["axtree_object"])
 
         return self.last_xtree
-    
+
     def get_bid(self, id, x_path: str, chunk) -> str:
         html_string = flatten_dom_to_str(self.last_obs["dom_object"])
         tree = etree.HTML(html_string)
@@ -51,12 +48,22 @@ class HTMLToAXTree:
             return browsergym_id
         except Exception as e:
             print("Error:", e, file=sys.stderr)
-            self.errors.append({"id":id, "error": str(e), "x_path": x_path, 
-                                "html_dom": html_string, "raw_html": self.last_html})
-            with open(f'./datasets/{self.dataset}/{self.dataset}_{chunk}_bid_errors.json', 'w') as f:
+            self.errors.append(
+                {
+                    "id": id,
+                    "error": str(e),
+                    "x_path": x_path,
+                    "html_dom": html_string,
+                    "raw_html": self.last_html,
+                }
+            )
+            with open(
+                f"./datasets/{self.dataset}/{self.dataset}_{chunk}_bid_errors.json", "w"
+            ) as f:
                 json.dump(self.errors, f, indent=4)
             return "Error generating browsergym_id"
-    
+
+
 if __name__ == "__main__":
     html_to_axtree = HTMLToAXTree()
     print(html_to_axtree.build_axtree("<html><body><h1>Hello World</h1></body></html>"))

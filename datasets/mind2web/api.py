@@ -32,6 +32,7 @@ def type(xpath: str, value: str) -> None:
     """
     pass
 
+
 def goto(url: str) -> None:
     """Navigate to the given URL.
 

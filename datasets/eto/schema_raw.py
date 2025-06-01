@@ -1,9 +1,10 @@
-from pydantic import BaseModel, Field
 from typing import List
+
+from pydantic import BaseModel, Field
 
 
 class Conversation(BaseModel):
-    from_: str = Field(..., alias='from')
+    from_: str = Field(..., alias="from")
     value: str
 
 

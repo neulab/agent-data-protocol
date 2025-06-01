@@ -1,9 +1,9 @@
-import os
-import tqdm
-import glob
 import argparse
+import glob
+import os
+
 import gymnasium as gym
-import browsergym.core  # register the openended task as a gym environment
+import tqdm
 from browsergym.utils.obs import flatten_axtree_to_str
 
 

@@ -1,13 +1,13 @@
 import json
-import sys
 import os
+import sys
 
 from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
+from schema.observation.image import ImageObservation
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.observation.image import ImageObservation
 from schema.trajectory import Trajectory
 
 
@@ -18,14 +18,12 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
                 ImageObservation(
                     content=os.path.join("images/", metadata["data_source"], metadata["image"]),
                     annotations=None,
-                    source="system"
+                    source="system",
                 ),
-                TextObservation(content=step["value"][len("<image>\n"):], source="user")
-            ] 
-        else:
-            return [
-                TextObservation(content=step["value"], source="user")
+                TextObservation(content=step["value"][len("<image>\n") :], source="user"),
             ]
+        else:
+            return [TextObservation(content=step["value"], source="user")]
     elif step["from"] == "gpt":
         if len(step["actions"]) > 0:
             content = [
@@ -36,13 +34,15 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
             ]
 
             for act in step["actions"]:
-                content.extend([
-                    ApiAction(
-                        function=act["API_name"],
-                        kwargs=act["API_params"],
-                        description=None,
-                    )
-                ])
+                content.extend(
+                    [
+                        ApiAction(
+                            function=act["API_name"],
+                            kwargs=act["API_params"],
+                            description=None,
+                        )
+                    ]
+                )
 
             return content
         else:
@@ -66,10 +66,7 @@ for line in sys.stdin:
         content.extend(convert_step(step, metadata))
 
     # Standardize the data
-    standardize_data = Trajectory(
-        id=str(raw_data["unique_id"]),
-        content=content
-    )
+    standardize_data = Trajectory(id=str(raw_data["unique_id"]), content=content)
 
     # Print the standardized data
     print(standardize_data.model_dump_json())

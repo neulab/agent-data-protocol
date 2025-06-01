@@ -4,157 +4,157 @@
 # source: android_env/proto/emulator_controller.proto
 # Protobuf Python Version: 5.27.2
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    5,
-    27,
-    2,
-    '',
-    'android_env/proto/emulator_controller.proto'
+    _runtime_version.Domain.PUBLIC, 5, 27, 2, "", "android_env/proto/emulator_controller.proto"
 )
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n+android_env/proto/emulator_controller.proto\x12\x19\x61ndroid.emulation.control\x1a\x1bgoogle/protobuf/empty.proto\"\xd7\x01\n\nVmRunState\x12=\n\x05state\x18\x01 \x01(\x0e\x32..android.emulation.control.VmRunState.RunState\"\x89\x01\n\x08RunState\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07RUNNING\x10\x01\x12\x0e\n\nRESTORE_VM\x10\x02\x12\n\n\x06PAUSED\x10\x03\x12\x0b\n\x07SAVE_VM\x10\x04\x12\x0c\n\x08SHUTDOWN\x10\x05\x12\r\n\tTERMINATE\x10\x07\x12\t\n\x05RESET\x10\t\x12\x12\n\x0eINTERNAL_ERROR\x10\n\"\"\n\x0eParameterValue\x12\x10\n\x04\x64\x61ta\x18\x01 \x03(\x02\x42\x02\x10\x01\"\xc3\x04\n\x12PhysicalModelValue\x12J\n\x06target\x18\x01 \x01(\x0e\x32:.android.emulation.control.PhysicalModelValue.PhysicalType\x12\x43\n\x06status\x18\x02 \x01(\x0e\x32\x33.android.emulation.control.PhysicalModelValue.State\x12\x38\n\x05value\x18\x03 \x01(\x0b\x32).android.emulation.control.ParameterValue\"U\n\x05State\x12\x06\n\x02OK\x10\x00\x12\x17\n\nNO_SERVICE\x10\xfd\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x15\n\x08\x44ISABLED\x10\xfe\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x14\n\x07UNKNOWN\x10\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01\"\x8a\x02\n\x0cPhysicalType\x12\x0c\n\x08POSITION\x10\x00\x12\x0c\n\x08ROTATION\x10\x01\x12\x12\n\x0eMAGNETIC_FIELD\x10\x02\x12\x0f\n\x0bTEMPERATURE\x10\x03\x12\r\n\tPROXIMITY\x10\x04\x12\t\n\x05LIGHT\x10\x05\x12\x0c\n\x08PRESSURE\x10\x06\x12\x0c\n\x08HUMIDITY\x10\x07\x12\x0c\n\x08VELOCITY\x10\x08\x12\x12\n\x0e\x41MBIENT_MOTION\x10\t\x12\x10\n\x0cHINGE_ANGLE0\x10\n\x12\x10\n\x0cHINGE_ANGLE1\x10\x0b\x12\x10\n\x0cHINGE_ANGLE2\x10\x0c\x12\r\n\tROLLABLE0\x10\r\x12\r\n\tROLLABLE1\x10\x0e\x12\r\n\tROLLABLE2\x10\x0f\"\xf8\x03\n\x0bSensorValue\x12\x41\n\x06target\x18\x01 \x01(\x0e\x32\x31.android.emulation.control.SensorValue.SensorType\x12<\n\x06status\x18\x02 \x01(\x0e\x32,.android.emulation.control.SensorValue.State\x12\x38\n\x05value\x18\x03 \x01(\x0b\x32).android.emulation.control.ParameterValue\"U\n\x05State\x12\x06\n\x02OK\x10\x00\x12\x17\n\nNO_SERVICE\x10\xfd\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x15\n\x08\x44ISABLED\x10\xfe\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x14\n\x07UNKNOWN\x10\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01\"\xd6\x01\n\nSensorType\x12\x10\n\x0c\x41\x43\x43\x45LERATION\x10\x00\x12\r\n\tGYROSCOPE\x10\x01\x12\x12\n\x0eMAGNETIC_FIELD\x10\x02\x12\x0f\n\x0bORIENTATION\x10\x03\x12\x0f\n\x0bTEMPERATURE\x10\x04\x12\r\n\tPROXIMITY\x10\x05\x12\t\n\x05LIGHT\x10\x06\x12\x0c\n\x08PRESSURE\x10\x07\x12\x0c\n\x08HUMIDITY\x10\x08\x12\x1f\n\x1bMAGNETIC_FIELD_UNCALIBRATED\x10\t\x12\x1a\n\x16GYROSCOPE_UNCALIBRATED\x10\n\"\xd2\x01\n\nLogMessage\x12\x10\n\x08\x63ontents\x18\x01 \x01(\t\x12\r\n\x05start\x18\x02 \x01(\x03\x12\x0c\n\x04next\x18\x03 \x01(\x03\x12;\n\x04sort\x18\x04 \x01(\x0e\x32-.android.emulation.control.LogMessage.LogType\x12\x37\n\x07\x65ntries\x18\x05 \x03(\x0b\x32&.android.emulation.control.LogcatEntry\"\x1f\n\x07LogType\x12\x08\n\x04Text\x10\x00\x12\n\n\x06Parsed\x10\x01\"\x86\x02\n\x0bLogcatEntry\x12\x11\n\ttimestamp\x18\x01 \x01(\x04\x12\x0b\n\x03pid\x18\x02 \x01(\r\x12\x0b\n\x03tid\x18\x03 \x01(\r\x12>\n\x05level\x18\x04 \x01(\x0e\x32/.android.emulation.control.LogcatEntry.LogLevel\x12\x0b\n\x03tag\x18\x05 \x01(\t\x12\x0b\n\x03msg\x18\x06 \x01(\t\"p\n\x08LogLevel\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07\x44\x45\x46\x41ULT\x10\x01\x12\x0b\n\x07VERBOSE\x10\x02\x12\t\n\x05\x44\x45\x42UG\x10\x03\x12\x08\n\x04INFO\x10\x04\x12\x08\n\x04WARN\x10\x05\x12\x07\n\x03\x45RR\x10\x06\x12\t\n\x05\x46\x41TAL\x10\x07\x12\n\n\x06SILENT\x10\x08\"\xf0\x01\n\x0fVmConfiguration\x12S\n\x0ehypervisorType\x18\x01 \x01(\x0e\x32;.android.emulation.control.VmConfiguration.VmHypervisorType\x12\x18\n\x10numberOfCpuCores\x18\x02 \x01(\x05\x12\x14\n\x0cramSizeBytes\x18\x03 \x01(\x03\"X\n\x10VmHypervisorType\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x08\n\x04NONE\x10\x01\x12\x07\n\x03KVM\x10\x02\x12\x08\n\x04HAXM\x10\x03\x12\x07\n\x03HVF\x10\x04\x12\x08\n\x04WHPX\x10\x05\x12\x07\n\x03GVM\x10\x06\"\x18\n\x08\x43lipData\x12\x0c\n\x04text\x18\x01 \x01(\t\"\xfa\x01\n\x05Touch\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\x12\x12\n\nidentifier\x18\x03 \x01(\x05\x12\x10\n\x08pressure\x18\x04 \x01(\x05\x12\x13\n\x0btouch_major\x18\x05 \x01(\x05\x12\x13\n\x0btouch_minor\x18\x06 \x01(\x05\x12\x44\n\nexpiration\x18\x07 \x01(\x0e\x32\x30.android.emulation.control.Touch.EventExpiration\"E\n\x0f\x45ventExpiration\x12 \n\x1c\x45VENT_EXPIRATION_UNSPECIFIED\x10\x00\x12\x10\n\x0cNEVER_EXPIRE\x10\x01\"P\n\nTouchEvent\x12\x31\n\x07touches\x18\x01 \x03(\x0b\x32 .android.emulation.control.Touch\x12\x0f\n\x07\x64isplay\x18\x02 \x01(\x05\"D\n\nMouseEvent\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\x12\x0f\n\x07\x62uttons\x18\x03 \x01(\x05\x12\x0f\n\x07\x64isplay\x18\x04 \x01(\x05\"\xc1\x02\n\rKeyboardEvent\x12\x46\n\x08\x63odeType\x18\x01 \x01(\x0e\x32\x34.android.emulation.control.KeyboardEvent.KeyCodeType\x12H\n\teventType\x18\x02 \x01(\x0e\x32\x35.android.emulation.control.KeyboardEvent.KeyEventType\x12\x0f\n\x07keyCode\x18\x03 \x01(\x05\x12\x0b\n\x03key\x18\x04 \x01(\t\x12\x0c\n\x04text\x18\x05 \x01(\t\"<\n\x0bKeyCodeType\x12\x07\n\x03Usb\x10\x00\x12\t\n\x05\x45vdev\x10\x01\x12\x07\n\x03XKB\x10\x02\x12\x07\n\x03Win\x10\x03\x12\x07\n\x03Mac\x10\x04\"4\n\x0cKeyEventType\x12\x0b\n\x07keydown\x10\x00\x12\t\n\x05keyup\x10\x01\x12\x0c\n\x08keypress\x10\x02\"2\n\x0b\x46ingerprint\x12\x12\n\nisTouching\x18\x01 \x01(\x08\x12\x0f\n\x07touchId\x18\x02 \x01(\x05\"\x8c\x01\n\x08GpsState\x12\x15\n\rpassiveUpdate\x18\x01 \x01(\x08\x12\x10\n\x08latitude\x18\x02 \x01(\x01\x12\x11\n\tlongitude\x18\x03 \x01(\x01\x12\r\n\x05speed\x18\x04 \x01(\x01\x12\x0f\n\x07\x62\x65\x61ring\x18\x05 \x01(\x01\x12\x10\n\x08\x61ltitude\x18\x06 \x01(\x01\x12\x12\n\nsatellites\x18\x07 \x01(\x05\"\x87\x04\n\x0c\x42\x61tteryState\x12\x12\n\nhasBattery\x18\x01 \x01(\x08\x12\x11\n\tisPresent\x18\x02 \x01(\x08\x12G\n\x07\x63harger\x18\x03 \x01(\x0e\x32\x36.android.emulation.control.BatteryState.BatteryCharger\x12\x13\n\x0b\x63hargeLevel\x18\x04 \x01(\x05\x12\x45\n\x06health\x18\x05 \x01(\x0e\x32\x35.android.emulation.control.BatteryState.BatteryHealth\x12\x45\n\x06status\x18\x06 \x01(\x0e\x32\x35.android.emulation.control.BatteryState.BatteryStatus\"W\n\rBatteryStatus\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0c\n\x08\x43HARGING\x10\x01\x12\x0f\n\x0b\x44ISCHARGING\x10\x02\x12\x10\n\x0cNOT_CHARGING\x10\x03\x12\x08\n\x04\x46ULL\x10\x04\"9\n\x0e\x42\x61tteryCharger\x12\x08\n\x04NONE\x10\x00\x12\x06\n\x02\x41\x43\x10\x01\x12\x07\n\x03USB\x10\x02\x12\x0c\n\x08WIRELESS\x10\x03\"P\n\rBatteryHealth\x12\x08\n\x04GOOD\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\x12\x08\n\x04\x44\x45\x41\x44\x10\x02\x12\x0f\n\x0bOVERVOLTAGE\x10\x03\x12\x0e\n\nOVERHEATED\x10\x04\"\xae\x01\n\x0eImageTransport\x12K\n\x07\x63hannel\x18\x01 \x01(\x0e\x32:.android.emulation.control.ImageTransport.TransportChannel\x12\x0e\n\x06handle\x18\x02 \x01(\t\"?\n\x10TransportChannel\x12!\n\x1dTRANSPORT_CHANNEL_UNSPECIFIED\x10\x00\x12\x08\n\x04MMAP\x10\x01\"P\n\rFoldedDisplay\x12\r\n\x05width\x18\x01 \x01(\r\x12\x0e\n\x06height\x18\x02 \x01(\r\x12\x0f\n\x07xOffset\x18\x03 \x01(\r\x12\x0f\n\x07yOffset\x18\x04 \x01(\r\"\xe5\x02\n\x0bImageFormat\x12@\n\x06\x66ormat\x18\x01 \x01(\x0e\x32\x30.android.emulation.control.ImageFormat.ImgFormat\x12\x35\n\x08rotation\x18\x02 \x01(\x0b\x32#.android.emulation.control.Rotation\x12\r\n\x05width\x18\x03 \x01(\r\x12\x0e\n\x06height\x18\x04 \x01(\r\x12\x0f\n\x07\x64isplay\x18\x05 \x01(\r\x12<\n\ttransport\x18\x06 \x01(\x0b\x32).android.emulation.control.ImageTransport\x12?\n\rfoldedDisplay\x18\x07 \x01(\x0b\x32(.android.emulation.control.FoldedDisplay\".\n\tImgFormat\x12\x07\n\x03PNG\x10\x00\x12\x0c\n\x08RGBA8888\x10\x01\x12\n\n\x06RGB888\x10\x02\"\x97\x01\n\x05Image\x12\x36\n\x06\x66ormat\x18\x01 \x01(\x0b\x32&.android.emulation.control.ImageFormat\x12\x11\n\x05width\x18\x02 \x01(\rB\x02\x18\x01\x12\x12\n\x06height\x18\x03 \x01(\rB\x02\x18\x01\x12\r\n\x05image\x18\x04 \x01(\x0c\x12\x0b\n\x03seq\x18\x05 \x01(\r\x12\x13\n\x0btimestampUs\x18\x06 \x01(\x04\"\xd5\x01\n\x08Rotation\x12\x42\n\x08rotation\x18\x01 \x01(\x0e\x32\x30.android.emulation.control.Rotation.SkinRotation\x12\r\n\x05xAxis\x18\x02 \x01(\x01\x12\r\n\x05yAxis\x18\x03 \x01(\x01\x12\r\n\x05zAxis\x18\x04 \x01(\x01\"X\n\x0cSkinRotation\x12\x0c\n\x08PORTRAIT\x10\x00\x12\r\n\tLANDSCAPE\x10\x01\x12\x14\n\x10REVERSE_PORTRAIT\x10\x02\x12\x15\n\x11REVERSE_LANDSCAPE\x10\x03\"\xf4\x01\n\tPhoneCall\x12\x41\n\toperation\x18\x01 \x01(\x0e\x32..android.emulation.control.PhoneCall.Operation\x12\x0e\n\x06number\x18\x02 \x01(\t\"\x93\x01\n\tOperation\x12\x0c\n\x08InitCall\x10\x00\x12\x0e\n\nAcceptCall\x10\x01\x12\x16\n\x12RejectCallExplicit\x10\x02\x12\x12\n\x0eRejectCallBusy\x10\x03\x12\x12\n\x0e\x44isconnectCall\x10\x04\x12\x13\n\x0fPlaceCallOnHold\x10\x05\x12\x13\n\x0fTakeCallOffHold\x10\x06\"\xbc\x01\n\rPhoneResponse\x12\x43\n\x08response\x18\x01 \x01(\x0e\x32\x31.android.emulation.control.PhoneResponse.Response\"f\n\x08Response\x12\x06\n\x02OK\x10\x00\x12\x10\n\x0c\x42\x61\x64Operation\x10\x01\x12\r\n\tBadNumber\x10\x02\x12\x11\n\rInvalidAction\x10\x03\x12\x10\n\x0c\x41\x63tionFailed\x10\x04\x12\x0c\n\x08RadioOff\x10\x05\"#\n\x05\x45ntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"<\n\tEntryList\x12/\n\x05\x65ntry\x18\x01 \x03(\x0b\x32 .android.emulation.control.Entry\"\xbd\x01\n\x0e\x45mulatorStatus\x12\x0f\n\x07version\x18\x01 \x01(\t\x12\x0e\n\x06uptime\x18\x02 \x01(\x04\x12\x0e\n\x06\x62ooted\x18\x03 \x01(\x08\x12<\n\x08vmConfig\x18\x04 \x01(\x0b\x32*.android.emulation.control.VmConfiguration\x12<\n\x0ehardwareConfig\x18\x05 \x01(\x0b\x32$.android.emulation.control.EntryList\"\xfe\x01\n\x0b\x41udioFormat\x12\x14\n\x0csamplingRate\x18\x01 \x01(\x04\x12\x41\n\x08\x63hannels\x18\x02 \x01(\x0e\x32/.android.emulation.control.AudioFormat.Channels\x12\x43\n\x06\x66ormat\x18\x03 \x01(\x0e\x32\x33.android.emulation.control.AudioFormat.SampleFormat\"/\n\x0cSampleFormat\x12\x0e\n\nAUD_FMT_U8\x10\x00\x12\x0f\n\x0b\x41UD_FMT_S16\x10\x01\" \n\x08\x43hannels\x12\x08\n\x04Mono\x10\x00\x12\n\n\x06Stereo\x10\x01\"g\n\x0b\x41udioPacket\x12\x36\n\x06\x66ormat\x18\x01 \x01(\x0b\x32&.android.emulation.control.AudioFormat\x12\x11\n\ttimestamp\x18\x02 \x01(\x04\x12\r\n\x05\x61udio\x18\x03 \x01(\x0c\".\n\nSmsMessage\x12\x12\n\nsrcAddress\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t\"\xcb\x02\n\x14\x44isplayConfiguration\x12\r\n\x05width\x18\x01 \x01(\r\x12\x0e\n\x06height\x18\x02 \x01(\r\x12\x0b\n\x03\x64pi\x18\x03 \x01(\r\x12\r\n\x05\x66lags\x18\x04 \x01(\r\x12\x0f\n\x07\x64isplay\x18\x05 \x01(\r\"\xe6\x01\n\x0c\x44isplayFlags\x12\x1c\n\x18\x44ISPLAYFLAGS_UNSPECIFIED\x10\x00\x12\x1f\n\x1bVIRTUAL_DISPLAY_FLAG_PUBLIC\x10\x01\x12%\n!VIRTUAL_DISPLAY_FLAG_PRESENTATION\x10\x02\x12\x1f\n\x1bVIRTUAL_DISPLAY_FLAG_SECURE\x10\x04\x12)\n%VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY\x10\x08\x12$\n VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR\x10\x10\"Z\n\x15\x44isplayConfigurations\x12\x41\n\x08\x64isplays\x18\x01 \x03(\x0b\x32/.android.emulation.control.DisplayConfiguration\"\xc8\x01\n\x0cNotification\x12@\n\x05\x65vent\x18\x01 \x01(\x0e\x32\x31.android.emulation.control.Notification.EventType\"v\n\tEventType\x12!\n\x1dVIRTUAL_SCENE_CAMERA_INACTIVE\x10\x00\x12\x1f\n\x1bVIRTUAL_SCENE_CAMERA_ACTIVE\x10\x01\x12%\n!DISPLAY_CONFIGURATIONS_CHANGED_UI\x10\x02\"1\n\x0eRotationRadian\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"+\n\x08Velocity\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"\xe8\x01\n\x07Posture\x12>\n\x05value\x18\x03 \x01(\x0e\x32/.android.emulation.control.Posture.PostureValue\"\x9c\x01\n\x0cPostureValue\x12\x13\n\x0fPOSTURE_UNKNOWN\x10\x00\x12\x12\n\x0ePOSTURE_CLOSED\x10\x01\x12\x17\n\x13POSTURE_HALF_OPENED\x10\x02\x12\x12\n\x0ePOSTURE_OPENED\x10\x03\x12\x13\n\x0fPOSTURE_FLIPPED\x10\x04\x12\x10\n\x0cPOSTURE_TENT\x10\x05\x12\x0f\n\x0bPOSTURE_MAX\x10\x06\x32\x8a\x18\n\x12\x45mulatorController\x12\x62\n\x0cstreamSensor\x12&.android.emulation.control.SensorValue\x1a&.android.emulation.control.SensorValue\"\x00\x30\x01\x12]\n\tgetSensor\x12&.android.emulation.control.SensorValue\x1a&.android.emulation.control.SensorValue\"\x00\x12M\n\tsetSensor\x12&.android.emulation.control.SensorValue\x1a\x16.google.protobuf.Empty\"\x00\x12[\n\x10setPhysicalModel\x12-.android.emulation.control.PhysicalModelValue\x1a\x16.google.protobuf.Empty\"\x00\x12r\n\x10getPhysicalModel\x12-.android.emulation.control.PhysicalModelValue\x1a-.android.emulation.control.PhysicalModelValue\"\x00\x12w\n\x13streamPhysicalModel\x12-.android.emulation.control.PhysicalModelValue\x1a-.android.emulation.control.PhysicalModelValue\"\x00\x30\x01\x12M\n\x0csetClipboard\x12#.android.emulation.control.ClipData\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\x0cgetClipboard\x12\x16.google.protobuf.Empty\x1a#.android.emulation.control.ClipData\"\x00\x12R\n\x0fstreamClipboard\x12\x16.google.protobuf.Empty\x1a#.android.emulation.control.ClipData\"\x00\x30\x01\x12O\n\nsetBattery\x12\'.android.emulation.control.BatteryState\x1a\x16.google.protobuf.Empty\"\x00\x12O\n\ngetBattery\x12\x16.google.protobuf.Empty\x1a\'.android.emulation.control.BatteryState\"\x00\x12G\n\x06setGps\x12#.android.emulation.control.GpsState\x1a\x16.google.protobuf.Empty\"\x00\x12G\n\x06getGps\x12\x16.google.protobuf.Empty\x1a#.android.emulation.control.GpsState\"\x00\x12S\n\x0fsendFingerprint\x12&.android.emulation.control.Fingerprint\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\x07sendKey\x12(.android.emulation.control.KeyboardEvent\x1a\x16.google.protobuf.Empty\"\x00\x12L\n\tsendTouch\x12%.android.emulation.control.TouchEvent\x1a\x16.google.protobuf.Empty\"\x00\x12L\n\tsendMouse\x12%.android.emulation.control.MouseEvent\x1a\x16.google.protobuf.Empty\"\x00\x12]\n\tsendPhone\x12$.android.emulation.control.PhoneCall\x1a(.android.emulation.control.PhoneResponse\"\x00\x12\\\n\x07sendSms\x12%.android.emulation.control.SmsMessage\x1a(.android.emulation.control.PhoneResponse\"\x00\x12P\n\tgetStatus\x12\x16.google.protobuf.Empty\x1a).android.emulation.control.EmulatorStatus\"\x00\x12[\n\rgetScreenshot\x12&.android.emulation.control.ImageFormat\x1a .android.emulation.control.Image\"\x00\x12`\n\x10streamScreenshot\x12&.android.emulation.control.ImageFormat\x1a .android.emulation.control.Image\"\x00\x30\x01\x12\x61\n\x0bstreamAudio\x12&.android.emulation.control.AudioFormat\x1a&.android.emulation.control.AudioPacket\"\x00\x30\x01\x12Q\n\x0binjectAudio\x12&.android.emulation.control.AudioPacket\x1a\x16.google.protobuf.Empty\"\x00(\x01\x12[\n\tgetLogcat\x12%.android.emulation.control.LogMessage\x1a%.android.emulation.control.LogMessage\"\x00\x12`\n\x0cstreamLogcat\x12%.android.emulation.control.LogMessage\x1a%.android.emulation.control.LogMessage\"\x00\x30\x01\x12M\n\nsetVmState\x12%.android.emulation.control.VmRunState\x1a\x16.google.protobuf.Empty\"\x00\x12M\n\ngetVmState\x12\x16.google.protobuf.Empty\x1a%.android.emulation.control.VmRunState\"\x00\x12\x80\x01\n\x18setDisplayConfigurations\x12\x30.android.emulation.control.DisplayConfigurations\x1a\x30.android.emulation.control.DisplayConfigurations\"\x00\x12\x66\n\x18getDisplayConfigurations\x12\x16.google.protobuf.Empty\x1a\x30.android.emulation.control.DisplayConfigurations\"\x00\x12Y\n\x12streamNotification\x12\x16.google.protobuf.Empty\x1a\'.android.emulation.control.Notification\"\x00\x30\x01\x12_\n\x18rotateVirtualSceneCamera\x12).android.emulation.control.RotationRadian\x1a\x16.google.protobuf.Empty\"\x00\x12^\n\x1dsetVirtualSceneCameraVelocity\x12#.android.emulation.control.Velocity\x1a\x16.google.protobuf.Empty\"\x00\x12J\n\nsetPosture\x12\".android.emulation.control.Posture\x1a\x16.google.protobuf.Empty\"\x00\x42&\n\x1c\x63om.android.emulator.controlP\x01\xa2\x02\x03\x41\x45\x43\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n+android_env/proto/emulator_controller.proto\x12\x19\x61ndroid.emulation.control\x1a\x1bgoogle/protobuf/empty.proto"\xd7\x01\n\nVmRunState\x12=\n\x05state\x18\x01 \x01(\x0e\x32..android.emulation.control.VmRunState.RunState"\x89\x01\n\x08RunState\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07RUNNING\x10\x01\x12\x0e\n\nRESTORE_VM\x10\x02\x12\n\n\x06PAUSED\x10\x03\x12\x0b\n\x07SAVE_VM\x10\x04\x12\x0c\n\x08SHUTDOWN\x10\x05\x12\r\n\tTERMINATE\x10\x07\x12\t\n\x05RESET\x10\t\x12\x12\n\x0eINTERNAL_ERROR\x10\n""\n\x0eParameterValue\x12\x10\n\x04\x64\x61ta\x18\x01 \x03(\x02\x42\x02\x10\x01"\xc3\x04\n\x12PhysicalModelValue\x12J\n\x06target\x18\x01 \x01(\x0e\x32:.android.emulation.control.PhysicalModelValue.PhysicalType\x12\x43\n\x06status\x18\x02 \x01(\x0e\x32\x33.android.emulation.control.PhysicalModelValue.State\x12\x38\n\x05value\x18\x03 \x01(\x0b\x32).android.emulation.control.ParameterValue"U\n\x05State\x12\x06\n\x02OK\x10\x00\x12\x17\n\nNO_SERVICE\x10\xfd\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x15\n\x08\x44ISABLED\x10\xfe\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x14\n\x07UNKNOWN\x10\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"\x8a\x02\n\x0cPhysicalType\x12\x0c\n\x08POSITION\x10\x00\x12\x0c\n\x08ROTATION\x10\x01\x12\x12\n\x0eMAGNETIC_FIELD\x10\x02\x12\x0f\n\x0bTEMPERATURE\x10\x03\x12\r\n\tPROXIMITY\x10\x04\x12\t\n\x05LIGHT\x10\x05\x12\x0c\n\x08PRESSURE\x10\x06\x12\x0c\n\x08HUMIDITY\x10\x07\x12\x0c\n\x08VELOCITY\x10\x08\x12\x12\n\x0e\x41MBIENT_MOTION\x10\t\x12\x10\n\x0cHINGE_ANGLE0\x10\n\x12\x10\n\x0cHINGE_ANGLE1\x10\x0b\x12\x10\n\x0cHINGE_ANGLE2\x10\x0c\x12\r\n\tROLLABLE0\x10\r\x12\r\n\tROLLABLE1\x10\x0e\x12\r\n\tROLLABLE2\x10\x0f"\xf8\x03\n\x0bSensorValue\x12\x41\n\x06target\x18\x01 \x01(\x0e\x32\x31.android.emulation.control.SensorValue.SensorType\x12<\n\x06status\x18\x02 \x01(\x0e\x32,.android.emulation.control.SensorValue.State\x12\x38\n\x05value\x18\x03 \x01(\x0b\x32).android.emulation.control.ParameterValue"U\n\x05State\x12\x06\n\x02OK\x10\x00\x12\x17\n\nNO_SERVICE\x10\xfd\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x15\n\x08\x44ISABLED\x10\xfe\xff\xff\xff\xff\xff\xff\xff\xff\x01\x12\x14\n\x07UNKNOWN\x10\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"\xd6\x01\n\nSensorType\x12\x10\n\x0c\x41\x43\x43\x45LERATION\x10\x00\x12\r\n\tGYROSCOPE\x10\x01\x12\x12\n\x0eMAGNETIC_FIELD\x10\x02\x12\x0f\n\x0bORIENTATION\x10\x03\x12\x0f\n\x0bTEMPERATURE\x10\x04\x12\r\n\tPROXIMITY\x10\x05\x12\t\n\x05LIGHT\x10\x06\x12\x0c\n\x08PRESSURE\x10\x07\x12\x0c\n\x08HUMIDITY\x10\x08\x12\x1f\n\x1bMAGNETIC_FIELD_UNCALIBRATED\x10\t\x12\x1a\n\x16GYROSCOPE_UNCALIBRATED\x10\n"\xd2\x01\n\nLogMessage\x12\x10\n\x08\x63ontents\x18\x01 \x01(\t\x12\r\n\x05start\x18\x02 \x01(\x03\x12\x0c\n\x04next\x18\x03 \x01(\x03\x12;\n\x04sort\x18\x04 \x01(\x0e\x32-.android.emulation.control.LogMessage.LogType\x12\x37\n\x07\x65ntries\x18\x05 \x03(\x0b\x32&.android.emulation.control.LogcatEntry"\x1f\n\x07LogType\x12\x08\n\x04Text\x10\x00\x12\n\n\x06Parsed\x10\x01"\x86\x02\n\x0bLogcatEntry\x12\x11\n\ttimestamp\x18\x01 \x01(\x04\x12\x0b\n\x03pid\x18\x02 \x01(\r\x12\x0b\n\x03tid\x18\x03 \x01(\r\x12>\n\x05level\x18\x04 \x01(\x0e\x32/.android.emulation.control.LogcatEntry.LogLevel\x12\x0b\n\x03tag\x18\x05 \x01(\t\x12\x0b\n\x03msg\x18\x06 \x01(\t"p\n\x08LogLevel\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07\x44\x45\x46\x41ULT\x10\x01\x12\x0b\n\x07VERBOSE\x10\x02\x12\t\n\x05\x44\x45\x42UG\x10\x03\x12\x08\n\x04INFO\x10\x04\x12\x08\n\x04WARN\x10\x05\x12\x07\n\x03\x45RR\x10\x06\x12\t\n\x05\x46\x41TAL\x10\x07\x12\n\n\x06SILENT\x10\x08"\xf0\x01\n\x0fVmConfiguration\x12S\n\x0ehypervisorType\x18\x01 \x01(\x0e\x32;.android.emulation.control.VmConfiguration.VmHypervisorType\x12\x18\n\x10numberOfCpuCores\x18\x02 \x01(\x05\x12\x14\n\x0cramSizeBytes\x18\x03 \x01(\x03"X\n\x10VmHypervisorType\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x08\n\x04NONE\x10\x01\x12\x07\n\x03KVM\x10\x02\x12\x08\n\x04HAXM\x10\x03\x12\x07\n\x03HVF\x10\x04\x12\x08\n\x04WHPX\x10\x05\x12\x07\n\x03GVM\x10\x06"\x18\n\x08\x43lipData\x12\x0c\n\x04text\x18\x01 \x01(\t"\xfa\x01\n\x05Touch\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\x12\x12\n\nidentifier\x18\x03 \x01(\x05\x12\x10\n\x08pressure\x18\x04 \x01(\x05\x12\x13\n\x0btouch_major\x18\x05 \x01(\x05\x12\x13\n\x0btouch_minor\x18\x06 \x01(\x05\x12\x44\n\nexpiration\x18\x07 \x01(\x0e\x32\x30.android.emulation.control.Touch.EventExpiration"E\n\x0f\x45ventExpiration\x12 \n\x1c\x45VENT_EXPIRATION_UNSPECIFIED\x10\x00\x12\x10\n\x0cNEVER_EXPIRE\x10\x01"P\n\nTouchEvent\x12\x31\n\x07touches\x18\x01 \x03(\x0b\x32 .android.emulation.control.Touch\x12\x0f\n\x07\x64isplay\x18\x02 \x01(\x05"D\n\nMouseEvent\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\x12\x0f\n\x07\x62uttons\x18\x03 \x01(\x05\x12\x0f\n\x07\x64isplay\x18\x04 \x01(\x05"\xc1\x02\n\rKeyboardEvent\x12\x46\n\x08\x63odeType\x18\x01 \x01(\x0e\x32\x34.android.emulation.control.KeyboardEvent.KeyCodeType\x12H\n\teventType\x18\x02 \x01(\x0e\x32\x35.android.emulation.control.KeyboardEvent.KeyEventType\x12\x0f\n\x07keyCode\x18\x03 \x01(\x05\x12\x0b\n\x03key\x18\x04 \x01(\t\x12\x0c\n\x04text\x18\x05 \x01(\t"<\n\x0bKeyCodeType\x12\x07\n\x03Usb\x10\x00\x12\t\n\x05\x45vdev\x10\x01\x12\x07\n\x03XKB\x10\x02\x12\x07\n\x03Win\x10\x03\x12\x07\n\x03Mac\x10\x04"4\n\x0cKeyEventType\x12\x0b\n\x07keydown\x10\x00\x12\t\n\x05keyup\x10\x01\x12\x0c\n\x08keypress\x10\x02"2\n\x0b\x46ingerprint\x12\x12\n\nisTouching\x18\x01 \x01(\x08\x12\x0f\n\x07touchId\x18\x02 \x01(\x05"\x8c\x01\n\x08GpsState\x12\x15\n\rpassiveUpdate\x18\x01 \x01(\x08\x12\x10\n\x08latitude\x18\x02 \x01(\x01\x12\x11\n\tlongitude\x18\x03 \x01(\x01\x12\r\n\x05speed\x18\x04 \x01(\x01\x12\x0f\n\x07\x62\x65\x61ring\x18\x05 \x01(\x01\x12\x10\n\x08\x61ltitude\x18\x06 \x01(\x01\x12\x12\n\nsatellites\x18\x07 \x01(\x05"\x87\x04\n\x0c\x42\x61tteryState\x12\x12\n\nhasBattery\x18\x01 \x01(\x08\x12\x11\n\tisPresent\x18\x02 \x01(\x08\x12G\n\x07\x63harger\x18\x03 \x01(\x0e\x32\x36.android.emulation.control.BatteryState.BatteryCharger\x12\x13\n\x0b\x63hargeLevel\x18\x04 \x01(\x05\x12\x45\n\x06health\x18\x05 \x01(\x0e\x32\x35.android.emulation.control.BatteryState.BatteryHealth\x12\x45\n\x06status\x18\x06 \x01(\x0e\x32\x35.android.emulation.control.BatteryState.BatteryStatus"W\n\rBatteryStatus\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0c\n\x08\x43HARGING\x10\x01\x12\x0f\n\x0b\x44ISCHARGING\x10\x02\x12\x10\n\x0cNOT_CHARGING\x10\x03\x12\x08\n\x04\x46ULL\x10\x04"9\n\x0e\x42\x61tteryCharger\x12\x08\n\x04NONE\x10\x00\x12\x06\n\x02\x41\x43\x10\x01\x12\x07\n\x03USB\x10\x02\x12\x0c\n\x08WIRELESS\x10\x03"P\n\rBatteryHealth\x12\x08\n\x04GOOD\x10\x00\x12\n\n\x06\x46\x41ILED\x10\x01\x12\x08\n\x04\x44\x45\x41\x44\x10\x02\x12\x0f\n\x0bOVERVOLTAGE\x10\x03\x12\x0e\n\nOVERHEATED\x10\x04"\xae\x01\n\x0eImageTransport\x12K\n\x07\x63hannel\x18\x01 \x01(\x0e\x32:.android.emulation.control.ImageTransport.TransportChannel\x12\x0e\n\x06handle\x18\x02 \x01(\t"?\n\x10TransportChannel\x12!\n\x1dTRANSPORT_CHANNEL_UNSPECIFIED\x10\x00\x12\x08\n\x04MMAP\x10\x01"P\n\rFoldedDisplay\x12\r\n\x05width\x18\x01 \x01(\r\x12\x0e\n\x06height\x18\x02 \x01(\r\x12\x0f\n\x07xOffset\x18\x03 \x01(\r\x12\x0f\n\x07yOffset\x18\x04 \x01(\r"\xe5\x02\n\x0bImageFormat\x12@\n\x06\x66ormat\x18\x01 \x01(\x0e\x32\x30.android.emulation.control.ImageFormat.ImgFormat\x12\x35\n\x08rotation\x18\x02 \x01(\x0b\x32#.android.emulation.control.Rotation\x12\r\n\x05width\x18\x03 \x01(\r\x12\x0e\n\x06height\x18\x04 \x01(\r\x12\x0f\n\x07\x64isplay\x18\x05 \x01(\r\x12<\n\ttransport\x18\x06 \x01(\x0b\x32).android.emulation.control.ImageTransport\x12?\n\rfoldedDisplay\x18\x07 \x01(\x0b\x32(.android.emulation.control.FoldedDisplay".\n\tImgFormat\x12\x07\n\x03PNG\x10\x00\x12\x0c\n\x08RGBA8888\x10\x01\x12\n\n\x06RGB888\x10\x02"\x97\x01\n\x05Image\x12\x36\n\x06\x66ormat\x18\x01 \x01(\x0b\x32&.android.emulation.control.ImageFormat\x12\x11\n\x05width\x18\x02 \x01(\rB\x02\x18\x01\x12\x12\n\x06height\x18\x03 \x01(\rB\x02\x18\x01\x12\r\n\x05image\x18\x04 \x01(\x0c\x12\x0b\n\x03seq\x18\x05 \x01(\r\x12\x13\n\x0btimestampUs\x18\x06 \x01(\x04"\xd5\x01\n\x08Rotation\x12\x42\n\x08rotation\x18\x01 \x01(\x0e\x32\x30.android.emulation.control.Rotation.SkinRotation\x12\r\n\x05xAxis\x18\x02 \x01(\x01\x12\r\n\x05yAxis\x18\x03 \x01(\x01\x12\r\n\x05zAxis\x18\x04 \x01(\x01"X\n\x0cSkinRotation\x12\x0c\n\x08PORTRAIT\x10\x00\x12\r\n\tLANDSCAPE\x10\x01\x12\x14\n\x10REVERSE_PORTRAIT\x10\x02\x12\x15\n\x11REVERSE_LANDSCAPE\x10\x03"\xf4\x01\n\tPhoneCall\x12\x41\n\toperation\x18\x01 \x01(\x0e\x32..android.emulation.control.PhoneCall.Operation\x12\x0e\n\x06number\x18\x02 \x01(\t"\x93\x01\n\tOperation\x12\x0c\n\x08InitCall\x10\x00\x12\x0e\n\nAcceptCall\x10\x01\x12\x16\n\x12RejectCallExplicit\x10\x02\x12\x12\n\x0eRejectCallBusy\x10\x03\x12\x12\n\x0e\x44isconnectCall\x10\x04\x12\x13\n\x0fPlaceCallOnHold\x10\x05\x12\x13\n\x0fTakeCallOffHold\x10\x06"\xbc\x01\n\rPhoneResponse\x12\x43\n\x08response\x18\x01 \x01(\x0e\x32\x31.android.emulation.control.PhoneResponse.Response"f\n\x08Response\x12\x06\n\x02OK\x10\x00\x12\x10\n\x0c\x42\x61\x64Operation\x10\x01\x12\r\n\tBadNumber\x10\x02\x12\x11\n\rInvalidAction\x10\x03\x12\x10\n\x0c\x41\x63tionFailed\x10\x04\x12\x0c\n\x08RadioOff\x10\x05"#\n\x05\x45ntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t"<\n\tEntryList\x12/\n\x05\x65ntry\x18\x01 \x03(\x0b\x32 .android.emulation.control.Entry"\xbd\x01\n\x0e\x45mulatorStatus\x12\x0f\n\x07version\x18\x01 \x01(\t\x12\x0e\n\x06uptime\x18\x02 \x01(\x04\x12\x0e\n\x06\x62ooted\x18\x03 \x01(\x08\x12<\n\x08vmConfig\x18\x04 \x01(\x0b\x32*.android.emulation.control.VmConfiguration\x12<\n\x0ehardwareConfig\x18\x05 \x01(\x0b\x32$.android.emulation.control.EntryList"\xfe\x01\n\x0b\x41udioFormat\x12\x14\n\x0csamplingRate\x18\x01 \x01(\x04\x12\x41\n\x08\x63hannels\x18\x02 \x01(\x0e\x32/.android.emulation.control.AudioFormat.Channels\x12\x43\n\x06\x66ormat\x18\x03 \x01(\x0e\x32\x33.android.emulation.control.AudioFormat.SampleFormat"/\n\x0cSampleFormat\x12\x0e\n\nAUD_FMT_U8\x10\x00\x12\x0f\n\x0b\x41UD_FMT_S16\x10\x01" \n\x08\x43hannels\x12\x08\n\x04Mono\x10\x00\x12\n\n\x06Stereo\x10\x01"g\n\x0b\x41udioPacket\x12\x36\n\x06\x66ormat\x18\x01 \x01(\x0b\x32&.android.emulation.control.AudioFormat\x12\x11\n\ttimestamp\x18\x02 \x01(\x04\x12\r\n\x05\x61udio\x18\x03 \x01(\x0c".\n\nSmsMessage\x12\x12\n\nsrcAddress\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t"\xcb\x02\n\x14\x44isplayConfiguration\x12\r\n\x05width\x18\x01 \x01(\r\x12\x0e\n\x06height\x18\x02 \x01(\r\x12\x0b\n\x03\x64pi\x18\x03 \x01(\r\x12\r\n\x05\x66lags\x18\x04 \x01(\r\x12\x0f\n\x07\x64isplay\x18\x05 \x01(\r"\xe6\x01\n\x0c\x44isplayFlags\x12\x1c\n\x18\x44ISPLAYFLAGS_UNSPECIFIED\x10\x00\x12\x1f\n\x1bVIRTUAL_DISPLAY_FLAG_PUBLIC\x10\x01\x12%\n!VIRTUAL_DISPLAY_FLAG_PRESENTATION\x10\x02\x12\x1f\n\x1bVIRTUAL_DISPLAY_FLAG_SECURE\x10\x04\x12)\n%VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY\x10\x08\x12$\n VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR\x10\x10"Z\n\x15\x44isplayConfigurations\x12\x41\n\x08\x64isplays\x18\x01 \x03(\x0b\x32/.android.emulation.control.DisplayConfiguration"\xc8\x01\n\x0cNotification\x12@\n\x05\x65vent\x18\x01 \x01(\x0e\x32\x31.android.emulation.control.Notification.EventType"v\n\tEventType\x12!\n\x1dVIRTUAL_SCENE_CAMERA_INACTIVE\x10\x00\x12\x1f\n\x1bVIRTUAL_SCENE_CAMERA_ACTIVE\x10\x01\x12%\n!DISPLAY_CONFIGURATIONS_CHANGED_UI\x10\x02"1\n\x0eRotationRadian\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02"+\n\x08Velocity\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02"\xe8\x01\n\x07Posture\x12>\n\x05value\x18\x03 \x01(\x0e\x32/.android.emulation.control.Posture.PostureValue"\x9c\x01\n\x0cPostureValue\x12\x13\n\x0fPOSTURE_UNKNOWN\x10\x00\x12\x12\n\x0ePOSTURE_CLOSED\x10\x01\x12\x17\n\x13POSTURE_HALF_OPENED\x10\x02\x12\x12\n\x0ePOSTURE_OPENED\x10\x03\x12\x13\n\x0fPOSTURE_FLIPPED\x10\x04\x12\x10\n\x0cPOSTURE_TENT\x10\x05\x12\x0f\n\x0bPOSTURE_MAX\x10\x06\x32\x8a\x18\n\x12\x45mulatorController\x12\x62\n\x0cstreamSensor\x12&.android.emulation.control.SensorValue\x1a&.android.emulation.control.SensorValue"\x00\x30\x01\x12]\n\tgetSensor\x12&.android.emulation.control.SensorValue\x1a&.android.emulation.control.SensorValue"\x00\x12M\n\tsetSensor\x12&.android.emulation.control.SensorValue\x1a\x16.google.protobuf.Empty"\x00\x12[\n\x10setPhysicalModel\x12-.android.emulation.control.PhysicalModelValue\x1a\x16.google.protobuf.Empty"\x00\x12r\n\x10getPhysicalModel\x12-.android.emulation.control.PhysicalModelValue\x1a-.android.emulation.control.PhysicalModelValue"\x00\x12w\n\x13streamPhysicalModel\x12-.android.emulation.control.PhysicalModelValue\x1a-.android.emulation.control.PhysicalModelValue"\x00\x30\x01\x12M\n\x0csetClipboard\x12#.android.emulation.control.ClipData\x1a\x16.google.protobuf.Empty"\x00\x12M\n\x0cgetClipboard\x12\x16.google.protobuf.Empty\x1a#.android.emulation.control.ClipData"\x00\x12R\n\x0fstreamClipboard\x12\x16.google.protobuf.Empty\x1a#.android.emulation.control.ClipData"\x00\x30\x01\x12O\n\nsetBattery\x12\'.android.emulation.control.BatteryState\x1a\x16.google.protobuf.Empty"\x00\x12O\n\ngetBattery\x12\x16.google.protobuf.Empty\x1a\'.android.emulation.control.BatteryState"\x00\x12G\n\x06setGps\x12#.android.emulation.control.GpsState\x1a\x16.google.protobuf.Empty"\x00\x12G\n\x06getGps\x12\x16.google.protobuf.Empty\x1a#.android.emulation.control.GpsState"\x00\x12S\n\x0fsendFingerprint\x12&.android.emulation.control.Fingerprint\x1a\x16.google.protobuf.Empty"\x00\x12M\n\x07sendKey\x12(.android.emulation.control.KeyboardEvent\x1a\x16.google.protobuf.Empty"\x00\x12L\n\tsendTouch\x12%.android.emulation.control.TouchEvent\x1a\x16.google.protobuf.Empty"\x00\x12L\n\tsendMouse\x12%.android.emulation.control.MouseEvent\x1a\x16.google.protobuf.Empty"\x00\x12]\n\tsendPhone\x12$.android.emulation.control.PhoneCall\x1a(.android.emulation.control.PhoneResponse"\x00\x12\\\n\x07sendSms\x12%.android.emulation.control.SmsMessage\x1a(.android.emulation.control.PhoneResponse"\x00\x12P\n\tgetStatus\x12\x16.google.protobuf.Empty\x1a).android.emulation.control.EmulatorStatus"\x00\x12[\n\rgetScreenshot\x12&.android.emulation.control.ImageFormat\x1a .android.emulation.control.Image"\x00\x12`\n\x10streamScreenshot\x12&.android.emulation.control.ImageFormat\x1a .android.emulation.control.Image"\x00\x30\x01\x12\x61\n\x0bstreamAudio\x12&.android.emulation.control.AudioFormat\x1a&.android.emulation.control.AudioPacket"\x00\x30\x01\x12Q\n\x0binjectAudio\x12&.android.emulation.control.AudioPacket\x1a\x16.google.protobuf.Empty"\x00(\x01\x12[\n\tgetLogcat\x12%.android.emulation.control.LogMessage\x1a%.android.emulation.control.LogMessage"\x00\x12`\n\x0cstreamLogcat\x12%.android.emulation.control.LogMessage\x1a%.android.emulation.control.LogMessage"\x00\x30\x01\x12M\n\nsetVmState\x12%.android.emulation.control.VmRunState\x1a\x16.google.protobuf.Empty"\x00\x12M\n\ngetVmState\x12\x16.google.protobuf.Empty\x1a%.android.emulation.control.VmRunState"\x00\x12\x80\x01\n\x18setDisplayConfigurations\x12\x30.android.emulation.control.DisplayConfigurations\x1a\x30.android.emulation.control.DisplayConfigurations"\x00\x12\x66\n\x18getDisplayConfigurations\x12\x16.google.protobuf.Empty\x1a\x30.android.emulation.control.DisplayConfigurations"\x00\x12Y\n\x12streamNotification\x12\x16.google.protobuf.Empty\x1a\'.android.emulation.control.Notification"\x00\x30\x01\x12_\n\x18rotateVirtualSceneCamera\x12).android.emulation.control.RotationRadian\x1a\x16.google.protobuf.Empty"\x00\x12^\n\x1dsetVirtualSceneCameraVelocity\x12#.android.emulation.control.Velocity\x1a\x16.google.protobuf.Empty"\x00\x12J\n\nsetPosture\x12".android.emulation.control.Posture\x1a\x16.google.protobuf.Empty"\x00\x42&\n\x1c\x63om.android.emulator.controlP\x01\xa2\x02\x03\x41\x45\x43\x62\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'android_env.proto.emulator_controller_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(
+    DESCRIPTOR, "android_env.proto.emulator_controller_pb2", _globals
+)
 if not _descriptor._USE_C_DESCRIPTORS:
-  _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'\n\034com.android.emulator.controlP\001\242\002\003AEC'
-  _globals['_PARAMETERVALUE'].fields_by_name['data']._loaded_options = None
-  _globals['_PARAMETERVALUE'].fields_by_name['data']._serialized_options = b'\020\001'
-  _globals['_IMAGE'].fields_by_name['width']._loaded_options = None
-  _globals['_IMAGE'].fields_by_name['width']._serialized_options = b'\030\001'
-  _globals['_IMAGE'].fields_by_name['height']._loaded_options = None
-  _globals['_IMAGE'].fields_by_name['height']._serialized_options = b'\030\001'
-  _globals['_VMRUNSTATE']._serialized_start=104
-  _globals['_VMRUNSTATE']._serialized_end=319
-  _globals['_VMRUNSTATE_RUNSTATE']._serialized_start=182
-  _globals['_VMRUNSTATE_RUNSTATE']._serialized_end=319
-  _globals['_PARAMETERVALUE']._serialized_start=321
-  _globals['_PARAMETERVALUE']._serialized_end=355
-  _globals['_PHYSICALMODELVALUE']._serialized_start=358
-  _globals['_PHYSICALMODELVALUE']._serialized_end=937
-  _globals['_PHYSICALMODELVALUE_STATE']._serialized_start=583
-  _globals['_PHYSICALMODELVALUE_STATE']._serialized_end=668
-  _globals['_PHYSICALMODELVALUE_PHYSICALTYPE']._serialized_start=671
-  _globals['_PHYSICALMODELVALUE_PHYSICALTYPE']._serialized_end=937
-  _globals['_SENSORVALUE']._serialized_start=940
-  _globals['_SENSORVALUE']._serialized_end=1444
-  _globals['_SENSORVALUE_STATE']._serialized_start=583
-  _globals['_SENSORVALUE_STATE']._serialized_end=668
-  _globals['_SENSORVALUE_SENSORTYPE']._serialized_start=1230
-  _globals['_SENSORVALUE_SENSORTYPE']._serialized_end=1444
-  _globals['_LOGMESSAGE']._serialized_start=1447
-  _globals['_LOGMESSAGE']._serialized_end=1657
-  _globals['_LOGMESSAGE_LOGTYPE']._serialized_start=1626
-  _globals['_LOGMESSAGE_LOGTYPE']._serialized_end=1657
-  _globals['_LOGCATENTRY']._serialized_start=1660
-  _globals['_LOGCATENTRY']._serialized_end=1922
-  _globals['_LOGCATENTRY_LOGLEVEL']._serialized_start=1810
-  _globals['_LOGCATENTRY_LOGLEVEL']._serialized_end=1922
-  _globals['_VMCONFIGURATION']._serialized_start=1925
-  _globals['_VMCONFIGURATION']._serialized_end=2165
-  _globals['_VMCONFIGURATION_VMHYPERVISORTYPE']._serialized_start=2077
-  _globals['_VMCONFIGURATION_VMHYPERVISORTYPE']._serialized_end=2165
-  _globals['_CLIPDATA']._serialized_start=2167
-  _globals['_CLIPDATA']._serialized_end=2191
-  _globals['_TOUCH']._serialized_start=2194
-  _globals['_TOUCH']._serialized_end=2444
-  _globals['_TOUCH_EVENTEXPIRATION']._serialized_start=2375
-  _globals['_TOUCH_EVENTEXPIRATION']._serialized_end=2444
-  _globals['_TOUCHEVENT']._serialized_start=2446
-  _globals['_TOUCHEVENT']._serialized_end=2526
-  _globals['_MOUSEEVENT']._serialized_start=2528
-  _globals['_MOUSEEVENT']._serialized_end=2596
-  _globals['_KEYBOARDEVENT']._serialized_start=2599
-  _globals['_KEYBOARDEVENT']._serialized_end=2920
-  _globals['_KEYBOARDEVENT_KEYCODETYPE']._serialized_start=2806
-  _globals['_KEYBOARDEVENT_KEYCODETYPE']._serialized_end=2866
-  _globals['_KEYBOARDEVENT_KEYEVENTTYPE']._serialized_start=2868
-  _globals['_KEYBOARDEVENT_KEYEVENTTYPE']._serialized_end=2920
-  _globals['_FINGERPRINT']._serialized_start=2922
-  _globals['_FINGERPRINT']._serialized_end=2972
-  _globals['_GPSSTATE']._serialized_start=2975
-  _globals['_GPSSTATE']._serialized_end=3115
-  _globals['_BATTERYSTATE']._serialized_start=3118
-  _globals['_BATTERYSTATE']._serialized_end=3637
-  _globals['_BATTERYSTATE_BATTERYSTATUS']._serialized_start=3409
-  _globals['_BATTERYSTATE_BATTERYSTATUS']._serialized_end=3496
-  _globals['_BATTERYSTATE_BATTERYCHARGER']._serialized_start=3498
-  _globals['_BATTERYSTATE_BATTERYCHARGER']._serialized_end=3555
-  _globals['_BATTERYSTATE_BATTERYHEALTH']._serialized_start=3557
-  _globals['_BATTERYSTATE_BATTERYHEALTH']._serialized_end=3637
-  _globals['_IMAGETRANSPORT']._serialized_start=3640
-  _globals['_IMAGETRANSPORT']._serialized_end=3814
-  _globals['_IMAGETRANSPORT_TRANSPORTCHANNEL']._serialized_start=3751
-  _globals['_IMAGETRANSPORT_TRANSPORTCHANNEL']._serialized_end=3814
-  _globals['_FOLDEDDISPLAY']._serialized_start=3816
-  _globals['_FOLDEDDISPLAY']._serialized_end=3896
-  _globals['_IMAGEFORMAT']._serialized_start=3899
-  _globals['_IMAGEFORMAT']._serialized_end=4256
-  _globals['_IMAGEFORMAT_IMGFORMAT']._serialized_start=4210
-  _globals['_IMAGEFORMAT_IMGFORMAT']._serialized_end=4256
-  _globals['_IMAGE']._serialized_start=4259
-  _globals['_IMAGE']._serialized_end=4410
-  _globals['_ROTATION']._serialized_start=4413
-  _globals['_ROTATION']._serialized_end=4626
-  _globals['_ROTATION_SKINROTATION']._serialized_start=4538
-  _globals['_ROTATION_SKINROTATION']._serialized_end=4626
-  _globals['_PHONECALL']._serialized_start=4629
-  _globals['_PHONECALL']._serialized_end=4873
-  _globals['_PHONECALL_OPERATION']._serialized_start=4726
-  _globals['_PHONECALL_OPERATION']._serialized_end=4873
-  _globals['_PHONERESPONSE']._serialized_start=4876
-  _globals['_PHONERESPONSE']._serialized_end=5064
-  _globals['_PHONERESPONSE_RESPONSE']._serialized_start=4962
-  _globals['_PHONERESPONSE_RESPONSE']._serialized_end=5064
-  _globals['_ENTRY']._serialized_start=5066
-  _globals['_ENTRY']._serialized_end=5101
-  _globals['_ENTRYLIST']._serialized_start=5103
-  _globals['_ENTRYLIST']._serialized_end=5163
-  _globals['_EMULATORSTATUS']._serialized_start=5166
-  _globals['_EMULATORSTATUS']._serialized_end=5355
-  _globals['_AUDIOFORMAT']._serialized_start=5358
-  _globals['_AUDIOFORMAT']._serialized_end=5612
-  _globals['_AUDIOFORMAT_SAMPLEFORMAT']._serialized_start=5531
-  _globals['_AUDIOFORMAT_SAMPLEFORMAT']._serialized_end=5578
-  _globals['_AUDIOFORMAT_CHANNELS']._serialized_start=5580
-  _globals['_AUDIOFORMAT_CHANNELS']._serialized_end=5612
-  _globals['_AUDIOPACKET']._serialized_start=5614
-  _globals['_AUDIOPACKET']._serialized_end=5717
-  _globals['_SMSMESSAGE']._serialized_start=5719
-  _globals['_SMSMESSAGE']._serialized_end=5765
-  _globals['_DISPLAYCONFIGURATION']._serialized_start=5768
-  _globals['_DISPLAYCONFIGURATION']._serialized_end=6099
-  _globals['_DISPLAYCONFIGURATION_DISPLAYFLAGS']._serialized_start=5869
-  _globals['_DISPLAYCONFIGURATION_DISPLAYFLAGS']._serialized_end=6099
-  _globals['_DISPLAYCONFIGURATIONS']._serialized_start=6101
-  _globals['_DISPLAYCONFIGURATIONS']._serialized_end=6191
-  _globals['_NOTIFICATION']._serialized_start=6194
-  _globals['_NOTIFICATION']._serialized_end=6394
-  _globals['_NOTIFICATION_EVENTTYPE']._serialized_start=6276
-  _globals['_NOTIFICATION_EVENTTYPE']._serialized_end=6394
-  _globals['_ROTATIONRADIAN']._serialized_start=6396
-  _globals['_ROTATIONRADIAN']._serialized_end=6445
-  _globals['_VELOCITY']._serialized_start=6447
-  _globals['_VELOCITY']._serialized_end=6490
-  _globals['_POSTURE']._serialized_start=6493
-  _globals['_POSTURE']._serialized_end=6725
-  _globals['_POSTURE_POSTUREVALUE']._serialized_start=6569
-  _globals['_POSTURE_POSTUREVALUE']._serialized_end=6725
-  _globals['_EMULATORCONTROLLER']._serialized_start=6728
-  _globals['_EMULATORCONTROLLER']._serialized_end=9810
+    _globals["DESCRIPTOR"]._loaded_options = None
+    _globals[
+        "DESCRIPTOR"
+    ]._serialized_options = b"\n\034com.android.emulator.controlP\001\242\002\003AEC"
+    _globals["_PARAMETERVALUE"].fields_by_name["data"]._loaded_options = None
+    _globals["_PARAMETERVALUE"].fields_by_name["data"]._serialized_options = b"\020\001"
+    _globals["_IMAGE"].fields_by_name["width"]._loaded_options = None
+    _globals["_IMAGE"].fields_by_name["width"]._serialized_options = b"\030\001"
+    _globals["_IMAGE"].fields_by_name["height"]._loaded_options = None
+    _globals["_IMAGE"].fields_by_name["height"]._serialized_options = b"\030\001"
+    _globals["_VMRUNSTATE"]._serialized_start = 104
+    _globals["_VMRUNSTATE"]._serialized_end = 319
+    _globals["_VMRUNSTATE_RUNSTATE"]._serialized_start = 182
+    _globals["_VMRUNSTATE_RUNSTATE"]._serialized_end = 319
+    _globals["_PARAMETERVALUE"]._serialized_start = 321
+    _globals["_PARAMETERVALUE"]._serialized_end = 355
+    _globals["_PHYSICALMODELVALUE"]._serialized_start = 358
+    _globals["_PHYSICALMODELVALUE"]._serialized_end = 937
+    _globals["_PHYSICALMODELVALUE_STATE"]._serialized_start = 583
+    _globals["_PHYSICALMODELVALUE_STATE"]._serialized_end = 668
+    _globals["_PHYSICALMODELVALUE_PHYSICALTYPE"]._serialized_start = 671
+    _globals["_PHYSICALMODELVALUE_PHYSICALTYPE"]._serialized_end = 937
+    _globals["_SENSORVALUE"]._serialized_start = 940
+    _globals["_SENSORVALUE"]._serialized_end = 1444
+    _globals["_SENSORVALUE_STATE"]._serialized_start = 583
+    _globals["_SENSORVALUE_STATE"]._serialized_end = 668
+    _globals["_SENSORVALUE_SENSORTYPE"]._serialized_start = 1230
+    _globals["_SENSORVALUE_SENSORTYPE"]._serialized_end = 1444
+    _globals["_LOGMESSAGE"]._serialized_start = 1447
+    _globals["_LOGMESSAGE"]._serialized_end = 1657
+    _globals["_LOGMESSAGE_LOGTYPE"]._serialized_start = 1626
+    _globals["_LOGMESSAGE_LOGTYPE"]._serialized_end = 1657
+    _globals["_LOGCATENTRY"]._serialized_start = 1660
+    _globals["_LOGCATENTRY"]._serialized_end = 1922
+    _globals["_LOGCATENTRY_LOGLEVEL"]._serialized_start = 1810
+    _globals["_LOGCATENTRY_LOGLEVEL"]._serialized_end = 1922
+    _globals["_VMCONFIGURATION"]._serialized_start = 1925
+    _globals["_VMCONFIGURATION"]._serialized_end = 2165
+    _globals["_VMCONFIGURATION_VMHYPERVISORTYPE"]._serialized_start = 2077
+    _globals["_VMCONFIGURATION_VMHYPERVISORTYPE"]._serialized_end = 2165
+    _globals["_CLIPDATA"]._serialized_start = 2167
+    _globals["_CLIPDATA"]._serialized_end = 2191
+    _globals["_TOUCH"]._serialized_start = 2194
+    _globals["_TOUCH"]._serialized_end = 2444
+    _globals["_TOUCH_EVENTEXPIRATION"]._serialized_start = 2375
+    _globals["_TOUCH_EVENTEXPIRATION"]._serialized_end = 2444
+    _globals["_TOUCHEVENT"]._serialized_start = 2446
+    _globals["_TOUCHEVENT"]._serialized_end = 2526
+    _globals["_MOUSEEVENT"]._serialized_start = 2528
+    _globals["_MOUSEEVENT"]._serialized_end = 2596
+    _globals["_KEYBOARDEVENT"]._serialized_start = 2599
+    _globals["_KEYBOARDEVENT"]._serialized_end = 2920
+    _globals["_KEYBOARDEVENT_KEYCODETYPE"]._serialized_start = 2806
+    _globals["_KEYBOARDEVENT_KEYCODETYPE"]._serialized_end = 2866
+    _globals["_KEYBOARDEVENT_KEYEVENTTYPE"]._serialized_start = 2868
+    _globals["_KEYBOARDEVENT_KEYEVENTTYPE"]._serialized_end = 2920
+    _globals["_FINGERPRINT"]._serialized_start = 2922
+    _globals["_FINGERPRINT"]._serialized_end = 2972
+    _globals["_GPSSTATE"]._serialized_start = 2975
+    _globals["_GPSSTATE"]._serialized_end = 3115
+    _globals["_BATTERYSTATE"]._serialized_start = 3118
+    _globals["_BATTERYSTATE"]._serialized_end = 3637
+    _globals["_BATTERYSTATE_BATTERYSTATUS"]._serialized_start = 3409
+    _globals["_BATTERYSTATE_BATTERYSTATUS"]._serialized_end = 3496
+    _globals["_BATTERYSTATE_BATTERYCHARGER"]._serialized_start = 3498
+    _globals["_BATTERYSTATE_BATTERYCHARGER"]._serialized_end = 3555
+    _globals["_BATTERYSTATE_BATTERYHEALTH"]._serialized_start = 3557
+    _globals["_BATTERYSTATE_BATTERYHEALTH"]._serialized_end = 3637
+    _globals["_IMAGETRANSPORT"]._serialized_start = 3640
+    _globals["_IMAGETRANSPORT"]._serialized_end = 3814
+    _globals["_IMAGETRANSPORT_TRANSPORTCHANNEL"]._serialized_start = 3751
+    _globals["_IMAGETRANSPORT_TRANSPORTCHANNEL"]._serialized_end = 3814
+    _globals["_FOLDEDDISPLAY"]._serialized_start = 3816
+    _globals["_FOLDEDDISPLAY"]._serialized_end = 3896
+    _globals["_IMAGEFORMAT"]._serialized_start = 3899
+    _globals["_IMAGEFORMAT"]._serialized_end = 4256
+    _globals["_IMAGEFORMAT_IMGFORMAT"]._serialized_start = 4210
+    _globals["_IMAGEFORMAT_IMGFORMAT"]._serialized_end = 4256
+    _globals["_IMAGE"]._serialized_start = 4259
+    _globals["_IMAGE"]._serialized_end = 4410
+    _globals["_ROTATION"]._serialized_start = 4413
+    _globals["_ROTATION"]._serialized_end = 4626
+    _globals["_ROTATION_SKINROTATION"]._serialized_start = 4538
+    _globals["_ROTATION_SKINROTATION"]._serialized_end = 4626
+    _globals["_PHONECALL"]._serialized_start = 4629
+    _globals["_PHONECALL"]._serialized_end = 4873
+    _globals["_PHONECALL_OPERATION"]._serialized_start = 4726
+    _globals["_PHONECALL_OPERATION"]._serialized_end = 4873
+    _globals["_PHONERESPONSE"]._serialized_start = 4876
+    _globals["_PHONERESPONSE"]._serialized_end = 5064
+    _globals["_PHONERESPONSE_RESPONSE"]._serialized_start = 4962
+    _globals["_PHONERESPONSE_RESPONSE"]._serialized_end = 5064
+    _globals["_ENTRY"]._serialized_start = 5066
+    _globals["_ENTRY"]._serialized_end = 5101
+    _globals["_ENTRYLIST"]._serialized_start = 5103
+    _globals["_ENTRYLIST"]._serialized_end = 5163
+    _globals["_EMULATORSTATUS"]._serialized_start = 5166
+    _globals["_EMULATORSTATUS"]._serialized_end = 5355
+    _globals["_AUDIOFORMAT"]._serialized_start = 5358
+    _globals["_AUDIOFORMAT"]._serialized_end = 5612
+    _globals["_AUDIOFORMAT_SAMPLEFORMAT"]._serialized_start = 5531
+    _globals["_AUDIOFORMAT_SAMPLEFORMAT"]._serialized_end = 5578
+    _globals["_AUDIOFORMAT_CHANNELS"]._serialized_start = 5580
+    _globals["_AUDIOFORMAT_CHANNELS"]._serialized_end = 5612
+    _globals["_AUDIOPACKET"]._serialized_start = 5614
+    _globals["_AUDIOPACKET"]._serialized_end = 5717
+    _globals["_SMSMESSAGE"]._serialized_start = 5719
+    _globals["_SMSMESSAGE"]._serialized_end = 5765
+    _globals["_DISPLAYCONFIGURATION"]._serialized_start = 5768
+    _globals["_DISPLAYCONFIGURATION"]._serialized_end = 6099
+    _globals["_DISPLAYCONFIGURATION_DISPLAYFLAGS"]._serialized_start = 5869
+    _globals["_DISPLAYCONFIGURATION_DISPLAYFLAGS"]._serialized_end = 6099
+    _globals["_DISPLAYCONFIGURATIONS"]._serialized_start = 6101
+    _globals["_DISPLAYCONFIGURATIONS"]._serialized_end = 6191
+    _globals["_NOTIFICATION"]._serialized_start = 6194
+    _globals["_NOTIFICATION"]._serialized_end = 6394
+    _globals["_NOTIFICATION_EVENTTYPE"]._serialized_start = 6276
+    _globals["_NOTIFICATION_EVENTTYPE"]._serialized_end = 6394
+    _globals["_ROTATIONRADIAN"]._serialized_start = 6396
+    _globals["_ROTATIONRADIAN"]._serialized_end = 6445
+    _globals["_VELOCITY"]._serialized_start = 6447
+    _globals["_VELOCITY"]._serialized_end = 6490
+    _globals["_POSTURE"]._serialized_start = 6493
+    _globals["_POSTURE"]._serialized_end = 6725
+    _globals["_POSTURE_POSTUREVALUE"]._serialized_start = 6569
+    _globals["_POSTURE_POSTUREVALUE"]._serialized_end = 6725
+    _globals["_EMULATORCONTROLLER"]._serialized_start = 6728
+    _globals["_EMULATORCONTROLLER"]._serialized_end = 9810
 # @@protoc_insertion_point(module_scope)

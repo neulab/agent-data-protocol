@@ -1,9 +1,9 @@
-import os
-import sys
-import pandas as pd
 import json
+import os
 import subprocess
+import sys
 
+import pandas as pd
 
 data_dir = os.path.join(os.path.dirname(__file__), "turking-bench", "tasks")
 if not os.path.exists(data_dir):

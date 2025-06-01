@@ -1,5 +1,6 @@
-from datasets import load_dataset
 import json
+
+from datasets import load_dataset
 
 
 def deserialize_to_list_of_dicts(serialized_data):
@@ -13,7 +14,7 @@ def deserialize_to_list_of_dicts(serialized_data):
     return list_of_dicts
 
 
-data = load_dataset("screenagent_dataset.py", split="train", cache_dir="./")['data']
+data = load_dataset("screenagent_dataset.py", split="train", cache_dir="./")["data"]
 
 data_for_demonstrate = [deserialize_to_list_of_dicts(data_item) for data_item in data[:5]]
 

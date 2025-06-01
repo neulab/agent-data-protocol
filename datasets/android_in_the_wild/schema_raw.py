@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
 from typing import List
+
+from pydantic import BaseModel, Field
 
 
 class SchemaRaw(BaseModel):
@@ -10,9 +11,7 @@ class SchemaRaw(BaseModel):
     android_api_level: int = Field(...)
     image_ui_annotations_text: List[str] = Field(..., alias="image/ui_annotations_text")
     results_yx_lift: List[float] = Field(..., alias="results/yx_lift")
-    image_ui_annotations_ui_types: List[str] = Field(
-        ..., alias="image/ui_annotations_ui_types"
-    )
+    image_ui_annotations_ui_types: List[str] = Field(..., alias="image/ui_annotations_ui_types")
     current_activity: str = Field(...)
     step_id: int = Field(...)
     image_channels: int = Field(..., alias="image/channels")

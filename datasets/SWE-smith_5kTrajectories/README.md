@@ -23,7 +23,7 @@ output a jsonl file containing the raw data. You can view
 Once you have created this, run the following command to create a sample (ignore the BrokenPipeError):
 
 ```bash
-export MY_DATASET="SWE-smith_5kTrajectories"  
+export MY_DATASET="SWE-smith_5kTrajectories"
 python datasets/$MY_DATASET/extract_raw.py | python scripts/jsonl_to_indented_json.py > datasets/$MY_DATASET/sample_raw.json
 ```
 
@@ -36,7 +36,7 @@ Once we have our standardized format (not yet), we will create a script that con
 We can then apply this to the sample data to create a sample in the standardized format.
 
 ```bash
-export MY_DATASET="SWE-smith_5kTrajectories" 
+export MY_DATASET="SWE-smith_5kTrajectories"
 export PYTHONPATH=`pwd`:$PYTHONPATH
 cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_indented_json.py > datasets/$MY_DATASET/sample_std.json
 ```

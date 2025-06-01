@@ -1,4 +1,3 @@
-
 def put(object: str, receptacle: str) -> str:
     """Put an object in/on a receptacle.
 
@@ -7,6 +6,7 @@ def put(object: str, receptacle: str) -> str:
     For example: put("mug 1", "desk 2")
     """
     pass
+
 
 def goto(receptacle: str) -> str:
     """Go to a location of the receptacle.
@@ -17,6 +17,7 @@ def goto(receptacle: str) -> str:
     """
     pass
 
+
 def take_from(object: str, receptacle: str) -> str:
     """Take an object from a receptacle.
 
@@ -25,6 +26,7 @@ def take_from(object: str, receptacle: str) -> str:
     For example: take_from("mug 1", "shelf 2")
     """
     pass
+
 
 def open_receptacle(receptacle: str) -> str:
     """Open a receptacle.
@@ -35,6 +37,7 @@ def open_receptacle(receptacle: str) -> str:
     """
     pass
 
+
 def toggle(object_or_receptacle: str) -> str:
     """Toggle an object or receptacle.
 
@@ -44,14 +47,16 @@ def toggle(object_or_receptacle: str) -> str:
     """
     pass
 
+
 def close_receptacle(receptacle: str) -> str:
     """Close a receptacle.
 
     This is used for interacting with a household environment.
-    
+
     For example: close_receptacle("microwave 1")
     """
     pass
+
 
 def clean(object: str, receptacle: str) -> str:
     """Clean an object with a receptacle.
@@ -62,6 +67,7 @@ def clean(object: str, receptacle: str) -> str:
     """
     pass
 
+
 def heat(object: str, receptacle: str) -> str:
     """Heat an object with a receptacle.
 
@@ -70,6 +76,7 @@ def heat(object: str, receptacle: str) -> str:
     For example: heat("egg 1", "microwave 1")
     """
     pass
+
 
 def cool(object: str, receptacle: str) -> str:
     """Cool an object with a receptacle.
@@ -89,6 +96,7 @@ def use(receptacle: str) -> str:
     For example: use("lamp 1")
     """
     pass
+
 
 def look() -> str:
     """Look around. It will return what you see in the room.

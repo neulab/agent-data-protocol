@@ -4,39 +4,44 @@
 # source: android_env/proto/a11y/android_accessibility_node_info.proto
 # Protobuf Python Version: 5.27.2
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
     _runtime_version.Domain.PUBLIC,
     5,
     27,
     2,
-    '',
-    'android_env/proto/a11y/android_accessibility_node_info.proto'
+    "",
+    "android_env/proto/a11y/android_accessibility_node_info.proto",
 )
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-from android_env.proto.a11y import android_accessibility_action_pb2 as android__env_dot_proto_dot_a11y_dot_android__accessibility__action__pb2
-from android_env.proto.a11y import android_accessibility_node_info_clickable_span_pb2 as android__env_dot_proto_dot_a11y_dot_android__accessibility__node__info__clickable__span__pb2
-from android_env.proto.a11y import rect_pb2 as android__env_dot_proto_dot_a11y_dot_rect__pb2
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n<android_env/proto/a11y/android_accessibility_node_info.proto\x12\x0b\x61ndroid_env\x1a\x39\x61ndroid_env/proto/a11y/android_accessibility_action.proto\x1aKandroid_env/proto/a11y/android_accessibility_node_info_clickable_span.proto\x1a!android_env/proto/a11y/rect.proto\"\xcd\x06\n\x1c\x41ndroidAccessibilityNodeInfo\x12\x11\n\tunique_id\x18\x01 \x01(\x05\x12\x30\n\x10\x62ounds_in_screen\x18\x02 \x01(\x0b\x32\x16.android_env.ProtoRect\x12\x12\n\nclass_name\x18\x03 \x01(\t\x12\x1b\n\x13\x63ontent_description\x18\x04 \x01(\t\x12\x11\n\thint_text\x18\x05 \x01(\t\x12\x14\n\x0cpackage_name\x18\x06 \x01(\t\x12\x0c\n\x04text\x18\x07 \x01(\t\x12\x1c\n\x14text_selection_start\x18\x08 \x01(\x03\x12\x1a\n\x12text_selection_end\x18\t \x01(\x03\x12\x1d\n\x15view_id_resource_name\x18\n \x01(\t\x12\x11\n\twindow_id\x18\x0b \x01(\x05\x12\x14\n\x0cis_checkable\x18\x0c \x01(\x08\x12\x12\n\nis_checked\x18\r \x01(\x08\x12\x14\n\x0cis_clickable\x18\x0e \x01(\x08\x12\x13\n\x0bis_editable\x18\x0f \x01(\x08\x12\x12\n\nis_enabled\x18\x10 \x01(\x08\x12\x14\n\x0cis_focusable\x18\x11 \x01(\x08\x12\x12\n\nis_focused\x18\x12 \x01(\x08\x12\x19\n\x11is_long_clickable\x18\x13 \x01(\x08\x12\x13\n\x0bis_password\x18\x14 \x01(\x08\x12\x15\n\ris_scrollable\x18\x15 \x01(\x08\x12\x13\n\x0bis_selected\x18\x16 \x01(\x08\x12\x1a\n\x12is_visible_to_user\x18\x17 \x01(\x08\x12\x38\n\x07\x61\x63tions\x18\x18 \x03(\x0b\x32\'.android_env.AndroidAccessibilityAction\x12\x15\n\tchild_ids\x18\x19 \x03(\x05\x42\x02\x10\x01\x12O\n\x0f\x63lickable_spans\x18\x1a \x03(\x0b\x32\x36.android_env.AndroidAccessibilityNodeInfoClickableSpan\x12\r\n\x05\x64\x65pth\x18\x1b \x01(\x05\x12\x15\n\rlabeled_by_id\x18\x1c \x01(\x05\x12\x14\n\x0clabel_for_id\x18\x1d \x01(\x05\x12\x15\n\rdrawing_order\x18\x1e \x01(\x05\x12\x14\n\x0ctooltip_text\x18\x1f \x01(\tB0\n,com.google.androidenv.accessibilityforwarderP\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b"\n<android_env/proto/a11y/android_accessibility_node_info.proto\x12\x0b\x61ndroid_env\x1a\x39\x61ndroid_env/proto/a11y/android_accessibility_action.proto\x1aKandroid_env/proto/a11y/android_accessibility_node_info_clickable_span.proto\x1a!android_env/proto/a11y/rect.proto\"\xcd\x06\n\x1c\x41ndroidAccessibilityNodeInfo\x12\x11\n\tunique_id\x18\x01 \x01(\x05\x12\x30\n\x10\x62ounds_in_screen\x18\x02 \x01(\x0b\x32\x16.android_env.ProtoRect\x12\x12\n\nclass_name\x18\x03 \x01(\t\x12\x1b\n\x13\x63ontent_description\x18\x04 \x01(\t\x12\x11\n\thint_text\x18\x05 \x01(\t\x12\x14\n\x0cpackage_name\x18\x06 \x01(\t\x12\x0c\n\x04text\x18\x07 \x01(\t\x12\x1c\n\x14text_selection_start\x18\x08 \x01(\x03\x12\x1a\n\x12text_selection_end\x18\t \x01(\x03\x12\x1d\n\x15view_id_resource_name\x18\n \x01(\t\x12\x11\n\twindow_id\x18\x0b \x01(\x05\x12\x14\n\x0cis_checkable\x18\x0c \x01(\x08\x12\x12\n\nis_checked\x18\r \x01(\x08\x12\x14\n\x0cis_clickable\x18\x0e \x01(\x08\x12\x13\n\x0bis_editable\x18\x0f \x01(\x08\x12\x12\n\nis_enabled\x18\x10 \x01(\x08\x12\x14\n\x0cis_focusable\x18\x11 \x01(\x08\x12\x12\n\nis_focused\x18\x12 \x01(\x08\x12\x19\n\x11is_long_clickable\x18\x13 \x01(\x08\x12\x13\n\x0bis_password\x18\x14 \x01(\x08\x12\x15\n\ris_scrollable\x18\x15 \x01(\x08\x12\x13\n\x0bis_selected\x18\x16 \x01(\x08\x12\x1a\n\x12is_visible_to_user\x18\x17 \x01(\x08\x12\x38\n\x07\x61\x63tions\x18\x18 \x03(\x0b\x32'.android_env.AndroidAccessibilityAction\x12\x15\n\tchild_ids\x18\x19 \x03(\x05\x42\x02\x10\x01\x12O\n\x0f\x63lickable_spans\x18\x1a \x03(\x0b\x32\x36.android_env.AndroidAccessibilityNodeInfoClickableSpan\x12\r\n\x05\x64\x65pth\x18\x1b \x01(\x05\x12\x15\n\rlabeled_by_id\x18\x1c \x01(\x05\x12\x14\n\x0clabel_for_id\x18\x1d \x01(\x05\x12\x15\n\rdrawing_order\x18\x1e \x01(\x05\x12\x14\n\x0ctooltip_text\x18\x1f \x01(\tB0\n,com.google.androidenv.accessibilityforwarderP\x01\x62\x06proto3"
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'android_env.proto.a11y.android_accessibility_node_info_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(
+    DESCRIPTOR, "android_env.proto.a11y.android_accessibility_node_info_pb2", _globals
+)
 if not _descriptor._USE_C_DESCRIPTORS:
-  _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'\n,com.google.androidenv.accessibilityforwarderP\001'
-  _globals['_ANDROIDACCESSIBILITYNODEINFO'].fields_by_name['child_ids']._loaded_options = None
-  _globals['_ANDROIDACCESSIBILITYNODEINFO'].fields_by_name['child_ids']._serialized_options = b'\020\001'
-  _globals['_ANDROIDACCESSIBILITYNODEINFO']._serialized_start=249
-  _globals['_ANDROIDACCESSIBILITYNODEINFO']._serialized_end=1094
+    _globals["DESCRIPTOR"]._loaded_options = None
+    _globals[
+        "DESCRIPTOR"
+    ]._serialized_options = b"\n,com.google.androidenv.accessibilityforwarderP\001"
+    _globals["_ANDROIDACCESSIBILITYNODEINFO"].fields_by_name["child_ids"]._loaded_options = None
+    _globals["_ANDROIDACCESSIBILITYNODEINFO"].fields_by_name[
+        "child_ids"
+    ]._serialized_options = b"\020\001"
+    _globals["_ANDROIDACCESSIBILITYNODEINFO"]._serialized_start = 249
+    _globals["_ANDROIDACCESSIBILITYNODEINFO"]._serialized_end = 1094
 # @@protoc_insertion_point(module_scope)

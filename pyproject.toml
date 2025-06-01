@@ -1,0 +1,52 @@
+[tool.ruff]
+target-version = "py38"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "W",  # pycodestyle warnings
+]
+ignore = [
+    "E501",  # line too long, handled by formatter
+    "E722",  # do not use bare except
+    "F841",  # local variable is assigned to but never used
+    "E731",  # do not assign a lambda expression, use a def
+    "F821",  # undefined name
+]
+
+[tool.ruff.lint.per-file-ignores]
+"datasets/**/*.py" = ["E722", "F841", "E731", "F821"]
+"scripts/**/*.py" = ["F841"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.10"  # Updated to support pattern matching
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+namespace_packages = true
+explicit_package_bases = true
+exclude = [
+    "datasets/",
+    "scripts/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "datasets.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "datasets.androidcontrol.*",
+]
+ignore_errors = true

@@ -1,23 +1,28 @@
+from typing import List
 
 from pydantic import BaseModel
-from typing import List
+
 
 class OCR(BaseModel):
     text: List[str]
     value: List[List[float]]
 
+
 class Color(BaseModel):
     text: List[str]
     value: List[List[float]]
+
 
 class Icon(BaseModel):
     text: List[str]
     value: List[List[float]]
 
+
 class Box(BaseModel):
     top_left: List[List[float]]
     bottom_right: List[List[float]]
     label: List[str]
+
 
 class SchemaRaw(BaseModel):
     id: str
