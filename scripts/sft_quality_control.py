@@ -179,6 +179,9 @@ def create_function_thought_chart(results):
 
 
 def main():
+    # Create output directory if it doesn't exist
+    os.makedirs("quality-control-results", exist_ok=True)
+    
     # Find all sample_sft.json files
     files = glob.glob("datasets/*/sample_sft.json")
     print(f"Found {len(files)} dataset files")
