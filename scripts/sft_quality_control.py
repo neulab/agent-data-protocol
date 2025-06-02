@@ -30,7 +30,7 @@ VALID_TOOLS = [
 
 def analyze_dataset(file_path):
     """Analyze a single dataset file and return statistics."""
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding='utf-8') as f:
         data = json.load(f)
 
     # Extract dataset name from path
@@ -46,7 +46,9 @@ def analyze_dataset(file_path):
     invalid_tools = set()
 
     for conversation in data:
-        conversation_has_finish = False
+        # conversation_has_finish = False
+        # Single round conversations are considered finished
+        conversation_has_finish = len(conversation.get("conversations", [])) == 2 
         for message in conversation.get("conversations", []):
             role = message.get("from", "unknown")
             content = message.get("value", "")
@@ -64,15 +66,19 @@ def analyze_dataset(file_path):
                 # Check if it's a finish action
                 if function_name == "finish":
                     conversation_has_finish = True
+                    # Automatically count finish actions as having thoughts
+                    function_thoughts += 1
 
                 # Check if it's a valid tool
                 if function_name not in VALID_TOOLS:
                     invalid_tools.add(function_name)
 
-                # Check for thoughts before function call
-                thought_match = THOUGHT_PATTERN.search(content)
-                if thought_match and thought_match.group(1).strip():
-                    function_thoughts += 1
+                # Only check for thoughts if not a finish action
+                if function_name != "finish":  
+                    thought_match = THOUGHT_PATTERN.search(content)
+                    if thought_match and thought_match.group(1).strip():
+                        function_thoughts += 1
+                        
             elif "<function=" in content:
                 # Alternative pattern for function calls without </function> closing tag
                 match = re.search(r"<function=([^>]+)>", content)
@@ -263,7 +269,7 @@ def generate_markdown_table(results):
         markdown += f"| {dataset} | {function_names_check} | {has_finish} | {valid_tools} | {thought_check} | {valid_roles} |\n"
 
     # Write to file
-    with open("quality-control-results/sft_quality_check.md", "w") as f:
+    with open("quality-control-results/sft_quality_check.md", "w", encoding='utf-8') as f:
         f.write(markdown)
 
     return markdown
