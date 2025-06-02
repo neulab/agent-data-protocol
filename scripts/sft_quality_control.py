@@ -237,12 +237,12 @@ def generate_markdown_table(results):
     # Initialize lists for passing and failing datasets
     passing_datasets = []
     failing_datasets = []
-    
+
     # Process each result and categorize as passing or failing
     for result in results:
         dataset = result["dataset"]
         checks = {}
-        
+
         # Check if function_names.csv adds up to close to 1.0
         function_names_sum = result["function_names_sum"]
         checks["function_names"] = 0.95 <= function_names_sum <= 1.05
@@ -252,9 +252,17 @@ def generate_markdown_table(results):
             checks["function_names"] = False
 
         # Check if finish action count > 80% or len1 conversation count > 80%
-        finish_percent = result["finish_action_count"] / result["conversation_count"] * 100 if result["conversation_count"] > 0 else 0
-        len1_percent = result["len1_conversation_count"] / result["conversation_count"] * 100 if result["conversation_count"] > 0 else 0
-        
+        finish_percent = (
+            result["finish_action_count"] / result["conversation_count"] * 100
+            if result["conversation_count"] > 0
+            else 0
+        )
+        len1_percent = (
+            result["len1_conversation_count"] / result["conversation_count"] * 100
+            if result["conversation_count"] > 0
+            else 0
+        )
+
         if finish_percent > 80:
             has_finish = f"✅ (finish = {finish_percent:.1f}%)"
             checks["has_finish"] = True
@@ -267,7 +275,9 @@ def generate_markdown_table(results):
 
         # Check if only valid tools are used
         checks["valid_tools"] = not result["invalid_tools"] and result["function_calls"] > 0
-        valid_tools = "✅" if checks["valid_tools"] else f"❌ ({', '.join(result['invalid_tools'])})"
+        valid_tools = (
+            "✅" if checks["valid_tools"] else f"❌ ({', '.join(result['invalid_tools'])})"
+        )
         if result["function_calls"] == 0:
             valid_tools = "❌ (No functions)"
             checks["valid_tools"] = False
@@ -292,35 +302,35 @@ def generate_markdown_table(results):
             "valid_tools": valid_tools,
             "thought_check": thought_check,
             "valid_roles": valid_roles,
-            "all_pass": all(checks.values())
+            "all_pass": all(checks.values()),
         }
-        
+
         # Add to appropriate list
         if dataset_entry["all_pass"]:
             passing_datasets.append(dataset_entry)
         else:
             failing_datasets.append(dataset_entry)
-    
+
     # Create markdown content
     markdown = "# SFT Quality Control Results\n\n"
-    
+
     # Table for passing datasets
     markdown += "## Passing Datasets\n\n"
     if passing_datasets:
         markdown += "| Dataset | Function Names Sum to 1.0 | Finish or Len1 | Only Valid Tools | >80% Functions Have Thoughts | Valid Roles |\n"
         markdown += "|---------|-------------------------|-------------------|-----------------|----------------------------|------------|\n"
-        
+
         for entry in passing_datasets:
             markdown += f"| {entry['dataset']} | {entry['function_names_check']} | {entry['has_finish']} | {entry['valid_tools']} | {entry['thought_check']} | {entry['valid_roles']} |\n"
     else:
         markdown += "No datasets passed all quality checks.\n\n"
-    
+
     # Table for failing datasets
     markdown += "\n## Failing Datasets\n\n"
     if failing_datasets:
         markdown += "| Dataset | Function Names Sum to 1.0 | Finish or Len1 | Only Valid Tools | >80% Functions Have Thoughts | Valid Roles |\n"
         markdown += "|---------|-------------------------|-------------------|-----------------|----------------------------|------------|\n"
-        
+
         for entry in failing_datasets:
             markdown += f"| {entry['dataset']} | {entry['function_names_check']} | {entry['has_finish']} | {entry['valid_tools']} | {entry['thought_check']} | {entry['valid_roles']} |\n"
     else:
