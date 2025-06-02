@@ -42,13 +42,14 @@ def analyze_dataset(file_path):
     function_calls = 0
     function_names = Counter()
     function_thoughts = 0
-    has_finish_action = False
+    finish_action_count = 0
+    len1_conversation_count = 0
     invalid_tools = set()
 
     for conversation in data:
-        # conversation_has_finish = False
-        # Single round conversations are considered finished
-        conversation_has_finish = len(conversation.get("conversations", [])) == 2
+        conversation_has_finish = False
+        if len(conversation.get("conversations", [])) == 2:
+            len1_conversation_count += 1
         for message in conversation.get("conversations", []):
             role = message.get("from", "unknown")
             content = message.get("value", "")
@@ -97,7 +98,7 @@ def analyze_dataset(file_path):
 
         # Update has_finish_action if this conversation has a finish action
         if conversation_has_finish:
-            has_finish_action = True
+            finish_action_count += 1
 
     # Calculate function names sum to check if close to 1.0
     function_names_sum = sum(function_names.values()) / function_calls if function_calls > 0 else 0
@@ -117,7 +118,8 @@ def analyze_dataset(file_path):
         "function_names": dict(function_names),
         "function_thoughts": function_thoughts,
         "function_names_sum": function_names_sum,
-        "has_finish_action": has_finish_action,
+        "finish_action_count": finish_action_count,
+        "len1_conversation_count": len1_conversation_count,
         "invalid_tools": list(invalid_tools),
         "thought_percentage": thought_percentage,
         "valid_roles": valid_roles,
@@ -234,7 +236,7 @@ def generate_markdown_table(results):
     """Generate a markdown table checking the specified conditions for each dataset."""
     # Table header
     markdown = "# SFT Quality Control Results\n\n"
-    markdown += "| Dataset | Function Names Sum to 1.0 | Has Finish Action | Only Valid Tools | >80% Functions Have Thoughts | Valid Roles |\n"
+    markdown += "| Dataset | Function Names Sum to 1.0 | Finish or Len1 | Only Valid Tools | >80% Functions Have Thoughts | Valid Roles |\n"
     markdown += "|---------|-------------------------|-------------------|-----------------|----------------------------|------------|\n"
 
     for result in results:
@@ -246,8 +248,13 @@ def generate_markdown_table(results):
         if function_names_sum == 0:
             function_names_check = "❌ (No functions)"
 
-        # Check if finish actions are included
-        has_finish = "✅" if result["has_finish_action"] else "❌"
+        # Check if finish action count > 80% or len1 conversation count > 80%
+        if result["finish_action_count"] > 0.8 * result["conversation_count"]:
+            has_finish = f"✅ (finish = {result['finish_action_count'] / result['conversation_count'] * 100:.1f}%)"
+        elif result["len1_conversation_count"] > 0.8 * result["conversation_count"]:
+            has_finish = f"✅ (len1 = {result['len1_conversation_count'] / result['conversation_count'] * 100:.1f}%)"
+        else:
+            has_finish = "❌"
 
         # Check if only valid tools are used
         valid_tools = (
@@ -294,7 +301,12 @@ def main():
         print(f"  Function calls: {result['function_calls']}")
         print(f"  Function thoughts: {result['function_thoughts']}")
         print(f"  Function names sum: {result['function_names_sum']:.2f}")
-        print(f"  Has finish action: {result['has_finish_action']}")
+        print(
+            f"  Finish action count: {result['finish_action_count']}/{result['conversation_count'] * 100:.1f}%"
+        )
+        print(
+            f"  Len1 conversation count: {result['len1_conversation_count']}/{result['conversation_count'] * 100:.1f}%"
+        )
         print(f"  Invalid tools: {result['invalid_tools']}")
         print(f"  Thought percentage: {result['thought_percentage']:.1f}%")
         print(f"  Valid roles: {result['valid_roles']}")
