@@ -233,47 +233,98 @@ def create_function_thought_chart(results):
 
 
 def generate_markdown_table(results):
-    """Generate a markdown table checking the specified conditions for each dataset."""
-    # Table header
-    markdown = "# SFT Quality Control Results\n\n"
-    markdown += "| Dataset | Function Names Sum to 1.0 | Finish or Len1 | Only Valid Tools | >80% Functions Have Thoughts | Valid Roles |\n"
-    markdown += "|---------|-------------------------|-------------------|-----------------|----------------------------|------------|\n"
-
+    """Generate separate markdown tables for passing and failing datasets."""
+    # Initialize lists for passing and failing datasets
+    passing_datasets = []
+    failing_datasets = []
+    
+    # Process each result and categorize as passing or failing
     for result in results:
         dataset = result["dataset"]
-
+        checks = {}
+        
         # Check if function_names.csv adds up to close to 1.0
         function_names_sum = result["function_names_sum"]
-        function_names_check = "✅" if 0.95 <= function_names_sum <= 1.05 else "❌"
+        checks["function_names"] = 0.95 <= function_names_sum <= 1.05
+        function_names_check = "✅" if checks["function_names"] else "❌"
         if function_names_sum == 0:
             function_names_check = "❌ (No functions)"
+            checks["function_names"] = False
 
         # Check if finish action count > 80% or len1 conversation count > 80%
-        if result["finish_action_count"] > 0.8 * result["conversation_count"]:
-            has_finish = f"✅ (finish = {result['finish_action_count'] / result['conversation_count'] * 100:.1f}%)"
-        elif result["len1_conversation_count"] > 0.8 * result["conversation_count"]:
-            has_finish = f"✅ (len1 = {result['len1_conversation_count'] / result['conversation_count'] * 100:.1f}%)"
+        finish_percent = result["finish_action_count"] / result["conversation_count"] * 100 if result["conversation_count"] > 0 else 0
+        len1_percent = result["len1_conversation_count"] / result["conversation_count"] * 100 if result["conversation_count"] > 0 else 0
+        
+        if finish_percent > 80:
+            has_finish = f"✅ (finish = {finish_percent:.1f}%)"
+            checks["has_finish"] = True
+        elif len1_percent > 80:
+            has_finish = f"✅ (len1 = {len1_percent:.1f}%)"
+            checks["has_finish"] = True
         else:
             has_finish = "❌"
+            checks["has_finish"] = False
 
         # Check if only valid tools are used
-        valid_tools = (
-            "✅" if not result["invalid_tools"] else f"❌ ({', '.join(result['invalid_tools'])})"
-        )
+        checks["valid_tools"] = not result["invalid_tools"] and result["function_calls"] > 0
+        valid_tools = "✅" if checks["valid_tools"] else f"❌ ({', '.join(result['invalid_tools'])})"
         if result["function_calls"] == 0:
             valid_tools = "❌ (No functions)"
+            checks["valid_tools"] = False
 
         # Check if >80% of functions have thoughts
         thought_percentage = result["thought_percentage"]
-        thought_check = "✅" if thought_percentage >= 80 else f"❌ ({thought_percentage:.1f}%)"
+        checks["thought_check"] = thought_percentage >= 80 and result["function_calls"] > 0
+        thought_check = "✅" if checks["thought_check"] else f"❌ ({thought_percentage:.1f}%)"
         if result["function_calls"] == 0:
             thought_check = "❌ (No functions)"
+            checks["thought_check"] = False
 
         # Check if roles are valid
-        valid_roles = "✅" if result["valid_roles"] else "❌"
+        checks["valid_roles"] = result["valid_roles"]
+        valid_roles = "✅" if checks["valid_roles"] else "❌"
 
-        # Add row to table
-        markdown += f"| {dataset} | {function_names_check} | {has_finish} | {valid_tools} | {thought_check} | {valid_roles} |\n"
+        # Create dataset entry
+        dataset_entry = {
+            "dataset": dataset,
+            "function_names_check": function_names_check,
+            "has_finish": has_finish,
+            "valid_tools": valid_tools,
+            "thought_check": thought_check,
+            "valid_roles": valid_roles,
+            "all_pass": all(checks.values())
+        }
+        
+        # Add to appropriate list
+        if dataset_entry["all_pass"]:
+            passing_datasets.append(dataset_entry)
+        else:
+            failing_datasets.append(dataset_entry)
+    
+    # Create markdown content
+    markdown = "# SFT Quality Control Results\n\n"
+    
+    # Table for passing datasets
+    markdown += "## Passing Datasets\n\n"
+    if passing_datasets:
+        markdown += "| Dataset | Function Names Sum to 1.0 | Finish or Len1 | Only Valid Tools | >80% Functions Have Thoughts | Valid Roles |\n"
+        markdown += "|---------|-------------------------|-------------------|-----------------|----------------------------|------------|\n"
+        
+        for entry in passing_datasets:
+            markdown += f"| {entry['dataset']} | {entry['function_names_check']} | {entry['has_finish']} | {entry['valid_tools']} | {entry['thought_check']} | {entry['valid_roles']} |\n"
+    else:
+        markdown += "No datasets passed all quality checks.\n\n"
+    
+    # Table for failing datasets
+    markdown += "\n## Failing Datasets\n\n"
+    if failing_datasets:
+        markdown += "| Dataset | Function Names Sum to 1.0 | Finish or Len1 | Only Valid Tools | >80% Functions Have Thoughts | Valid Roles |\n"
+        markdown += "|---------|-------------------------|-------------------|-----------------|----------------------------|------------|\n"
+        
+        for entry in failing_datasets:
+            markdown += f"| {entry['dataset']} | {entry['function_names_check']} | {entry['has_finish']} | {entry['valid_tools']} | {entry['thought_check']} | {entry['valid_roles']} |\n"
+    else:
+        markdown += "All datasets passed all quality checks.\n\n"
 
     # Write to file
     with open("quality-control-results/sft_quality_check.md", "w", encoding="utf-8") as f:

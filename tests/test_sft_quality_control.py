@@ -1,6 +1,6 @@
 import json
 import os
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 import pytest
 
@@ -9,6 +9,7 @@ from scripts.sft_quality_control import (
     create_function_names_chart,
     create_function_thought_chart,
     create_roles_chart,
+    generate_markdown_table,
 )
 
 
@@ -178,3 +179,78 @@ def test_analyze_dataset_with_gpt_role_functions(tmp_path):
     assert result["function_names"]["finish"] == 1, (
         "Should detect 'finish' function in 'gpt' role message"
     )
+
+
+def test_generate_markdown_table_separation():
+    """Test that generate_markdown_table separates passing and failing datasets."""
+    # Create test results with both passing and failing datasets
+    results = [
+        # Passing dataset
+        {
+            "dataset": "passing_dataset",
+            "conversation_count": 100,
+            "roles": {"human": 100, "gpt": 100},
+            "function_calls": 50,
+            "function_names": {"execute_bash": 25, "finish": 25},
+            "function_thoughts": 45,
+            "function_names_sum": 1.0,
+            "finish_action_count": 90,
+            "len1_conversation_count": 0,
+            "invalid_tools": [],
+            "thought_percentage": 90.0,
+            "valid_roles": True,
+        },
+        # Failing dataset (missing finish actions)
+        {
+            "dataset": "failing_dataset_1",
+            "conversation_count": 100,
+            "roles": {"human": 100, "gpt": 100},
+            "function_calls": 50,
+            "function_names": {"execute_bash": 25, "finish": 5},
+            "function_thoughts": 45,
+            "function_names_sum": 0.6,  # This will fail
+            "finish_action_count": 5,
+            "len1_conversation_count": 0,
+            "invalid_tools": [],
+            "thought_percentage": 90.0,
+            "valid_roles": True,
+        },
+        # Failing dataset (invalid tools)
+        {
+            "dataset": "failing_dataset_2",
+            "conversation_count": 100,
+            "roles": {"human": 100, "gpt": 100},
+            "function_calls": 50,
+            "function_names": {"execute_bash": 25, "finish": 25},
+            "function_thoughts": 45,
+            "function_names_sum": 1.0,
+            "finish_action_count": 90,
+            "len1_conversation_count": 0,
+            "invalid_tools": ["invalid_tool"],  # This will fail
+            "thought_percentage": 90.0,
+            "valid_roles": True,
+        },
+    ]
+
+    # Generate markdown table with mocked file operations
+    with patch("builtins.open", mock_open()):
+        markdown = generate_markdown_table(results)
+
+    # Check that the markdown contains separate sections
+    assert "## Passing Datasets" in markdown
+    assert "## Failing Datasets" in markdown
+
+    # Check that datasets are in the correct sections
+    passing_section = markdown.split("## Failing Datasets")[0]
+    failing_section = markdown.split("## Failing Datasets")[1]
+
+    assert "passing_dataset" in passing_section
+    assert "failing_dataset_1" in failing_section
+    assert "failing_dataset_2" in failing_section
+
+    # Make sure failing datasets are not in the passing section
+    assert "failing_dataset_1" not in passing_section
+    assert "failing_dataset_2" not in passing_section
+
+    # Make sure passing dataset is not in the failing section
+    assert "passing_dataset" not in failing_section
