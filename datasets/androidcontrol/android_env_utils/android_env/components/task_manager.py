@@ -203,7 +203,7 @@ class TaskManager:
             if self._stats["episode_steps"] > self._task.max_episode_steps:
                 self._stats["reset_count_max_duration_reached"] += 1
                 logging.info(
-                    "Maximum task duration (%r steps) reached. " "Truncating the episode.",
+                    "Maximum task duration (%r steps) reached. Truncating the episode.",
                     self._task.max_episode_steps,
                 )
                 return dm_env.truncation
@@ -214,7 +214,7 @@ class TaskManager:
             if task_duration > datetime.timedelta(seconds=int(max_episode_sec)):
                 self._stats["reset_count_max_duration_reached"] += 1
                 logging.info(
-                    "Maximum task duration (%r sec) reached. " "Truncating the episode.",
+                    "Maximum task duration (%r sec) reached. Truncating the episode.",
                     max_episode_sec,
                 )
                 return dm_env.truncation

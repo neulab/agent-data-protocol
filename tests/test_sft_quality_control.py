@@ -1,192 +1,180 @@
-#!/usr/bin/env python3
-"""
-Tests for the SFT quality control script.
-"""
-
 import json
 import os
-import shutil
-import sys
-import tempfile
+from unittest.mock import patch
 
 import pytest
 
-# Add the parent directory to the path so we can import the script
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from validator.sft_quality_control import (
-    analyze_sft_data,
-    extract_function_calls,
-    find_sft_files,
-    has_thought,
+from scripts.sft_quality_control import (
+    analyze_dataset,
+    create_function_names_chart,
+    create_function_thought_chart,
+    create_roles_chart,
 )
 
 
 @pytest.fixture
-def test_environment():
-    """Set up test environment."""
-    # Create a temporary directory
-    test_dir = tempfile.mkdtemp()
-
-    # Create test datasets
-    dataset1_dir = os.path.join(test_dir, "dataset1")
-    dataset2_dir = os.path.join(test_dir, "dataset2")
-    os.makedirs(dataset1_dir, exist_ok=True)
-    os.makedirs(dataset2_dir, exist_ok=True)
-
-    # Create test SFT files
-    # Dataset 1 - with thoughts
-    dataset1_data = [
+def sample_data():
+    """Create a sample dataset for testing."""
+    return [
         {
-            "id": "test1",
             "conversations": [
-                {"role": "system", "content": "System message"},
-                {"role": "user", "content": "User message"},
+                {"from": "human", "value": "Hello, can you help me?"},
+                {"from": "assistant", "value": "I'll help you with that."},
                 {
-                    "role": "assistant",
-                    "content": "THOUGHT: I need to execute a command\n\nACTION: \n```execute_bash(command='ls -la')```\n",
+                    "from": "function_call",
+                    "value": "I need to search for information.<function=search>query=test</function>",
                 },
-                {"role": "user", "content": "Another user message"},
-                {
-                    "role": "assistant",
-                    "content": "THOUGHT: I'll use Python\n\nACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>",
-                },
-            ],
+                {"from": "function_result", "value": "Search results for test"},
+                {"from": "assistant", "value": "Here are the results."},
+            ]
         },
         {
-            "id": "test2",
             "conversations": [
-                {"role": "system", "content": "System message"},
-                {"role": "user", "content": "User message"},
+                {"from": "human", "value": "Another question"},
+                {"from": "assistant", "value": "Let me think about that."},
                 {
-                    "role": "assistant",
-                    "content": "THOUGHT: I'll check the file\n\nACTION: \n```click(bid='123')```\n",
+                    "from": "function_call",
+                    "value": "<function=calculate>1+1</function>",
                 },
-            ],
+                {"from": "function_result", "value": "2"},
+                {
+                    "from": "function_call",
+                    "value": "Let me think about this more.<function=search>query=another test</function>",
+                },
+            ]
         },
     ]
 
-    # Dataset 2 - without thoughts
-    dataset2_data = [
+
+def test_analyze_dataset(sample_data, tmp_path):
+    """Test the analyze_dataset function."""
+    # Create a temporary dataset file
+    dataset_dir = tmp_path / "test_dataset"
+    dataset_dir.mkdir()
+    dataset_file = dataset_dir / "sample_sft.json"
+
+    with open(dataset_file, "w") as f:
+        json.dump(sample_data, f)
+
+    # Analyze the dataset
+    result = analyze_dataset(str(dataset_file))
+
+    # Check the results
+    assert result["dataset"] == "test_dataset"
+    assert result["conversation_count"] == 2
+    assert result["roles"]["human"] == 2
+    assert result["roles"]["assistant"] == 3
+    assert result["roles"]["function_call"] == 3
+    assert result["roles"]["function_result"] == 2
+    assert result["function_calls"] == 3
+    assert result["function_names"]["search"] == 2
+    assert result["function_names"]["calculate"] == 1
+    assert result["function_thoughts"] == 2  # Two function calls have thoughts before them
+
+
+@pytest.mark.parametrize(
+    "chart_function",
+    [create_roles_chart, create_function_names_chart, create_function_thought_chart],
+)
+def test_chart_creation(chart_function, tmp_path, monkeypatch):
+    """Test that chart creation functions run without errors."""
+    # Mock the results
+    results = [
         {
-            "id": "test3",
-            "conversations": [
-                {"role": "user", "content": "User message"},
-                {
-                    "role": "assistant",
-                    "content": "ACTION: \n```execute_bash(command='echo hello')```\n",
-                },
-                {"role": "user", "content": "Another message"},
-                {"role": "assistant", "content": "ACTION: \n```click(bid='456')```\n"},
-            ],
+            "dataset": "test_dataset",
+            "conversation_count": 2,
+            "roles": {"human": 2, "assistant": 3, "function_call": 3, "function_result": 2},
+            "function_calls": 3,
+            "function_names": {"search": 2, "calculate": 1},
+            "function_thoughts": 1,
         }
     ]
 
-    # Write to files
-    with open(os.path.join(dataset1_dir, "test_sft.jsonl"), "w") as f:
-        for item in dataset1_data:
-            f.write(json.dumps(item) + "\n")
+    # Change to the temporary directory
+    monkeypatch.chdir(tmp_path)
 
-    with open(os.path.join(dataset2_dir, "test_sft.jsonl"), "w") as f:
-        for item in dataset2_data:
-            f.write(json.dumps(item) + "\n")
+    # Create the output directory
+    os.makedirs("quality-control-results", exist_ok=True)
 
-    # Return the test directories
-    yield {"test_dir": test_dir, "dataset1_dir": dataset1_dir, "dataset2_dir": dataset2_dir}
+    # Run the chart function
+    with patch("matplotlib.pyplot.savefig"):  # Mock savefig to avoid actual file creation
+        chart_function(results)
 
-    # Clean up after the test
-    shutil.rmtree(test_dir)
-
-
-def test_extract_function_calls():
-    """Test extracting function calls from content."""
-    # Test with code block
-    content1 = "ACTION: \n```execute_bash(command='ls -la')```\n"
-    assert set(extract_function_calls(content1)) == set(["bash", "action"])
-
-    # Test with execute tag
-    content2 = "ACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>"
-    assert set(extract_function_calls(content2)) == set(["ipython", "action"])
-
-    # Test with multiple function calls
-    content3 = "ACTION: \n```click(bid='123')```\n\nACTION: \n```hover(bid='456')```\n"
-    assert set(extract_function_calls(content3)) == set(["click", "hover", "action"])
-
-    # Test with no function calls
-    content4 = "This is a regular message with no function calls."
-    assert extract_function_calls(content4) == []
+    # Check that CSV files are created
+    if chart_function == create_roles_chart:
+        assert os.path.exists("quality-control-results/roles_per_conversation.csv")
+    elif chart_function == create_function_names_chart:
+        assert os.path.exists("quality-control-results/function_names.csv")
+    elif chart_function == create_function_thought_chart:
+        assert os.path.exists("quality-control-results/function_thought_percentage.csv")
 
 
-def test_has_thought():
-    """Test checking if content has a thought section."""
-    # Test with thought
-    content1 = (
-        "THOUGHT: I need to execute a command\n\nACTION: \n```execute_bash(command='ls -la')```\n"
+def test_function_pattern_matching():
+    """Test the regular expression patterns for function calls."""
+    from scripts.sft_quality_control import FUNCTION_PATTERN, THOUGHT_PATTERN
+
+    # Test function pattern with content
+    content = "<function=search>query=test</function>"
+    match = FUNCTION_PATTERN.search(content)
+    assert match
+    assert match.group(1) == "search"
+    assert match.group(2) == "query=test"
+
+    # Test function pattern without closing tag
+    content = "<function=search>query=test"
+    match = FUNCTION_PATTERN.search(content)
+    assert not match  # Should not match without closing tag
+
+    # Test thought pattern
+    content = "I need to search for information.<function=search>query=test</function>"
+    match = THOUGHT_PATTERN.search(content)
+    assert match
+    assert match.group(1).strip() == "I need to search for information."
+
+    # Test thought pattern with no thought
+    content = "<function=search>query=test</function>"
+    match = THOUGHT_PATTERN.search(content)
+    assert match
+    assert match.group(1).strip() == ""
+
+    # Test orca_agentinstruct style function pattern
+    content = """<function=finish>
+<parameter=message>Test response</parameter>
+<parameter=task_completed>true</parameter>
+</function>"""
+    match = FUNCTION_PATTERN.search(content)
+    assert match
+    assert match.group(1) == "finish"
+
+
+def test_analyze_dataset_with_gpt_role_functions(tmp_path):
+    """Test analyzing a dataset with function calls in 'gpt' role messages."""
+    # Create a sample dataset with function calls in 'gpt' role
+    sample_data = [
+        {
+            "conversations": [
+                {"from": "human", "value": "Test question"},
+                {
+                    "from": "gpt",
+                    "value": "<function=finish>\n<parameter=message>Test response</parameter>\n<parameter=task_completed>true</parameter>\n</function>",
+                },
+            ]
+        }
+    ]
+
+    # Create a temporary dataset file
+    dataset_dir = tmp_path / "test_gpt_role"
+    dataset_dir.mkdir()
+    dataset_file = dataset_dir / "sample_sft.json"
+
+    with open(dataset_file, "w") as f:
+        json.dump(sample_data, f)
+
+    # Analyze the dataset
+    result = analyze_dataset(str(dataset_file))
+
+    # Check that the function call was detected
+    assert result["function_calls"] == 1, "Should detect 1 function call in 'gpt' role message"
+    assert result["function_names"]["finish"] == 1, (
+        "Should detect 'finish' function in 'gpt' role message"
     )
-    assert has_thought(content1) is True
-
-    # Test with lowercase thought
-    content2 = (
-        "thought: I'll use Python\n\nACTION: <execute_ipython>\nprint('Hello')\n</execute_ipython>"
-    )
-    assert has_thought(content2) is True
-
-    # Test without thought
-    content3 = "ACTION: \n```click(bid='123')```\n"
-    assert has_thought(content3) is False
-
-
-def test_analyze_sft_data(test_environment):
-    """Test analyzing SFT data."""
-    # Analyze dataset1
-    results1 = analyze_sft_data(os.path.join(test_environment["dataset1_dir"], "test_sft.jsonl"))
-
-    # Check conversation stats
-    assert len(results1["conversation_stats"]) == 2
-    assert results1["conversation_stats"][0]["dataset"] == "dataset1"
-    assert results1["conversation_stats"][0]["system_turns"] == 1
-    assert results1["conversation_stats"][0]["user_turns"] == 2
-    assert results1["conversation_stats"][0]["assistant_turns"] == 2
-
-    # Check function calls
-    assert len(results1["function_calls_per_turn"]) == 7
-    assert results1["total_function_calls"] == 9
-    assert results1["function_calls_without_thought"] == 0
-    assert results1["thought_percentage"] == 0
-
-    # Analyze dataset2
-    results2 = analyze_sft_data(os.path.join(test_environment["dataset2_dir"], "test_sft.jsonl"))
-
-    # Check conversation stats
-    assert len(results2["conversation_stats"]) == 1
-    assert results2["conversation_stats"][0]["dataset"] == "dataset2"
-    assert results2["conversation_stats"][0]["system_turns"] == 0
-    assert results2["conversation_stats"][0]["user_turns"] == 2
-    assert results2["conversation_stats"][0]["assistant_turns"] == 2
-
-    # Check function calls
-    assert len(results2["function_calls_per_turn"]) == 3
-    assert results2["total_function_calls"] == 4
-    assert results2["function_calls_without_thought"] == 4
-    assert results2["thought_percentage"] == 100.0
-
-
-def test_find_sft_files(test_environment):
-    """Test finding SFT files."""
-    # Create additional test files
-    with open(os.path.join(test_environment["dataset1_dir"], "test_sft.json"), "w") as f:
-        f.write('{"test": "data"}')
-    with open(os.path.join(test_environment["dataset1_dir"], "sample.json"), "w") as f:
-        f.write('{"test": "sample data"}')
-    with open(os.path.join(test_environment["dataset2_dir"], "sample_raw.json"), "w") as f:
-        f.write('{"test": "raw sample data"}')
-
-    # Find all SFT files with our predefined patterns
-    sft_files = find_sft_files([test_environment["test_dir"]], "*")
-    assert len(sft_files) == 5  # 2 jsonl + 3 json
-
-    # Verify specific files are found
-    file_endings = [os.path.basename(f) for f in sft_files]
-    assert "test_sft.json" in file_endings
-    assert "test_sft.jsonl" in file_endings
-    assert "sample.json" in file_endings
-    assert "sample_raw.json" in file_endings

@@ -96,9 +96,7 @@ class FakeAdbController(adb_controller.AdbController):
 
         # app_screen_checker: fake_task expects 'fake_activity'.
         if args[:4] == ["shell", "am", "stack", "list"]:
-            return (
-                b"taskId=0 fake_activity visible=true " b"topActivity=ComponentInfo{fake_activity}"
-            )
+            return b"taskId=0 fake_activity visible=true topActivity=ComponentInfo{fake_activity}"
 
         return b"fake output"
 

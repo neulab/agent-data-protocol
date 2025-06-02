@@ -66,9 +66,9 @@ class SetupStepInterpreter:
         step_type = step_cmd.WhichOneof("step")
         success_condition = step_cmd.success_condition
         success_check = success_condition.WhichOneof("check")
-        assert (
-            step_type or success_check
-        ), "At least one of step and success_condition must be defined."
+        assert step_type or success_check, (
+            "At least one of step and success_condition must be defined."
+        )
 
         num_tries = 0
         max_retries = max(success_condition.num_retries, 3)

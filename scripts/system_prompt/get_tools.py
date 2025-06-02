@@ -43,7 +43,7 @@ def convert_tools_to_description(tools: list[dict]) -> str:
         fn = tool["function"]
         if i > 0:
             ret += "\n"
-        ret += f"---- BEGIN FUNCTION #{i+1}: {fn['name']} ----\n"
+        ret += f"---- BEGIN FUNCTION #{i + 1}: {fn['name']} ----\n"
         ret += f"Description: {fn['description']}\n"
 
         if "parameters" in fn:
@@ -65,9 +65,9 @@ def convert_tools_to_description(tools: list[dict]) -> str:
                     enum_values = ", ".join(f"`{v}`" for v in param_info["enum"])
                     desc += f"\nAllowed values: [{enum_values}]"
 
-                ret += f"  ({j+1}) {param_name} ({param_type}, {param_status}): {desc}\n"
+                ret += f"  ({j + 1}) {param_name} ({param_type}, {param_status}): {desc}\n"
         else:
             ret += "No parameters are required for this function.\n"
 
-        ret += f"---- END FUNCTION #{i+1} ----\n"
+        ret += f"---- END FUNCTION #{i + 1} ----\n"
     return ret

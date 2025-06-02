@@ -87,7 +87,7 @@ class FakeSimulatorTest(absltest.TestCase):
         line = adb_controller.execute_command(["shell", "am", "stack", "list"])
         line = line.decode("utf-8")
         self.assertEqual(
-            line, "taskId=0 fake_activity visible=true " "topActivity=ComponentInfo{fake_activity}"
+            line, "taskId=0 fake_activity visible=true topActivity=ComponentInfo{fake_activity}"
         )
 
     def test_send_touch(self):

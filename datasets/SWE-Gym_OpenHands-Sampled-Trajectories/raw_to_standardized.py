@@ -13,8 +13,9 @@ def process_data(data):
     content = []
     for msg in data.messages:
         if msg.role in ["system", "user", "tool"]:
-            _msg = f"[{msg.name}] {msg.content}" if msg.role == "tool" else msg.content
-            _msg = "\n".join(_msg.split("] OBSERVATION:\n")[1:])
+            _msg = f"{msg.content}" if msg.role == "tool" else msg.content
+            if "OBSERVATION:\n" in _msg:
+                _msg = "\n".join(_msg.split("OBSERVATION:\n")[1:])
             content.append(
                 TextObservation(
                     content=_msg,
@@ -29,13 +30,15 @@ def process_data(data):
                         continue
                     content.append(
                         ApiAction(
+                            description=msg.content,
                             function=tool_call.function.name,
                             kwargs=json.loads(tool_call.function.arguments),
                         )
                     )
             else:
                 content.append(MessageAction(content=msg.content))
-
+        else:
+            assert False
     return Trajectory(
         id=data.instance_id,
         content=content,

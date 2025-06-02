@@ -47,8 +47,7 @@ def test_sample_raw_against_schema(sample_path):
                         dataset_api = importlib.util.module_from_spec(spec)
                         spec.loader.exec_module(dataset_api)
                     assert hasattr(dataset_api, content.function), (
-                        f"{content.function} not found in api.py"
-                        f" in {os.path.dirname(sample_path)}"
+                        f"{content.function} not found in api.py in {os.path.dirname(sample_path)}"
                     )
                     # Validate content.kwargs against the function signature
                     function = getattr(dataset_api, content.function)

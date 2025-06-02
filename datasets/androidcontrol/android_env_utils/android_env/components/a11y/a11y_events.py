@@ -61,7 +61,7 @@ def extract_events_from_task_extras(
         or task_extras[_A11Y_EVENT_KEY].ndim != 1
     ):
         raise ValueError(
-            f"{_A11Y_EVENT_KEY} task extra should be a numpy array with one" " dimension."
+            f"{_A11Y_EVENT_KEY} task extra should be a numpy array with one dimension."
         )
 
     if task_extras[_A11Y_EVENT_KEY].size == 0:
@@ -88,8 +88,7 @@ def extract_events_from_task_extras(
 
         else:
             raise TypeError(
-                f"Unexpected event type: {type(e)}. See here for full "
-                f"task_extras: {task_extras}."
+                f"Unexpected event type: {type(e)}. See here for full task_extras: {task_extras}."
             )
 
     return events
@@ -105,7 +104,7 @@ def keep_latest_event_only(task_extras: dict[str, Any]):
         or task_extras[_A11Y_EVENT_KEY].ndim != 1
     ):
         raise ValueError(
-            f"{_A11Y_EVENT_KEY} task extra should be a numpy array with one" " dimension."
+            f"{_A11Y_EVENT_KEY} task extra should be a numpy array with one dimension."
         )
 
     if task_extras[_A11Y_EVENT_KEY].size == 0:
