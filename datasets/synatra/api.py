@@ -57,3 +57,14 @@ def tab_focus(page_number: int) -> None:
 def close_tab() -> None:
     """Close the current tab."""
     pass
+
+
+def click(element_id: int) -> None:
+    """Click on an element with the given id.
+
+    Args:
+    ----
+        element_id (int): The id of the element to click on.
+
+    """
+    pass
