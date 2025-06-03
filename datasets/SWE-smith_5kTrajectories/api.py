@@ -32,7 +32,7 @@ def str_replace_editor(
     insert_line: int = None,
     view_range: list = None,
 ) -> None:
-    """Custom editing tool for viewing, creating and editing files.
+    """View, create, and edit files with this custom editing tool.
 
     Args:
     ----
