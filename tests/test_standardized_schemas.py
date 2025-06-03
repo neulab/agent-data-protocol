@@ -13,10 +13,10 @@ DATASET_PATH = Path(__file__).parent.parent / "datasets"
 
 
 def get_sample_jsons(directory):
-    # get DATASET_PATH/*/sample.json files
+    # get DATASET_PATH/*/sample_std.json files
     for subdir in os.listdir(directory):
         subdir_path = os.path.join(directory, subdir)
-        sample_path = os.path.join(subdir_path, "sample.json")
+        sample_path = os.path.join(subdir_path, "sample_std.json")
         if os.path.exists(sample_path):
             yield sample_path
 
@@ -29,9 +29,9 @@ def load_json(file_path):
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))
 def test_sample_raw_against_schema(sample_path):
     samples = load_json(sample_path)
-    assert isinstance(samples, list), "sample.json should be a list"
+    assert isinstance(samples, list), "sample_std.json should be a list"
 
-    # dynamically load api.py in the same directory as sample.json
+    # dynamically load api.py in the same directory as sample_std.json
     dataset_api = None
 
     for sample in samples:
