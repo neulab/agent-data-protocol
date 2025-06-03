@@ -18,7 +18,12 @@ def convert_step(step: dict[str, str]) -> list:
             return [TextObservation(content=step["content"], source="user")]
 
     elif step["role"] == "system":
-        return [TextObservation(content=step["content"], source="system")]
+        # Check if this system message contains function descriptions
+        if "You have access to the following functions:" in step["content"] or "---- BEGIN FUNCTION" in step["content"]:
+            # This is a system message with function descriptions, mark it as function_call
+            return [TextObservation(content=step["content"], source="function_call")]
+        else:
+            return [TextObservation(content=step["content"], source="system")]
 
     elif step["role"] == "assistant":
         result = []
@@ -41,15 +46,18 @@ def convert_step(step: dict[str, str]) -> list:
                 function_name = match.group(1)
                 params_content = match.group(2)
 
+                # Parse parameters
+                kwargs = {}
+                param_pattern = r"<parameter=([^>]+)>(.*?)</parameter>"
+                
                 # Map function names
                 if function_name == "bash":
                     function_name = "execute_bash"
                 if function_name == "submit":
                     function_name = "finish"
-
-                # Parse parameters
-                kwargs = {}
-                param_pattern = r"<parameter=([^>]+)>(.*?)</parameter>"
+                    # Make sure finish has a message parameter
+                    if "message" not in kwargs:
+                        kwargs["message"] = "Task completed."
                 param_matches = re.findall(param_pattern, params_content, re.DOTALL)
 
                 for param_name, param_value in param_matches:
