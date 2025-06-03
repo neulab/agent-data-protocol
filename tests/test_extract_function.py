@@ -53,7 +53,6 @@ def extract_full_function_call(content, tools=None):
 
         # If we found a balanced match
         if nesting == 0:
-            end_pos = pos - len(end_tag)
             return content[start_pos:pos]
 
     return None
