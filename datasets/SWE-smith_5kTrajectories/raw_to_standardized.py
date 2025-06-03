@@ -13,17 +13,13 @@ def convert_step(step: dict[str, str]) -> list:
         if step["content"].startswith("OBSERVATION:"):
             # Remove "OBSERVATION:" prefix and clean up
             content = step["content"][len("OBSERVATION:") :].strip()
-            return [TextObservation(content=content, source="system")]
+            return [TextObservation(content=content, source="assistant")]
         else:
             return [TextObservation(content=step["content"], source="user")]
 
     elif step["role"] == "system":
-        # Check if this system message contains function descriptions
-        if "You have access to the following functions:" in step["content"] or "---- BEGIN FUNCTION" in step["content"]:
-            # This is a system message with function descriptions, mark it as function_call
-            return [TextObservation(content=step["content"], source="function_call")]
-        else:
-            return [TextObservation(content=step["content"], source="system")]
+        # All system messages are marked as system, regardless of content
+        return [TextObservation(content=step["content"], source="system")]
 
     elif step["role"] == "assistant":
         result = []
@@ -40,7 +36,7 @@ def convert_step(step: dict[str, str]) -> list:
                 # Add any text before this function call as a text observation
                 before_text = content[current_pos : match.start()].strip()
                 if before_text:
-                    result.append(TextObservation(content=before_text, source="system"))
+                    result.append(TextObservation(content=before_text, source="assistant"))
 
                 # Parse the function call
                 function_name = match.group(1)
@@ -49,7 +45,7 @@ def convert_step(step: dict[str, str]) -> list:
                 # Parse parameters
                 kwargs = {}
                 param_pattern = r"<parameter=([^>]+)>(.*?)</parameter>"
-                
+
                 # Map function names
                 if function_name == "bash":
                     function_name = "execute_bash"
@@ -84,7 +80,7 @@ def convert_step(step: dict[str, str]) -> list:
             # Add any remaining text after the last function call
             remaining_text = content[current_pos:].strip()
             if remaining_text:
-                result.append(TextObservation(content=remaining_text, source="system"))
+                result.append(TextObservation(content=remaining_text, source="assistant"))
 
         # Check for traditional code blocks if no function calls found
         elif "```" in content:
@@ -92,7 +88,7 @@ def convert_step(step: dict[str, str]) -> list:
             if code_block_regex:
                 description_text = content[: code_block_regex.start()].strip()
                 if description_text:
-                    result.append(TextObservation(content=description_text, source="system"))
+                    result.append(TextObservation(content=description_text, source="assistant"))
 
                 # For code blocks, treat as API action
                 result.append(
@@ -106,10 +102,10 @@ def convert_step(step: dict[str, str]) -> list:
                 )
             else:
                 # Regular message content
-                result.append(TextObservation(content=content, source="system"))
+                result.append(TextObservation(content=content, source="assistant"))
         else:
             # Regular message content
-            result.append(TextObservation(content=content, source="system"))
+            result.append(TextObservation(content=content, source="assistant"))
 
         return result
     else:

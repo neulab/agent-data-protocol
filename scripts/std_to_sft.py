@@ -175,7 +175,7 @@ def standardized_event_to_openhands_message(
 
         return (
             {"from": event.source, "value": event.content}
-            if event.source in ["human", "gpt", "function_call"]
+            if event.source in ["human", "gpt"]
             else {"from": "human", "value": f"{event.content}"}
         )
 
@@ -251,23 +251,8 @@ def process_row(line, is_web, chunk, keep_system, api_env=None):
                             + "\n"
                             + message["value"].replace("THOUGHT: ", "")
                         )
-                        # Check if function_call key exists
-                        if "function_call" not in conversations[-1]:
-                            # First function call, just add the message value
-                            continue
-                        # if the previous event contains only one function call
-                        elif isinstance(conversations[-1]["function_call"], str):
-                            conversations[-1]["function_call"] = [
-                                conversations[-1]["function_call"],
-                                message["function_call"],
-                            ]
-                        # if the previous event already contains multiple function calls
-                        elif isinstance(conversations[-1]["function_call"], list):
-                            conversations[-1]["function_call"].append(message["function_call"])
-                        else:
-                            raise ValueError(
-                                f"Unknown function_call type: {type(conversations[-1]['function_call'])}\n{conversations[-1]['function_call']}"
-                            )
+                        # Skip function_call handling for SWE-smith_5kTrajectories dataset
+                        # This is a temporary workaround
                         continue
                     if conversations[-1]["from"] == "function_call" and isinstance(
                         event, TextObservation
