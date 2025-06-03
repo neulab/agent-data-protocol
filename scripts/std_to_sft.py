@@ -173,11 +173,10 @@ def standardized_event_to_openhands_message(
         if event.source == "assistant":
             event.source = "gpt"
 
-        return (
-            {"from": event.source, "value": event.content}
-            if event.source in ["human", "gpt"]
-            else {"from": "human", "value": f"{event.content}"}
-        )
+        if event.source == "system":
+            return {"from": "human", "value": f"{event.content}"}
+        else:
+            return {"from": event.source, "value": event.content}
 
     elif hasattr(event, "__class__") and event.__class__.__name__ == "ImageObservation":
         # Handle ImageObservation
@@ -251,8 +250,23 @@ def process_row(line, is_web, chunk, keep_system, api_env=None):
                             + "\n"
                             + message["value"].replace("THOUGHT: ", "")
                         )
-                        # Skip function_call handling for SWE-smith_5kTrajectories dataset
-                        # This is a temporary workaround
+                        # Check if function_call key exists
+                        if "function_call" not in conversations[-1]:
+                            # First function call, just add the message value
+                            continue
+                        # if the previous event contains only one function call
+                        elif isinstance(conversations[-1]["function_call"], str):
+                            conversations[-1]["function_call"] = [
+                                conversations[-1]["function_call"],
+                                message["function_call"],
+                            ]
+                        # if the previous event already contains multiple function calls
+                        elif isinstance(conversations[-1]["function_call"], list):
+                            conversations[-1]["function_call"].append(message["function_call"])
+                        else:
+                            raise ValueError(
+                                f"Unknown function_call type: {type(conversations[-1]['function_call'])}\n{conversations[-1]['function_call']}"
+                            )
                         continue
                     if conversations[-1]["from"] == "function_call" and isinstance(
                         event, TextObservation
