@@ -15,7 +15,7 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] nebius_SWE-agent-trajectories
 - [x] nnetnav
 - [x] omniact
-- [ ] openhands
+- [x] openhands
 - [ ] orca_agentinstruct
 - [ ] screenagent (no sample_std.json)
 - [ ] synatra
