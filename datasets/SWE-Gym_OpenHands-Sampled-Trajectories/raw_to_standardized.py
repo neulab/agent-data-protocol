@@ -17,7 +17,7 @@ def process_data(data):
             if "OBSERVATION:\n" in _msg:
                 _msg = "\n".join(_msg.split("OBSERVATION:\n")[1:])
             # Map the roles to the allowed source values in the schema
-            source_map = {"system": "environment", "user": "user_msg", "tool": "environment"}
+            source_map = {"system": "environment", "user": "user", "tool": "environment"}
             content.append(
                 TextObservation(
                     content=_msg,

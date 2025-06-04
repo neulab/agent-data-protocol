@@ -77,7 +77,7 @@ if __name__ == "__main__":
             print(f"Error processing trajectory {idx}: {e}", file=sys.stderr)
             continue
 
-        content: list = [TextObservation(content=data.objective, source="user_msg")]
+        content: list = [TextObservation(content=data.objective, source="user")]
 
         content.extend(convert_step(data))
 

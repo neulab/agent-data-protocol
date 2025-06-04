@@ -45,7 +45,7 @@ def convert_step(step: dict[str, str], id: str) -> list[Action | Observation]:
                 ]
         else:
             return [
-                TextObservation(content=step["content"], source="user_msg"),
+                TextObservation(content=step["content"], source="user"),
             ]
 
     except Exception as e:
@@ -81,27 +81,27 @@ for raw_data in raw_data_list:
                 [
                     TextObservation(
                         content="Congratulations! You have successfully solved the task.",
-                        source="user_msg",
+                        source="user",
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Your solution has been verified as correct. ", source="user_msg"
+                        content="Your solution has been verified as correct. ", source="user"
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Well done on successfully completing the task!", source="user_msg"
+                        content="Well done on successfully completing the task!", source="user"
                     ),
                 ],
                 [
                     TextObservation(
                         content="Your implementation satisfies the task requirements.",
-                        source="user_msg",
+                        source="user",
                     ),
                 ],
                 [
-                    TextObservation(content="Task completed successfully.", source="user_msg"),
+                    TextObservation(content="Task completed successfully.", source="user"),
                 ],
             ]
         )

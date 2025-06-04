@@ -28,7 +28,7 @@ def process_data(raw_data_list):
             continue
         traj = Trajectory(
             id=str(raw_traj["task_id"]),
-            content=[TextObservation(content=task, source="user_msg")],
+            content=[TextObservation(content=task, source="user")],
         )
         for element in raw_traj["trajectory"]:
             if "action" in element:

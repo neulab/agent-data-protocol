@@ -10,7 +10,7 @@
       {
         "class_": "text_observation",
         "content": "<uploaded_files>\n/testbed\n</uploaded_files>\nI've uploaded a python code repository in the directory /testbed. Consider the following PR description:\n\n<pr_description>\n[bug] replace_in_file has inconsistent return value\n### Describe the bug\n\nNot really a bug, but a minor inconsistence: `files.replace_in_file` in non-strict mode return `False` if the pattern was not found, but nothing (e.g. `None`) if it was found and replaced. Noticed this because I wanted to check the return value.\r\n\r\nTrivial change, will make a PR in a minute.\n\n### How to reproduce it\n\n_No response_\n\n</pr_description>\n\nCan you help me implement the necessary changes to the repository so that the requirements specified in the <pr_description> are met?\nI've already taken care of all changes to any of the test files described in the <pr_description>. This means you DON'T have to modify the testing logic or any of the tests in any way!\nYour task is to make the minimal changes to non-tests files in the /testbed directory to ensure the <pr_description> is satisfied.\nFollow these steps to resolve the issue:\n1. As a first step, it might be a good idea to find and read code relevant to the <pr_description>\n2. Create a script to reproduce the error and execute it with `python <filename.py>` using the bash tool, to confirm the error\n3. Edit the sourcecode of the repo to resolve the issue\n4. Rerun your reproduce script and confirm that the error is fixed!\n5. Think about edgecases and make sure your fix handles them as well\nYour thinking should be thorough and so it's fine if it's very long.",
-        "source": "user_msg"
+        "source": "user"
       },
       {
         "class_": "text_observation",
@@ -195,7 +195,7 @@
       {
         "class_": "text_observation",
         "content": "<uploaded_files>\n/testbed\n</uploaded_files>\nI've uploaded a python code repository in the directory /testbed. Consider the following PR description:\n\n<pr_description>\n# Safety scan fails to find dependencies in certain file types\n\n## Description\n\nI noticed an issue when using the safety scan command on a project with various dependency files. The scan doesn't properly detect dependencies from certain file types that used to work in previous versions.\n\nWhen running a scan on a project that contains requirements.txt, poetry.lock, pipenv.lock, or pyproject.toml files, the dependencies are not being detected correctly. This happens because the code is using different file type constants than what's expected.\n\nFor example, when I run:\n\n```python\nfrom safety.scan.ecosystems.python.dependencies import get_dependencies\nfrom safety.scan.file import InspectableFile, FileType\n\n# Create a test requirements file\nf = InspectableFile(\"requirements.txt\", FileType.REQUIREMENTS_TXT)\ndeps = get_dependencies(f)\nprint(deps)  # Returns empty list instead of the expected dependencies\n```\n\nThe function is checking for `FileType.REQUIREMENTS` instead of `FileType.REQUIREMENTS_TXT`, and similarly for other file types. It's also checking for `FileType.VIRTUAL_ENV` instead of `FileType.VIRTUAL_ENVIRONMENT`.\n\nThis causes the scan to miss dependencies and report that everything is safe when it might not be, which is a serious security concern.\n\n<END WRITING>\n</pr_description>\n\nCan you help me implement the necessary changes to the repository so that the requirements specified in the <pr_description> are met?\nI've already taken care of all changes to any of the test files described in the <pr_description>. This means you DON'T have to modify the testing logic or any of the tests in any way!\nYour task is to make the minimal changes to non-tests files in the /testbed directory to ensure the <pr_description> is satisfied.\nFollow these steps to resolve the issue:\n1. As a first step, it might be a good idea to find and read code relevant to the <pr_description>\n2. Create a script to reproduce the error and execute it with `python <filename.py>` using the bash tool, to confirm the error\n3. Edit the source code of the repo to resolve the issue\n4. Rerun your reproduce script and confirm that the error is fixed!\n5. Think about edgecases and make sure your fix handles them as well\nYour thinking should be thorough and so it's fine if it's very long.",
-        "source": "user_msg"
+        "source": "user"
       },
       {
         "class_": "text_observation",
@@ -249,7 +249,7 @@
       {
         "class_": "text_observation",
         "content": "Your command ran successfully and did not produce any output.",
-        "source": "user_msg"
+        "source": "user"
       },
       {
         "class_": "text_observation",
@@ -267,7 +267,7 @@
       {
         "class_": "text_observation",
         "content": "Your command ran successfully and did not produce any output.",
-        "source": "user_msg"
+        "source": "user"
       },
       {
         "class_": "text_observation",
@@ -285,7 +285,7 @@
       {
         "class_": "text_observation",
         "content": "Your command ran successfully and did not produce any output.",
-        "source": "user_msg"
+        "source": "user"
       },
       {
         "class_": "text_observation",
@@ -303,7 +303,7 @@
       {
         "class_": "text_observation",
         "content": "Your command ran successfully and did not produce any output.",
-        "source": "user_msg"
+        "source": "user"
       },
       {
         "class_": "text_observation",
@@ -479,7 +479,7 @@
       {
         "class_": "text_observation",
         "content": "Your command ran successfully and did not produce any output.",
-        "source": "user_msg"
+        "source": "user"
       },
       {
         "class_": "text_observation",
@@ -848,7 +848,7 @@
       {
         "class_": "text_observation",
         "content": "Your command ran successfully and did not produce any output.",
-        "source": "user_msg"
+        "source": "user"
       },
       {
         "class_": "api_action",

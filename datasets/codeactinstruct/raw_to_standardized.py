@@ -42,7 +42,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 content=step["content"],
                 source="environment"
                 if step["role"] == "system"
-                else "user_msg"
+                else "user"
                 if step["role"] == "user"
                 else "agent",
             ),
@@ -76,7 +76,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 content=obs_regex.group(1),
                 source="environment"
                 if step["role"] == "system"
-                else "user_msg"
+                else "user"
                 if step["role"] == "user"
                 else "agent",
             ),
@@ -88,7 +88,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 content=task_regex.group(1),
                 source="environment"
                 if step["role"] == "system"
-                else "user_msg"
+                else "user"
                 if step["role"] == "user"
                 else "agent",
             ),
@@ -119,27 +119,27 @@ for raw_data in raw_data_list:
                 [
                     TextObservation(
                         content="Congratulations! You have successfully solved the task.",
-                        source="user_msg",
+                        source="user",
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Your solution has been verified as correct. ", source="user_msg"
+                        content="Your solution has been verified as correct. ", source="user"
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Well done on successfully completing the task!", source="user_msg"
+                        content="Well done on successfully completing the task!", source="user"
                     ),
                 ],
                 [
                     TextObservation(
                         content="Your implementation satisfies the task requirements.",
-                        source="user_msg",
+                        source="user",
                     ),
                 ],
                 [
-                    TextObservation(content="Task completed successfully.", source="user_msg"),
+                    TextObservation(content="Task completed successfully.", source="user"),
                 ],
             ]
         )

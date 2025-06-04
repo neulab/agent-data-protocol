@@ -48,7 +48,7 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
                 or task_regex.group(5)
                 or task_regex.group(7)
                 or task_regex.group(9),
-                source="user_msg",
+                source="user",
             ),
             CodeAction(
                 language="python",

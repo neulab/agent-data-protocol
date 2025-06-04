@@ -15,7 +15,7 @@ def convert_step(step: dict[str, str]) -> list:
             content = step["content"][len("OBSERVATION:") :].strip()
             return [TextObservation(content=content, source="environment")]
         else:
-            return [TextObservation(content=step["content"], source="user_msg")]
+            return [TextObservation(content=step["content"], source="user")]
 
     elif step["role"] == "system":
         return [TextObservation(content=step["content"], source="environment")]

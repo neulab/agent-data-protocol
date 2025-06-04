@@ -64,7 +64,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                     content=answer_subs.replace("Think:", "THOUGHT:").replace("Act:", "ACTION:"),
                     source="environment",
                 ),
-                TextObservation(content=system_regex.group(2).strip(), source="user_msg"),
+                TextObservation(content=system_regex.group(2).strip(), source="user"),
             ]
 
         elif "I will ask you a question" in system_regex.group(1):
@@ -87,7 +87,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
             return [
                 TextObservation(content=sys_sql_subs, source="environment"),
-                TextObservation(content="Ok? Understood?", source="user_msg"),
+                TextObservation(content="Ok? Understood?", source="user"),
             ]
         elif "You are web shopping" in system_regex.group(1):
             webshop_sys_msg = system_regex.group(1) + "\nclick[something]"
@@ -102,7 +102,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
             return [
                 TextObservation(content=thought_subs, source="environment"),
-                TextObservation(content="Ok? Understood?", source="user_msg"),
+                TextObservation(content="Ok? Understood?", source="user"),
             ]
 
         elif "You are an agent that answers questions" in system_regex.group(1):
@@ -113,20 +113,18 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             )
             return [
                 TextObservation(content=answer_sub, source="environment"),
-                TextObservation(content="Ok? Understood?", source="user_msg"),
+                TextObservation(content="Ok? Understood?", source="user"),
             ]
 
         elif "Interact with a household to solve a task" in system_regex.group(1):
             return [
                 TextObservation(content=system_regex.group(1), source="environment"),
-                TextObservation(content="Ok? Understood?", source="user_msg"),
+                TextObservation(content="Ok? Understood?", source="user"),
             ]
 
         # Now I will start a new problem
         return [
-            TextObservation(
-                content=system_regex.group(1) + system_regex.group(2), source="user_msg"
-            )
+            TextObservation(content=system_regex.group(1) + system_regex.group(2), source="user")
         ]
 
     # Special case for SQL
@@ -135,12 +133,12 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         in step["content"]
     ):
         return [
-            TextObservation(content=step["content"], source="user_msg"),
+            TextObservation(content=step["content"], source="user"),
         ]
     # Special case for alfworld
     elif "Interact with a household to solve a task." in step["content"]:
         return [
-            TextObservation(content=step["content"], source="user_msg")
+            TextObservation(content=step["content"], source="user")
             .replace("Thought:", "THOUGHT:")
             .replace("Action:", "ACTION:"),
         ]
@@ -228,7 +226,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 .replace("Thought:", "THOUGHT:")
                 .replace("Action:", "ACTION:")
                 .replace("Observation:", "OBSERVATION:"),
-                source="user_msg"
+                source="user"
                 if step["role"] == "user"
                 else "agent"
                 if step["role"] == "assistant"
@@ -261,27 +259,27 @@ Review the current state of the page and all other information to find the best 
                 [
                     TextObservation(
                         content="Congratulations! You have successfully solved the task.",
-                        source="user_msg",
+                        source="user",
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Your solution has been verified as correct. ", source="user_msg"
+                        content="Your solution has been verified as correct. ", source="user"
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Well done on successfully completing the task!", source="user_msg"
+                        content="Well done on successfully completing the task!", source="user"
                     ),
                 ],
                 [
                     TextObservation(
                         content="Your implementation satisfies the task requirements.",
-                        source="user_msg",
+                        source="user",
                     ),
                 ],
                 [
-                    TextObservation(content="Task completed successfully.", source="user_msg"),
+                    TextObservation(content="Task completed successfully.", source="user"),
                 ],
             ]
         )

@@ -15,7 +15,7 @@ for raw_data in raw_data_list:
     # Process the conversations
     for message in raw_data["conversations"]:
         if message["from"] == "human":
-            content.append(TextObservation(content=message["value"], source="user_msg"))
+            content.append(TextObservation(content=message["value"], source="user"))
         elif message["from"] == "gpt":
             content.append(MessageAction(content=message["value"], description=""))
 

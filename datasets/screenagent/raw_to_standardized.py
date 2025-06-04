@@ -29,7 +29,7 @@ def process_data(data: List[ScreenAgentItem], keep_all: bool = False) -> List[Tr
         content.append(
             TextObservation(
                 content=trajectory_data.task_prompt_en,
-                source="user_msg",
+                source="user",
             )
         )
 

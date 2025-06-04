@@ -225,7 +225,7 @@ def process_data(data: dict) -> Trajectory:
     fake_url = f"https://turkingbench.github.io/tasks/{urllib.parse.quote(data['_id'])}"
     content: list = [
         TextObservation(
-            content=f"Go to {fake_url} and follow the instructions on the page", source="user_msg"
+            content=f"Go to {fake_url} and follow the instructions on the page", source="user"
         ),
         ApiAction(function="goto", kwargs={"url": fake_url}),
         WebObservation(

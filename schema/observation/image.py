@@ -24,7 +24,7 @@ class ImageObservation(Observation):
     annotations: list[ImageAnnotation] | None = Field(
         None, description="The annotations of the image"
     )
-    source: Literal["user_msg", "agent", "environment"] = Field(
+    source: Literal["user", "agent", "environment"] = Field(
         ..., description="The source of the observation"
     )
 

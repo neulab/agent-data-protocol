@@ -18,7 +18,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         if code_obs_regex:
             return [TextObservation(content=code_obs_regex.group(1), source="environment")]
         else:
-            return [TextObservation(content=step["content"], source="user_msg")]
+            return [TextObservation(content=step["content"], source="user")]
     elif step["role"] == "assistant":
         code_extract_regex = re.match(r"(.*?)?```(\w+)?\n(.*?)\n```", step["content"], re.DOTALL)
 
@@ -63,27 +63,27 @@ for raw_data in raw_data_array:
                 [
                     TextObservation(
                         content="Congratulations! You have successfully solved the task.",
-                        source="user_msg",
+                        source="user",
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Your solution has been verified as correct. ", source="user_msg"
+                        content="Your solution has been verified as correct. ", source="user"
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Well done on successfully completing the task!", source="user_msg"
+                        content="Well done on successfully completing the task!", source="user"
                     ),
                 ],
                 [
                     TextObservation(
                         content="Your implementation satisfies the task requirements.",
-                        source="user_msg",
+                        source="user",
                     ),
                 ],
                 [
-                    TextObservation(content="Task completed successfully.", source="user_msg"),
+                    TextObservation(content="Task completed successfully.", source="user"),
                 ],
             ]
         )

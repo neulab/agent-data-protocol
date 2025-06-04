@@ -20,10 +20,10 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
                     annotations=None,
                     source="environment",
                 ),
-                TextObservation(content=step["value"][len("<image>\n") :], source="user_msg"),
+                TextObservation(content=step["value"][len("<image>\n") :], source="user"),
             ]
         else:
-            return [TextObservation(content=step["value"], source="user_msg")]
+            return [TextObservation(content=step["value"], source="user")]
     elif step["from"] == "gpt":
         if len(step["actions"]) > 0:
             content = [

@@ -56,7 +56,7 @@ def process_data(raw_data_list: List[Dict]) -> List[Dict]:
 
         traj: Trajectory = Trajectory(
             id=task_stamp,
-            content=[TextObservation(content=task, source="user_msg")],  # first message is the task
+            content=[TextObservation(content=task, source="user")],  # first message is the task
         )
         for element in raw_traj["trace"]:
             if element["type"] == "state":

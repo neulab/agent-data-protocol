@@ -48,7 +48,7 @@ def convert_step(
     """
     if step.type == "chat":
         if step.speaker == "instructor":
-            return [TextObservation(content=step.utterance, source="user_msg")]
+            return [TextObservation(content=step.utterance, source="user")]
         elif step.speaker == "navigator":
             return [MessageAction(content=step.utterance, description=None)]
         else:
@@ -166,7 +166,7 @@ def create_sample_std():
             {
                 "class_": "text_observation",
                 "content": "I need help with booking a flight",
-                "source": "user_msg",
+                "source": "user",
             },
             {
                 "class_": "message_action",

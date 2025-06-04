@@ -60,7 +60,7 @@ def process_item(item):
             else None
         )
     elif item.role == "user":
-        return TextObservation(content=item.text, source="user_msg")
+        return TextObservation(content=item.text, source="user")
     elif item.role == "ai" and "```" in item.text:
         try:
             return parse_api_action(item)
