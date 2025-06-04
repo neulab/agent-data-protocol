@@ -11,8 +11,8 @@ class WebObservation(Observation):
     url: str | None = Field(..., description="The URL of the web page")
     image_observation: ImageObservation | None = Field(..., description="The image observation")
     viewport_size: tuple[int, int] | None = Field(..., description="The size of the viewport")
-    
-    @field_validator('class_')
+
+    @field_validator("class_")
     def validate_class(cls, v):
         if v != "web_observation":
             raise ValueError(f"class_ must be 'web_observation', got '{v}'")

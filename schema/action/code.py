@@ -320,8 +320,8 @@ class CodeAction(Action):
     description: str | None = Field(
         ..., description="The description/thought provided for the action"
     )
-    
-    @field_validator('class_')
+
+    @field_validator("class_")
     def validate_class(cls, v):
         if v != "code_action":
             raise ValueError(f"class_ must be 'code_action', got '{v}'")
