@@ -58,8 +58,8 @@ To create a converter, create a file called `raw_to_standardized.py` in your dat
 3. Output the standardized data to stdout
 
 The standardized format should follow these guidelines:
-- TextObservation.source must be one of: 'user_msg', 'agent', or 'environment'
-- ImageObservation.source must be one of: 'user_msg', 'agent', or 'environment'
+- TextObservation.source must be one of: 'user', 'agent', or 'environment'
+- ImageObservation.source must be one of: 'user', 'agent', or 'environment'
 - WebObservation must include a url field
 - WebObservation.viewport_size should be a list, not a tuple
 - WebObservation should include axtree (can be None)

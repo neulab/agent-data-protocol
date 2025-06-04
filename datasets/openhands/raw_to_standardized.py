@@ -51,7 +51,7 @@ def parse_browser_action(action_str):
 
 
 def map_source(source):
-    """Map source to one of the allowed values: 'user_msg', 'agent', or 'environment'"""
+    """Map source to one of the allowed values: 'user', 'agent', or 'environment'"""
     if source == "user":
         return "user"
     elif source == "assistant":
