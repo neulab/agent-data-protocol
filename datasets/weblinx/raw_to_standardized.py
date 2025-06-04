@@ -221,8 +221,9 @@ if __name__ == "__main__":
                 raw_data_list.append(json.loads(line))
         standardized_trajectories = process_data(raw_data_list)
 
-    # Print the standardized data as a JSON array
-    print(json.dumps(standardized_trajectories))
+    # Print the standardized data as JSONL (one JSON object per line)
+for traj in standardized_trajectories:
+    print(json.dumps(traj))
 
     if intents_skipped:
         print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)

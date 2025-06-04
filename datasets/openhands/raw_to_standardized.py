@@ -453,5 +453,6 @@ for line in sys.stdin:
         standardized_data = process_data(data, keep_all=args.keep_all)
         standardized_trajectories.append(standardized_data.model_dump())
 
-    # Print the standardized data as a JSON array
-    print(json.dumps(standardized_trajectories))
+    # Print the standardized data as JSONL (one JSON object per line)
+for traj in standardized_trajectories:
+    print(json.dumps(traj))

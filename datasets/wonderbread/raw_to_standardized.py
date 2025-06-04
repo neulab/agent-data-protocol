@@ -150,5 +150,6 @@ for line in sys.stdin:
 
     standardized_trajectories = process_data(raw_data_list)
 
-    # Print the standardized data as a JSON array
-    print(json.dumps(standardized_trajectories))
+    # Print the standardized data as JSONL (one JSON object per line)
+for traj in standardized_trajectories:
+    print(json.dumps(traj))
