@@ -9,7 +9,7 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] androidcontrol
 - [x] code_feedback
 - [x] codeactinstruct
-- [ ] eto
+- [x] eto
 - [ ] llava_plus
 - [x] mind2web
 - [ ] nebius_SWE-agent-trajectories
