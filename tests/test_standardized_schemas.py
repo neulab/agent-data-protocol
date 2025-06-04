@@ -22,6 +22,7 @@ def get_sample_jsons(directory):
 
 
 def load_json(file_path):
+    """Load JSON file, handling both indented and non-indented formats."""
     with open(file_path, "r") as file:
         return json.load(file)
 
