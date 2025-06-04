@@ -7,7 +7,7 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] agenttuning
 - [x] android_in_the_wild
 - [x] androidcontrol
-- [ ] code_feedback
+- [x] code_feedback
 - [ ] codeactinstruct
 - [ ] eto
 - [ ] llava_plus
