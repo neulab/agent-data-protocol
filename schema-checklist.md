@@ -21,5 +21,5 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] synatra
 - [x] turkingbench
 - [x] webarena_successful
-- [ ] weblinx
+- [x] weblinx
 - [ ] wonderbread
