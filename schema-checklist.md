@@ -12,7 +12,7 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] eto
 - [x] llava_plus
 - [x] mind2web
-- [ ] nebius_SWE-agent-trajectories
+- [x] nebius_SWE-agent-trajectories
 - [x] nnetnav
 - [x] omniact
 - [ ] openhands

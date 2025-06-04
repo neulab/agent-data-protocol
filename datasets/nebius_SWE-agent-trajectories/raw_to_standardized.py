@@ -55,12 +55,12 @@ def parse_api_action(item):
 def process_item(item):
     if item.role == "system":
         return (
-            TextObservation(content=item.system_prompt, source="system")
+            TextObservation(content=item.system_prompt, source="environment")
             if item.system_prompt
             else None
         )
     elif item.role == "user":
-        return TextObservation(content=item.text, source="user")
+        return TextObservation(content=item.text, source="user_msg")
     elif item.role == "ai" and "```" in item.text:
         try:
             return parse_api_action(item)
@@ -93,8 +93,14 @@ def process_data(data):
 
 
 if __name__ == "__main__":
-    for line in sys.stdin:
-        raw_data = json.loads(line)
+    # Read the entire input as a JSON array
+    raw_data_list = json.load(sys.stdin)
+    standardized_trajectories = []
+
+    for raw_data in raw_data_list:
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
-        print(standardized_data.model_dump_json())
+        standardized_trajectories.append(standardized_data.model_dump())
+
+    # Print the standardized data as a JSON array
+    print(json.dumps(standardized_trajectories))
