@@ -225,11 +225,15 @@ def process_data(data: dict) -> Trajectory:
     fake_url = f"https://turkingbench.github.io/tasks/{urllib.parse.quote(data['_id'])}"
     content: list = [
         TextObservation(
-            content=f"Go to {fake_url} and follow the instructions on the page", source="user"
+            content=f"Go to {fake_url} and follow the instructions on the page", source="user_msg"
         ),
         ApiAction(function="goto", kwargs={"url": fake_url}),
         WebObservation(
-            html=html_template, axtree=None, url=None, viewport_size=None, image_observation=None
+            html=html_template,
+            axtree=None,
+            url=fake_url,
+            viewport_size=None,
+            image_observation=None,
         ),
     ]
 
@@ -397,8 +401,15 @@ def process_data(data: dict) -> Trajectory:
 
 
 if __name__ == "__main__":
-    for line in sys.stdin:
-        raw_data = json.loads(line)
+    # Read the entire input as a JSON array
+    raw_data_list = json.load(sys.stdin)
+
+    standardized_trajectories = []
+
+    for raw_data in raw_data_list:
         data = SchemaRaw(**raw_data).model_dump()
         standardized_data = process_data(data)
-        print(standardized_data.model_dump_json())
+        standardized_trajectories.append(standardized_data.model_dump())
+
+    # Print the standardized data as a JSON array
+    print(json.dumps(standardized_trajectories))
