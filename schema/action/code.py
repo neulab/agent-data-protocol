@@ -6,6 +6,7 @@ from schema.action.action import Action
 
 
 class CodeAction(Action):
+    class_: str = Field("code_action", description="The class of the action")
     language: Literal[
         "git",
         "go",
