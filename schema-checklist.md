@@ -18,7 +18,7 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] openhands
 - [x] orca_agentinstruct
 - [x] screenagent
-- [ ] synatra
+- [x] synatra
 - [ ] turkingbench
 - [ ] webarena_successful
 - [ ] weblinx

@@ -63,18 +63,21 @@ def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
 
 
 if __name__ == "__main__":
-    idx = 0
+    # Read the entire input as a JSON array
+    raw_data_list = json.load(sys.stdin)
 
-    for line in sys.stdin:
-        raw_data = json.loads(line)
+    standardized_trajectories = []
+
+    for idx, raw_data in enumerate(raw_data_list):
         raw_data = SchemaRaw(**raw_data)
 
         try:
             data = synatra_trajectory(raw_data)
-        except:
+        except Exception as e:
+            print(f"Error processing trajectory {idx}: {e}", file=sys.stderr)
             continue
 
-        content: list = [TextObservation(content=data.objective, source="user")]
+        content: list = [TextObservation(content=data.objective, source="user_msg")]
 
         content.extend(convert_step(data))
 
@@ -87,6 +90,7 @@ if __name__ == "__main__":
             },
         )
 
-        idx += 1
+        standardized_trajectories.append(standardized_data.model_dump())
 
-        print(standardized_data.model_dump_json())
+    # Print the standardized data as a JSON array
+    print(json.dumps(standardized_trajectories))
