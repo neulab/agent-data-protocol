@@ -24,11 +24,11 @@ class ImageObservation(Observation):
     annotations: list[ImageAnnotation] | None = Field(
         None, description="The annotations of the image"
     )
-    source: Literal["user_msg", "user", "agent", "environment", "os", "system"] = Field(
+    source: Literal["user_msg", "agent", "environment"] = Field(
         ..., description="The source of the observation"
     )
-    
-    @field_validator('class_')
+
+    @field_validator("class_")
     def validate_class(cls, v):
         if v != "image_observation":
             raise ValueError(f"class_ must be 'image_observation', got '{v}'")
