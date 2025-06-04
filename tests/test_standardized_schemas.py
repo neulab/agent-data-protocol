@@ -57,5 +57,3 @@ def test_sample_standardized_against_schema(sample_path):
 
         except ValidationError as e:
             pytest.fail(f"Validation failed for {sample_path}: {str(e)}")
-
-    pytest.fail("fake failure")

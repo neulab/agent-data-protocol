@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from schema.action.action import Action
 
@@ -9,3 +9,9 @@ class MessageAction(Action):
     description: str | None = Field(
         None, description="The description/thought provided for the action"
     )
+    
+    @field_validator('class_')
+    def validate_class(cls, v):
+        if v != "message_action":
+            raise ValueError(f"class_ must be 'message_action', got '{v}'")
+        return v
