@@ -18,12 +18,12 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
                 ImageObservation(
                     content=os.path.join("images/", metadata["data_source"], metadata["image"]),
                     annotations=None,
-                    source="system",
+                    source="environment",
                 ),
-                TextObservation(content=step["value"][len("<image>\n") :], source="user"),
+                TextObservation(content=step["value"][len("<image>\n") :], source="user_msg"),
             ]
         else:
-            return [TextObservation(content=step["value"], source="user")]
+            return [TextObservation(content=step["value"], source="user_msg")]
     elif step["from"] == "gpt":
         if len(step["actions"]) > 0:
             content = [
@@ -56,9 +56,11 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
         raise Exception("Invalid role.")
 
 
-for line in sys.stdin:
-    raw_data = json.loads(line)
+# Read the entire input as a JSON array
+raw_data_list = json.load(sys.stdin)
+standardized_trajectories = []
 
+for raw_data in raw_data_list:
     metadata = dict([(k, v) for k, v in raw_data.items() if k != "conversations"])
 
     content = []
@@ -67,6 +69,7 @@ for line in sys.stdin:
 
     # Standardize the data
     standardize_data = Trajectory(id=str(raw_data["unique_id"]), content=content)
+    standardized_trajectories.append(standardize_data.model_dump())
 
-    # Print the standardized data
-    print(standardize_data.model_dump_json())
+# Print the standardized data as a JSON array
+print(json.dumps(standardized_trajectories))

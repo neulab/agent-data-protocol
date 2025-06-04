@@ -10,7 +10,7 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] code_feedback
 - [x] codeactinstruct
 - [x] eto
-- [ ] llava_plus
+- [x] llava_plus
 - [x] mind2web
 - [ ] nebius_SWE-agent-trajectories
 - [x] nnetnav
