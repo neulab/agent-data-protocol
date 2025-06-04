@@ -215,7 +215,10 @@ if __name__ == "__main__":
         standardized_trajectories = create_sample_std()
     else:
         # Read the entire input as a JSON array
-        raw_data_list = json.load(sys.stdin)
+        raw_data_list = []
+for line in sys.stdin:
+    if line.strip():
+        raw_data_list.append(json.loads(line))
         standardized_trajectories = process_data(raw_data_list)
 
     # Print the standardized data as a JSON array

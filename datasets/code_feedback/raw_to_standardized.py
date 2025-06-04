@@ -41,13 +41,14 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         raise Exception("Invalid role.")
 
 
-# Load the entire JSON array from stdin
-raw_data_array = json.load(sys.stdin)
+# Process each line of JSONL from stdin
+for line in sys.stdin:
+    if not line.strip():
+        continue
 
-# Create a list to store all standardized trajectories
-standardized_trajectories = []
+    # Parse the JSON object from the current line
+    raw_data = json.loads(line)
 
-for raw_data in raw_data_array:
     content = []
     for step in raw_data["messages"]:
         content.extend(convert_step(step))
@@ -131,8 +132,5 @@ for raw_data in raw_data_array:
     # Standardize the data
     standardize_data = Trajectory(id=str(raw_data["id"]), content=content)
 
-    # Add to the list of standardized trajectories
-    standardized_trajectories.append(standardize_data.model_dump())
-
-# Print the standardized data as a JSON array
-print(json.dumps(standardized_trajectories, indent=2))
+    # Print the standardized data as a JSON object (one per line)
+    print(json.dumps(standardize_data.model_dump()))

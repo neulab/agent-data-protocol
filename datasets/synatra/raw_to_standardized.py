@@ -64,7 +64,10 @@ def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
 
 if __name__ == "__main__":
     # Read the entire input as a JSON array
-    raw_data_list = json.load(sys.stdin)
+    raw_data_list = []
+for line in sys.stdin:
+    if line.strip():
+        raw_data_list.append(json.loads(line))
 
     standardized_trajectories = []
 

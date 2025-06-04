@@ -47,8 +47,8 @@ def process_data(data):
         details={
             "run_id": data.run_id,
             "resolved": str(data.resolved),
-            "tools": json.dumps(data.tools),
-            "test_result": json.dumps(data.test_result),
+            "tools": json.dumps(data.tools, indent=2),
+            "test_result": json.dumps(data.test_result, indent=2),
         },
     )
 

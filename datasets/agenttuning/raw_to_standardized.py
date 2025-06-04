@@ -235,7 +235,10 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
 
 
-raw_data_list = json.load(sys.stdin)
+raw_data_list = []
+for line in sys.stdin:
+    if line.strip():
+        raw_data_list.append(json.loads(line))
 standardized_data_list = []
 for raw_data in raw_data_list:
     web_system_msg = """You are an autonomous intelligent agent tasked with navigating a web browser. You will be given web-based tasks. These tasks will be accomplished through the use of specific actions you can issue.
@@ -334,4 +337,5 @@ Review the current state of the page and all other information to find the best 
     standardized_data_list.append(standardize_data.model_dump())
 
 # Print the standardized data as a JSON list
-print(json.dumps(standardized_data_list, indent=2))
+for item in standardized_data_list:
+    print(json.dumps(item))

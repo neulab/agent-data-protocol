@@ -104,7 +104,10 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 APIS = set()
 
 # Read the entire input as a JSON array
-raw_data_list = json.load(sys.stdin)
+raw_data_list = []
+for line in sys.stdin:
+    if line.strip():
+        raw_data_list.append(json.loads(line))
 standardized_trajectories = []
 
 for raw_data in raw_data_list:

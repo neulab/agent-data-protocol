@@ -63,15 +63,18 @@ def process_data(data: List[ScreenAgentItem], keep_all: bool = False) -> List[Tr
 if __name__ == "__main__":
     args = get_args()
 
-    # Read the entire input as a JSON array
-    raw_data = json.load(sys.stdin)
+    # Process each line of JSONL from stdin
+    for line in sys.stdin:
+        if not line.strip():
+            continue
 
-    # Process the data
-    standardized_trajectories = []
-    for trajectory_group in raw_data:
+        # Parse the JSON object from the current line
+        trajectory_group = json.loads(line)
+
+        # Process the data
         data = SchemaRaw.model_validate(trajectory_group).root
         trajectories = process_data(data, keep_all=args.keep_all)
-        standardized_trajectories.extend([t.model_dump() for t in trajectories])
 
-    # Print the standardized data as a JSON array
-    print(json.dumps(standardized_trajectories, indent=2))
+        # Print each trajectory as a separate JSON line
+        for trajectory in trajectories:
+            print(json.dumps(trajectory.model_dump()))
