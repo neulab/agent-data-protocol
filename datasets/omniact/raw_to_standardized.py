@@ -38,13 +38,11 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
     try:
         return [
             ImageObservation(
-                class_="image_observation",
                 content=example["image"],
                 annotations=annotations,
                 source="environment",
             ),
             TextObservation(
-                class_="text_observation",
                 content=task_regex.group(1)
                 or task_regex.group(3)
                 or task_regex.group(5)
@@ -53,7 +51,6 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
                 source="user_msg",
             ),
             CodeAction(
-                class_="code_action",
                 language="python",
                 content=task_regex.group(2)
                 or task_regex.group(4)
