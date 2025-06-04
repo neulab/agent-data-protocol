@@ -8,7 +8,7 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] android_in_the_wild
 - [x] androidcontrol
 - [x] code_feedback
-- [ ] codeactinstruct
+- [x] codeactinstruct
 - [ ] eto
 - [ ] llava_plus
 - [x] mind2web
