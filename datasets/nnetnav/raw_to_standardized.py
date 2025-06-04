@@ -206,7 +206,7 @@ def main():
         traj = SchemaRaw.model_validate(item)
         standardized = convert_trajectory(traj)
         # Print each result as a separate line
-        print(json.dumps(standardized, indent=2))
+        print(json.dumps(standardized))
 
 
 if __name__ == "__main__":

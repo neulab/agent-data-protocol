@@ -194,7 +194,7 @@ for raw_data in raw_data_list:
     standardized_trajectories.append(traj.model_dump())
 
 # Print the standardized data as a JSON array
-print(json.dumps(standardized_trajectories, indent=2))
+print(json.dumps(standardized_trajectories))
 
 # with open("apis.txt", "w") as f:
 #     for api in APIS:
