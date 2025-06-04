@@ -20,6 +20,6 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] screenagent
 - [x] synatra
 - [x] turkingbench
-- [ ] webarena_successful
+- [x] webarena_successful
 - [ ] weblinx
 - [ ] wonderbread
