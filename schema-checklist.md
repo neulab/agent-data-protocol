@@ -16,7 +16,7 @@ This checklist tracks the progress of schema validation for each dataset.
 - [x] nnetnav
 - [x] omniact
 - [x] openhands
-- [ ] orca_agentinstruct
+- [x] orca_agentinstruct
 - [ ] screenagent (no sample_std.json)
 - [ ] synatra
 - [ ] turkingbench

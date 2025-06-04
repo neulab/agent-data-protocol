@@ -19,7 +19,7 @@ def convert_step(step: dict[str, str], id: str) -> list[Action | Observation]:
     if step["role"] == "system":
         system_msg = step["content"]
         return [
-            TextObservation(content=system_msg, source=step["role"]),
+            TextObservation(content=system_msg, source="environment"),
         ]
 
     assert step["role"] in ["assistant", "user"], f"Invalid role: {step['role']}"
@@ -45,7 +45,7 @@ def convert_step(step: dict[str, str], id: str) -> list[Action | Observation]:
                 ]
         else:
             return [
-                TextObservation(content=step["content"], source="user"),
+                TextObservation(content=step["content"], source="user_msg"),
             ]
 
     except Exception as e:
@@ -61,9 +61,11 @@ def convert_step(step: dict[str, str], id: str) -> list[Action | Observation]:
         return "error"
 
 
-for line in sys.stdin:
-    raw_data = json.loads(line)
+# Read the entire input as a JSON array
+raw_data_list = json.load(sys.stdin)
+standardized_trajectories = []
 
+for raw_data in raw_data_list:
     content = []
     for step in raw_data["conversations"]:
         traj_step = convert_step(step, id=raw_data["id"])
@@ -79,27 +81,27 @@ for line in sys.stdin:
                 [
                     TextObservation(
                         content="Congratulations! You have successfully solved the task.",
-                        source="user",
+                        source="user_msg",
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Your solution has been verified as correct. ", source="user"
+                        content="Your solution has been verified as correct. ", source="user_msg"
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Well done on successfully completing the task!", source="user"
+                        content="Well done on successfully completing the task!", source="user_msg"
                     ),
                 ],
                 [
                     TextObservation(
                         content="Your implementation satisfies the task requirements.",
-                        source="user",
+                        source="user_msg",
                     ),
                 ],
                 [
-                    TextObservation(content="Task completed successfully.", source="user"),
+                    TextObservation(content="Task completed successfully.", source="user_msg"),
                 ],
             ]
         )
@@ -144,6 +146,7 @@ for line in sys.stdin:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
     # Standardize the data
     standardize_data = Trajectory(id=str(raw_data["id"]), content=content)
+    standardized_trajectories.append(standardize_data.model_dump())
 
-    # Print the standardized data
-    print(standardize_data.model_dump_json())
+# Print the standardized data as a JSON array
+print(json.dumps(standardized_trajectories))
