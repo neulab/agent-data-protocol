@@ -41,7 +41,7 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
                 class_="image_observation",
                 content=example["image"],
                 annotations=annotations,
-                source="os",
+                source="environment",
             ),
             TextObservation(
                 class_="text_observation",
@@ -50,7 +50,7 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
                 or task_regex.group(5)
                 or task_regex.group(7)
                 or task_regex.group(9),
-                source="user",
+                source="user_msg",
             ),
             CodeAction(
                 class_="code_action",
