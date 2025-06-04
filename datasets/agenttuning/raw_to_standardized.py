@@ -62,9 +62,9 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             return [
                 TextObservation(
                     content=answer_subs.replace("Think:", "THOUGHT:").replace("Act:", "ACTION:"),
-                    source="system",
+                    source="environment",
                 ),
-                TextObservation(content=system_regex.group(2).strip(), source="user"),
+                TextObservation(content=system_regex.group(2).strip(), source="user_msg"),
             ]
 
         elif "I will ask you a question" in system_regex.group(1):
@@ -86,8 +86,8 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             )
 
             return [
-                TextObservation(content=sys_sql_subs, source="system"),
-                TextObservation(content="Ok? Understood?", source="user"),
+                TextObservation(content=sys_sql_subs, source="environment"),
+                TextObservation(content="Ok? Understood?", source="user_msg"),
             ]
         elif "You are web shopping" in system_regex.group(1):
             webshop_sys_msg = system_regex.group(1) + "\nclick[something]"
@@ -101,8 +101,8 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             )
 
             return [
-                TextObservation(content=thought_subs, source="system"),
-                TextObservation(content="Ok? Understood?", source="user"),
+                TextObservation(content=thought_subs, source="environment"),
+                TextObservation(content="Ok? Understood?", source="user_msg"),
             ]
 
         elif "You are an agent that answers questions" in system_regex.group(1):
@@ -112,19 +112,21 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 r"Final Answer: #3", r"ACTION: <solution> #3 </solution>", system_regex.group(1)
             )
             return [
-                TextObservation(content=answer_sub, source="system"),
-                TextObservation(content="Ok? Understood?", source="user"),
+                TextObservation(content=answer_sub, source="environment"),
+                TextObservation(content="Ok? Understood?", source="user_msg"),
             ]
 
         elif "Interact with a household to solve a task" in system_regex.group(1):
             return [
-                TextObservation(content=system_regex.group(1), source="system"),
-                TextObservation(content="Ok? Understood?", source="user"),
+                TextObservation(content=system_regex.group(1), source="environment"),
+                TextObservation(content="Ok? Understood?", source="user_msg"),
             ]
 
         # Now I will start a new problem
         return [
-            TextObservation(content=system_regex.group(1) + system_regex.group(2), source="user")
+            TextObservation(
+                content=system_regex.group(1) + system_regex.group(2), source="user_msg"
+            )
         ]
 
     # Special case for SQL
@@ -133,12 +135,12 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         in step["content"]
     ):
         return [
-            TextObservation(content=step["content"], source="user"),
+            TextObservation(content=step["content"], source="user_msg"),
         ]
     # Special case for alfworld
     elif "Interact with a household to solve a task." in step["content"]:
         return [
-            TextObservation(content=step["content"], source="user")
+            TextObservation(content=step["content"], source="user_msg")
             .replace("Thought:", "THOUGHT:")
             .replace("Action:", "ACTION:"),
         ]
@@ -166,6 +168,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 MessageAction(
                     content=f"<solution> {answer_extract_regex.group(1)} </solution>",
                     description=code_act_regex.group(1),
+                    message=answer_extract_regex.group(1),
                 ),
             ]
         elif finish_extract_regex:
@@ -174,6 +177,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                     # content=finish_extract_regex.group(0),
                     content="<execute_bash>\nexit\n</execute_bash>",
                     description=code_act_regex.group(1),
+                    message="exit",
                 ),
             ]
         else:
@@ -193,11 +197,12 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             MessageAction(
                 content=f"<solution> {sql_solution_regex.group(2)} </solution>",
                 description=sql_solution_regex.group(1),
+                message=sql_solution_regex.group(2),
             ),
         ]
     elif code_obs_regex:
         return [
-            TextObservation(content=code_obs_regex.group(1), source="os"),
+            TextObservation(content=code_obs_regex.group(1), source="environment"),
         ]
 
     elif (
@@ -205,7 +210,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         or "ok. i'll follow" in step["content"].strip().lower()
     ):
         return [
-            MessageAction(content=step["content"]),
+            MessageAction(content=step["content"], message=step["content"]),
         ]
 
     else:
@@ -223,13 +228,18 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 .replace("Thought:", "THOUGHT:")
                 .replace("Action:", "ACTION:")
                 .replace("Observation:", "OBSERVATION:"),
-                source=step["role"] if step["role"] != "system" else "user",
+                source="user_msg"
+                if step["role"] == "user"
+                else "agent"
+                if step["role"] == "assistant"
+                else "environment",
             ),
         ]
 
 
-for line in sys.stdin:
-    raw_data = json.loads(line)
+raw_data_list = json.load(sys.stdin)
+standardized_data_list = []
+for raw_data in raw_data_list:
     web_system_msg = """You are an autonomous intelligent agent tasked with navigating a web browser. You will be given web-based tasks. These tasks will be accomplished through the use of specific actions you can issue.
 
 # Instructions
@@ -239,39 +249,39 @@ Review the current state of the page and all other information to find the best 
     if "mind2web" in raw_data["id"]:
         content.extend(
             [
-                TextObservation(content=web_system_msg, source="system"),
+                TextObservation(content=web_system_msg, source="environment"),
             ]
         )
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
 
-    if isinstance(content[-1], TextObservation) and content[-1].source == "assistant":
+    if isinstance(content[-1], TextObservation) and content[-1].source == "agent":
         user_end_message = random.choice(
             [
                 [
                     TextObservation(
                         content="Congratulations! You have successfully solved the task.",
-                        source="user",
+                        source="user_msg",
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Your solution has been verified as correct. ", source="user"
+                        content="Your solution has been verified as correct. ", source="user_msg"
                     ),
                 ],
                 [
                     TextObservation(
-                        content="Well done on successfully completing the task!", source="user"
+                        content="Well done on successfully completing the task!", source="user_msg"
                     ),
                 ],
                 [
                     TextObservation(
                         content="Your implementation satisfies the task requirements.",
-                        source="user",
+                        source="user_msg",
                     ),
                 ],
                 [
-                    TextObservation(content="Task completed successfully.", source="user"),
+                    TextObservation(content="Task completed successfully.", source="user_msg"),
                 ],
             ]
         )
@@ -282,30 +292,35 @@ Review the current state of the page and all other information to find the best 
                     MessageAction(
                         content="<solution> I have successfully completed the task. </solution>",
                         description="",
+                        message="I have successfully completed the task.",
                     ),
                 ],
                 [
                     MessageAction(
                         content="<solution> I did it! The task is now complete. </solution>",
                         description="",
+                        message="I did it! The task is now complete.",
                     ),
                 ],
                 [
                     MessageAction(
                         content="<solution> The objective has been achieved with no outstanding issues. </solution>",
                         description="",
+                        message="The objective has been achieved with no outstanding issues.",
                     ),
                 ],
                 [
                     MessageAction(
                         content="<solution> I have fulfilled all the requirements of the task. </solution>",
                         description="",
+                        message="I have fulfilled all the requirements of the task.",
                     ),
                 ],
                 [
                     MessageAction(
                         content="<solution> I've wrapped up the task successfully. </solution>",
                         description="",
+                        message="I've wrapped up the task successfully.",
                     ),
                 ],
             ]
@@ -317,5 +332,8 @@ Review the current state of the page and all other information to find the best 
         content=content,
     )
 
-    # Print the standardized data
-    print(standardize_data.model_dump_json())
+    # Add to the list
+    standardized_data_list.append(standardize_data.model_dump())
+
+# Print the standardized data as a JSON list
+print(json.dumps(standardized_data_list))
