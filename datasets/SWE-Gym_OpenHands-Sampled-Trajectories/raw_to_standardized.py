@@ -16,10 +16,12 @@ def process_data(data):
             _msg = f"{msg.content}" if msg.role == "tool" else msg.content
             if "OBSERVATION:\n" in _msg:
                 _msg = "\n".join(_msg.split("OBSERVATION:\n")[1:])
+            # Map the roles to the allowed source values in the schema
+            source_map = {"system": "environment", "user": "user_msg", "tool": "environment"}
             content.append(
                 TextObservation(
                     content=_msg,
-                    source="user" if msg.role == "tool" else msg.role,
+                    source=source_map[msg.role],
                 )
             )
         elif msg.role == "assistant":
