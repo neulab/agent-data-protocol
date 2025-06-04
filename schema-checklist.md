@@ -3,7 +3,7 @@
 This checklist tracks the progress of schema validation for each dataset.
 
 - [x] SWE-Gym_OpenHands-Sampled-Trajectories
-- [ ] SWE-smith_5kTrajectories
+- [x] SWE-smith_5kTrajectories
 - [ ] agenttuning
 - [x] android_in_the_wild
 - [x] androidcontrol

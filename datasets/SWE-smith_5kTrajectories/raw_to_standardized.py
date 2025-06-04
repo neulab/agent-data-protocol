@@ -13,12 +13,12 @@ def convert_step(step: dict[str, str]) -> list:
         if step["content"].startswith("OBSERVATION:"):
             # Remove "OBSERVATION:" prefix and clean up
             content = step["content"][len("OBSERVATION:") :].strip()
-            return [TextObservation(content=content, source="system")]
+            return [TextObservation(content=content, source="environment")]
         else:
-            return [TextObservation(content=step["content"], source="user")]
+            return [TextObservation(content=step["content"], source="user_msg")]
 
     elif step["role"] == "system":
-        return [TextObservation(content=step["content"], source="system")]
+        return [TextObservation(content=step["content"], source="environment")]
 
     elif step["role"] == "assistant":
         result = []
@@ -35,7 +35,7 @@ def convert_step(step: dict[str, str]) -> list:
                 # Add any text before this function call as a text observation
                 before_text = content[current_pos : match.start()].strip()
                 if before_text:
-                    result.append(TextObservation(content=before_text, source="system"))
+                    result.append(TextObservation(content=before_text, source="agent"))
 
                 # Parse the function call
                 function_name = match.group(1)
@@ -76,7 +76,7 @@ def convert_step(step: dict[str, str]) -> list:
             # Add any remaining text after the last function call
             remaining_text = content[current_pos:].strip()
             if remaining_text:
-                result.append(TextObservation(content=remaining_text, source="system"))
+                result.append(TextObservation(content=remaining_text, source="agent"))
 
         # Check for traditional code blocks if no function calls found
         elif "```" in content:
@@ -84,7 +84,7 @@ def convert_step(step: dict[str, str]) -> list:
             if code_block_regex:
                 description_text = content[: code_block_regex.start()].strip()
                 if description_text:
-                    result.append(TextObservation(content=description_text, source="system"))
+                    result.append(TextObservation(content=description_text, source="agent"))
 
                 # For code blocks, treat as API action
                 result.append(
@@ -98,10 +98,10 @@ def convert_step(step: dict[str, str]) -> list:
                 )
             else:
                 # Regular message content
-                result.append(TextObservation(content=content, source="system"))
+                result.append(TextObservation(content=content, source="agent"))
         else:
             # Regular message content
-            result.append(TextObservation(content=content, source="system"))
+            result.append(TextObservation(content=content, source="agent"))
 
         return result
     else:
