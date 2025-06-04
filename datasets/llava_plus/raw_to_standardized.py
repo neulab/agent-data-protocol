@@ -72,4 +72,4 @@ for raw_data in raw_data_list:
     standardized_trajectories.append(standardize_data.model_dump())
 
 # Print the standardized data as a JSON array
-print(json.dumps(standardized_trajectories))
+print(json.dumps(standardized_trajectories, indent=2))

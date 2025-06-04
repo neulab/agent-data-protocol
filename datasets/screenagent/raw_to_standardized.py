@@ -74,4 +74,4 @@ if __name__ == "__main__":
         standardized_trajectories.extend([t.model_dump() for t in trajectories])
 
     # Print the standardized data as a JSON array
-    print(json.dumps(standardized_trajectories))
+    print(json.dumps(standardized_trajectories, indent=2))

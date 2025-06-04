@@ -106,4 +106,4 @@ if __name__ == "__main__":
     standardized_trajectories = process_data(raw_data_list)
 
     # Print the standardized data as a JSON array
-    print(json.dumps(standardized_trajectories))
+    print(json.dumps(standardized_trajectories, indent=2))

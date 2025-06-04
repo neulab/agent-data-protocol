@@ -412,4 +412,4 @@ if __name__ == "__main__":
         standardized_trajectories.append(standardized_data.model_dump())
 
     # Print the standardized data as a JSON array
-    print(json.dumps(standardized_trajectories))
+    print(json.dumps(standardized_trajectories, indent=2))

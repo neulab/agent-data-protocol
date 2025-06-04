@@ -334,4 +334,4 @@ Review the current state of the page and all other information to find the best 
     standardized_data_list.append(standardize_data.model_dump())
 
 # Print the standardized data as a JSON list
-print(json.dumps(standardized_data_list))
+print(json.dumps(standardized_data_list, indent=2))
