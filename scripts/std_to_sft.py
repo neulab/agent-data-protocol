@@ -167,6 +167,14 @@ def standardized_event_to_openhands_message(
         # I had this earlier to include source in the message, but OpenHands does not have that and has bash executions as user messages
         # return {"role": event.source, "content": event.content} if event.source == "user" or event.source=='system' else {"role": "user", "content": f"OBSERVATION from {event.source}: {event.content}"}
 
+        # Check if this is a system message containing function descriptions
+        if event.source == "system" and (
+            "<function=" in event.content
+            or "<function_calls>" in event.content
+            or "<invoke name=" in event.content
+        ):
+            return {"from": "function_call", "value": event.content}
+
         if event.source == "user":
             event.source = "human"
 

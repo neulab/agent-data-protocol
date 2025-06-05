@@ -51,9 +51,7 @@ def convert_step(step: dict[str, str]) -> list:
                     function_name = "execute_bash"
                 if function_name == "submit":
                     function_name = "finish"
-                    # Make sure finish has a message parameter
-                    if "message" not in kwargs:
-                        kwargs["message"] = "Task completed."
+
                 param_matches = re.findall(param_pattern, params_content, re.DOTALL)
 
                 for param_name, param_value in param_matches:
@@ -71,6 +69,10 @@ def convert_step(step: dict[str, str]) -> list:
                         kwargs[param_name] = param_value == "true"
                     else:
                         kwargs[param_name] = param_value
+
+                # Make sure finish function has a message parameter
+                if function_name == "finish" and "message" not in kwargs:
+                    kwargs["message"] = "Task completed successfully."
 
                 # Add the API action
                 result.append(ApiAction(function=function_name, kwargs=kwargs))
