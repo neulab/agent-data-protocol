@@ -68,6 +68,10 @@ def convert_step(step: dict[str, str]) -> list:
                     else:
                         kwargs[param_name] = param_value
 
+                # Add required message parameter for finish function if not present
+                if function_name == "finish" and "message" not in kwargs:
+                    kwargs["message"] = "Task completed."
+
                 # Add the API action
                 result.append(ApiAction(function=function_name, kwargs=kwargs))
 

@@ -30,11 +30,16 @@ def process_data(data):
                     if tool_call.type != "function":
                         print(f"Unknown tool call type: {tool_call.type}", file=sys.stderr)
                         continue
+                    kwargs = json.loads(tool_call.function.arguments)
+                    # Add required message parameter for finish function if not present
+                    if tool_call.function.name == "finish" and "message" not in kwargs:
+                        kwargs["message"] = "Task completed."
+
                     content.append(
                         ApiAction(
                             description=msg.content,
                             function=tool_call.function.name,
-                            kwargs=json.loads(tool_call.function.arguments),
+                            kwargs=kwargs,
                         )
                     )
             else:
