@@ -307,7 +307,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": null
       }
     ],
@@ -483,7 +485,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": "The task has been successfully completed. Here's a summary of what was done:\n\n1. **Explored the Repository**: Identified the relevant files and functions related to the `describe_db_clusters` functionality in the RDS module.\n   \n2. **Modified the Source Code**: Updated the `describe_db_clusters` function in `models.py` to handle both `DBClusterIdentifier` and `ClusterArn` by extracting the actual cluster identifier from the ARN.\n\n3. **Tested the Changes**: Created and executed a script to reproduce the error, confirming that both identifier types now work correctly without errors.\n\nThe repository is now updated to meet the requirements specified in the PR description. If there are any more tasks or questions, feel free to let me know!\n\nI'll now finish the interaction."
       }
     ],
@@ -691,7 +695,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": null
       }
     ],
@@ -878,7 +884,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": "Great! The fix works. Let me explain what I did:\n\n1. First, I explored the repository structure and found the relevant files:\n   - `/workspace/getmoto__moto__4.1/moto/rds/models.py` - Contains the core RDS functionality\n   - `/workspace/getmoto__moto__4.1/moto/rds/responses.py` - Contains the API response handling\n\n2. I created a reproduction script that:\n   - Creates a DB cluster\n   - Tries to describe it using the cluster identifier (which worked)\n   - Tries to describe it using the cluster ARN (which failed)\n\n3. I identified the issue in the `describe_db_clusters` method in `models.py`:\n   - When a cluster ARN was passed as the identifier, it was trying to look up the cluster using the full ARN as the key\n   - However, clusters are stored with just their identifier as the key\n\n4. I modified the code to:\n   - Check if the cluster_identifier starts with 'arn:aws:rds:'\n   - If it does, extract the cluster name from the ARN by taking the last part after the colon\n   - Then use that extracted identifier to look up the cluster\n\n5. I tested the fix and confirmed that both lookup methods now work:\n   - Using cluster identifier: \"test-cluster-1\" \u2705\n   - Using cluster ARN: \"arn:aws:rds:us-east-1:123456789012:cluster:test-cluster-1\" \u2705\n\nThe fix is minimal and focused on the specific issue. It handles edge cases by:\n1. Only modifying the identifier if it's an ARN (starts with 'arn:aws:rds:')\n2. Preserving the original error handling for non-existent clusters\n3. Not affecting any other functionality like Neptune clusters or listing all clusters\n\nThe change aligns with AWS's behavior where both cluster identifiers and ARNs can be used to look up clusters."
       }
     ],
@@ -1099,7 +1107,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": "I have implemented the solution by modifying the `describe_db_clusters` method to properly interpret both a plain identifier and an ARN, consistent with the requirements described in the PR.\n\nKey steps undertaken:\n\n1. **Codebase Exploration**: Analyzed the relevant parts of the code to understand how `describe_db_clusters` currently functions.\n2. **Implemented Changes**: Modified the identification logic in the `describe_db_clusters` method to recognize ARNs.\n3. **Validation**: Created and ran a Python script to replicate the error condition and verify the fix was effective.\n\nBoth identifier and ARN queries now function correctly and return the expected cluster data without error.\n\nThis fix is comprehensive in addressing the task requirements.\n\nIf there are no further requests, I'll conclude this task."
       }
     ],
@@ -1281,7 +1291,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": "The task has been successfully resolved by modifying the `dispatch` method in the `Dispatch` class of `utils.py`. The key changes implemented are:\n\n1. **Traversal of MRO**: Instead of checking for lazy registration only on the toplevel module, the modified function now traverses the Method Resolution Order (MRO) of the class to trigger any necessary lazy-loaded module registrations.\n\n2. **Validation**: The script `reproduce_issue.py` was used to verify the issue originally described. Post modification, the tokens remain consistent before and after registering modules in the MRO, thus resolving the inconsistency problem.\n\nIf you have any more issues or need further assistance, feel free to reach out! \n\nAssuming there are no further tasks, I will now finish the interaction."
       }
     ],
@@ -1484,7 +1496,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": "The task has been successfully completed. The issue with the `DataFrame.info()` method raising a `ValueError` when `compute.use_numba` is enabled has been resolved. The fix involved modifying the `add_dtypes_line` method to cast float values to integers before formatting, ensuring compatibility with the `:d` format specifier.\n\nThe changes have been tested and confirmed to work as expected, with the output of `DataFrame.info()` now displaying correctly without errors.\n\nIf you have any further questions or need additional assistance, feel free to ask!\n\nNow, I will finish the interaction."
       }
     ],
@@ -1710,7 +1724,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": null
       }
     ],
@@ -1956,7 +1972,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": null
       }
     ],
@@ -2621,7 +2639,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": null
       }
     ],
@@ -2949,7 +2969,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": "Perfect! The fix works for all test cases. Let's summarize what we did:\n\n1. We identified the issue in `mypy/semanal.py` where there was a check that prevented assigning to empty tuples.\n2. We removed the check since empty tuples are valid assignment targets in Python.\n3. We tested the fix with multiple test cases:\n   - Simple empty tuple assignment: `() = []`\n   - Mixed tuple assignment with empty tuple: `(a, b), () = [[1, 2], []]`\n   - Multiple empty tuples: `(), (), () = [], [], []`\n\nThe fix is minimal and focused on the specific issue. We didn't need to modify any test files as mentioned in the PR description. The change allows mypy to correctly handle empty tuple assignments while maintaining all other functionality."
       }
     ],
@@ -3710,7 +3732,9 @@
       {
         "class_": "api_action",
         "function": "finish",
-        "kwargs": {},
+        "kwargs": {
+          "message": "Task completed."
+        },
         "description": null
       }
     ],
