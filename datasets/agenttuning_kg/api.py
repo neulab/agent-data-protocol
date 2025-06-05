@@ -2,7 +2,7 @@ def get_relations(variable: str) -> list[str]:
     """Get all relations connected to an entity or variable in the knowledge base.
 
     This function helps to explore the knowledge graph by retrieving all relations
-    (i.e., edges) that are associated with the given variable, which can be either 
+    (i.e., edges) that are associated with the given variable, which can be either
     a concrete entity (e.g., "Barack Obama") or a variable placeholder (e.g., "#0").
 
     Example: get_relations("Barack Obama")
@@ -13,8 +13,8 @@ def get_relations(variable: str) -> list[str]:
 def get_neighbors(variable: str, relation: str) -> str:
     """Get all entities connected to a variable via a specific relation.
 
-    This function retrieves a new variable containing all entities that are 
-    connected to the input variable by the given relation. This is typically 
+    This function retrieves a new variable containing all entities that are
+    connected to the input variable by the given relation. This is typically
     used after get_relations to determine which relation to follow.
 
     Example: get_neighbors("Barack Obama", "people.person.profession")
@@ -26,7 +26,7 @@ def intersection(variable1: str, variable2: str) -> str:
     """Compute the intersection of two variables.
 
     This function returns a new variable that includes only the entities
-    shared between the two input variables. The input variables must be 
+    shared between the two input variables. The input variables must be
     of the same type.
 
     Example: intersection("#1", "#2")
@@ -49,7 +49,7 @@ def get_attributes(variable: str) -> list[str]:
 def argmax(variable: str, attribute: str) -> str:
     """Return the entity with the maximum value of the given attribute.
 
-    Use this function to find the entity with the highest value for the 
+    Use this function to find the entity with the highest value for the
     specified attribute within a variable. Requires attributes to be known.
 
     Example: argmax("#2", "age")
@@ -60,7 +60,7 @@ def argmax(variable: str, attribute: str) -> str:
 def argmin(variable: str, attribute: str) -> str:
     """Return the entity with the minimum value of the given attribute.
 
-    Use this function to find the entity with the lowest value for the 
+    Use this function to find the entity with the lowest value for the
     specified attribute within a variable. Requires attributes to be known.
 
     Example: argmin("#2", "age")

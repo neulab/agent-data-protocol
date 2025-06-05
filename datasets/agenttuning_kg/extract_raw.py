@@ -1,10 +1,8 @@
 import json
 
-import pandas as pd
-
 from datasets import load_dataset
 
-dataset = load_dataset("THUDM/AgentInstruct")['kg']
+dataset = load_dataset("THUDM/AgentInstruct")["kg"]
 df = dataset.to_pandas()
 
 # Standardize the role names
