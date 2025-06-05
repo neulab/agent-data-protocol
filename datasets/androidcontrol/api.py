@@ -5,6 +5,7 @@ def click(x: int, y: int) -> None:
     ----
         x (int): The x coordinate to click.
         y (int): The y coordinate to click.
+
     """
     pass
 
@@ -15,6 +16,7 @@ def scroll(direction: str) -> None:
     Args:
     ----
         direction (str): The direction to scroll.
+
     """
     pass
 
@@ -25,6 +27,7 @@ def input_text(text: str) -> None:
     Args:
     ----
         text (str): The text to input.
+
     """
     pass
 
@@ -45,6 +48,7 @@ def open_app(app_name: str) -> None:
     Args:
     ----
         app_name (str): The name of the app to open.
+
     """
     pass
 
