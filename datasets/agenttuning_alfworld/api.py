@@ -6,8 +6,10 @@ def go(location: str):
 
     Example:
         go("bed 1")
+
     """
     pass
+
 
 def take(item: str, source: str):
     """Pick up an item from a specified source location.
@@ -18,8 +20,10 @@ def take(item: str, source: str):
 
     Example:
         take("laptop 1", "diningtable 1")
+
     """
     pass
+
 
 def put(item: str, target: str):
     """Place an item onto or into a specified target.
@@ -30,8 +34,10 @@ def put(item: str, target: str):
 
     Example:
         put("laptop 1", "bed 1")
+
     """
     pass
+
 
 def open(obj: str):
     """Open a specified container or object.
@@ -41,8 +47,10 @@ def open(obj: str):
 
     Example:
         open("drawer 1")
+
     """
     pass
+
 
 def heat(item: str, appliance: str):
     """Heat an item using a specified appliance.
@@ -53,8 +61,10 @@ def heat(item: str, appliance: str):
 
     Example:
         heat("plate 1", "microwave 1")
+
     """
     pass
+
 
 def examine(obj: str):
     """Inspect or look closely at an object in the environment.
@@ -64,8 +74,10 @@ def examine(obj: str):
 
     Example:
         examine("dresser 1")
+
     """
     pass
+
 
 def cool(item: str, appliance: str):
     """Cool an item using a specified appliance.
@@ -76,8 +88,10 @@ def cool(item: str, appliance: str):
 
     Example:
         cool("plate 1", "fridge 1")
+
     """
     pass
+
 
 def use(obj: str):
     """Use or activate a specified object or appliance.
@@ -87,8 +101,10 @@ def use(obj: str):
 
     Example:
         use("desklamp 1")
+
     """
     pass
+
 
 def close(obj: str):
     """Close a specified container or object.
@@ -98,8 +114,10 @@ def close(obj: str):
 
     Example:
         close("fridge 1")
+
     """
     pass
+
 
 def clean(item: str, appliance: str):
     """Clean an item using a specified appliance.
@@ -110,8 +128,10 @@ def clean(item: str, appliance: str):
 
     Example:
         clean("ladle 2", "sinkbasin 1")
+
     """
     pass
+
 
 def report_problem(obj: str):
     """Report an issue with a specified object in the environment.
@@ -121,8 +141,10 @@ def report_problem(obj: str):
 
     Example:
         report_problem("toilet 1")
+
     """
     pass
+
 
 def inventory():
     """Check currently held items.
@@ -131,8 +153,10 @@ def inventory():
 
     Example:
         inventory()
+
     """
     pass
+
 
 def look():
     """Survey the surroundings to get a description of the current environment.
@@ -141,8 +165,10 @@ def look():
 
     Example:
         look()
+
     """
     pass
+
 
 def look_at_under(item: str, reference: str):
     """Look closely at an item that is located under a specified object.
@@ -153,5 +179,6 @@ def look_at_under(item: str, reference: str):
 
     Example:
         look_at_under("cellphone 1", "desklamp 1")
+
     """
     pass
