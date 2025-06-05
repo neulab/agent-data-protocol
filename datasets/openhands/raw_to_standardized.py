@@ -443,16 +443,16 @@ if __name__ == "__main__":
 
     # Read the entire input as a JSON array
     raw_data_list = []
-for line in sys.stdin:
-    if line.strip():
-        raw_data_list.append(json.loads(line))
-    standardized_trajectories = []
+    for line in sys.stdin:
+        if line.strip():
+            raw_data_list.append(json.loads(line))
 
+    standardized_trajectories = []
     for raw_data in raw_data_list:
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data, keep_all=args.keep_all)
         standardized_trajectories.append(standardized_data.model_dump())
 
     # Print the standardized data as JSONL (one JSON object per line)
-for traj in standardized_trajectories:
-    print(json.dumps(traj))
+    for traj in standardized_trajectories:
+        print(json.dumps(traj))
