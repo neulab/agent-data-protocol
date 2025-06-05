@@ -5,14 +5,12 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
-# Read the entire input as a JSON array
-raw_data_list = []
+# Process each line of input individually
 for line in sys.stdin:
-    if line.strip():
-        raw_data_list.append(json.loads(line))
-standardized_trajectories = []
+    if not line.strip():
+        continue
 
-for raw_data in raw_data_list:
+    raw_data = json.loads(line)
     content = []
 
     # Process the conversations
@@ -29,8 +27,5 @@ for raw_data in raw_data_list:
     # Create trajectory
     traj = Trajectory(id=raw_data["id"], content=content)
 
-    standardized_trajectories.append(traj.model_dump())
-
-# Print the standardized data as JSONL (one JSON object per line)
-for traj in standardized_trajectories:
-    print(json.dumps(traj))
+    # Print the standardized data as JSON
+    print(json.dumps(traj.model_dump()))

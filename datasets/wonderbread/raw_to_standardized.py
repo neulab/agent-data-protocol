@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from typing import Dict, List
+from typing import Dict
 
 from schema.action.api import ApiAction
 from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
@@ -38,118 +38,112 @@ def map_keypress(key: str) -> str:
     return key
 
 
-def process_data(raw_data_list: List[Dict]) -> List[Dict]:
-    """Process a list of raw data into standardized trajectories.
+def process_single_data(raw_traj: Dict) -> Dict:
+    """Process a single raw data into a standardized trajectory.
 
     Args:
-        raw_data_list: List of raw data dictionaries
+        raw_traj: Raw data dictionary
 
     Returns:
-        List of standardized trajectory dictionaries
+        Standardized trajectory dictionary
     """
-    standardized_trajectories = []
+    task = raw_traj["task"]
+    task_stamp = raw_traj["task_stamp"]
+    sop = raw_traj["sop"]
 
-    for raw_traj in raw_data_list:
-        task = raw_traj["task"]
-        task_stamp = raw_traj["task_stamp"]
-        sop = raw_traj["sop"]
+    traj: Trajectory = Trajectory(
+        id=task_stamp,
+        content=[TextObservation(content=task, source="user")],  # first message is the task
+    )
+    for element in raw_traj["trace"]:
+        if element["type"] == "state":
+            html = element["data"]["html"]
+            url = element["data"]["url"]
 
-        traj: Trajectory = Trajectory(
-            id=task_stamp,
-            content=[TextObservation(content=task, source="user")],  # first message is the task
-        )
-        for element in raw_traj["trace"]:
-            if element["type"] == "state":
-                html = element["data"]["html"]
-                url = element["data"]["url"]
-
-                json_state = json.loads(element["data"]["json_state"])
-                annotations = []
-                for state in json_state:
-                    bbox = BoundingBox(
-                        x=state["x"],
-                        y=state["y"],
-                        width=state["width"],
-                        height=state["height"],
-                    )
-                    element_type = state["tag"]
-                    text = state.get("text", "")
-                    xpath = state.get("xpath", None)
-                    annotation = ImageAnnotation(
-                        text=text, element_type=element_type, bounding_box=bbox, xpath=xpath
-                    )
-                    annotations.append(annotation)
-                image_observation = ImageObservation(
-                    content=f"{root}/screenshots/{task_stamp}/{os.path.basename(element['data']['path_to_screenshot']).split('.')[0]}.png",
-                    annotations=annotations,
-                    source="environment",
+            json_state = json.loads(element["data"]["json_state"])
+            annotations = []
+            for state in json_state:
+                bbox = BoundingBox(
+                    x=state["x"],
+                    y=state["y"],
+                    width=state["width"],
+                    height=state["height"],
                 )
-
-                web_obs = WebObservation(
-                    url=url,
-                    viewport_size=[
-                        element["data"]["screen_size"]["width"],
-                        element["data"]["screen_size"]["height"],
-                    ],
-                    html=html,
-                    image_observation=image_observation,
-                    axtree=None,
+                element_type = state["tag"]
+                text = state.get("text", "")
+                xpath = state.get("xpath", None)
+                annotation = ImageAnnotation(
+                    text=text, element_type=element_type, bounding_box=bbox, xpath=xpath
                 )
-                traj.content.append(web_obs)
+                annotations.append(annotation)
+            image_observation = ImageObservation(
+                content=f"{root}/screenshots/{task_stamp}/{os.path.basename(element['data']['path_to_screenshot']).split('.')[0]}.png",
+                annotations=annotations,
+                source="environment",
+            )
 
-            elif element["type"] == "action":
-                function = element["data"]["type"]
-                try:
-                    match function:
-                        case "mouseup":
-                            kwargs = {
-                                "xpath": element["data"]["element_attributes"]["element"]["xpath"],
-                            }
-                            function_name = "click"
-                        case "keystroke":
-                            kwargs = {
-                                "xpath": element["data"]["element_attributes"]["element"]["xpath"],
-                                "value": "".join(
-                                    element["data"]["key"].strip("'").split("' '")
-                                ),  # "'h' 'e' 'l' 'l' 'o'" --> "hello"
-                            }
-                            function_name = "type"
-                        case "keypress":
-                            kwargs = {
-                                "xpath": element["data"]["element_attributes"]["element"]["xpath"],
-                                "value": map_keypress(element["data"]["key"]),
-                            }
-                            function_name = "keyboard_press"
-                        case "scroll":
-                            kwargs = {
-                                "dx": element["data"]["dx"],
-                                "dy": element["data"]["dy"],
-                            }
-                            function_name = "scroll"
-                        case _:
-                            raise ValueError(f"Unknown action type: {function}")
+            web_obs = WebObservation(
+                url=url,
+                viewport_size=[
+                    element["data"]["screen_size"]["width"],
+                    element["data"]["screen_size"]["height"],
+                ],
+                html=html,
+                image_observation=image_observation,
+                axtree=None,
+            )
+            traj.content.append(web_obs)
 
-                    action = ApiAction(function=function_name, kwargs=kwargs)
-                    traj.content.append(action)
-                except TypeError:
-                    continue
-            else:
-                raise ValueError(f"Unknown element type: {element['type']}")
+        elif element["type"] == "action":
+            function = element["data"]["type"]
+            try:
+                match function:
+                    case "mouseup":
+                        kwargs = {
+                            "xpath": element["data"]["element_attributes"]["element"]["xpath"],
+                        }
+                        function_name = "click"
+                    case "keystroke":
+                        kwargs = {
+                            "xpath": element["data"]["element_attributes"]["element"]["xpath"],
+                            "value": "".join(
+                                element["data"]["key"].strip("'").split("' '")
+                            ),  # "'h' 'e' 'l' 'l' 'o'" --> "hello"
+                        }
+                        function_name = "type"
+                    case "keypress":
+                        kwargs = {
+                            "xpath": element["data"]["element_attributes"]["element"]["xpath"],
+                            "value": map_keypress(element["data"]["key"]),
+                        }
+                        function_name = "keyboard_press"
+                    case "scroll":
+                        kwargs = {
+                            "dx": element["data"]["dx"],
+                            "dy": element["data"]["dy"],
+                        }
+                        function_name = "scroll"
+                    case _:
+                        raise ValueError(f"Unknown action type: {function}")
 
-        standardized_trajectories.append(traj.model_dump())
+                action = ApiAction(function=function_name, kwargs=kwargs)
+                traj.content.append(action)
+            except TypeError:
+                continue
+        else:
+            raise ValueError(f"Unknown element type: {element['type']}")
 
-    return standardized_trajectories
+    return traj.model_dump()
 
 
 if __name__ == "__main__":
-    # Read the entire input as a JSON array
-    raw_data_list = []
-for line in sys.stdin:
-    if line.strip():
-        raw_data_list.append(json.loads(line))
+    # Process each line of input individually
+    for line in sys.stdin:
+        if not line.strip():
+            continue
 
-    standardized_trajectories = process_data(raw_data_list)
+        raw_data = json.loads(line)
+        standardized_data = process_single_data(raw_data)
 
-    # Print the standardized data as JSONL (one JSON object per line)
-for traj in standardized_trajectories:
-    print(json.dumps(traj))
+        # Print the standardized data as JSON
+        print(json.dumps(standardized_data))

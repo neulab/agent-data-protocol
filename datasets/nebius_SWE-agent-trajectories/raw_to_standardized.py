@@ -93,18 +93,14 @@ def process_data(data):
 
 
 if __name__ == "__main__":
-    # Read the entire input as a JSON array
-    raw_data_list = []
-for line in sys.stdin:
-    if line.strip():
-        raw_data_list.append(json.loads(line))
-    standardized_trajectories = []
+    # Process each line of input individually
+    for line in sys.stdin:
+        if not line.strip():
+            continue
 
-    for raw_data in raw_data_list:
+        raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
-        standardized_trajectories.append(standardized_data.model_dump())
 
-    # Print the standardized data as JSONL (one JSON object per line)
-for traj in standardized_trajectories:
-    print(json.dumps(traj))
+        # Print the standardized data as JSON
+        print(json.dumps(standardized_data.model_dump()))

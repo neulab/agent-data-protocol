@@ -235,24 +235,26 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
 
 
-raw_data_list = []
-for line in sys.stdin:
-    if line.strip():
-        raw_data_list.append(json.loads(line))
-standardized_data_list = []
-for raw_data in raw_data_list:
-    web_system_msg = """You are an autonomous intelligent agent tasked with navigating a web browser. You will be given web-based tasks. These tasks will be accomplished through the use of specific actions you can issue.
+# Process each line of input individually
+web_system_msg = """You are an autonomous intelligent agent tasked with navigating a web browser. You will be given web-based tasks. These tasks will be accomplished through the use of specific actions you can issue.
 
 # Instructions
 Review the current state of the page and all other information to find the best possible next action to accomplish your goal. Your answer will be interpreted and executed by a program, make sure to follow the formatting instructions."""
 
+for line in sys.stdin:
+    if not line.strip():
+        continue
+
+    raw_data = json.loads(line)
     content = []
+
     if "mind2web" in raw_data["id"]:
         content.extend(
             [
                 TextObservation(content=web_system_msg, source="environment"),
             ]
         )
+
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
 
@@ -327,15 +329,12 @@ Review the current state of the page and all other information to find the best 
             ]
         )
         content.extend(assistant_end_message)
+
     # Standardize the data
     standardize_data = Trajectory(
         id=raw_data["id"],
         content=content,
     )
 
-    # Add to the list
-    standardized_data_list.append(standardize_data.model_dump())
-
-# Print the standardized data as a JSON list
-for item in standardized_data_list:
-    print(json.dumps(item))
+    # Print the standardized data as JSON
+    print(json.dumps(standardize_data.model_dump()))

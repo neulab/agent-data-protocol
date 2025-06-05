@@ -56,14 +56,12 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
         raise Exception("Invalid role.")
 
 
-# Read the entire input as a JSON array
-raw_data_list = []
+# Process each line of input individually
 for line in sys.stdin:
-    if line.strip():
-        raw_data_list.append(json.loads(line))
-standardized_trajectories = []
+    if not line.strip():
+        continue
 
-for raw_data in raw_data_list:
+    raw_data = json.loads(line)
     metadata = dict([(k, v) for k, v in raw_data.items() if k != "conversations"])
 
     content = []
@@ -72,8 +70,6 @@ for raw_data in raw_data_list:
 
     # Standardize the data
     standardize_data = Trajectory(id=str(raw_data["unique_id"]), content=content)
-    standardized_trajectories.append(standardize_data.model_dump())
 
-# Print the standardized data as JSONL (one JSON object per line)
-for traj in standardized_trajectories:
-    print(json.dumps(traj))
+    # Print the standardized data as JSON
+    print(json.dumps(standardize_data.model_dump()))

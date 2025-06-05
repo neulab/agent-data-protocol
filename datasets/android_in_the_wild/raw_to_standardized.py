@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from schema.action.action import Action
 from schema.action.api import ApiAction
@@ -10,31 +10,25 @@ from schema.observation.observation import Observation
 from schema.trajectory import Trajectory
 
 
-def process_data(raw_data_list: List[Dict]) -> List[Dict]:
-    """Process a list of raw data into standardized trajectories.
+def process_episode(episode_data: List[Dict]) -> Dict:
+    """Process a list of data for a single episode into a standardized trajectory.
 
     Args:
-        raw_data_list: List of raw data dictionaries
+        episode_data: List of data dictionaries for a single episode
 
     Returns:
-        List of standardized trajectory dictionaries
+        Standardized trajectory dictionary
     """
-    standardized_trajectories = []
+    if not episode_data:
+        return None
 
-    prev_id = None
+    episode_id = episode_data[0]["episode_id"]
     content: list[Action | Observation] = []
 
-    def flush_episode(curr_data: dict[str, Any]):
-        if content:
-            traj = Trajectory(id=prev_id, content=list(content))
-            standardized_trajectories.append(traj.model_dump())
-            content.clear()
-        content.append(MessageAction(content=curr_data["goal_info"]))
+    # Add the goal info as the first message
+    content.append(MessageAction(content=episode_data[0]["goal_info"]))
 
-    for data in raw_data_list:
-        if prev_id != data["episode_id"]:
-            flush_episode(data)
-            prev_id = data["episode_id"]
+    for data in episode_data:
         # Validating assumptions
         if data["goal_info"] != content[0].content:
             raise ValueError(
@@ -95,22 +89,37 @@ def process_data(raw_data_list: List[Dict]) -> List[Dict]:
         else:
             raise ValueError(f"Unknown action type: {data['results/action_type']}")
 
-    if content:
-        traj = Trajectory(id=prev_id, content=content)
-        standardized_trajectories.append(traj.model_dump())
-
-    return standardized_trajectories
+    traj = Trajectory(id=episode_id, content=content)
+    return traj.model_dump()
 
 
 if __name__ == "__main__":
-    # Read the entire input as a JSON array
-    raw_data_list = []
+    # Process data line by line, but group by episode_id
+    current_episode_id = None
+    current_episode_data = []
+
     for line in sys.stdin:
-        if line.strip():
-            raw_data_list.append(json.loads(line))
+        if not line.strip():
+            continue
 
-    standardized_trajectories = process_data(raw_data_list)
+        data = json.loads(line)
 
-    # Print the standardized data as JSONL (one JSON object per line)
-    for traj in standardized_trajectories:
-        print(json.dumps(traj))
+        # If we encounter a new episode, process the previous one
+        if current_episode_id is not None and current_episode_id != data["episode_id"]:
+            # Process and output the current episode
+            standardized_trajectory = process_episode(current_episode_data)
+            if standardized_trajectory:
+                print(json.dumps(standardized_trajectory))
+            # Start a new episode
+            current_episode_data = [data]
+        else:
+            # Add to the current episode
+            current_episode_data.append(data)
+
+        current_episode_id = data["episode_id"]
+
+    # Process the last episode
+    if current_episode_data:
+        standardized_trajectory = process_episode(current_episode_data)
+        if standardized_trajectory:
+            print(json.dumps(standardized_trajectory))

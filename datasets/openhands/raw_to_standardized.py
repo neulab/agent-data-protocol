@@ -441,18 +441,14 @@ def get_args():
 if __name__ == "__main__":
     args = get_args()
 
-    # Read the entire input as a JSON array
-    raw_data_list = []
+    # Process each line of input individually
     for line in sys.stdin:
-        if line.strip():
-            raw_data_list.append(json.loads(line))
+        if not line.strip():
+            continue
 
-    standardized_trajectories = []
-    for raw_data in raw_data_list:
+        raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data, keep_all=args.keep_all)
-        standardized_trajectories.append(standardized_data.model_dump())
 
-    # Print the standardized data as JSONL (one JSON object per line)
-    for traj in standardized_trajectories:
-        print(json.dumps(traj))
+        # Print the standardized data as JSON
+        print(json.dumps(standardized_data.model_dump()))

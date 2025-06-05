@@ -103,17 +103,17 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
 APIS = set()
 
-# Read the entire input as a JSON array
-raw_data_list = []
+# Process each line of input individually
 for line in sys.stdin:
-    if line.strip():
-        raw_data_list.append(json.loads(line))
-standardized_trajectories = []
+    if not line.strip():
+        continue
 
-for raw_data in raw_data_list:
+    raw_data = json.loads(line)
     content = []
+
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
+
     if (isinstance(content[-1], TextObservation) and content[-1].source == "agent") or isinstance(
         content[-1], CodeAction
     ):
@@ -191,11 +191,9 @@ for raw_data in raw_data_list:
         id=raw_data["id"],
         content=content,
     )
-    standardized_trajectories.append(traj.model_dump())
 
-# Print the standardized data as JSONL (one JSON object per line)
-for traj in standardized_trajectories:
-    print(json.dumps(traj))
+    # Print the standardized data as JSON
+    print(json.dumps(traj.model_dump()))
 
 # with open("apis.txt", "w") as f:
 #     for api in APIS:

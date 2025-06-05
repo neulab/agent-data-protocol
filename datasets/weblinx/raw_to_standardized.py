@@ -203,6 +203,32 @@ def create_sample_std():
     return [sample_trajectory]
 
 
+def process_single_data(raw_data: Dict) -> Dict:
+    """Process a single raw data into a standardized trajectory.
+
+    Args:
+        raw_data: Raw data dictionary
+
+    Returns:
+        Standardized trajectory dictionary
+    """
+    data = SchemaRaw(**raw_data)
+
+    content: list = []
+    for step in data.data:
+        content.extend(convert_step(step, data.shortcode))
+
+    standardized_data = Trajectory(
+        id=data.shortcode,
+        content=content,
+        details={
+            "description": data.description,
+            "tasks": ", ".join(data.tasks),
+        },
+    )
+    return standardized_data.model_dump()
+
+
 if __name__ == "__main__":
     # Check if WebLINX-full directory exists
     if not WEBLINX_DUMP.is_dir():
@@ -213,17 +239,21 @@ if __name__ == "__main__":
         print(f"{DOWNLOAD_INSTRUCTIONS}", file=sys.stderr)
         # Create a sample standardized trajectory for testing
         standardized_trajectories = create_sample_std()
+
+        # Print the standardized data as JSONL (one JSON object per line)
+        for traj in standardized_trajectories:
+            print(json.dumps(traj))
     else:
-        # Read the entire input as a JSON array
-        raw_data_list = []
+        # Process each line of input individually
         for line in sys.stdin:
-            if line.strip():
-                raw_data_list.append(json.loads(line))
-        standardized_trajectories = process_data(raw_data_list)
+            if not line.strip():
+                continue
 
-    # Print the standardized data as JSONL (one JSON object per line)
-for traj in standardized_trajectories:
-    print(json.dumps(traj))
+            raw_data = json.loads(line)
+            standardized_data = process_single_data(raw_data)
 
-    if intents_skipped:
-        print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)
+            # Print the standardized data as JSON
+            print(json.dumps(standardized_data))
+
+        if intents_skipped:
+            print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)
