@@ -66,9 +66,6 @@ if __name__ == "__main__":
     # Process each line of input individually
     idx = 0
     for line in sys.stdin:
-        if not line.strip():
-            continue
-
         raw_data = json.loads(line)
         raw_data = SchemaRaw(**raw_data)
 

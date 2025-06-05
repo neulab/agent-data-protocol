@@ -246,9 +246,6 @@ if __name__ == "__main__":
     else:
         # Process each line of input individually
         for line in sys.stdin:
-            if not line.strip():
-                continue
-
             raw_data = json.loads(line)
             standardized_data = process_single_data(raw_data)
 

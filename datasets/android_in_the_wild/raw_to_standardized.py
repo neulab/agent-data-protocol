@@ -99,9 +99,6 @@ if __name__ == "__main__":
     current_episode_data = []
 
     for line in sys.stdin:
-        if not line.strip():
-            continue
-
         data = json.loads(line)
 
         # If we encounter a new episode, process the previous one

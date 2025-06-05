@@ -242,9 +242,6 @@ web_system_msg = """You are an autonomous intelligent agent tasked with navigati
 Review the current state of the page and all other information to find the best possible next action to accomplish your goal. Your answer will be interpreted and executed by a program, make sure to follow the formatting instructions."""
 
 for line in sys.stdin:
-    if not line.strip():
-        continue
-
     raw_data = json.loads(line)
     content = []
 

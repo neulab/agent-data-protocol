@@ -58,9 +58,6 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
 
 # Process each line of input individually
 for line in sys.stdin:
-    if not line.strip():
-        continue
-
     raw_data = json.loads(line)
     metadata = dict([(k, v) for k, v in raw_data.items() if k != "conversations"])
 

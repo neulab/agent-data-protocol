@@ -105,9 +105,6 @@ APIS = set()
 
 # Process each line of input individually
 for line in sys.stdin:
-    if not line.strip():
-        continue
-
     raw_data = json.loads(line)
     content = []
 

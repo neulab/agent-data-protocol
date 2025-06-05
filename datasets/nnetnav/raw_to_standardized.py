@@ -200,8 +200,6 @@ def convert_trajectory(traj: SchemaRaw) -> Dict[str, Any]:
 def main():
     # Process each line as a separate JSON object
     for line in sys.stdin:
-        if not line.strip():
-            continue
         item = json.loads(line)
         traj = SchemaRaw.model_validate(item)
         standardized = convert_trajectory(traj)

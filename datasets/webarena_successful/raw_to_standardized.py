@@ -100,9 +100,6 @@ def process_data(raw_traj):
 if __name__ == "__main__":
     # Process each line of input individually
     for line in sys.stdin:
-        if not line.strip():
-            continue
-
         raw_data = json.loads(line)
         standardized_data = process_data(raw_data)
 

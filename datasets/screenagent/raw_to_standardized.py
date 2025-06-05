@@ -65,9 +65,6 @@ if __name__ == "__main__":
 
     # Process each line of JSONL from stdin
     for line in sys.stdin:
-        if not line.strip():
-            continue
-
         # Parse the JSON object from the current line
         trajectory_group = json.loads(line)
 

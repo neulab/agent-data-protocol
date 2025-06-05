@@ -43,9 +43,6 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
 # Process each line of JSONL from stdin
 for line in sys.stdin:
-    if not line.strip():
-        continue
-
     # Parse the JSON object from the current line
     raw_data = json.loads(line)
 
