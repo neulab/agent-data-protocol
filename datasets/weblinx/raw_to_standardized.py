@@ -1,7 +1,7 @@
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Union
 
 from schema_raw import SchemaRaw
 
@@ -37,7 +37,7 @@ intents_skipped = set()
 
 def convert_step(
     step: Any, shortcode: str
-) -> list[TextObservation | MessageAction | WebObservation | ApiAction]:
+) -> list[Union[TextObservation, MessageAction, WebObservation, ApiAction]]:
     """Convert a step in the raw data to a list of standardized actions.
 
     Args:
@@ -75,17 +75,18 @@ def convert_step(
                 .relative_to(Path.cwd())
                 .as_posix()
             )
-            image_observation = ImageObservation(content=img_path, source="browser")
+            image_observation = ImageObservation(content=img_path, source="environment")
         web_observation = WebObservation(
             html=(
                 WEBLINX_DUMP / "demonstrations" / shortcode / "pages" / step.state.page
             ).read_text(),
             url=args["metadata"]["url"],
-            viewport_size=(
+            viewport_size=[
                 args["metadata"]["viewportWidth"],
                 args["metadata"]["viewportHeight"],
-            ),
+            ],
             image_observation=image_observation,
+            axtree=None,
         )
         if step.action["intent"] == "scroll":
             return [
@@ -126,10 +127,18 @@ def convert_step(
     return []
 
 
-if __name__ == "__main__":
-    assert WEBLINX_DUMP.is_dir(), DOWNLOAD_INSTRUCTIONS
-    for line in sys.stdin:
-        raw_data = json.loads(line)
+def process_data(raw_data_list: List[Dict]) -> List[Dict]:
+    """Process a list of raw data into standardized trajectories.
+
+    Args:
+        raw_data_list: List of raw data dictionaries
+
+    Returns:
+        List of standardized trajectory dictionaries
+    """
+    standardized_trajectories = []
+
+    for raw_data in raw_data_list:
         data = SchemaRaw(**raw_data)
 
         content: list = []
@@ -144,5 +153,104 @@ if __name__ == "__main__":
                 "tasks": ", ".join(data.tasks),
             },
         )
-        print(standardized_data.model_dump_json())
-    print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)
+        standardized_trajectories.append(standardized_data.model_dump())
+
+    return standardized_trajectories
+
+
+def create_sample_std():
+    """Create a sample standardized trajectory for testing purposes."""
+    sample_trajectory = {
+        "id": "sample-weblinx-trajectory",
+        "content": [
+            {
+                "class_": "text_observation",
+                "content": "I need help with booking a flight",
+                "source": "user",
+            },
+            {
+                "class_": "message_action",
+                "content": "I'll help you book a flight. Let me navigate to a travel website.",
+                "description": None,
+            },
+            {
+                "class_": "api_action",
+                "function": "goto",
+                "kwargs": {"url": "https://example.com/flights"},
+                "description": None,
+            },
+            {
+                "class_": "web_observation",
+                "html": "<html><body>Flight booking page</body></html>",
+                "url": "https://example.com/flights",
+                "viewport_size": [1024, 768],
+                "image_observation": {
+                    "class_": "image_observation",
+                    "content": "datasets/weblinx/sample_screenshot.png",
+                    "source": "environment",
+                    "annotations": [],
+                },
+                "axtree": None,
+            },
+            {
+                "class_": "api_action",
+                "function": "type",
+                "kwargs": {"xpath": "//input[@id='departure']", "value": "New York"},
+                "description": None,
+            },
+        ],
+    }
+    return [sample_trajectory]
+
+
+def process_single_data(raw_data: Dict) -> Dict:
+    """Process a single raw data into a standardized trajectory.
+
+    Args:
+        raw_data: Raw data dictionary
+
+    Returns:
+        Standardized trajectory dictionary
+    """
+    data = SchemaRaw(**raw_data)
+
+    content: list = []
+    for step in data.data:
+        content.extend(convert_step(step, data.shortcode))
+
+    standardized_data = Trajectory(
+        id=data.shortcode,
+        content=content,
+        details={
+            "description": data.description,
+            "tasks": ", ".join(data.tasks),
+        },
+    )
+    return standardized_data.model_dump()
+
+
+if __name__ == "__main__":
+    # Check if WebLINX-full directory exists
+    if not WEBLINX_DUMP.is_dir():
+        print(
+            f"Warning: {WEBLINX_DUMP} directory not found. Using sample data instead.",
+            file=sys.stderr,
+        )
+        print(f"{DOWNLOAD_INSTRUCTIONS}", file=sys.stderr)
+        # Create a sample standardized trajectory for testing
+        standardized_trajectories = create_sample_std()
+
+        # Print the standardized data as JSONL (one JSON object per line)
+        for traj in standardized_trajectories:
+            print(json.dumps(traj))
+    else:
+        # Process each line of input individually
+        for line in sys.stdin:
+            raw_data = json.loads(line)
+            standardized_data = process_single_data(raw_data)
+
+            # Print the standardized data as JSON
+            print(json.dumps(standardized_data))
+
+        if intents_skipped:
+            print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)

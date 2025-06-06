@@ -18,7 +18,7 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
                 ImageObservation(
                     content=os.path.join("images/", metadata["data_source"], metadata["image"]),
                     annotations=None,
-                    source="system",
+                    source="environment",
                 ),
                 TextObservation(content=step["value"][len("<image>\n") :], source="user"),
             ]
@@ -56,9 +56,9 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
         raise Exception("Invalid role.")
 
 
+# Process each line of input individually
 for line in sys.stdin:
     raw_data = json.loads(line)
-
     metadata = dict([(k, v) for k, v in raw_data.items() if k != "conversations"])
 
     content = []
@@ -68,5 +68,5 @@ for line in sys.stdin:
     # Standardize the data
     standardize_data = Trajectory(id=str(raw_data["unique_id"]), content=content)
 
-    # Print the standardized data
-    print(standardize_data.model_dump_json())
+    # Print the standardized data as JSON
+    print(json.dumps(standardize_data.model_dump()))

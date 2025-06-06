@@ -16,7 +16,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         code_obs_regex = re.match(r"Execution result: \n(.*)", step["content"], re.DOTALL)
 
         if code_obs_regex:
-            return [TextObservation(content=code_obs_regex.group(1), source="execution")]
+            return [TextObservation(content=code_obs_regex.group(1), source="environment")]
         else:
             return [TextObservation(content=step["content"], source="user")]
     elif step["role"] == "assistant":
@@ -41,7 +41,9 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         raise Exception("Invalid role.")
 
 
+# Process each line of JSONL from stdin
 for line in sys.stdin:
+    # Parse the JSON object from the current line
     raw_data = json.loads(line)
 
     content = []
@@ -127,5 +129,5 @@ for line in sys.stdin:
     # Standardize the data
     standardize_data = Trajectory(id=str(raw_data["id"]), content=content)
 
-    # Print the standardized data
-    print(standardize_data.model_dump_json())
+    # Print the standardized data as a JSON object (one per line)
+    print(json.dumps(standardize_data.model_dump()))

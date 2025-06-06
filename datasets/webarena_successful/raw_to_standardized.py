@@ -13,21 +13,22 @@ from schema.trajectory import Trajectory
 _id2key = list(chain(SPECIAL_KEYS, ASCII_CHARSET, FREQ_UNICODE_CHARSET, ["\n"]))
 
 root = "datasets/webarena_successful"
-trajs: list[Trajectory] = []
 
 # step does not have screenshot recording, skip to maintain the consistency of data format
 SOURCE_BLACK_LIST = ["SteP"]
 
-for line in sys.stdin:
-    raw_traj = json.loads(line)
+
+def process_data(raw_traj):
     task = raw_traj["intent"]
     model = raw_traj["source"]
     if model in SOURCE_BLACK_LIST:
-        continue
+        return None
+
     traj = Trajectory(
         id=str(raw_traj["task_id"]),
         content=[TextObservation(content=task, source="user")],
     )
+
     for element in raw_traj["trajectory"]:
         if "action" in element:
             function = element["action"]["action_name"]
@@ -80,18 +81,28 @@ for line in sys.stdin:
             img_obs = ImageObservation(
                 content=screenshot_path,
                 annotations=[],
-                source="browser",
+                source="environment",
             )
             web_obs = WebObservation(
                 url=url,
-                viewport_size=(1280, 720),
+                viewport_size=[1280, 720],
                 html=html,
                 image_observation=img_obs,
+                axtree=None,
             )
             traj.content.append(web_obs)
         else:
             raise ValueError(f"Unknown element type: {element}")
-    trajs.append(traj)
 
-for traj in trajs:
-    print(traj.model_dump_json())
+    return traj.model_dump()
+
+
+if __name__ == "__main__":
+    # Process each line of input individually
+    for line in sys.stdin:
+        raw_data = json.loads(line)
+        standardized_data = process_data(raw_data)
+
+        # Print the standardized data as JSON if not None
+        if standardized_data:
+            print(json.dumps(standardized_data))

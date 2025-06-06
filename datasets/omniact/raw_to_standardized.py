@@ -40,7 +40,7 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
             ImageObservation(
                 content=example["image"],
                 annotations=annotations,
-                source="os",
+                source="environment",
             ),
             TextObservation(
                 content=task_regex.group(1)

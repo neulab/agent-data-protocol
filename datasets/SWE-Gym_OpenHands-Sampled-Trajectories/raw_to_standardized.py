@@ -16,10 +16,12 @@ def process_data(data):
             _msg = f"{msg.content}" if msg.role == "tool" else msg.content
             if "OBSERVATION:\n" in _msg:
                 _msg = "\n".join(_msg.split("OBSERVATION:\n")[1:])
+            # Map the roles to the allowed source values in the schema
+            source_map = {"system": "environment", "user": "user", "tool": "environment"}
             content.append(
                 TextObservation(
                     content=_msg,
-                    source="user" if msg.role == "tool" else msg.role,
+                    source=source_map[msg.role],
                 )
             )
         elif msg.role == "assistant":
@@ -28,11 +30,16 @@ def process_data(data):
                     if tool_call.type != "function":
                         print(f"Unknown tool call type: {tool_call.type}", file=sys.stderr)
                         continue
+                    kwargs = json.loads(tool_call.function.arguments)
+                    # Add required message parameter for finish function if not present
+                    if tool_call.function.name == "finish" and "message" not in kwargs:
+                        kwargs["message"] = "Task completed."
+
                     content.append(
                         ApiAction(
                             description=msg.content,
                             function=tool_call.function.name,
-                            kwargs=json.loads(tool_call.function.arguments),
+                            kwargs=kwargs,
                         )
                     )
             else:
@@ -45,8 +52,8 @@ def process_data(data):
         details={
             "run_id": data.run_id,
             "resolved": str(data.resolved),
-            "tools": json.dumps(data.tools),
-            "test_result": json.dumps(data.test_result),
+            "tools": json.dumps(data.tools, indent=2),
+            "test_result": json.dumps(data.test_result, indent=2),
         },
     )
 

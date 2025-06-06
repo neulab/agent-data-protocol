@@ -50,6 +50,18 @@ def parse_browser_action(action_str):
     return function_name, args, kwargs
 
 
+def map_source(source):
+    """Map source to one of the allowed values: 'user', 'agent', or 'environment'"""
+    if source == "user":
+        return "user"
+    elif source == "assistant":
+        return "agent"
+    elif source == "system":
+        return "environment"
+    else:
+        return "environment"
+
+
 def process_data(data, keep_all=False):
     content = []
     for item in data.trajectory:
@@ -80,7 +92,7 @@ def process_data(data, keep_all=False):
                     _html = markdown.markdown(item.content)
                 content.append(
                     WebObservation(
-                        source=item.source,
+                        source=map_source(item.source),
                         url=item.extras.url,
                         html=_html,
                         axtree=None
@@ -89,7 +101,7 @@ def process_data(data, keep_all=False):
                         image_observation=None
                         if not item.extras.screenshot
                         else ImageObservation(
-                            source=item.source,
+                            source=map_source(item.source),
                             content=item.extras.screenshot,  # Base64-encoded image data, not a path
                         ),
                         viewport_size=None,
@@ -100,7 +112,7 @@ def process_data(data, keep_all=False):
                 obs += [f"Output:\n{item.content}\n"]
                 content.append(
                     TextObservation(
-                        source=item.source,
+                        source=map_source(item.source),
                         content="\n".join(obs),
                     )
                 )
@@ -110,7 +122,7 @@ def process_data(data, keep_all=False):
                 obs += [f"Output:\n{item.content}\n"]
                 content.append(
                     TextObservation(
-                        source=item.source,
+                        source=map_source(item.source),
                         content="\n".join(obs),
                     )
                 )
@@ -119,14 +131,14 @@ def process_data(data, keep_all=False):
                     continue
                 content.append(
                     TextObservation(
-                        source=item.source,
+                        source=map_source(item.source),
                         content=f"Agent state changed to {item.extras.agent_state}",
                     )
                 )
             elif item.observation == "delegate":
                 content.append(
                     TextObservation(
-                        source=item.source,
+                        source=map_source(item.source),
                         content=item.content if item.content else item.extras.outputs.content,
                     )
                 )
@@ -150,7 +162,7 @@ def process_data(data, keep_all=False):
                     continue
                 content.append(
                     TextObservation(
-                        source=item.source,
+                        source=map_source(item.source),
                         content=f"{item.message}\n{item.content}"
                         if item.message != item.content
                         else item.message,
@@ -170,7 +182,7 @@ def process_data(data, keep_all=False):
                 print(f"Unknown observation: {'\n'.join(obs)}", file=sys.stderr)
                 content.append(
                     TextObservation(
-                        source=item.source,
+                        source=map_source(item.source),
                         content="\n".join(obs),
                     )
                 )
@@ -181,7 +193,7 @@ def process_data(data, keep_all=False):
             if item.source == "user":
                 content.append(
                     TextObservation(
-                        source=item.source,
+                        source=map_source(item.source),
                         content=item.args.content,
                     )
                 )
@@ -429,8 +441,11 @@ def get_args():
 if __name__ == "__main__":
     args = get_args()
 
+    # Process each line of input individually
     for line in sys.stdin:
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data, keep_all=args.keep_all)
-        print(standardized_data.model_dump_json())
+
+        # Print the standardized data as JSON
+        print(json.dumps(standardized_data.model_dump()))

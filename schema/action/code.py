@@ -1,11 +1,12 @@
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from schema.action.action import Action
 
 
 class CodeAction(Action):
+    class_: str = Field("code_action", description="The class of the action")
     language: Literal[
         "git",
         "go",
@@ -319,3 +320,9 @@ class CodeAction(Action):
     description: str | None = Field(
         ..., description="The description/thought provided for the action"
     )
+
+    @field_validator("class_")
+    def validate_class(cls, v):
+        if v != "code_action":
+            raise ValueError(f"class_ must be 'code_action', got '{v}'")
+        return v

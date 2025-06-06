@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from typing import Dict
 
 from schema.action.api import ApiAction
 from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
@@ -37,15 +38,21 @@ def map_keypress(key: str) -> str:
     return key
 
 
-for line in sys.stdin:
-    raw_traj = json.loads(line)
+def process_single_data(raw_traj: Dict) -> Dict:
+    """Process a single raw data into a standardized trajectory.
+
+    Args:
+        raw_traj: Raw data dictionary
+
+    Returns:
+        Standardized trajectory dictionary
+    """
     task = raw_traj["task"]
     task_stamp = raw_traj["task_stamp"]
     sop = raw_traj["sop"]
 
     traj: Trajectory = Trajectory(
         id=task_stamp,
-        # task=task,
         content=[TextObservation(content=task, source="user")],  # first message is the task
     )
     for element in raw_traj["trace"]:
@@ -72,17 +79,18 @@ for line in sys.stdin:
             image_observation = ImageObservation(
                 content=f"{root}/screenshots/{task_stamp}/{os.path.basename(element['data']['path_to_screenshot']).split('.')[0]}.png",
                 annotations=annotations,
-                source="browser",
+                source="environment",
             )
 
             web_obs = WebObservation(
                 url=url,
-                viewport_size=(
+                viewport_size=[
                     element["data"]["screen_size"]["width"],
                     element["data"]["screen_size"]["height"],
-                ),
+                ],
                 html=html,
                 image_observation=image_observation,
+                axtree=None,
             )
             traj.content.append(web_obs)
 
@@ -125,4 +133,14 @@ for line in sys.stdin:
         else:
             raise ValueError(f"Unknown element type: {element['type']}")
 
-    print(traj.model_dump_json())
+    return traj.model_dump()
+
+
+if __name__ == "__main__":
+    # Process each line of input individually
+    for line in sys.stdin:
+        raw_data = json.loads(line)
+        standardized_data = process_single_data(raw_data)
+
+        # Print the standardized data as JSON
+        print(json.dumps(standardized_data))

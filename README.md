@@ -49,6 +49,37 @@ This sample data will form the basis of our discussion regarding the standardize
 
 ### Step 2: Write Convertor to Standardized Format
 
+Once you have created the sample raw data, you need to write a converter to transform it into our standardized format. The standardized format is defined in the `schema/` directory.
+
+To create a converter, create a file called `raw_to_standardized.py` in your dataset directory. This script should:
+
+1. Read the raw data from stdin
+2. Convert it to the standardized format
+3. Output the standardized data to stdout
+
+The standardized format should follow these guidelines:
+- TextObservation.source must be one of: 'user', 'agent', or 'environment'
+- ImageObservation.source must be one of: 'user', 'agent', or 'environment'
+- WebObservation must include a url field
+- WebObservation.viewport_size should be a list, not a tuple
+- WebObservation should include axtree (can be None)
+
+You can run the following command to create a sample standardized file:
+
+```bash
+python datasets/$MY_DATASET/raw_to_standardized.py < datasets/$MY_DATASET/sample_raw.json > datasets/$MY_DATASET/sample_std.json
+```
+
+### Step 3: Validate the Standardized Format
+
+To ensure your standardized format is correct, run the validation test:
+
+```bash
+python -m pytest tests/test_standardized_schemas.py::test_sample_standardized_against_schema[/workspace/agent-data-collection/datasets/$MY_DATASET/sample_std.json] -v
+```
+
+If the test passes, your standardized format is correct. If not, you'll need to fix the issues in your `raw_to_standardized.py` script.
+
 Once we have our standardized format, we will create a script that converts, line-by-line, a jsonl file in the raw format to one in the standardized format in `raw_to_standardized.py`.
 
 We can then apply this to the sample data to create a sample in the standardized format.

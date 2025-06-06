@@ -27,7 +27,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         system_msg = re.sub(r"<execute>", r"<execute_ipython_cell>", system_msg)
         system_msg = re.sub(r"</execute>", r"</execute_ipython_cell>", system_msg)
         return [
-            TextObservation(content=system_msg, source=step["role"]),
+            TextObservation(content=system_msg, source="environment"),
         ]
 
     assert step["role"] in ["assistant", "user"], f"Invalid role: {step['role']}"
@@ -38,7 +38,14 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
     if WARNING_MSG in step["content"]:
         return [
-            TextObservation(content=step["content"], source=step["role"]),
+            TextObservation(
+                content=step["content"],
+                source="environment"
+                if step["role"] == "system"
+                else "user"
+                if step["role"] == "user"
+                else "agent",
+            ),
         ]
     elif solution_regex:
         assert step["role"] == "assistant", (
@@ -65,12 +72,26 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
     elif obs_regex:
         return [
-            TextObservation(content=obs_regex.group(1), source=step["role"]),
+            TextObservation(
+                content=obs_regex.group(1),
+                source="environment"
+                if step["role"] == "system"
+                else "user"
+                if step["role"] == "user"
+                else "agent",
+            ),
         ]
 
     elif task_regex:
         return [
-            TextObservation(content=task_regex.group(1), source=step["role"]),
+            TextObservation(
+                content=task_regex.group(1),
+                source="environment"
+                if step["role"] == "system"
+                else "user"
+                if step["role"] == "user"
+                else "agent",
+            ),
         ]
 
     else:
@@ -82,15 +103,17 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
 APIS = set()
 
+# Process each line of input individually
 for line in sys.stdin:
     raw_data = json.loads(line)
-
     content = []
+
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
-    if (
-        isinstance(content[-1], TextObservation) and content[-1].source == "assistant"
-    ) or isinstance(content[-1], CodeAction):
+
+    if (isinstance(content[-1], TextObservation) and content[-1].source == "agent") or isinstance(
+        content[-1], CodeAction
+    ):
         user_end_message = random.choice(
             [
                 [
@@ -161,11 +184,13 @@ for line in sys.stdin:
     if isinstance(content[-1], MessageAction) and "<finish>" not in content[-1].content:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
-    traj: Trajectory = Trajectory(
+    traj = Trajectory(
         id=raw_data["id"],
         content=content,
     )
-    print(traj.model_dump_json())
+
+    # Print the standardized data as JSON
+    print(json.dumps(traj.model_dump()))
 
 # with open("apis.txt", "w") as f:
 #     for api in APIS:

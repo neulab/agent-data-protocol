@@ -13,13 +13,12 @@ def convert_step(step: dict[str, str]) -> list:
         if step["content"].startswith("OBSERVATION:"):
             # Remove "OBSERVATION:" prefix and clean up
             content = step["content"][len("OBSERVATION:") :].strip()
-            return [TextObservation(content=content, source="assistant")]
+            return [TextObservation(content=content, source="environment")]
         else:
             return [TextObservation(content=step["content"], source="user")]
 
     elif step["role"] == "system":
-        # All system messages are marked as system, regardless of content
-        return [TextObservation(content=step["content"], source="system")]
+        return [TextObservation(content=step["content"], source="environment")]
 
     elif step["role"] == "assistant":
         result = []
@@ -36,15 +35,11 @@ def convert_step(step: dict[str, str]) -> list:
                 # Add any text before this function call as a text observation
                 before_text = content[current_pos : match.start()].strip()
                 if before_text:
-                    result.append(TextObservation(content=before_text, source="assistant"))
+                    result.append(TextObservation(content=before_text, source="agent"))
 
                 # Parse the function call
                 function_name = match.group(1)
                 params_content = match.group(2)
-
-                # Parse parameters
-                kwargs = {}
-                param_pattern = r"<parameter=([^>]+)>(.*?)</parameter>"
 
                 # Map function names
                 if function_name == "bash":
@@ -52,6 +47,9 @@ def convert_step(step: dict[str, str]) -> list:
                 if function_name == "submit":
                     function_name = "finish"
 
+                # Parse parameters
+                kwargs = {}
+                param_pattern = r"<parameter=([^>]+)>(.*?)</parameter>"
                 param_matches = re.findall(param_pattern, params_content, re.DOTALL)
 
                 for param_name, param_value in param_matches:
@@ -70,9 +68,9 @@ def convert_step(step: dict[str, str]) -> list:
                     else:
                         kwargs[param_name] = param_value
 
-                # Make sure finish function has a message parameter
+                # Add required message parameter for finish function if not present
                 if function_name == "finish" and "message" not in kwargs:
-                    kwargs["message"] = "Task completed successfully."
+                    kwargs["message"] = "Task completed."
 
                 # Add the API action
                 result.append(ApiAction(function=function_name, kwargs=kwargs))
@@ -82,7 +80,7 @@ def convert_step(step: dict[str, str]) -> list:
             # Add any remaining text after the last function call
             remaining_text = content[current_pos:].strip()
             if remaining_text:
-                result.append(TextObservation(content=remaining_text, source="assistant"))
+                result.append(TextObservation(content=remaining_text, source="agent"))
 
         # Check for traditional code blocks if no function calls found
         elif "```" in content:
@@ -90,7 +88,7 @@ def convert_step(step: dict[str, str]) -> list:
             if code_block_regex:
                 description_text = content[: code_block_regex.start()].strip()
                 if description_text:
-                    result.append(TextObservation(content=description_text, source="assistant"))
+                    result.append(TextObservation(content=description_text, source="agent"))
 
                 # For code blocks, treat as API action
                 result.append(
@@ -104,10 +102,10 @@ def convert_step(step: dict[str, str]) -> list:
                 )
             else:
                 # Regular message content
-                result.append(TextObservation(content=content, source="assistant"))
+                result.append(TextObservation(content=content, source="agent"))
         else:
             # Regular message content
-            result.append(TextObservation(content=content, source="assistant"))
+            result.append(TextObservation(content=content, source="agent"))
 
         return result
     else:

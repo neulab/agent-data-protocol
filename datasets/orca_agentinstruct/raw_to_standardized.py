@@ -19,7 +19,7 @@ def convert_step(step: dict[str, str], id: str) -> list[Action | Observation]:
     if step["role"] == "system":
         system_msg = step["content"]
         return [
-            TextObservation(content=system_msg, source=step["role"]),
+            TextObservation(content=system_msg, source="environment"),
         ]
 
     assert step["role"] in ["assistant", "user"], f"Invalid role: {step['role']}"
@@ -61,14 +61,15 @@ def convert_step(step: dict[str, str], id: str) -> list[Action | Observation]:
         return "error"
 
 
+# Process each line of input individually
 for line in sys.stdin:
     raw_data = json.loads(line)
-
     content = []
+
     for step in raw_data["conversations"]:
         traj_step = convert_step(step, id=raw_data["id"])
         content.extend(traj_step if traj_step != "error" else [])
-    #
+
     if (
         isinstance(content[-1], TextObservation)
         and content[-1].source == "assistant"
@@ -139,11 +140,13 @@ for line in sys.stdin:
             ]
         )
         content.extend(assistant_end_message)
+
     # Handle finish actions for message actions
     if isinstance(content[-1], MessageAction) and "<finish>" not in content[-1].content:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
+
     # Standardize the data
     standardize_data = Trajectory(id=str(raw_data["id"]), content=content)
 
-    # Print the standardized data
-    print(standardize_data.model_dump_json())
+    # Print the standardized data as JSON
+    print(json.dumps(standardize_data.model_dump()))

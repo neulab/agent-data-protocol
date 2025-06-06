@@ -55,7 +55,7 @@ def parse_api_action(item):
 def process_item(item):
     if item.role == "system":
         return (
-            TextObservation(content=item.system_prompt, source="system")
+            TextObservation(content=item.system_prompt, source="environment")
             if item.system_prompt
             else None
         )
@@ -93,8 +93,11 @@ def process_data(data):
 
 
 if __name__ == "__main__":
+    # Process each line of input individually
     for line in sys.stdin:
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
-        print(standardized_data.model_dump_json())
+
+        # Print the standardized data as JSON
+        print(json.dumps(standardized_data.model_dump()))

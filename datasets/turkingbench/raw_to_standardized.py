@@ -229,7 +229,11 @@ def process_data(data: dict) -> Trajectory:
         ),
         ApiAction(function="goto", kwargs={"url": fake_url}),
         WebObservation(
-            html=html_template, axtree=None, url=None, viewport_size=None, image_observation=None
+            html=html_template,
+            axtree=None,
+            url=fake_url,
+            viewport_size=None,
+            image_observation=None,
         ),
     ]
 
@@ -397,8 +401,11 @@ def process_data(data: dict) -> Trajectory:
 
 
 if __name__ == "__main__":
+    # Process each line of input individually
     for line in sys.stdin:
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data).model_dump()
         standardized_data = process_data(data)
-        print(standardized_data.model_dump_json())
+
+        # Print the standardized data as JSON
+        print(json.dumps(standardized_data.model_dump()))

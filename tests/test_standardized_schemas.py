@@ -22,22 +22,25 @@ def get_sample_jsons(directory):
 
 
 def load_json(file_path):
+    """Load JSON file, handling both indented and non-indented formats."""
     with open(file_path, "r") as file:
         return json.load(file)
 
 
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))
-def test_sample_raw_against_schema(sample_path):
+def test_sample_standardized_against_schema(sample_path):
     samples = load_json(sample_path)
     assert isinstance(samples, list), "sample_std.json should be a list"
+    assert len(samples) > 0, "sample_std.json should have at least one sample"
 
     # dynamically load api.py in the same directory as sample_std.json
     dataset_api = None
 
-    for sample in samples:
+    for sample_id, sample in enumerate(samples):
         try:
             traj = Trajectory(**sample)
-            for content in traj.content:
+            for content_id, content in enumerate(traj.content):
+                print(f"{sample_id=}, {content_id=}, {type(content)=}")
                 if isinstance(content, ApiAction):
                     # Make sure that content.function exists in api.py
                     if dataset_api is None:
