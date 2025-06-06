@@ -3,6 +3,7 @@ import re
 import sys
 
 from schema_raw import SchemaRaw
+
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
@@ -14,7 +15,7 @@ def convert_step(step) -> list:
         content = step.content
         # Handle observations that start with "OBSERVATION:"
         if content.startswith("OBSERVATION:"):
-            content = content[len("OBSERVATION:"):].strip()
+            content = content[len("OBSERVATION:") :].strip()
             return [TextObservation(content=content, source="environment")]
         else:
             source = "user" if step.role == "user" else "environment"
@@ -66,9 +67,15 @@ def convert_step(step) -> list:
                     else:
                         kwargs[param_name] = param_value
 
+                # Add required message parameter for finish function if not present
+                if function_name == "finish" and "message" not in kwargs:
+                    kwargs["message"] = "Task completed."
+
                 # Add the API action with description from before_text
                 description = before_text if before_text else None
-                result.append(ApiAction(function=function_name, kwargs=kwargs, description=description))
+                result.append(
+                    ApiAction(function=function_name, kwargs=kwargs, description=description)
+                )
 
                 current_pos = match.end()
 
@@ -91,10 +98,7 @@ def process_data(data):
     for step in data.messages:
         content.extend(convert_step(step))
 
-    return Trajectory(
-        id=data.instance_id, 
-        content=content
-    )
+    return Trajectory(id=data.instance_id, content=content)
 
 
 if __name__ == "__main__":
