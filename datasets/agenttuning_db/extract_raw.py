@@ -1,16 +1,9 @@
 import json
 
-import pandas as pd
-
 from datasets import load_dataset
 
-dataset = load_dataset("THUDM/AgentInstruct")
-df = []
-for name, ds in dataset.items():
-    _df = ds.to_pandas()
-    _df["subset"] = name
-    df.append(_df)
-df = pd.concat(df)
+dataset = load_dataset("THUDM/AgentInstruct")["db"]
+df = dataset.to_pandas()
 
 # Standardize the role names
 ROLE_MAP = {
