@@ -5,7 +5,7 @@
       {
         "class_": "text_observation",
         "content": "You are an agent that answers questions based on the knowledge stored in a knowledge base. To achieve this, you can use the following tools to query the KB.\n\nAfter a variable is produced along the process, you need to judge whether a variable is the final answer to the question. Each variable is represented as an id starting from 0. For example, #0 is the first variable, #1 is the second variable, and so on.\nOnce you find the answer, respond with '<solution> #id </solution>', where id is the id of the variable that you think is the final answer. For example, if you think #3 is the final answer, you MUST respond with '<solution> #3 </solution>'.\nYou can only take ONE action at a time!! After you get the observation from its execution, you can take another action. You can take at most 15 actions to find the answer to the question.",
-        "source": "system"
+        "source": "environment"
       },
       {
         "class_": "text_observation",
@@ -15,7 +15,7 @@
       {
         "class_": "text_observation",
         "content": "I've understood your instruction, start please.",
-        "source": "assistant"
+        "source": "agent"
       },
       {
         "class_": "text_observation",
@@ -25,7 +25,8 @@
       {
         "language": "python",
         "content": "get_relations('Gas-generator cycle')",
-        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer."
+        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -35,7 +36,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Gas-generator cycle', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -45,7 +47,8 @@
       {
         "language": "python",
         "content": "get_relations('Kerosene')",
-        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'."
+        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -55,7 +58,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Kerosene', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -65,7 +69,8 @@
       {
         "language": "python",
         "content": "intersection('#0', '#1')",
-        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1."
+        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -75,7 +80,8 @@
       {
         "language": "python",
         "content": "get_relations('#2')",
-        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2."
+        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -85,7 +91,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#2', 'spaceflight.rocket_engine.designed_by')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines."
+        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -94,7 +101,8 @@
       },
       {
         "content": "<finish> <solution> #3 </solution> </finish>",
-        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer."
+        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer.",
+        "class_": "message_action"
       },
       {
         "class_": "text_observation",
@@ -104,7 +112,8 @@
       {
         "language": "python",
         "content": "get_relations('Kelvin')",
-        "description": "I need to first find systems that use kelvin for temperature. To acheive this, I will query the KB to find relations connected to the entity 'Kelvin'."
+        "description": "I need to first find systems that use kelvin for temperature. To acheive this, I will query the KB to find relations connected to the entity 'Kelvin'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -114,7 +123,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Kelvin', 'measurement_unit.temperature_unit.measurement_system')",
-        "description": "From the above relations, I might use measurement_unit.temperature_unit.measurement_system to find systems that use Kelvin."
+        "description": "From the above relations, I might use measurement_unit.temperature_unit.measurement_system to find systems that use Kelvin.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -124,7 +134,8 @@
       {
         "language": "python",
         "content": "get_relations('Unit of Magnetic Field Strength')",
-        "description": "Now I need to find the unit of Magnetic Field Strength in such systems. To do this, I will query the KB to find relations connected to the entity 'Unit of Magnetic Field Strength'."
+        "description": "Now I need to find the unit of Magnetic Field Strength in such systems. To do this, I will query the KB to find relations connected to the entity 'Unit of Magnetic Field Strength'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -134,7 +145,8 @@
       {
         "language": "python",
         "content": "get_relations('Measurement System')",
-        "description": "Oops, the get_relations on 'Unit of Magnetic Field Strength' failed, it might be because Magnetic Field Strength is a concept, not an entity itself in the database. What I should do is finding units for Magnetic Field Strength. Let's try another approach. I will try get_relations() on the entity 'Measurement System' to find the units used in a measurement system."
+        "description": "Oops, the get_relations on 'Unit of Magnetic Field Strength' failed, it might be because Magnetic Field Strength is a concept, not an entity itself in the database. What I should do is finding units for Magnetic Field Strength. Let's try another approach. I will try get_relations() on the entity 'Measurement System' to find the units used in a measurement system.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -144,7 +156,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#0', 'measurement_unit.measurement_system.units_used')",
-        "description": "I made a mistake again. 'Measurement System' might not have direct relations suitable for the question. I'll need to use variable #0 to find all entities connected to measurement systems, which includes the unit systems."
+        "description": "I made a mistake again. 'Measurement System' might not have direct relations suitable for the question. I'll need to use variable #0 to find all entities connected to measurement systems, which includes the unit systems.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -154,7 +167,8 @@
       {
         "language": "python",
         "content": "get_relations('#0')",
-        "description": "I made a mistake again, there might not be a direct relationship to the units from the measurement system. I will try to get the relations of variable #0 and see if there's a useful relationship that can lead to the units."
+        "description": "I made a mistake again, there might not be a direct relationship to the units from the measurement system. I will try to get the relations of variable #0 and see if there's a useful relationship that can lead to the units.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -164,7 +178,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#0', 'measurement_unit.measurement_system.magnetic_field_strength_units')",
-        "description": "From the above relations, I might use measurement_unit.measurement_system.magnetic_field_strength_units to find the units of Magnetic Field Strength in the same system."
+        "description": "From the above relations, I might use measurement_unit.measurement_system.magnetic_field_strength_units to find the units of Magnetic Field Strength in the same system.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -173,7 +188,8 @@
       },
       {
         "content": "<finish> <solution> #1 </solution> </finish>",
-        "description": "Thought: #1 is the final answer to the question, which represents the unit for Magnetic Field Strength in the same system that uses Kelvin for temperature."
+        "description": "Thought: #1 is the final answer to the question, which represents the unit for Magnetic Field Strength in the same system that uses Kelvin for temperature.",
+        "class_": "message_action"
       }
     ],
     "details": {}
@@ -184,7 +200,7 @@
       {
         "class_": "text_observation",
         "content": "You are an agent that answers questions based on the knowledge stored in a knowledge base. To achieve this, you can use the following tools to query the KB.\n\nAfter a variable is produced along the process, you need to judge whether a variable is the final answer to the question. Each variable is represented as an id starting from 0. For example, #0 is the first variable, #1 is the second variable, and so on.\nOnce you find the answer, respond with '<solution> #id </solution>', where id is the id of the variable that you think is the final answer. For example, if you think #3 is the final answer, you MUST respond with '<solution> #3 </solution>'.\nYou can only take ONE action at a time!! After you get the observation from its execution, you can take another action. You can take at most 15 actions to find the answer to the question.",
-        "source": "system"
+        "source": "environment"
       },
       {
         "class_": "text_observation",
@@ -194,7 +210,7 @@
       {
         "class_": "text_observation",
         "content": "I've understood your instruction, start please.",
-        "source": "assistant"
+        "source": "agent"
       },
       {
         "class_": "text_observation",
@@ -204,7 +220,8 @@
       {
         "language": "python",
         "content": "get_relations('Gas-generator cycle')",
-        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer."
+        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -214,7 +231,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Gas-generator cycle', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -224,7 +242,8 @@
       {
         "language": "python",
         "content": "get_relations('Kerosene')",
-        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'."
+        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -234,7 +253,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Kerosene', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -244,7 +264,8 @@
       {
         "language": "python",
         "content": "intersection('#0', '#1')",
-        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1."
+        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -254,7 +275,8 @@
       {
         "language": "python",
         "content": "get_relations('#2')",
-        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2."
+        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -264,7 +286,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#2', 'spaceflight.rocket_engine.designed_by')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines."
+        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -273,7 +296,8 @@
       },
       {
         "content": "<finish> <solution> #3 </solution> </finish>",
-        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer."
+        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer.",
+        "class_": "message_action"
       },
       {
         "class_": "text_observation",
@@ -283,7 +307,8 @@
       {
         "language": "python",
         "content": "get_relations('Coca-Cola')",
-        "description": "Given the entity 'Coca-Cola', I need to find people who endorse this product. To do this, I'll first need to query all relations connected to 'Coca-Cola'."
+        "description": "Given the entity 'Coca-Cola', I need to find people who endorse this product. To do this, I'll first need to query all relations connected to 'Coca-Cola'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -293,7 +318,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Coca-Cola', 'business.endorsed_product.endorsements')",
-        "description": "The relation business.endorsed_product.endorsements seems to lead to the people that endorsed Coca-Cola."
+        "description": "The relation business.endorsed_product.endorsements seems to lead to the people that endorsed Coca-Cola.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -303,7 +329,8 @@
       {
         "language": "python",
         "content": "get_relations('#0')",
-        "description": "Now, we have different product endorsements of Coca-Cola. We should find the endorser of these endorsements."
+        "description": "Now, we have different product endorsements of Coca-Cola. We should find the endorser of these endorsements.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -313,7 +340,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#0', 'business.product_endorsement.endorser')",
-        "description": "I should use 'business.product_endorsement.endorser' to find the endorsers of Coca-Cola."
+        "description": "I should use 'business.product_endorsement.endorser' to find the endorsers of Coca-Cola.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -322,7 +350,8 @@
       },
       {
         "content": "<finish> <solution> #1 </solution> </finish>",
-        "description": "Thought: The endorsers are represented by the variable #1 and that should be the final answer."
+        "description": "Thought: The endorsers are represented by the variable #1 and that should be the final answer.",
+        "class_": "message_action"
       }
     ],
     "details": {}
@@ -333,7 +362,7 @@
       {
         "class_": "text_observation",
         "content": "You are an agent that answers questions based on the knowledge stored in a knowledge base. To achieve this, you can use the following tools to query the KB.\n\nAfter a variable is produced along the process, you need to judge whether a variable is the final answer to the question. Each variable is represented as an id starting from 0. For example, #0 is the first variable, #1 is the second variable, and so on.\nOnce you find the answer, respond with '<solution> #id </solution>', where id is the id of the variable that you think is the final answer. For example, if you think #3 is the final answer, you MUST respond with '<solution> #3 </solution>'.\nYou can only take ONE action at a time!! After you get the observation from its execution, you can take another action. You can take at most 15 actions to find the answer to the question.",
-        "source": "system"
+        "source": "environment"
       },
       {
         "class_": "text_observation",
@@ -343,7 +372,7 @@
       {
         "class_": "text_observation",
         "content": "I've understood your instruction, start please.",
-        "source": "assistant"
+        "source": "agent"
       },
       {
         "class_": "text_observation",
@@ -353,7 +382,8 @@
       {
         "language": "python",
         "content": "get_relations('Gas-generator cycle')",
-        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer."
+        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -363,7 +393,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Gas-generator cycle', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -373,7 +404,8 @@
       {
         "language": "python",
         "content": "get_relations('Kerosene')",
-        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'."
+        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -383,7 +415,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Kerosene', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -393,7 +426,8 @@
       {
         "language": "python",
         "content": "intersection('#0', '#1')",
-        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1."
+        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -403,7 +437,8 @@
       {
         "language": "python",
         "content": "get_relations('#2')",
-        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2."
+        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -413,7 +448,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#2', 'spaceflight.rocket_engine.designed_by')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines."
+        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -422,7 +458,8 @@
       },
       {
         "content": "<finish> <solution> #3 </solution> </finish>",
-        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer."
+        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer.",
+        "class_": "message_action"
       },
       {
         "class_": "text_observation",
@@ -432,7 +469,8 @@
       {
         "language": "python",
         "content": "get_relations('Barley stem rust')",
-        "description": "I need to first find plants having a relationship with the disease 'Barley stem rust'. To acheive this, I will query the KB to find relations connected to the entity 'Barley stem rust'."
+        "description": "I need to first find plants having a relationship with the disease 'Barley stem rust'. To acheive this, I will query the KB to find relations connected to the entity 'Barley stem rust'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -442,7 +480,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Barley stem rust', 'biology.plant_disease.plant_disease_triangle')",
-        "description": "Now I will use biology.plant_disease.plant_disease_triangle to find the plant disease triangle which is related to barley stem rust."
+        "description": "Now I will use biology.plant_disease.plant_disease_triangle to find the plant disease triangle which is related to barley stem rust.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -452,7 +491,8 @@
       {
         "language": "python",
         "content": "get_relations('#0')",
-        "description": "Now I need to find the host of the disease in the triangle. So I'll query the KB to find relations connected to the variable #0"
+        "description": "Now I need to find the host of the disease in the triangle. So I'll query the KB to find relations connected to the variable #0",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -462,7 +502,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#0', 'biology.plant_disease_triangle.host')",
-        "description": "I can use the relation biology.plant_disease_triangle.host to find the host of the disease triangle."
+        "description": "I can use the relation biology.plant_disease_triangle.host to find the host of the disease triangle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -471,7 +512,8 @@
       },
       {
         "content": "<finish> <solution> #1 </solution> </finish>",
-        "description": "Thought: #1 is the final answer to the question, which represents plants capable of hosting barley stem rust."
+        "description": "Thought: #1 is the final answer to the question, which represents plants capable of hosting barley stem rust.",
+        "class_": "message_action"
       }
     ],
     "details": {}
@@ -482,7 +524,7 @@
       {
         "class_": "text_observation",
         "content": "You are an agent that answers questions based on the knowledge stored in a knowledge base. To achieve this, you can use the following tools to query the KB.\n\nAfter a variable is produced along the process, you need to judge whether a variable is the final answer to the question. Each variable is represented as an id starting from 0. For example, #0 is the first variable, #1 is the second variable, and so on.\nOnce you find the answer, respond with '<solution> #id </solution>', where id is the id of the variable that you think is the final answer. For example, if you think #3 is the final answer, you MUST respond with '<solution> #3 </solution>'.\nYou can only take ONE action at a time!! After you get the observation from its execution, you can take another action. You can take at most 15 actions to find the answer to the question.",
-        "source": "system"
+        "source": "environment"
       },
       {
         "class_": "text_observation",
@@ -492,7 +534,7 @@
       {
         "class_": "text_observation",
         "content": "I've understood your instruction, start please.",
-        "source": "assistant"
+        "source": "agent"
       },
       {
         "class_": "text_observation",
@@ -502,7 +544,8 @@
       {
         "language": "python",
         "content": "get_relations('Gas-generator cycle')",
-        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer."
+        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -512,7 +555,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Gas-generator cycle', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -522,7 +566,8 @@
       {
         "language": "python",
         "content": "get_relations('Kerosene')",
-        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'."
+        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -532,7 +577,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Kerosene', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -542,7 +588,8 @@
       {
         "language": "python",
         "content": "intersection('#0', '#1')",
-        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1."
+        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -552,7 +599,8 @@
       {
         "language": "python",
         "content": "get_relations('#2')",
-        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2."
+        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -562,7 +610,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#2', 'spaceflight.rocket_engine.designed_by')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines."
+        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -571,7 +620,8 @@
       },
       {
         "content": "<finish> <solution> #3 </solution> </finish>",
-        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer."
+        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer.",
+        "class_": "message_action"
       },
       {
         "class_": "text_observation",
@@ -581,7 +631,8 @@
       {
         "language": "python",
         "content": "get_relations('UAB Hospital')",
-        "description": "I need to first find specialties of UAB Hospital. To expect this, I will query the KB to find relations connected to the entity 'UAB Hospital'."
+        "description": "I need to first find specialties of UAB Hospital. To expect this, I will query the KB to find relations connected to the entity 'UAB Hospital'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -591,7 +642,8 @@
       {
         "language": "python",
         "content": "get_neighbors('UAB Hospital', 'medicine.hospital.medical_specialties')",
-        "description": "From the above relations, I should use medicine.hospital.medical_specialties to find the specialties attached with UAB Hospital."
+        "description": "From the above relations, I should use medicine.hospital.medical_specialties to find the specialties attached with UAB Hospital.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -601,7 +653,8 @@
       {
         "language": "python",
         "content": "get_relations('hiv')",
-        "description": "I also need to find specialties related to hiv. To achieve this, I will query the KB to find relations connected to the entity 'hiv'."
+        "description": "I also need to find specialties related to hiv. To achieve this, I will query the KB to find relations connected to the entity 'hiv'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -611,7 +664,8 @@
       {
         "language": "python",
         "content": "get_neighbors('hiv', 'medicine.disease.medical_specialties')",
-        "description": "From the above relations, I should use medicine.disease.medical_specialties to find the medical specialties handling HIV."
+        "description": "From the above relations, I should use medicine.disease.medical_specialties to find the medical specialties handling HIV.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -621,7 +675,8 @@
       {
         "language": "python",
         "content": "intersection('#0', '#1')",
-        "description": "The specialties which are both in UAB Hospital and related to HIV should be the intersection of variable #0 and variable #1."
+        "description": "The specialties which are both in UAB Hospital and related to HIV should be the intersection of variable #0 and variable #1.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -630,7 +685,8 @@
       },
       {
         "content": "<finish> <solution> #2 </solution> </finish>",
-        "description": "Thought: #2 is the final answer to the question, which represents the UAB Hospital specialties that are HIV-related."
+        "description": "Thought: #2 is the final answer to the question, which represents the UAB Hospital specialties that are HIV-related.",
+        "class_": "message_action"
       }
     ],
     "details": {}
@@ -641,7 +697,7 @@
       {
         "class_": "text_observation",
         "content": "You are an agent that answers questions based on the knowledge stored in a knowledge base. To achieve this, you can use the following tools to query the KB.\n\nAfter a variable is produced along the process, you need to judge whether a variable is the final answer to the question. Each variable is represented as an id starting from 0. For example, #0 is the first variable, #1 is the second variable, and so on.\nOnce you find the answer, respond with '<solution> #id </solution>', where id is the id of the variable that you think is the final answer. For example, if you think #3 is the final answer, you MUST respond with '<solution> #3 </solution>'.\nYou can only take ONE action at a time!! After you get the observation from its execution, you can take another action. You can take at most 15 actions to find the answer to the question.",
-        "source": "system"
+        "source": "environment"
       },
       {
         "class_": "text_observation",
@@ -651,7 +707,7 @@
       {
         "class_": "text_observation",
         "content": "I've understood your instruction, start please.",
-        "source": "assistant"
+        "source": "agent"
       },
       {
         "class_": "text_observation",
@@ -661,7 +717,8 @@
       {
         "language": "python",
         "content": "get_relations('Gas-generator cycle')",
-        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer."
+        "description": "I need to first find engines with gas-generator cycle. To acheive this, I will query the KB to find relations connected to the entity 'Gas-generator cycle' and see if any of them can help me find the answer.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -671,7 +728,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Gas-generator cycle', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find the engines of Gas-generator cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -681,7 +739,8 @@
       {
         "language": "python",
         "content": "get_relations('Kerosene')",
-        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'."
+        "description": "I also need to find engines with kerosene. To acheive this, I will query the KB to find relations connected to the entity 'Kerosene'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -691,7 +750,8 @@
       {
         "language": "python",
         "content": "get_neighbors('Kerosene', 'spaceflight.rocket_engine_cycle.rocket_engines')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle."
+        "description": "From the above relations, I might use spaceflight.rocket_engine_cycle.rocket_engines to find engines with kerosene cycle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -701,7 +761,8 @@
       {
         "language": "python",
         "content": "intersection('#0', '#1')",
-        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1."
+        "description": "The engines with both gas-generator cycle and kerosene cycle shoule be the intersection of variable #0 and variable #1.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -711,7 +772,8 @@
       {
         "language": "python",
         "content": "get_relations('#2')",
-        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2."
+        "description": "Now I need to find who designed such engines, which will be the final answer. To acheive this, I will query the KB to find relations connected to the variable #2.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -721,7 +783,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#2', 'spaceflight.rocket_engine.designed_by')",
-        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines."
+        "description": "From the above relations, I might use spaceflight.rocket_engine.designed_by to find the designer of the engines.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -730,7 +793,8 @@
       },
       {
         "content": "<finish> <solution> #3 </solution> </finish>",
-        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer."
+        "description": "Thought: #3 is the final answer to the question, which represents the target rocket engine designer.",
+        "class_": "message_action"
       },
       {
         "class_": "text_observation",
@@ -740,7 +804,8 @@
       {
         "language": "python",
         "content": "get_relations('black stem rust')",
-        "description": "To answer this question, I need to identify the plants that can host black stem rust. Let's start by finding all the hosting plants connected to 'black stem rust'."
+        "description": "To answer this question, I need to identify the plants that can host black stem rust. Let's start by finding all the hosting plants connected to 'black stem rust'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -750,7 +815,8 @@
       {
         "language": "python",
         "content": "get_neighbors('black stem rust', 'biology.plant_disease.plant_disease_triangle')",
-        "description": "The observed relation gives the plant disease triangle which might hold the information about the hosting plant. Let's query for the hosting plants connected to 'black stem rust'."
+        "description": "The observed relation gives the plant disease triangle which might hold the information about the hosting plant. Let's query for the hosting plants connected to 'black stem rust'.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -760,7 +826,8 @@
       {
         "language": "python",
         "content": "get_relations('#0')",
-        "description": "Now I have the plant disease triangle for black stem rust. Now I need to find the host plants out of this. I will fetch the relations for biological plant disease triangle."
+        "description": "Now I have the plant disease triangle for black stem rust. Now I need to find the host plants out of this. I will fetch the relations for biological plant disease triangle.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -770,7 +837,8 @@
       {
         "language": "python",
         "content": "get_neighbors('#0', 'biology.plant_disease_triangle.host')",
-        "description": "The observation gives me a relation - 'biology.plant_disease_triangle.host' - that can help me identify the hosts for the black stem rust. Let's query for the hosts."
+        "description": "The observation gives me a relation - 'biology.plant_disease_triangle.host' - that can help me identify the hosts for the black stem rust. Let's query for the hosts.",
+        "class_": "code_action"
       },
       {
         "class_": "text_observation",
@@ -779,7 +847,8 @@
       },
       {
         "content": "<finish> <solution> #1 </solution> </finish>",
-        "description": "Thought: #1 is the final answer to the question, which represents the plants that can host black stem rust."
+        "description": "Thought: #1 is the final answer to the question, which represents the plants that can host black stem rust.",
+        "class_": "message_action"
       }
     ],
     "details": {}
