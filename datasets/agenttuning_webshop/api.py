@@ -6,8 +6,10 @@ def search(keywords: str):
 
     Example:
         search("3.25 ounce (pack of 3) protein serving jerky price < 50.00")
+
     """
     pass
+
 
 def click(bid: str):
     """Click an element on the webpage by its visible label or ID.
@@ -18,5 +20,6 @@ def click(bid: str):
     Example:
         click("B0977H69D1")
         click("Buy Now")
+
     """
     pass

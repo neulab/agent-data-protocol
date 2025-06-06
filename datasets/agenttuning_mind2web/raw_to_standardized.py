@@ -4,11 +4,11 @@ import sys
 from typing import Tuple
 
 from schema.action.action import Action
-from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
+
 
 def parse_thought_and_answer(message: str) -> Tuple[str, str]:
     """
@@ -17,27 +17,23 @@ def parse_thought_and_answer(message: str) -> Tuple[str, str]:
     match = re.search(r"Thought:\s*(.*?)\s*Answer:\s*(.*)", message, re.DOTALL)
     if not match:
         raise ValueError(f"Could not parse Thought and Answer from {message}.")
-    
+
     thought = match.group(1).strip()
     answer = match.group(2).strip()
     return thought, answer
 
+
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     if step["role"] == "user":
         return [
-            TextObservation(
-                content=step["content"],
-                source=step["role"]
-            ),
+            TextObservation(content=step["content"], source=step["role"]),
         ]
     else:
         assert step["role"] == "assistant"
         thought, answer = parse_thought_and_answer(step["content"])
-        
-        return [
-            MessageAction(
-                content=f"<finish> {answer} </finish>", description=thought)
-        ]        
+
+        return [MessageAction(content=f"<finish> {answer} </finish>", description=thought)]
+
 
 for line in sys.stdin:
     raw_data = json.loads(line)
@@ -47,17 +43,18 @@ for line in sys.stdin:
     try:
         for step in raw_data["conversations"]:
             content.extend(convert_step(step))
-    except: continue
-    
+    except:
+        continue
+
     assert len(content) == 2
     match = re.search(r"\b([A-Z])\.", content[1].content)
     if not match:
         raise ValueError(f"No valid option key found in: {content[1].content}")
     option_key = match.group(1)
     # All answers should contain an option key in the user message
-    if not f"{option_key}." in content[0].content:
+    if f"{option_key}." not in content[0].content:
         continue
-    
+
     # Standardize the data
     standardize_data = Trajectory(
         id=raw_data["id"],

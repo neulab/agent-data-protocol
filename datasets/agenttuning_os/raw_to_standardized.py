@@ -9,6 +9,7 @@ from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
+
 def convert_first_user_message(first_user_message_regex: re.Match[str]) -> list[Observation]:
     """
     Extracts and formats the essential parts of a system prompt.
@@ -18,16 +19,17 @@ def convert_first_user_message(first_user_message_regex: re.Match[str]) -> list[
     # assert re.search(r"Act: finish", first_user_message_regex.group(1), re.DOTALL)
     # assert re.search(r"```bash\n(.*?)\n```", first_user_message_regex.group(1), re.DOTALL)
     # assert re.search(r"answer(.*)", first_user_message_regex.group(1), re.DOTALL)
-    
+
     system_msg = """If you think you have got the answer to the question, you should print like this:\n\n<solution> Your solution here </solution>"""
     return [
         TextObservation(
-            content= first_user_message_regex.group(2).strip().replace("?bash:`", "?") + "\n\n" + system_msg, 
-            source="user"
+            content=first_user_message_regex.group(2).strip().replace("?bash:`", "?")
+            + "\n\n"
+            + system_msg,
+            source="user",
         )
     ]
-    
-    
+
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     # parse first user message
@@ -36,9 +38,9 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         step["content"],
         re.DOTALL,
     )
-    if first_user_message_regex: 
+    if first_user_message_regex:
         return convert_first_user_message(first_user_message_regex)
-    
+
     code_act_regex = re.match(r"Think: (.*)\n\nAct: (.*)", step["content"], re.DOTALL)
     code_obs_regex = re.match(r"The output of the OS:\n(.*)", step["content"], re.DOTALL)
 
@@ -85,7 +87,6 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
 
     else:
-
         return [
             TextObservation(
                 content=step["content"]
@@ -104,9 +105,9 @@ for line in sys.stdin:
         content.extend(convert_step(step))
 
     # Handle finish actions
-    if isinstance(content[-1], MessageAction) and '<solution>' in content[-1].content:
+    if isinstance(content[-1], MessageAction) and "<solution>" in content[-1].content:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
-        
+
     # Standardize the data
     standardize_data = Trajectory(
         id=raw_data["id"],
