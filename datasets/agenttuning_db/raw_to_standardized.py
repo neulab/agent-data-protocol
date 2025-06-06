@@ -25,7 +25,7 @@ def convert_system(system_regex: re.Match[str]) -> list[Observation]:
     )
     sys_sql_subs = sys_sql_subs.replace("Action: Operation", "").replace("Action: Answer", "")
     return [
-        TextObservation(content=sys_sql_subs, source="system"),
+        TextObservation(content=sys_sql_subs, source="environment"),
         TextObservation(content="Ok? Understood?", source="user"),
     ]
 
@@ -85,7 +85,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 .replace("Thought:", "THOUGHT:")
                 .replace("Action:", "ACTION:")
                 .replace("Observation:", "OBSERVATION:"),
-                source=step["role"] if step["role"] != "system" else "user",
+                source=step["role"] if step["role"] != "system" else "environment",
             ),
         ]
 

@@ -23,7 +23,7 @@ def convert_system(system_regex: re.Match[str]) -> list[Observation]:
         .strip()
     )
     return [
-        TextObservation(content=system_prompt, source="system"),
+        TextObservation(content=system_prompt, source="environment"),
         TextObservation(content="Ok? Understood?", source="user"),
     ]
 
@@ -180,14 +180,14 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             ]
         else:
             return [
-                TextObservation(content=thought if thought else step["content"], source="assistant")
+                TextObservation(content=thought if thought else step["content"], source="agent")
             ]
 
     else:
         return [
             TextObservation(
                 content=step["content"].replace("ACTION: ", ""),
-                source=step["role"] if step["role"] != "system" else "user",
+                source=step["role"] if step["role"] != "system" else "environment",
             ),
         ]
 
@@ -199,9 +199,9 @@ for line in sys.stdin:
         content.extend(convert_step(step))
 
     # Handle finish actions for natural language based tasks
-    if (
-        isinstance(content[-1], TextObservation) and content[-1].source == "assistant"
-    ) or isinstance(content[-1], CodeAction):
+    if (isinstance(content[-1], TextObservation) and content[-1].source == "agent") or isinstance(
+        content[-1], CodeAction
+    ):
         user_end_message = random.choice(
             [
                 [

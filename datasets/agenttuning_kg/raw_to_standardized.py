@@ -27,7 +27,7 @@ def convert_system(system_regex: re.Match[str]) -> list[Observation]:
     system_prompt = system_prompt[0] + "\n\n" + system_prompt[-1]
 
     return [
-        TextObservation(content=system_prompt, source="system"),
+        TextObservation(content=system_prompt, source="environment"),
         TextObservation(content="Ok? Understood?", source="user"),
     ]
 
@@ -80,14 +80,14 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 ),
             ]
         else:
-            return [TextObservation(content=step["content"], source="assistant")]
+            return [TextObservation(content=step["content"], source="agent")]
 
     # parse user message
     else:
         return [
             TextObservation(
                 content=step["content"].replace("Observation:", ""),
-                source=step["role"] if step["role"] != "system" else "user",
+                source=step["role"] if step["role"] != "system" else "environment",
             ),
         ]
 
