@@ -13,5 +13,5 @@ class SchemaRaw(BaseModel):
     id: str
     messages: List[Message]
     n_tokens: int
-    prompt: List[str]
+    prompt: str
     task_name: str
