@@ -83,7 +83,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
     elif code_obs_regex:
         return [
-            TextObservation(content=code_obs_regex.group(1), source="os"),
+            TextObservation(content=code_obs_regex.group(1), source="environment"),
         ]
 
     else:

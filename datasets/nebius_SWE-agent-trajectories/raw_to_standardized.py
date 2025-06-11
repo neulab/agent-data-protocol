@@ -3,16 +3,18 @@ import json
 import re
 import shlex
 import sys
+import random
 
 import api
 from schema_raw import SchemaRaw
 
 from schema.action.api import ApiAction
+from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
-ACTIONS = [f[0] for f in inspect.getmembers(api, inspect.isfunction) if f[0] != "run"]
+ACTIONS = [f[0] for f in inspect.getmembers(api, inspect.isfunction)]
 
 
 def parse_edit_action(action_str):
@@ -49,16 +51,11 @@ def parse_api_action(item):
             action_kwargs = {param: arg for param, arg in zip(action_params.keys(), action_args)}
         return ApiAction(function=action_name, kwargs=action_kwargs, description=thought)
     else:
-        return ApiAction(function="run", kwargs={"command": action_str}, description=thought)
-
+        return CodeAction(language="bash", content=action_str, description=thought,)
 
 def process_item(item):
     if item.role == "system":
-        return (
-            TextObservation(content=item.system_prompt, source="environment")
-            if item.system_prompt
-            else None
-        )
+        return None
     elif item.role == "user":
         return TextObservation(content=item.text, source="user")
     elif item.role == "ai" and "```" in item.text:
@@ -80,6 +77,74 @@ def process_data(data):
         if observation is not None:
             content.append(observation)
 
+    # Handle finish action
+    if isinstance(content[-1], ApiAction) or isinstance(content[-1], CodeAction):
+        user_end_message = random.choice(
+            [
+                [
+                    TextObservation(
+                        content="Congratulations! You have successfully solved the task.",
+                        source="user",
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Your solution has been verified as correct. ", source="user"
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Well done on successfully completing the task!", source="user"
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Your implementation satisfies the task requirements.",
+                        source="user",
+                    ),
+                ],
+                [
+                    TextObservation(content="Task completed successfully.", source="user"),
+                ],
+            ]
+        )
+        content.extend(user_end_message)
+        assistant_end_message = random.choice(
+            [
+                [
+                    MessageAction(
+                        content="<finish> I have successfully completed the task. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I did it! The task is now complete. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> The objective has been achieved with no outstanding issues. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I have fulfilled all the requirements of the task. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I've wrapped up the task successfully. </finish>",
+                        description="",
+                    ),
+                ],
+            ]
+        )
+        content.extend(assistant_end_message)
+        
     return Trajectory(
         id=data.instance_id,
         content=content,
@@ -96,6 +161,7 @@ if __name__ == "__main__":
     # Process each line of input individually
     for line in sys.stdin:
         raw_data = json.loads(line)
+        if not raw_data["target"]: continue
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
 

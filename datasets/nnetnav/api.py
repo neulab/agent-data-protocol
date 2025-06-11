@@ -37,3 +37,23 @@ def close_tab() -> None:
 def stop(answer: str = None) -> None:
     """Stop the interaction with an optional answer."""
     pass
+
+def click(id: str) -> None:
+    """Click on an element by its unique ID."""
+    pass
+
+def hover(id: str) -> None:
+    """Hover over an element by its unique ID."""
+    pass
+
+def goto(url: str) -> None:
+    """Navigate to the specified URL."""
+    pass
+
+def go_back() -> None:
+    """Navigate back to the previous page."""
+    pass
+
+def go_forward() -> None:
+    """Navigate forward to the next page."""
+    pass

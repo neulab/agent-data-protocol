@@ -1,9 +1,13 @@
 import json
 import re
 import sys
+import inspect
+import types
+import os
+from typing import Tuple
 
 from schema.action.action import Action
-from schema.action.code import CodeAction
+from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
@@ -27,23 +31,41 @@ def convert_system(system_regex: re.Match[str]) -> list[Observation]:
     system_prompt = system_prompt[0] + "\n\n" + system_prompt[-1]
 
     return [
-        TextObservation(content=system_prompt, source="environment"),
-        TextObservation(content="Ok? Understood?", source="user"),
+        TextObservation(content= system_prompt + "\n\n" + "Ok? Understood?", source="user"),
     ]
 
+# Extracts function signatures and docstrings from a python file content string
+def get_api_sigs() -> dict[str, list]:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'api.py')) as f:
+        api_content = f.read()
+    api_module = types.ModuleType("api_module")
+    exec(api_content, api_module.__dict__)
+    functions = inspect.getmembers(api_module, inspect.isfunction)
+    sigs = {}
+    for name, func in functions:
+        sig = inspect.signature(func)
+        sigs[name] = []
+        for arg_name, _ in sig.parameters.items():
+            sigs[name].append(arg_name)
+    return sigs
+SIGS = get_api_sigs()
 
-def format_code(raw_code: str) -> str:
-    # Format the function name and argument list and add quotes
+# Format the function name and argument list and add quotes
+def format_code(raw_code: str) -> Tuple[str, dict]:
     match = re.match(r"(\w+)\((.*)\)", raw_code)
     if not match:
         raise ValueError(f"Invalid function call format: {raw_code}")
     func_name = match.group(1)
     args_str = match.group(2)
+    if not func_name in SIGS:
+        raise ValueError(f"Invalid function call: {raw_code}")
     if not args_str:
-        return f"{func_name}()"
+        return func_name, {}
     args = [arg.strip() for arg in args_str.split(",")]
-    quoted_args = [f"'{arg}'" for arg in args]
-    return f"{func_name}({', '.join(quoted_args)})"
+    if not len(args) == len(SIGS[func_name]):
+        raise ValueError(f"Invalid function call: {raw_code}")
+    args = {SIGS[func_name][i]: f"'{arg}'" for i, arg in enumerate(args)}
+    return func_name, args
 
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
@@ -72,12 +94,14 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         if match:
             thought = match.group(1).strip()
             action = match.group(2).strip()
+            api_name, kwargs = format_code(action)
+            
             return [
-                CodeAction(
-                    language="python",
-                    content=format_code(action),
+                ApiAction(
+                    function=api_name,
+                    kwargs=kwargs,
                     description=thought,
-                ),
+                )
             ]
         else:
             return [TextObservation(content=step["content"], source="agent")]

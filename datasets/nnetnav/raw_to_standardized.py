@@ -4,6 +4,7 @@ import sys
 from typing import Any, Dict
 
 from schema_raw import SchemaRaw
+from schema.trajectory import Trajectory
 
 
 def parse_observation(content: str) -> Dict[str, Any]:
@@ -73,7 +74,7 @@ def parse_action(content: str) -> Dict[str, Any]:
 
     # Handle empty or malformed actions
     if not action_str:
-        return noop_action
+        return None
 
     # Parse action string into components
     parts = action_str.split(" ", 1)
@@ -96,7 +97,7 @@ def parse_action(content: str) -> Dict[str, Any]:
         "stop",
         "noop",
     ]:
-        return noop_action
+        return None
 
     try:
         if len(parts) > 1:
@@ -139,7 +140,7 @@ def parse_action(content: str) -> Dict[str, Any]:
                     kwargs = {"url": args[0]}
     except (IndexError, ValueError):
         # If there's any error parsing the action, return a noop
-        return noop_action
+        return None
 
     return {
         "type": "api_action",
@@ -175,8 +176,11 @@ def convert_trajectory(traj: SchemaRaw) -> Dict[str, Any]:
         obs_data = parse_observation(obs_msg.content)
 
         # Set task from first observation
-        if standardized["details"]["task"] is None and obs_data["objective"] is not None:
-            standardized["details"]["task"] = obs_data["objective"]
+        if not standardized["details"]["task"]:
+            if obs_data["objective"]:
+                standardized["details"]["task"] = obs_data["objective"]
+            else: 
+                standardized["details"]["task"] = ''
 
         # Add observation
         standardized["content"].append(
@@ -192,6 +196,8 @@ def convert_trajectory(traj: SchemaRaw) -> Dict[str, Any]:
 
         # Parse and add action
         action = parse_action(action_msg.content)
+        if not action: 
+            return None
         standardized["content"].append(action)
 
     return standardized
@@ -203,8 +209,14 @@ def main():
         item = json.loads(line)
         traj = SchemaRaw.model_validate(item)
         standardized = convert_trajectory(traj)
+        if not standardized: continue
+        standardized = Trajectory(
+            id=standardized["id"],
+            content=standardized["content"],
+            details=standardized["details"],
+        )
         # Print each result as a separate line
-        print(json.dumps(standardized))
+        print(json.dumps(standardized.model_dump()))
 
 
 if __name__ == "__main__":

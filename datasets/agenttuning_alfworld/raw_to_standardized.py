@@ -5,7 +5,7 @@ import sys
 from typing import Tuple
 
 from schema.action.action import Action
-from schema.action.code import CodeAction
+from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
@@ -23,89 +23,88 @@ def convert_system(system_regex: re.Match[str]) -> list[Observation]:
         .strip()
     )
     return [
-        TextObservation(content=system_prompt, source="environment"),
-        TextObservation(content="Ok? Understood?", source="user"),
+        TextObservation(content=system_prompt + "\n\n" + "Ok? Understood?", source="user"),
     ]
 
 
-def parse_action(action_str: str) -> str:
+def parse_action(action_str: str) -> Tuple[str, dict]:
     """
-    Convert natural language ACTION strings into function calls.
+    Convert natural language ACTION strings into (function_name, argument_dict).
     """
     action_str = action_str.strip().lower()
 
     # Match "go to X"
     match = re.match(r"go to (.+)", action_str)
     if match:
-        return f"go('{match.group(1)}')"
+        return "go", {"location": f'"{match.group(1)}"'}
 
     # Match "take X from Y"
     match = re.match(r"take (.+) from (.+)", action_str)
     if match:
-        return f"take('{match.group(1)}', '{match.group(2)}')"
+        return "take", {"item": f'"{match.group(1)}"', "source": f'"{match.group(2)}"'}
 
     # Match "put X in/on Y"
     match = re.match(r"put (.+) in/on (.+)", action_str)
     if match:
-        return f"put('{match.group(1)}', '{match.group(2)}')"
+        return "put", {"item": f'"{match.group(1)}"', "target": f'"{match.group(2)}"'}
 
     # Match "put X on Y"
     match = re.match(r"put (.+) on (.+)", action_str)
     if match:
-        return f"put('{match.group(1)}', '{match.group(2)}')"
+        return "put", {"item": f'"{match.group(1)}"', "target": f'"{match.group(2)}"'}
 
     # Match "open X"
     match = re.match(r"open (.+)", action_str)
     if match:
-        return f"open('{match.group(1)}')"
+        return "open", {"obj": f'"{match.group(1)}"'}
 
     # Match "close X"
     match = re.match(r"close (.+)", action_str)
     if match:
-        return f"close('{match.group(1)}')"
+        return "close", {"obj": f'"{match.group(1)}"'}
 
-    # Match "heat X using Y"
+    # Match "heat X with Y"
     match = re.match(r"heat (.+) with (.+)", action_str)
     if match:
-        return f"heat('{match.group(1)}', '{match.group(2)}')"
+        return "heat", {"item": f'"{match.group(1)}"', "appliance": f'"{match.group(2)}"'}
 
     # Match "examine X"
     match = re.match(r"examine (.+)", action_str)
     if match:
-        return f"examine('{match.group(1)}')"
+        return "examine", {"obj": f'"{match.group(1)}"'}
 
     # Match "cool X with Y"
     match = re.match(r"cool (.+) with (.+)", action_str)
     if match:
-        return f"cool('{match.group(1)}', '{match.group(2)}')"
+        return "cool", {"item": f'"{match.group(1)}"', "appliance": f'"{match.group(2)}"'}
 
     # Match "use X"
     match = re.match(r"use (.+)", action_str)
     if match:
-        return f"use('{match.group(1)}')"
+        return "use", {"obj": f'"{match.group(1)}"'}
 
     # Match "clean X with Y"
     match = re.match(r"clean (.+) with (.+)", action_str)
     if match:
-        return f"clean('{match.group(1)}', '{match.group(2)}')"
+        return "clean", {"item": f'"{match.group(1)}"', "appliance": f'"{match.group(2)}"'}
 
     # Match "report problem with X"
     match = re.match(r"report problem with (.+)", action_str)
     if match:
-        return f"report_problem('{match.group(1)}')"
+        return "report_problem", {"obj": f'"{match.group(1)}"'}
 
     # Match "inventory"
     if action_str == "inventory":
-        return "inventory()"
+        return "inventory", {}
 
     # Match "look"
     if action_str == "look":
-        return "look()"
+        return "look", {}
 
     # Match "look at X under Y"
     match = re.match(r"look at (.+) under (.+)", action_str)
     if match:
-        return f"look_at_under('{match.group(1)}', '{match.group(2)}')"
+        return "look_at_under", {"item": f'"{match.group(1)}"', "reference": f'"{match.group(2)}"'}
 
     raise ValueError(f"Unrecognized ACTION format: {action_str}")
 
@@ -171,12 +170,13 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     elif step["role"] == "assistant":
         thought, action = extract_thought_and_action(step["content"])
         if action:
+            function_name, kwargs = parse_action(action)
             return [
-                CodeAction(
-                    language="python",
-                    content=parse_action(action),
+                ApiAction(
                     description=thought,
-                ),
+                    function=function_name,
+                    kwargs=kwargs,
+                )
             ]
         else:
             return [
@@ -200,7 +200,7 @@ for line in sys.stdin:
 
     # Handle finish actions for natural language based tasks
     if (isinstance(content[-1], TextObservation) and content[-1].source == "agent") or isinstance(
-        content[-1], CodeAction
+        content[-1], ApiAction
     ):
         user_end_message = random.choice(
             [

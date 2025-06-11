@@ -10,6 +10,7 @@ from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
 from schema_raw import Args, SchemaRaw
 
 from schema.action.api import ApiAction
+from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.image import ImageObservation
 from schema.observation.observation import Observation
@@ -217,12 +218,10 @@ def process_data(data, keep_all=False):
             )
         elif item.action == "run":
             content.append(
-                ApiAction(
-                    function=item.action,
+                CodeAction(
+                    language="bash",
+                    content=item.args.command,
                     description=item.args.thought,
-                    kwargs={
-                        "command": item.args.command,
-                    },
                 )
             )
         elif item.action == "run_ipython":

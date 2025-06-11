@@ -11,11 +11,11 @@ def search(keywords: str):
     pass
 
 
-def click(bid: str):
+def click(element: str):
     """Click an element on the webpage by its visible label or ID.
 
     Args:
-        bid (str): The label or identifier of the clickable item.
+        element (str): The label or identifier of the clickable item.
 
     Example:
         click("B0977H69D1")

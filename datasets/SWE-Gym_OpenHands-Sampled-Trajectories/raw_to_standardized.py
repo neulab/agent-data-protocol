@@ -11,19 +11,25 @@ from schema.trajectory import Trajectory
 
 def process_data(data):
     content = []
+    parallel_tool_count = 0
     for msg in data.messages:
-        if msg.role in ["system", "user", "tool"]:
+        if msg.role == "system": continue
+        elif msg.role in ["user", "tool"]:
             _msg = f"{msg.content}" if msg.role == "tool" else msg.content
             if "OBSERVATION:\n" in _msg:
                 _msg = "\n".join(_msg.split("OBSERVATION:\n")[1:])
             # Map the roles to the allowed source values in the schema
-            source_map = {"system": "environment", "user": "user", "tool": "environment"}
-            content.append(
-                TextObservation(
+            source_map = {"user": "user", "tool": "environment"}
+            _msg = TextObservation(
                     content=_msg,
                     source=source_map[msg.role],
                 )
-            )
+            if parallel_tool_count != 0: parallel_tool_count -=1
+            if parallel_tool_count == 0:
+                content.append(_msg)
+            else:
+                # Handle parallel tool calls observations
+                content = content[:(-parallel_tool_count)] + [_msg] + content[(-parallel_tool_count):]
         elif msg.role == "assistant":
             if msg.tool_calls:
                 for tool_call in msg.tool_calls:
@@ -32,16 +38,24 @@ def process_data(data):
                         continue
                     kwargs = json.loads(tool_call.function.arguments)
                     # Add required message parameter for finish function if not present
-                    if tool_call.function.name == "finish" and "message" not in kwargs:
-                        kwargs["message"] = "Task completed."
-
-                    content.append(
-                        ApiAction(
-                            description=msg.content,
-                            function=tool_call.function.name,
-                            kwargs=kwargs,
+                    if tool_call.function.name == "finish":
+                        if "message" not in kwargs:
+                            kwargs["message"] = "Task completed."
+                        content.append(
+                            MessageAction(
+                                content=f"<finish> {kwargs["message"]} </finish>",
+                                description=msg.content,
+                            )
                         )
-                    )
+                    else:
+                        parallel_tool_count += 1
+                        content.append(
+                            ApiAction(
+                                description=msg.content,
+                                function=tool_call.function.name,
+                                kwargs=kwargs,
+                            )
+                        )
             else:
                 content.append(MessageAction(content=msg.content))
         else:
