@@ -1,8 +1,8 @@
 import ast
 import inspect
 import json
-import sys
 import random
+import sys
 
 import api
 import markdown
@@ -33,9 +33,7 @@ def parse_browser_action(action_str):
     call_node = action_ast.body
     function_name = call_node.func.id
     args = [ast.literal_eval(arg) for arg in call_node.args]
-    kwargs = {
-        kw.arg: ast.literal_eval(kw.value) for kw in call_node.keywords
-    }
+    kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call_node.keywords}
     return function_name, args, kwargs
 
 
@@ -232,9 +230,11 @@ def process_data(data, keep_all=False):
                 if not function_name:
                     print(f"Invalid browser action: {action}", file=sys.stderr)
                     continue
-                try: 
-                    api_args = list(inspect.signature(getattr(api, function_name)).parameters.keys())
-                except: 
+                try:
+                    api_args = list(
+                        inspect.signature(getattr(api, function_name)).parameters.keys()
+                    )
+                except:
                     continue
                 kwargs = {k: v for k, v in kwargs.items() if k in api_args}
                 for arg in zip(args, api_args):
@@ -251,11 +251,12 @@ def process_data(data, keep_all=False):
                 thought = item.args.thought
             elif item.message:
                 thought = item.message
-            if item.args.outputs.content: 
+            if item.args.outputs.content:
                 output = item.args.outputs.content
-            elif item.message: 
+            elif item.message:
                 output = item.message
-            else: output = None
+            else:
+                output = None
             content.append(
                 ApiAction(
                     function=item.action,
@@ -299,12 +300,7 @@ def process_data(data, keep_all=False):
                         },
                     )
                 )
-            content.append(
-                    TextObservation(
-                        source="user",
-                        content="Continue"
-                    )
-                )
+            content.append(TextObservation(source="user", content="Continue"))
         elif item.action == "add_task":
             content.append(
                 ApiAction(
@@ -413,30 +409,42 @@ def process_data(data, keep_all=False):
             )
         else:
             print(f"Unknown action: {item.action}", file=sys.stderr)
-        
+
         # Combine consecutive agent message + action
-        if len(content) >= 2 and isinstance(content[-1], Action) and isinstance(content[-2], MessageAction):
+        if (
+            len(content) >= 2
+            and isinstance(content[-1], Action)
+            and isinstance(content[-2], MessageAction)
+        ):
             pre_message = content.pop(-2).content
             if pre_message:
-                if content[-1].description: 
-                    content[-1].description = pre_message + '\n\n' + content[-1].description
-                else: 
+                if content[-1].description:
+                    content[-1].description = pre_message + "\n\n" + content[-1].description
+                else:
                     content[-1].description = pre_message
                 content[-1].description = content[-1].description.strip()
-        
+
         # Combine consecutive user message
-        if len(content) >= 2 and isinstance(content[-1], TextObservation) and isinstance(content[-2], TextObservation):
+        if (
+            len(content) >= 2
+            and isinstance(content[-1], TextObservation)
+            and isinstance(content[-2], TextObservation)
+        ):
             if content[-1].source != content[-2].source:
                 return None
             pre_message = content.pop(-2).content
             if pre_message:
-                if content[-1].content: 
-                    content[-1].content = pre_message + '\n\n' + content[-1].content
-                else: 
+                if content[-1].content:
+                    content[-1].content = pre_message + "\n\n" + content[-1].content
+                else:
                     content[-1].content = pre_message
                 content[-1].content = content[-1].content.strip()
 
-        if len(content) >= 2 and isinstance(content[-1], Action) and isinstance(content[-2], Action):
+        if (
+            len(content) >= 2
+            and isinstance(content[-1], Action)
+            and isinstance(content[-2], Action)
+        ):
             if isinstance(content[-1], MessageAction):
                 continue
             return None
@@ -465,9 +473,9 @@ def process_data(data, keep_all=False):
     )
     if isinstance(content[-1], MessageAction) and not isinstance(content[-2], Observation):
         user_end_obs = TextObservation(
-                            content=user_end_message,
-                            source="user",
-                        )
+            content=user_end_message,
+            source="user",
+        )
         content = content[:-1] + [user_end_obs] + [content[-1]]
         content[-1].description = content[-1].content
         content[-1].content = assistant_end_message
@@ -491,7 +499,7 @@ def process_data(data, keep_all=False):
                 description="",
             ),
         )
-    
+
     return Trajectory(
         id=data.id,
         content=content,
@@ -520,12 +528,13 @@ if __name__ == "__main__":
     # Process each line of input individually
     for line in sys.stdin:
         raw_data = json.loads(line)
-        if raw_data["feedback"] != "positive": continue
-        #if raw_data["id"] == "249": continue
-        #if raw_data["id"] != "100": continue
+        if raw_data["feedback"] != "positive":
+            continue
+        # if raw_data["id"] == "249": continue
+        # if raw_data["id"] != "100": continue
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data, keep_all=args.keep_all)
 
         # Print the standardized data as JSON
-        if standardized_data: 
+        if standardized_data:
             print(json.dumps(standardized_data.model_dump()))

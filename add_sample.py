@@ -14,7 +14,7 @@ def add_sample(dataset):
                 sft.append(json.loads(line))
             except Exception:
                 print(line)
-                assert 1==2
+                assert 1 == 2
                 continue
     print(f"sft: {len(sft)}")
     out_sft = random.sample(sft, min(5, len(sft)))

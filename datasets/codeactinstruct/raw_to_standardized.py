@@ -14,6 +14,7 @@ TOOL_DESCRIPTION = "Tool function available (already imported in <execute> envir
 WARNING_MSG = "Observation:\nI don't understand your input. \nIf you want to execute code, please use <execute> YOUR_CODE_HERE </execute>.\nIf you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>.\nFor example: The answer to the question is <solution> 42 </solution>."
 APIS = set()
 
+
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     global APIS
 
@@ -96,6 +97,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             MessageAction(content=step["content"], description=None),
         ]
 
+
 # Process each line of input individually
 for line in sys.stdin:
     raw_data = json.loads(line)
@@ -105,8 +107,10 @@ for line in sys.stdin:
         content.extend(convert_step(step))
 
     # append useful system prompt to first user message
-    content[0].content += "\n\nYou have 5 chances to interact with the environment or propose a solution. You can only propose a solution 2 times."
-    
+    content[
+        0
+    ].content += "\n\nYou have 5 chances to interact with the environment or propose a solution. You can only propose a solution 2 times."
+
     if (isinstance(content[-1], TextObservation) and content[-1].source == "agent") or isinstance(
         content[-1], CodeAction
     ):

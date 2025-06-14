@@ -10,12 +10,19 @@ openhands_default_tools = {
     "web_read": {"required": ["url"], "optional": []},
     "browser": {"required": ["code"], "optional": []},
     "execute_ipython_cell": {"code": ["command"], "optional": []},
-    "str_replace_editor": {"required": ["command", "path"], "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"]},
+    "str_replace_editor": {
+        "required": ["command", "path"],
+        "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"],
+    },
     "edit_file": {"required": ["path", "content"], "optional": ["start", "end"]},
 }
 
+
 def check_exclude_openhands_default_tools(name, sig, required, optional):
-    if not all(api in openhands_default_tools[name]["required"] + openhands_default_tools[name]["optional"] for api in required):
+    if not all(
+        api in openhands_default_tools[name]["required"] + openhands_default_tools[name]["optional"]
+        for api in required
+    ):
         print(f"mismatch required arguments: {name}, {sig}")
         return False
     if not all(api in openhands_default_tools[name]["optional"] for api in optional):
@@ -25,6 +32,7 @@ def check_exclude_openhands_default_tools(name, sig, required, optional):
         print(f"mismatch required arguments: {name}, {sig}")
         return False
     return True
+
 
 def check_exclude_tools(name: str, required: list, optional: list, exclude_apis: dict):
     exclude_api_required = exclude_apis[name]["required"]
@@ -42,8 +50,9 @@ def check_exclude_tools(name: str, required: list, optional: list, exclude_apis:
         print(f"{name} is included")
         return False
     return True
-    
-def get_api_tool_description(dataset, exclude_apis={}, env='execute_ipython_cell'):
+
+
+def get_api_tool_description(dataset, exclude_apis={}, env="execute_ipython_cell"):
     api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
     API_TOOL_DESCRIPTION = ""
     if os.path.exists(api_file_path):
@@ -62,16 +71,21 @@ def get_api_tool_description(dataset, exclude_apis={}, env='execute_ipython_cell
                     required.append(arg_name)
                 else:
                     optional.append(arg_name)
-            if name in openhands_default_tools and check_exclude_openhands_default_tools(name, sig, required, optional): 
+            if name in openhands_default_tools and check_exclude_openhands_default_tools(
+                name, sig, required, optional
+            ):
                 continue
             if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
                 continue
             docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
             API_TOOL_DESCRIPTION += docstring
             sigs[name] = {"required": required, "optional": optional}
-        if not API_TOOL_DESCRIPTION: return "", {}
-        if exclude_apis: also = 'also '
-        else: also = ''
+        if not API_TOOL_DESCRIPTION:
+            return "", {}
+        if exclude_apis:
+            also = "also "
+        else:
+            also = ""
         prefixes = [
             f"The following pre-defined functions are {also}available in {env}. ",
             f"The environment {env} {also}provides the following pre-defined functions: ",
@@ -80,12 +94,13 @@ def get_api_tool_description(dataset, exclude_apis={}, env='execute_ipython_cell
             f"The following functions are {also}defined and ready for use in {env}: ",
             f"Note that {env} {also}supports the following pre-defined functions: ",
             f"Below is a list of functions you can {also}use in the {env} environment. ",
-            f"The toolkit for {env} {also}contains the following functions. "
+            f"The toolkit for {env} {also}contains the following functions. ",
         ]
         API_TOOL_DESCRIPTION = random.choice(prefixes) + "\n\n" + API_TOOL_DESCRIPTION
         return API_TOOL_DESCRIPTION, sigs
     else:
         return "", {}
+
 
 def get_language_descriptions(languages):
     language_description = ""

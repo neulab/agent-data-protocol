@@ -27,38 +27,33 @@ openhands_default_tools = {
     "web_read": {"required": ["url"], "optional": []},
     "browser": {"required": ["code"], "optional": []},
     "execute_ipython_cell": {"code": ["command"], "optional": []},
-    "str_replace_editor": {"required": ["command", "path"], "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"]},
+    "str_replace_editor": {
+        "required": ["command", "path"],
+        "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"],
+    },
     "edit_file": {"required": ["path", "content"], "optional": ["start", "end"]},
 }
 
-action_function = {
-    "python": "execute_ipython_cell", 
-    "bash": "execute_bash", 
-    "web": "browser"
-}
+action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 
-function_args = {
-    "execute_ipython_cell": "code",
-    "execute_bash": "command",
-    "browser": "code"
-}
+function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
 
 browser_default_apis = {
-    'goto': {'required': ['url'], 'optional': []}, 
-    'go_back': {'required': [], 'optional': []}, 
-    'go_forward': {'required': [], 'optional': []}, 
-    'noop': {'required': [], 'optional': ['wait_ms']}, 
-    'scroll': {'required': ['delta_x', 'delta_y'], 'optional': []}, 
-    'fill': {'required': ['bid', 'value'], 'optional': []}, 
-    'select_option': {'required': ['bid', 'options'], 'optional': []}, 
-    'click': {'required': ['bid'], 'optional': ['button', 'modifiers']}, 
-    'dblclick': {'required': ['bid'], 'optional': ['button', 'modifiers']}, 
-    'hover': {'required': ['bid'], 'optional': []}, 
-    'press': {'required': ['bid', 'key_comb'], 'optional': []}, 
-    'focus': {'required': ['bid'], 'optional': []}, 
-    'clear': {'required': ['bid'], 'optional': []}, 
-    'drag_and_drop': {'required': ['from_bid', 'to_bid'], 'optional': []}, 
-    'upload_file': {'required': ['bid', 'file'], 'optional': []}
+    "goto": {"required": ["url"], "optional": []},
+    "go_back": {"required": [], "optional": []},
+    "go_forward": {"required": [], "optional": []},
+    "noop": {"required": [], "optional": ["wait_ms"]},
+    "scroll": {"required": ["delta_x", "delta_y"], "optional": []},
+    "fill": {"required": ["bid", "value"], "optional": []},
+    "select_option": {"required": ["bid", "options"], "optional": []},
+    "click": {"required": ["bid"], "optional": ["button", "modifiers"]},
+    "dblclick": {"required": ["bid"], "optional": ["button", "modifiers"]},
+    "hover": {"required": ["bid"], "optional": []},
+    "press": {"required": ["bid", "key_comb"], "optional": []},
+    "focus": {"required": ["bid"], "optional": []},
+    "clear": {"required": ["bid"], "optional": []},
+    "drag_and_drop": {"required": ["from_bid", "to_bid"], "optional": []},
+    "upload_file": {"required": ["bid", "file"], "optional": []},
 }
 
 USE_NAV = (
@@ -66,6 +61,7 @@ USE_NAV = (
 )  # only disable NAV actions when running webarena and miniwob benchmarks
 
 generate_axtree = HTMLToAXTree(dataset)
+
 
 def verify_args(required_args, optional_args, input_args):
     # all required args should be included
@@ -77,6 +73,7 @@ def verify_args(required_args, optional_args, input_args):
         if arg not in required_args + optional_args:
             return False
     return True
+
 
 # Convert function call to OH format
 def format_function(function_name, parameters):
@@ -91,13 +88,14 @@ def format_function(function_name, parameters):
     </parameter>
     </function>
     """
-    
+
     function_call = ""
     for parameter in parameters:
         value = parameters[parameter]
         function_call += f"<parameter={parameter}>\n{value}\n</parameter>\n"
     function_call = f"<function={function_name}>\n{function_call}</function>"
     return function_call
+
 
 # Extract the tool in a OH format function call
 def extract_function_call(content):
@@ -106,7 +104,10 @@ def extract_function_call(content):
             return tool
     return None
 
+
 NON_OH_EVENTS = {}
+
+
 def standardized_event_to_openhands_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
@@ -114,10 +115,9 @@ def standardized_event_to_openhands_message(
     is_web: bool,
     chunk: str,
     api_env: str = None,
-    api_sigs = None,
-    languages: list = []
+    api_sigs=None,
+    languages: list = [],
 ) -> dict:
-    
     if isinstance(event, WebObservation):
         if event.axtree is not None:
             axtree = event.axtree
@@ -132,7 +132,7 @@ def standardized_event_to_openhands_message(
         thought = event.description + "\n\n" if event.description else ""
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
-        
+
         # for tool that are one of the default OH tools
         if function_name in openhands_default_tools and function_name not in api_sigs:
             tool_args = openhands_default_tools[function_name]
@@ -140,9 +140,14 @@ def standardized_event_to_openhands_message(
                 raise ValueError(f"Function call with wrong argument: {event}")
             function_call = format_function(function_name, arguments)
             return {"from": "function_call", "value": f"{thought}{function_call}"}
-        
+
         # for OH default browser based apis that don't require bid
-        if is_web and function_name in browser_default_apis and function_name not in api_sigs and "bid" not in browser_default_apis[function_name]["required"]:
+        if (
+            is_web
+            and function_name in browser_default_apis
+            and function_name not in api_sigs
+            and "bid" not in browser_default_apis[function_name]["required"]
+        ):
             api_args = browser_default_apis[function_name]
             if not verify_args(api_args["required"], api_args["optional"], arguments):
                 raise ValueError(f"Function call with wrong argument: {event}")
@@ -150,7 +155,7 @@ def standardized_event_to_openhands_message(
             previous_web_actions.extend([api_action])
             function_call = format_function("browser", {"code": api_action})
             return {"from": "function_call", "value": f"{thought}{function_call}"}
-        
+
         # try to directly get the browsergym_id from the event kwargs
         browsergym_id = event.kwargs.get("bid", None)
         if not browsergym_id:
@@ -169,25 +174,33 @@ def standardized_event_to_openhands_message(
             if not api_env:
                 # Default to 'execute_ipython_cell' if api_env is not specified
                 api_env = "execute_ipython_cell"
-            if not verify_args(api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments):
+            if not verify_args(
+                api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
+            ):
                 raise ValueError(f"Function call with wrong argument: {event}")
             api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
-            function_call = format_function(api_env, {function_args.get(api_env, "code"): api_action})
+            function_call = format_function(
+                api_env, {function_args.get(api_env, "code"): api_action}
+            )
             return {"from": "function_call", "value": f"{thought}{function_call}"}
-        
+
         api_env = "browser"
         # for apis that are browser based but are not OH default browser apis
         # these should all be dataset specific apis
         if function_name in api_sigs:
-            if not verify_args(api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments):
+            if not verify_args(
+                api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
+            ):
                 raise ValueError(f"Function call with wrong argument: {event}")
             api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
-            function_call = format_function(api_env, {function_args.get(api_env, "code"): api_action})
+            function_call = format_function(
+                api_env, {function_args.get(api_env, "code"): api_action}
+            )
             return {"from": "function_call", "value": f"{thought}{function_call}"}
-        
+
         # for tool calls that are browser based and need bid
         api_args = browser_default_apis[function_name]
-        if browsergym_id: 
+        if browsergym_id:
             arguments["bid"] = browsergym_id
         # to handle mismatching "bid" and "id" arguments
         if "bid" not in arguments:
@@ -237,8 +250,8 @@ def standardized_event_to_openhands_message(
 
         elif event.source == "environment":
             event.source = "observation"
-        
-        else: 
+
+        else:
             raise ValueError(f"Wrong event source: {event.source}")
         return {"from": event.source, "value": event.content}
 
@@ -276,7 +289,7 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
             message = standardized_event_to_openhands_message(
                 id, event, previous_web_actions, is_web, chunk, api_env, api_sigs, languages
             )
-            if not message: 
+            if not message:
                 return None
             if len(conversations) == 0:
                 # append api function docs to first user message when available
@@ -284,38 +297,46 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
                     message["value"] = api_tool_description + message["value"]
                     conversations.extend([message])
                     continue
-            
+
             # Combine consecutive user message and web observation
             if conversations[-1]["from"] == "human" and isinstance(event, WebObservation):
                 conversations[-1]["value"] += "\n\n" + message["value"]
                 continue
-            
+
             # Match observations to function_calls
             if conversations[-1]["from"] == "function_call" and isinstance(event, TextObservation):
                 message["from"] = "observation"
                 function_name = extract_function_call(conversations[-1]["value"])
                 if function_name:
-                    message["value"] = f"EXECUTION RESULT of [{function_name}]:\n" + message["value"]
-            
+                    message["value"] = (
+                        f"EXECUTION RESULT of [{function_name}]:\n" + message["value"]
+                    )
+
             conversations.extend([message])
-                
+
         except Exception as e:
             traceback.print_exc()
             print(e)
             return None
     if languages:
         language_descriptions = get_language_descriptions(languages)
-        conversations[0]["value"] = language_descriptions + '\n\n' + conversations[0]["value"]
+        conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
     return {
         "id": trajectory.id,
         "conversations": conversations,
         "system": get_system_message(),
     }
 
+
 def main():
     parser = argparse.ArgumentParser(description="Convert standardized data to SFT format")
     parser.add_argument(
-        "--is_web", type=str, choices=["yes", "no"], help="Does the dataset contain web api", required=True, default="no"
+        "--is_web",
+        type=str,
+        choices=["yes", "no"],
+        help="Does the dataset contain web api",
+        required=True,
+        default="no",
     )
     parser.add_argument("--chunk", type=str, help="Dataset name", required=True)
     parser.add_argument(
@@ -326,12 +347,12 @@ def main():
         default=None,
     )
     args = parser.parse_args()
-    args.is_web = args.is_web=="yes"
+    args.is_web = args.is_web == "yes"
     exclude_apis = browser_default_apis if args.is_web else {}
     api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, args.api_env)
     count = 0
     for line in sys.stdin:
-        if count % 10000 == 0 and count != 0: 
+        if count % 10000 == 0 and count != 0:
             print(f"Processed {count} lines", file=sys.stderr)
         output_line = process_row(
             line,
@@ -339,20 +360,22 @@ def main():
             chunk=args.chunk,
             api_env=args.api_env,
             api_tool_description=api_tool_description,
-            api_sigs = api_sigs
+            api_sigs=api_sigs,
         )
         if output_line:
             # print("Successfully processed line", file=sys.stderr)
-            with open(f'datasets/{dataset}/full_sft.jsonl', 'a') as f:
-                try: 
-                    f.write(json.dumps(output_line) + '\n')
+            with open(f"datasets/{dataset}/full_sft.jsonl", "a") as f:
+                try:
+                    f.write(json.dumps(output_line) + "\n")
                     count += 1
-                except Exception as e: 
+                except Exception as e:
                     traceback.print_exc()
                     print(e)
                     continue
         # else:
         #     print(f"Failed to process line: {line[:10]}...", file=sys.stderr)
     print(f"Number of non OH events: {NON_OH_EVENTS}", file=sys.stderr)
+
+
 if __name__ == "__main__":
     main()

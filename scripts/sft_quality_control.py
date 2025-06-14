@@ -46,7 +46,7 @@ def analyze_dataset(file_path):
     len1_conversation_count = 0
     invalid_tools = set()
     valid_roles = True
-    
+
     for conversation in data:
         conversation_has_finish = False
         if len(conversation.get("conversations", [])) == 2:
@@ -64,7 +64,7 @@ def analyze_dataset(file_path):
             else:
                 if role not in {"gpt", "function_call"}:
                     valid_roles = False
-                
+
             # Check for function calls in any message content
             match = FUNCTION_PATTERN.search(content)
             if match:
