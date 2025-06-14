@@ -1,9 +1,9 @@
 import inspect
 import json
+import random
 import re
 import shlex
 import sys
-import random
 
 import api
 from schema_raw import SchemaRaw
@@ -51,7 +51,12 @@ def parse_api_action(item):
             action_kwargs = {param: arg for param, arg in zip(action_params.keys(), action_args)}
         return ApiAction(function=action_name, kwargs=action_kwargs, description=thought)
     else:
-        return CodeAction(language="bash", content=action_str, description=thought,)
+        return CodeAction(
+            language="bash",
+            content=action_str,
+            description=thought,
+        )
+
 
 def process_item(item):
     if item.role == "system":
@@ -144,7 +149,7 @@ def process_data(data):
             ]
         )
         content.extend(assistant_end_message)
-        
+
     return Trajectory(
         id=data.instance_id,
         content=content,
@@ -161,7 +166,8 @@ if __name__ == "__main__":
     # Process each line of input individually
     for line in sys.stdin:
         raw_data = json.loads(line)
-        if not raw_data["target"]: continue
+        if not raw_data["target"]:
+            continue
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
 

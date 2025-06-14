@@ -1,4 +1,3 @@
-
 def scroll(delta_x: float, delta_y: float):
     """Scroll horizontally and/or vertically in pixels.
 
@@ -7,8 +6,6 @@ def scroll(delta_x: float, delta_y: float):
         delta_x (float): Horizontal scroll in pixels.
         delta_y (float): Vertical scroll in pixels.
 
-    Example: scroll(0, 200)
-             scroll(-50.2, -100.5)
     """
     pass
 

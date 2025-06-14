@@ -1,3 +1,14 @@
+def execute_bash(command: str) -> None:
+    """Execute a bash command in the terminal.
+
+    Args:
+    ----
+        command (str): The bash command to execute.
+
+    """
+    pass
+
+
 def str_replace_editor(
     command: str,
     path: str,

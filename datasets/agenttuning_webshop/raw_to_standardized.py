@@ -120,7 +120,7 @@ for line in sys.stdin:
     try:
         for step in raw_data["conversations"]:
             content.extend(convert_step(step))
-    except Exception as e: 
+    except Exception as e:
         continue
 
     # Handle finish actions for natural language based tasks
