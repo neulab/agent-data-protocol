@@ -5,10 +5,10 @@ from datasets import load_dataset
 
 
 def main():
-    ds = load_dataset("smurty/NNetNav-6k")
+    ds = load_dataset("stanfordnlp/nnetnav-live", split="train", streaming=True)
 
     # Print each item as a separate line in jsonl format
-    for item in ds["train"]:
+    for item in ds:
         print(json.dumps(item))
 
 
