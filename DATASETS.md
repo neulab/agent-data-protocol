@@ -17,7 +17,7 @@ This document outlines the input argument configurations for each dataset. The a
 | code_feedback                           |         None         |     no     |
 | codeactinstruct                         | execute_ipython_cell |     no     |
 | nebius_SWE-agent-trajectories           |     execute_bash     |     no     |
-| nnetnav                                 |     browser          |     yes    |
+| nnetnav                                 |        browser       |     yes    |
 | openhands                               | execute_ipython_cell |     yes    |
 | orca_agentinstruct                      | execute_ipython_cell |     no     |
 | SWE-Gym_OpenHands-Sampled-Trajectories  | execute_ipython_cell |     no     |

@@ -17,7 +17,7 @@ def add_sample(dataset):
                 assert 1==2
                 continue
     print(f"sft: {len(sft)}")
-    out_sft = random.sample(sft, 5)
+    out_sft = random.sample(sft, min(5, len(sft)))
     # out_sft = sft[:10]
     with open(f"datasets/{dataset}/sample_sft.json", "w") as f:
         json.dump(out_sft, f, indent=2, ensure_ascii=False)
@@ -75,8 +75,7 @@ def save_sample():
 # Comment out the assertion to allow the script to run
 # save_sample()
 # assert 1 == 2
-dirs = ["agenttuning_alfworld"]
-dirs = [os.getenv("MY_DATASET")]
+dirs = [os.getenv("MY_DATASET", "openhands")]
 for d in dirs:
     # if os.path.exists(f"datasets/{d}/full_sft.jsonl"):
     print(d)

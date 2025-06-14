@@ -24,13 +24,13 @@ def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
     if function == "stop":
         kwargs["answer"] = step.next_action.typed_string
     elif function == "type":
+        kwargs["bid"] = step.next_action.axt_node_id
         kwargs["text"] = step.next_action.typed_string
-        kwargs["element_id"] = step.next_action.axt_node_id
     elif function in ["click"]:
-        kwargs["element_id"] = step.next_action.axt_node_id
+        kwargs["bid"] = step.next_action.axt_node_id
     elif function == "scroll":
-        kwargs["dx"] = 0
-        kwargs["dy"] = 100 if "down" in step.next_action.typed_string else -100
+        kwargs["delta_x"] = 0
+        kwargs["delta_y"] = 100 if "down" in step.next_action.typed_string else -100
     elif function in ["key_press", "press"]:
         kwargs["key_comb"] = step.next_action.typed_string
         function = "press"
@@ -75,8 +75,8 @@ if __name__ == "__main__":
             print(f"Error processing trajectory {idx}: {e}", file=sys.stderr)
             idx += 1
             continue
-
-        content: list = [TextObservation(content=data.objective, source="user")]
+        objective = f"Generate the next action given the an objective, the current web page, and previous actions. \n\nObjective: {data.objective}"
+        content: list = [TextObservation(content=objective, source="user")]
 
         content.extend(convert_step(data))
 

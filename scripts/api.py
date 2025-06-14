@@ -16,11 +16,15 @@ openhands_default_tools = {
 
 def check_exclude_openhands_default_tools(name, sig, required, optional):
     if not all(api in openhands_default_tools[name]["required"] + openhands_default_tools[name]["optional"] for api in required):
-        raise ValueError(f"mismatch required arguments: {name}, {sig}")
+        print(f"mismatch required arguments: {name}, {sig}")
+        return False
     if not all(api in openhands_default_tools[name]["optional"] for api in optional):
-        raise ValueError(f"mismatch optional arguments: {name}, {sig}")
+        print(f"mismatch optional arguments: {name}, {sig}")
+        return False
     if not all(api in required for api in openhands_default_tools[name]["required"]):
-        raise ValueError(f"mismatch required arguments: {name}, {sig}")
+        print(f"mismatch required arguments: {name}, {sig}")
+        return False
+    return True
 
 def check_exclude_tools(name: str, required: list, optional: list, exclude_apis: dict):
     exclude_api_required = exclude_apis[name]["required"]
@@ -29,13 +33,13 @@ def check_exclude_tools(name: str, required: list, optional: list, exclude_apis:
         required.remove("id")
         required.append("bid")
     if not all(api in exclude_api_required + exclude_api_optional for api in required):
-        print(name, 29)
+        print(f"{name} is included")
         return False
     if not all(api in exclude_api_optional for api in optional):
-        print(name, 32)
+        print(f"{name} is included")
         return False
     if not all(api in required for api in exclude_api_required):
-        print(name, 35)
+        print(f"{name} is included")
         return False
     return True
     
@@ -58,8 +62,7 @@ def get_api_tool_description(dataset, exclude_apis={}, env='execute_ipython_cell
                     required.append(arg_name)
                 else:
                     optional.append(arg_name)
-            if name in openhands_default_tools: 
-                check_exclude_openhands_default_tools(name, sig, required, optional)
+            if name in openhands_default_tools and check_exclude_openhands_default_tools(name, sig, required, optional): 
                 continue
             if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
                 continue
@@ -83,3 +86,14 @@ def get_api_tool_description(dataset, exclude_apis={}, env='execute_ipython_cell
         return API_TOOL_DESCRIPTION, sigs
     else:
         return "", {}
+
+def get_language_descriptions(languages):
+    language_description = ""
+    for lan in languages:
+        language_description += (
+            f"In the execute_ipython_cell code environment, you can execute {lan} code by wrapping it in the following format: "
+            f"{lan}('YOUR {lan.upper()} CODE')\n"
+            f"The {lan} code must be provided as a quoted string inside the {lan}(...) function. "
+            f"Ensure 'YOUR {lan.upper()} CODE' is valid {lan} code.\n\n"
+        )
+    return language_description.strip()

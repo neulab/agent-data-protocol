@@ -34,17 +34,14 @@ def get_web_user_message(
 # Current Accessibility Tree:
 {cur_axtree_txt}
 
-{previous_actions}
+# Previous Actions
+{prev_action_str}
 
 Here is an example with chain of thought of a valid action when clicking on a button:
 "
-THOUGHT: In order to accomplish my goal I need to click on the button with bid 12
-
-ACTION:
-```click("12")```
+In order to accomplish my goal I need to click on the button with bid 12
+```click(bid="12")```
 "
-
-If you do not have a proper THOUGHT for your action, you can directly provide the ACTION.
 """.strip()
     if USE_CONCISE_ANSWER:
         prompt += CONCISE_INSTRUCTION

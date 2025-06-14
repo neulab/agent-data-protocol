@@ -1,9 +1,24 @@
-def type(element_id: str, text: str) -> None:
+
+def scroll(delta_x: float, delta_y: float):
+    """Scroll horizontally and/or vertically in pixels.
+
+    Args:
+    ----
+        delta_x (float): Horizontal scroll in pixels.
+        delta_y (float): Vertical scroll in pixels.
+
+    Example: scroll(0, 200)
+             scroll(-50.2, -100.5)
+    """
+    pass
+
+
+def type(bid: str, text: str) -> None:
     """Type the given text into an element with the given id.
 
     Args:
     ----
-        element_id (str): The id of the element to type into.
+        bid (str): The id of the element to type into.
         text (str): The text to type.
 
     """
@@ -59,12 +74,12 @@ def close_tab() -> None:
     pass
 
 
-def click(element_id: int) -> None:
+def click(bid: int) -> None:
     """Click on an element with the given id.
 
     Args:
     ----
-        element_id (int): The id of the element to click on.
+        bid (int): The id of the element to click on.
 
     """
     pass

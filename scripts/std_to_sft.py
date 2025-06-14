@@ -12,7 +12,7 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-from scripts.api import get_api_tool_description
+from scripts.api import get_api_tool_description, get_language_descriptions
 from scripts.html_to_axtree import HTMLToAXTree
 from scripts.system_prompt.system import get_system_message
 from scripts.system_prompt.user import get_web_user_message
@@ -114,7 +114,8 @@ def standardized_event_to_openhands_message(
     is_web: bool,
     chunk: str,
     api_env: str = None,
-    api_sigs = None
+    api_sigs = None,
+    languages: list = []
 ) -> dict:
     
     if isinstance(event, WebObservation):
@@ -133,7 +134,7 @@ def standardized_event_to_openhands_message(
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
         
         # for tool that are one of the default OH tools
-        if function_name in openhands_default_tools:
+        if function_name in openhands_default_tools and function_name not in api_sigs:
             tool_args = openhands_default_tools[function_name]
             if not verify_args(tool_args["required"], tool_args["optional"], arguments):
                 raise ValueError(f"Function call with wrong argument: {event}")
@@ -151,7 +152,9 @@ def standardized_event_to_openhands_message(
             return {"from": "function_call", "value": f"{thought}{function_call}"}
         
         # try to directly get the browsergym_id from the event kwargs
-        browsergym_id = event.kwargs.get("element_id", None)
+        browsergym_id = event.kwargs.get("bid", None)
+        if not browsergym_id:
+            browsergym_id = event.kwargs.get("element_id", None)
         # this gets the browsergym_id of the element that the user is interacting with
         # the latest(last seen) html's obs is updated whenever build_axtree is called
         # the latest obs is used to get the browsergym_id
@@ -159,7 +162,6 @@ def standardized_event_to_openhands_message(
             event_xpath = event.kwargs.get("xpath", None)
             if event_xpath:
                 browsergym_id = generate_axtree.get_bid(id, event_xpath, chunk)
-        
         # for tool calls that are not browser based since there is no browsergym_id
         # and tool calls that are specified as non-web
         # these should all be dataset specific apis
@@ -201,14 +203,18 @@ def standardized_event_to_openhands_message(
     if isinstance(event, CodeAction):
         thought = event.description + "\n\n" if event.description else ""
         function_name = action_function.get(event.language, f"execute_{event.language}")
-        arg = function_args.get(function_name, "code")
-        code_action = format_function(function_name, {arg: event.content})
+        code_content = event.content
         if function_name not in openhands_default_tools:
             if function_name not in NON_OH_EVENTS:
                 NON_OH_EVENTS[function_name] = 0
             NON_OH_EVENTS[function_name] += 1
-            #raise ValueError(f"Event with unknown code action type: {type(event)}\n{function_name}{event}")
-            return None
+            # raise ValueError(f"Event with unknown code action type: {type(event)}\n{function_name}{event}")
+            # return None
+            languages.append(event.language)
+            function_name = "execute_ipython_cell"
+            code_content = f"{event.language}('{code_content}')"
+        arg = function_args.get(function_name, "code")
+        code_action = format_function(function_name, {arg: code_content})
         return {"from": "function_call", "value": f"{thought}{code_action}"}
 
     elif isinstance(event, MessageAction):
@@ -263,11 +269,12 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
     # details = trajectory.details
     conversations = []
     previous_web_actions = []
+    languages = []
     for i in range(len(events)):
         event = events[i]
         try:
             message = standardized_event_to_openhands_message(
-                id, event, previous_web_actions, is_web, chunk, api_env, api_sigs
+                id, event, previous_web_actions, is_web, chunk, api_env, api_sigs, languages
             )
             if not message: 
                 return None
@@ -277,6 +284,11 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
                     message["value"] = api_tool_description + message["value"]
                     conversations.extend([message])
                     continue
+            
+            # Combine consecutive user message and web observation
+            if conversations[-1]["from"] == "human" and isinstance(event, WebObservation):
+                conversations[-1]["value"] += "\n\n" + message["value"]
+                continue
             
             # Match observations to function_calls
             if conversations[-1]["from"] == "function_call" and isinstance(event, TextObservation):
@@ -291,7 +303,9 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
             traceback.print_exc()
             print(e)
             return None
-
+    if languages:
+        language_descriptions = get_language_descriptions(languages)
+        conversations[0]["value"] = language_descriptions + '\n\n' + conversations[0]["value"]
     return {
         "id": trajectory.id,
         "conversations": conversations,
@@ -318,7 +332,7 @@ def main():
     count = 0
     for line in sys.stdin:
         if count % 10000 == 0 and count != 0: 
-            print(f"Processed {count} lines; {NON_OH_EVENTS}", file=sys.stderr)
+            print(f"Processed {count} lines", file=sys.stderr)
         output_line = process_row(
             line,
             is_web=args.is_web,

@@ -1,27 +1,3 @@
-def run(command: str):
-    """Execute a bash command.
-
-    Args:
-    ----
-        command (str): The bash command to execute.
-
-    """
-    pass
-
-
-def run_ipython(code: str, kernel_init_code: str):
-    """Execute an IPython cell.
-
-    Args:
-    ----
-        code (str): The python code to execute.
-        kernel_init_code (str): The kernel initialization code.
-
-    """
-    pass
-
-
-#
 def initialize(env_vars: dict):
     """Set environment variables.
 
@@ -182,5 +158,208 @@ def rag_search(query: str):
     ----
         query (str): The query to search.
 
+    """
+    pass
+
+from typing import Literal, Union, List
+
+def goto(url: str):
+    """Navigate to a URL.
+
+    Args:
+    ----
+        url (str): The target URL to visit.
+
+    Example: goto('http://www.example.com')
+    """
+    pass
+
+
+def go_back():
+    """Navigate to the previous page in history.
+
+    Example: go_back()
+    """
+    pass
+
+
+def go_forward():
+    """Navigate to the next page in history.
+
+    Example: go_forward()
+    """
+    pass
+
+
+def noop(wait_ms: float = 1000):
+    """Do nothing and optionally wait.
+
+    Args:
+    ----
+        wait_ms (float, optional): Time to wait in milliseconds (default is 1000).
+
+    Example: noop()
+             noop(500)
+    """
+    pass
+
+
+def scroll(delta_x: float, delta_y: float):
+    """Scroll horizontally and/or vertically in pixels.
+
+    Args:
+    ----
+        delta_x (float): Horizontal scroll in pixels.
+        delta_y (float): Vertical scroll in pixels.
+
+    Example: scroll(0, 200)
+             scroll(-50.2, -100.5)
+    """
+    pass
+
+
+def fill(bid: str, value: str):
+    """Fill a form field with text.
+
+    Args:
+    ----
+        bid (str): Element ID to fill.
+        value (str): Text to input.
+
+    Example: fill('237', 'example value')
+    """
+    pass
+
+
+def select_option(bid: str, options: Union[str, List[str]]):
+    """Select one or more options in a dropdown/select element.
+
+    Args:
+    ----
+        bid (str): The element ID.
+        options (str or list[str]): One or more option values or labels to select.
+
+    Example: select_option('a48', 'blue')
+             select_option('c48', ['red', 'green', 'blue'])
+    """
+    pass
+
+
+def click(bid: str, button: Literal['left', 'middle', 'right'] = 'left',
+          modifiers: List[Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = []):
+    """Click an element.
+
+    Args:
+    ----
+        bid (str): Element ID to click.
+        button (str, optional): Mouse button to use.
+        modifiers (list, optional): List of modifier keys.
+
+    Example: click('a51')
+             click('b22', button='right')
+    """
+    pass
+
+
+def dblclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left',
+             modifiers: List[Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = []):
+    """Double-click an element.
+
+    Args:
+    ----
+        bid (str): Element ID to double-click.
+        button (str, optional): Mouse button to use.
+        modifiers (list, optional): List of modifier keys.
+
+    Example: dblclick('12')
+             dblclick('ca42', button='right')
+    """
+    pass
+
+
+def hover(bid: str):
+    """Hover over an element.
+
+    Args:
+    ----
+        bid (str): Element ID to hover on.
+
+    Example: hover('b8')
+    """
+    pass
+
+
+def press(bid: str, key_comb: str):
+    """Press a key combination on a focused element.
+
+    Args:
+    ----
+        bid (str): Element ID to focus.
+        key_comb (str): Key combination to simulate.
+
+    Example: press('88', 'Backspace')
+    """
+    pass
+
+
+def focus(bid: str):
+    """Focus the specified element.
+
+    Args:
+    ----
+        bid (str): Element ID to focus.
+
+    Example: focus('b455')
+    """
+    pass
+
+
+def clear(bid: str):
+    """Clear the value of an input field.
+
+    Args:
+    ----
+        bid (str): Element ID to clear.
+
+    Example: clear('996')
+    """
+    pass
+
+
+def drag_and_drop(from_bid: str, to_bid: str):
+    """Perform drag-and-drop from one element to another.
+
+    Args:
+    ----
+        from_bid (str): Source element ID.
+        to_bid (str): Target element ID.
+
+    Example: drag_and_drop('56', '498')
+    """
+    pass
+
+
+def upload_file(bid: str, file: Union[str, List[str]]):
+    """Upload file(s) via a file input element.
+
+    Args:
+    ----
+        bid (str): Element ID to click for upload.
+        file (str or list[str]): Path(s) to file(s) to upload.
+
+    Example: upload_file('572', '/path/to/file.pdf')
+             upload_file('63', ['/file1.jpg', '/file2.zip'])
+    """
+    pass
+
+
+def send_msg_to_user(msg: str):
+    """Send a message to the user.
+
+    Args:
+    ----
+        msg (str): The message content to send.
+
+    Example: send_msg_to_user('The number of stars for the React repository on GitHub is 225k.')
     """
     pass
