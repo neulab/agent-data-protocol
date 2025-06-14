@@ -75,7 +75,7 @@ def save_sample():
 # Comment out the assertion to allow the script to run
 # save_sample()
 # assert 1 == 2
-dirs = [os.getenv("MY_DATASET", "openhands")]
+dirs = [os.getenv("MY_DATASET", "SWE-Gym_OpenHands-Sampled-Trajectories")]
 for d in dirs:
     # if os.path.exists(f"datasets/{d}/full_sft.jsonl"):
     print(d)

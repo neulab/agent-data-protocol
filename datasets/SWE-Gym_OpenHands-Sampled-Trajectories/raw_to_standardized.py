@@ -1,9 +1,12 @@
 import json
 import sys
+import random
 
 from schema_raw import SchemaRaw
 
+from schema.action.action import Action
 from schema.action.api import ApiAction
+from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
@@ -47,6 +50,15 @@ def process_data(data):
                                 description=msg.content,
                             )
                         )
+                    elif tool_call.function.name == "execute_bash":
+                        parallel_tool_count += 1
+                        content.append(
+                            CodeAction(
+                                language="bash",
+                                content=kwargs["command"],
+                                description=msg.content,
+                            )
+                        )
                     else:
                         parallel_tool_count += 1
                         content.append(
@@ -60,6 +72,73 @@ def process_data(data):
                 content.append(MessageAction(content=msg.content))
         else:
             assert False
+    if not isinstance(content[-1], MessageAction) or "<finish>" not in content[-1].content:
+        user_end_message = random.choice(
+            [
+                [
+                    TextObservation(
+                        content="Congratulations! You have successfully solved the task.",
+                        source="user",
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Your solution has been verified as correct. ", source="user"
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Well done on successfully completing the task!", source="user"
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Your implementation satisfies the task requirements.",
+                        source="user",
+                    ),
+                ],
+                [
+                    TextObservation(content="Task completed successfully.", source="user"),
+                ],
+            ]
+        )
+        content.extend(user_end_message)
+        assistant_end_message = random.choice(
+            [
+                [
+                    MessageAction(
+                        content="<finish> I have successfully completed the task. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I did it! The task is now complete. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> The objective has been achieved with no outstanding issues. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I have fulfilled all the requirements of the task. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I've wrapped up the task successfully. </finish>",
+                        description="",
+                    ),
+                ],
+            ]
+        )
+        content.extend(assistant_end_message)
+
     return Trajectory(
         id=data.instance_id,
         content=content,
@@ -79,4 +158,5 @@ if __name__ == "__main__":
         if not data.resolved:
             continue
         standardized_data = process_data(data)
-        print(standardized_data.model_dump_json())
+        if standardized_data:
+            print(standardized_data.model_dump_json())
