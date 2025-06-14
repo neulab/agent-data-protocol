@@ -1,10 +1,9 @@
 import json
-import sys
 import random
+import sys
 
 from schema_raw import SchemaRaw
 
-from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
