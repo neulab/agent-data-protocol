@@ -1,0 +1,21 @@
+CI Failure Analysis - Check Docstrings Job
+==========================================
+
+The CI is failing due to docstring formatting issues in API files. The ruff linter is checking for proper docstring formatting with the following rules:
+- D413: Missing blank line after last section ("Args")
+- D417: Missing argument description in the docstring
+
+Specific issues found:
+
+1. datasets/openhands/api.py - Multiple issues:
+   - Lines 169, 197, 210, 224, 237, 252, 268, 283, 295, 308, 320, 332, 345, 359: Missing blank line after "Args" section (D413)
+   - Lines 207, 221, 234, 248, 264, 292, 329, 342: Missing argument descriptions (D417)
+
+2. datasets/synatra/api.py - 2 issues:
+   - Line 2: Missing argument description for `delta_y` (D417)
+   - Line 5: Missing blank line after "Args" section (D413)
+
+Total: 24 errors found, 15 fixable with --fix option.
+
+The command that failed:
+ruff check datasets/*/api.py --select D --ignore D100,D203,D213
