@@ -70,7 +70,7 @@ You can run the following command to create a sample standardized file:
 python datasets/$MY_DATASET/raw_to_standardized.py < datasets/$MY_DATASET/sample_raw.json > datasets/$MY_DATASET/sample_std.json
 ```
 
-### Step 3: Validate the Standardized Format
+#### Validate the Standardized Format
 
 To ensure your standardized format is correct, run the validation test:
 
@@ -97,10 +97,12 @@ Once we have the standardized format, we can convert it to the SFT format:
 ```bash
 export MY_DATASET=dataset_name
 export PYTHONPATH=`pwd`:$PYTHONPATH
-cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python -u scripts/std_to_sft.py --is_web=no --chunk=all --keep_system=yes > datasets/$MY_DATASET/sample_sft.json
+cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python -u scripts/std_to_sft.py --is_web=no --chunk=all --api_env=execute_ipython_cell > datasets/$MY_DATASET/sample_sft.json
 ```
 
 Use `--is_web=yes` for web-based datasets like `mind2web, synatra`.
+Use `--chunk=all` by default.
+Use `--api_env=yes` for web-based datasets like `mind2web, synatra`.
 
 Run the validator script on the dataset to ensure that it is in the correct format:
 

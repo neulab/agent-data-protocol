@@ -3,7 +3,7 @@
 source /project/flame/yueqis/miniconda3/etc/profile.d/conda.sh
 conda activate unified
 
-export MY_DATASET=orca_agentinstruct # SWE-Gym_OpenHands-Sampled-Trajectories
+export MY_DATASET=agenttuning_alfworld # SWE-Gym_OpenHands-Sampled-Trajectories
 echo $MY_DATASET
 
 echo Step_1

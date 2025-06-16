@@ -71,12 +71,12 @@ def close_tab() -> None:
     pass
 
 
-def click(bid: int) -> None:
+def click(bid: str) -> None:
     """Click on an element with the given id.
 
     Args:
     ----
-        bid (int): The id of the element to click on.
+        bid (str): The id of the element to click on.
 
     """
     pass

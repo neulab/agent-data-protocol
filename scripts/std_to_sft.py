@@ -225,7 +225,7 @@ def standardized_event_to_openhands_message(
             # return None
             languages.append(event.language)
             function_name = "execute_ipython_cell"
-            code_content = f"{event.language}('{code_content}')"
+            code_content = f'{event.language}("{code_content}")'
         arg = function_args.get(function_name, "code")
         code_action = format_function(function_name, {arg: code_content})
         return {"from": "function_call", "value": f"{thought}{code_action}"}

@@ -22,20 +22,20 @@ def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
     kwargs = {}
     function = step.next_action.action_type.to_string().lower()
     if function == "stop":
-        kwargs["answer"] = step.next_action.typed_string
+        kwargs["answer"] = f'"{step.next_action.typed_string}"'
     elif function == "type":
-        kwargs["bid"] = step.next_action.axt_node_id
-        kwargs["text"] = step.next_action.typed_string
+        kwargs["bid"] = f'"{step.next_action.axt_node_id}"'
+        kwargs["text"] = f'"{step.next_action.typed_string}"'
     elif function in ["click"]:
-        kwargs["bid"] = step.next_action.axt_node_id
+        kwargs["bid"] = f'"{step.next_action.axt_node_id}"'
     elif function == "scroll":
         kwargs["delta_x"] = 0
         kwargs["delta_y"] = 100 if "down" in step.next_action.typed_string else -100
     elif function in ["key_press", "press"]:
-        kwargs["key_comb"] = step.next_action.typed_string
+        kwargs["key_comb"] = f'"{step.next_action.typed_string}"'
         function = "press"
     elif function in ["new_tab", "goto", "goto_url"]:
-        kwargs["url"] = step.next_action.typed_string
+        kwargs["url"] = f'"{step.next_action.typed_string}"'
         function = "goto" if function == "goto_url" else function
     elif function in ["tab_focus", "page_focus", "switch_tab"]:
         kwargs["page_number"] = step.next_action.typed_string

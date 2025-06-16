@@ -28,7 +28,7 @@ def parse_edit_action(action_str):
         replacement_text = action_str.split(None, 3)[-1].strip()
     if replacement_text.endswith("end_of_edit"):
         replacement_text = replacement_text[: -len("end_of_edit")]
-    return {"start_line": start_line, "end_line": end_line, "replacement_text": replacement_text}
+    return {"start_line": start_line, "end_line": end_line, "replacement_text": f'"{replacement_text}"'}
 
 
 def parse_api_action(item):
@@ -48,7 +48,12 @@ def parse_api_action(item):
         else:
             action_args = shlex.split(action_str)[1:]
             action_params = inspect.signature(getattr(api, action_name)).parameters
-            action_kwargs = {param: arg for param, arg in zip(action_params.keys(), action_args)}
+            action_kwargs = {}
+            for param, arg in zip(action_params.items(), action_args):
+                param_name, param_obj = param
+                if param_obj.annotation is str:
+                    arg = f'"{arg}"'
+                action_kwargs[param_name] = arg
         return ApiAction(function=action_name, kwargs=action_kwargs, description=thought)
     else:
         return CodeAction(
@@ -66,7 +71,7 @@ def process_item(item):
     elif item.role == "ai" and "```" in item.text:
         try:
             return parse_api_action(item)
-        except Exception:
+        except:
             return MessageAction(content=item.text)
     elif item.role == "ai":
         return MessageAction(content=item.text)

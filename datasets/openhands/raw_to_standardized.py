@@ -231,19 +231,20 @@ def process_data(data, keep_all=False):
                     print(f"Invalid browser action: {action}", file=sys.stderr)
                     continue
                 try:
-                    api_args = list(
-                        inspect.signature(getattr(api, function_name)).parameters.keys()
-                    )
+                    api_args = inspect.signature(getattr(api, function_name)).parameters
                 except:
                     continue
-                kwargs = {k: v for k, v in kwargs.items() if k in api_args}
-                for arg in zip(args, api_args):
-                    kwargs[arg[1]] = arg[0]
+                action_kwargs = {}
+                for param, arg in zip(api_args.items(), args):
+                    param_name, param_obj = param
+                    if param_obj.annotation is str:
+                        arg = f'"{arg}"'
+                    action_kwargs[param_name] = arg
                 content.append(
                     ApiAction(
                         function=function_name,
                         description=item.args.thought,
-                        kwargs=kwargs,
+                        kwargs=action_kwargs,
                     )
                 )
         elif item.action == "finish":
@@ -262,7 +263,7 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=thought,
                     kwargs={
-                        "output": output,
+                        "output": f'"{output}"',
                     },
                 )
             )
@@ -273,8 +274,8 @@ def process_data(data, keep_all=False):
                         function="delegate_to_RagAgent",
                         description=item.args.thought,
                         kwargs={
-                            "task": item.args.inputs.task,
-                            "query": item.args.inputs.query,
+                            "task": f'"{item.args.inputs.task}"',
+                            "query": f'"{item.args.inputs.query}"',
                         },
                     )
                 )
@@ -284,8 +285,8 @@ def process_data(data, keep_all=False):
                         function="delegate_to_CrawlAgent",
                         description=item.args.thought,
                         kwargs={
-                            "task": item.args.inputs.task,
-                            "link": item.args.inputs.link,
+                            "task": f'"{item.args.inputs.task}"',
+                            "link": f'"{item.args.inputs.link}"'
                         },
                     )
                 )
@@ -295,8 +296,8 @@ def process_data(data, keep_all=False):
                         function="delegate_to_agent",
                         description=item.args.thought,
                         kwargs={
-                            "agent": item.args.agent,
-                            "task": item.args.inputs.task,
+                            "agent": f'"{item.args.agent}"',
+                            "task": f'"{item.args.inputs.task}"',
                         },
                     )
                 )
@@ -307,7 +308,7 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "goal": item.args.goal,
+                        "goal": f'"{item.args.goal}"',
                     },
                 )
             )
@@ -317,8 +318,8 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "task_id": item.args.task_id,
-                        "state": item.args.state,
+                        "task_id": f'"{item.args.task_id}"',
+                        "state": f'"{item.args.state}"',
                     },
                 )
             )
@@ -346,8 +347,8 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "task": item.args.task,
-                        "plan": plan,
+                        "task": f'"{item.args.task}"',
+                        "plan": f'"{plan}"',
                     },
                 )
             )
@@ -357,7 +358,7 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "path": item.args.path,
+                        "path": f'"{item.args.path}"',
                         "start": item.args.start,
                         "end": item.args.end,
                     },
@@ -369,8 +370,8 @@ def process_data(data, keep_all=False):
                     function="edit",
                     description=item.args.thought,
                     kwargs={
-                        "path": item.args.path,
-                        "content": item.args.content,
+                        "path": f'"{item.args.path}"',
+                        "content": f'"{item.args.content}"',
                         "start": item.args.start,
                         "end": item.args.end,
                     },
@@ -382,7 +383,7 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "link": item.args.link,
+                        "link": f'"{item.args.link}"',
                     },
                 )
             )
@@ -392,7 +393,7 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "query": item.args.query,
+                        "query": f'"{item.args.query}"',
                     },
                 )
             )
@@ -403,7 +404,7 @@ def process_data(data, keep_all=False):
                 ApiAction(
                     function=item.action,
                     kwargs={
-                        "agent_state": item.args.agent_state,
+                        "agent_state": f'"{item.args.agent_state}"',
                     },
                 )
             )

@@ -74,8 +74,10 @@ def get_api_tool_description(dataset, exclude_apis={}, env="execute_ipython_cell
             if name in openhands_default_tools and check_exclude_openhands_default_tools(
                 name, sig, required, optional
             ):
+                print(f"excluded {name}")
                 continue
             if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
+                print(f"excluded {name}")
                 continue
             docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
             API_TOOL_DESCRIPTION += docstring
