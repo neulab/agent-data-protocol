@@ -286,7 +286,7 @@ def process_data(data, keep_all=False):
                         description=item.args.thought,
                         kwargs={
                             "task": f'"{item.args.inputs.task}"',
-                            "link": f'"{item.args.inputs.link}"'
+                            "link": f'"{item.args.inputs.link}"',
                         },
                     )
                 )

@@ -25,6 +25,7 @@ def str_replace_editor(
 
 def submit():
     """Finish the interaction when the task is complete OR if the assistant cannot proceed further with the task.
+
     No parameters are required for this function.
     """
     pass
