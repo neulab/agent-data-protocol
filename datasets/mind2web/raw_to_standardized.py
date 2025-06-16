@@ -335,4 +335,3 @@ if __name__ == "__main__":
         )
         # Print the standardized data
         print(standardized_data.model_dump_json())
-        break
