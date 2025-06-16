@@ -1,9 +1,9 @@
 import json
+import os
 import random
 import re
 import sys
 from typing import Tuple
-import os
 
 from generate_thought import generate_thought
 
@@ -151,7 +151,9 @@ def extract_thought_and_action(content: str) -> Tuple[str, str]:
     return "", ""
 
 
-def convert_step(idx: str, step: dict[str, str], context: str='', save_thoughts: dict={}) -> list[Action | Observation]:
+def convert_step(
+    idx: str, step: dict[str, str], context: str = "", save_thoughts: dict = {}
+) -> list[Action | Observation]:
     # parse system prompt
     system_regex = re.match(
         r"(Interact with a household to solve a task.*)",  # noqa
@@ -175,8 +177,10 @@ def convert_step(idx: str, step: dict[str, str], context: str='', save_thoughts:
         if action:
             function_name, kwargs = parse_action(action)
             if not thought:
-                if idx not in save_thoughts: 
-                    save_thoughts[idx] = generate_thought(context, 'api_action', function_name, kwargs)
+                if idx not in save_thoughts:
+                    save_thoughts[idx] = generate_thought(
+                        context, "api_action", function_name, kwargs
+                    )
                 thought = save_thoughts[idx]
             return [
                 ApiAction(
@@ -198,10 +202,11 @@ def convert_step(idx: str, step: dict[str, str], context: str='', save_thoughts:
             ),
         ]
 
-GENERATED_THOUGHTS_FILE = os.path.join(os.path.dirname(__file__), 'generated_thoughts.json')
+
+GENERATED_THOUGHTS_FILE = os.path.join(os.path.dirname(__file__), "generated_thoughts.json")
 if os.path.exists(GENERATED_THOUGHTS_FILE):
-    with open(GENERATED_THOUGHTS_FILE) as f: 
-        GENERATED_THOUGHTS = json.load(f)    
+    with open(GENERATED_THOUGHTS_FILE) as f:
+        GENERATED_THOUGHTS = json.load(f)
 else:
     GENERATED_THOUGHTS = {}
 for line in sys.stdin:
@@ -292,5 +297,5 @@ for line in sys.stdin:
 
     # Print the standardized data
     print(standardize_data.model_dump_json())
-    with open(GENERATED_THOUGHTS_FILE, 'w') as f: 
+    with open(GENERATED_THOUGHTS_FILE, "w") as f:
         json.dump(GENERATED_THOUGHTS, f, indent=2, ensure_ascii=False)

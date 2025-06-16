@@ -1,12 +1,13 @@
 import json
-import re
 import os
+import re
 import sys
 
 import openai
-api_key = os.getenv("OPENAI_API_KEY", "") 
+
+api_key = os.getenv("OPENAI_API_KEY", "")
 if not api_key:
-    print(f"openai api_key not found", file=sys.stderr)
+    print("openai api_key not found", file=sys.stderr)
 client = openai.OpenAI(api_key=api_key)
 
 STR_REPLACE_EDITOR_EXAMPLES = """
@@ -24,7 +25,7 @@ STR_REPLACE_EDITOR_EXAMPLES = """
 
     Model Output:
     {"description": "The `dask.base` module contains the `normalize_token` function, which is used to create deterministic tokens for various Python objects. To address the issue described in the PR, we need to add a new normalization function for `Enum` types. This function should be registered with the `normalize_token` dispatcher.\n\nHere's the plan:\n\n1. **Identify the Location for the New Function**: The new function should be added to the `dask.base` module, where other normalization functions are defined.\n\n2. **Implement the Function**: Implement the function `normalize_enum` as described in the PR, which returns a tuple of the enum's type name, name, and value.\n\n3. **Register the Function**: Use the `@normalize_token.register(Enum)` decorator to register the function with the `normalize_token` dispatcher.\n\nLet's implement these changes in the `dask.base` module."}
-    
+
     EXAMPLE 2:
     History:
     [{
@@ -56,7 +57,7 @@ BASH_EXAMPLES = """
 
     Model Output:
     {"description": "The script executed without any errors, which indicates that the issue might not manifest when running this code as a standalone script. The problem likely occurs when `mypy` performs type checking on this code. \n\nTo reproduce the error, we need to run `mypy` on this script using the specified command-line flags from the PR description. Let's proceed with that."}
-    
+
     EXAMPLE 2:
     History:
     [{
@@ -73,18 +74,20 @@ BASH_EXAMPLES = """
     {"description": "I have modified the `infer_constraints_from_protocol_members` function in `constraints.py` to handle cases where `inst` or `temp` might be `None`. Instead of asserting their presence, the function now skips over such cases, preventing the internal error.\n\nLet's rerun the `mypy` check on the `reproduce_error.py` script to verify that this change resolves the issue."}
 """
 
+
 def generate_thought(context, action_class, action_function, action_kwargs):
     if action_class == "api_action" and action_function == "str_replace_editor":
         examples = STR_REPLACE_EDITOR_EXAMPLES
     elif action_class == "code_action" and action_function == "bash":
         examples = BASH_EXAMPLES
-    else: raise ValueError(f"{action_class}\n{action_function}")
+    else:
+        raise ValueError(f"{action_class}\n{action_function}")
     prompt = f"""
     You are helping an agent working on code modifications in a simulated development environment.
     Based on the history and current action, generate a reasoning of why the agent decides to perform this action.
-    Below are some example: 
+    Below are some example:
     {examples}
-    
+
     Now, consider the following:
 
     History:

@@ -1,12 +1,13 @@
 import json
-import re
 import os
+import re
 import sys
 
 import openai
-api_key = os.getenv("OPENAI_API_KEY", "") 
+
+api_key = os.getenv("OPENAI_API_KEY", "")
 if not api_key:
-    print(f"openai api_key not found", file=sys.stderr)
+    print("openai api_key not found", file=sys.stderr)
 client = openai.OpenAI(api_key=api_key)
 
 EXAMPLES = """
@@ -24,7 +25,7 @@ EXAMPLES = """
 
     Model Output:
     {"description": "To accomplish the task, I need to first find the spraybottles. I'll start with checking the shelves, as they are common places to store spraybottles."}
-    
+
     EXAMPLE 2:
     History:
     [{
@@ -41,13 +42,14 @@ EXAMPLES = """
     {"description": "The previous action seems invalid as the script reads \"On the toilet 1, you see nothing.\" I should try putting the spraybottle again in the toilet."}
 """
 
+
 def generate_thought(context, action_class, action_function, action_kwargs):
     prompt = f"""
     You are helping an agent operating in a simulated household environment.
     Based on the history and current action, generate a reasoning of why the agent decides to perform this action.
-    Below are some example: 
+    Below are some example:
     {EXAMPLES}
-    
+
     Now, consider the following:
 
     History:
