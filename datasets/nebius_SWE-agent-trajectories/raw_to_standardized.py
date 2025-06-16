@@ -28,7 +28,11 @@ def parse_edit_action(action_str):
         replacement_text = action_str.split(None, 3)[-1].strip()
     if replacement_text.endswith("end_of_edit"):
         replacement_text = replacement_text[: -len("end_of_edit")]
-    return {"start_line": start_line, "end_line": end_line, "replacement_text": f'"{replacement_text}"'}
+    return {
+        "start_line": start_line,
+        "end_line": end_line,
+        "replacement_text": f'"{replacement_text}"',
+    }
 
 
 def parse_api_action(item):

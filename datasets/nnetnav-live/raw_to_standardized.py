@@ -52,7 +52,11 @@ def parse_action(content: str) -> Dict[str, Any]:
         else:
             press_enter_after = "0"
         fn_name = "type"
-        fn_kwargs = {"bid": f'"{id}"', "text": f'"{content}"', "press_enter_after": press_enter_after}
+        fn_kwargs = {
+            "bid": f'"{id}"',
+            "text": f'"{content}"',
+            "press_enter_after": press_enter_after,
+        }
     elif "press" in action:
         key_comb = action.split("[")[1].split("]")[0]
         fn_name = "keyboard_press"
@@ -129,7 +133,10 @@ def process_step(step):
     except:
         return None, None
 
-    return f"You are given the following objective: {obs_data["objective"]}\nExamine the current web page and perform the next appropriate action to move toward completing the objective.", processed_msgs
+    return (
+        f"You are given the following objective: {obs_data['objective']}\nExamine the current web page and perform the next appropriate action to move toward completing the objective.",
+        processed_msgs,
+    )
 
 
 def main():
@@ -138,17 +145,17 @@ def main():
         traj_id = step["id"]
         traj_content = []
         traj_goal = None
-        
+
         traj_goal, step_msgs = process_step(step)
-        if not traj_goal or not step_msgs: continue
+        if not traj_goal or not step_msgs:
+            continue
         traj_content.extend(step_msgs)
         goal_message = TextObservation(content=traj_goal, source="user")
         traj_content = [goal_message] + traj_content
 
-        traj = Trajectory(
-            id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"}
-        )
+        traj = Trajectory(id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"})
         print(json.dumps(traj.model_dump()))
+
 
 if __name__ == "__main__":
     main()

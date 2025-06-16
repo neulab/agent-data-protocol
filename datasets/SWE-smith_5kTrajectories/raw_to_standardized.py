@@ -1,11 +1,10 @@
 import json
+import random
 import re
 import sys
-import random
 
 from schema_raw import SchemaRaw
 
-from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
@@ -14,9 +13,9 @@ from schema.trajectory import Trajectory
 
 
 def convert_step(step) -> list:
-    if step.role == "system": 
+    if step.role == "system":
         return []
-    
+
     elif step.role == "user":
         content = step.content
         # Handle observations that start with "OBSERVATION:"
@@ -44,7 +43,7 @@ def convert_step(step) -> list:
                 # Parse the function call
                 function_name = match.group(1)
                 params_content = match.group(2)
-                
+
                 # Parse parameters
                 kwargs = {}
                 param_pattern = r"<parameter=([^>]+)>(.*?)</parameter>"
@@ -68,13 +67,11 @@ def convert_step(step) -> list:
 
                 # Create description from before_text
                 description = before_text if before_text else None
-                
+
                 if function_name == "bash":
                     result.append(
                         CodeAction(
-                            language="bash",
-                            content=kwargs["command"],
-                            description=description
+                            language="bash", content=kwargs["command"], description=description
                         )
                     )
                 else:
@@ -83,13 +80,13 @@ def convert_step(step) -> list:
                     )
 
                 current_pos = match.end()
-                
+
         else:
             # No function calls found, treat as regular message
             result.append(MessageAction(content=content))
 
         return result
-    
+
     else:
         raise Exception(f"Invalid role: {step.role}")
 
