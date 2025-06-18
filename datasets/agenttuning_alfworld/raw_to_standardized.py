@@ -5,8 +5,6 @@ import sys
 from typing import Tuple
 import os
 
-from generate_thought import generate_thought
-
 from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
@@ -174,10 +172,6 @@ def convert_step(idx: str, step: dict[str, str], context: str='', save_thoughts:
         thought, action = extract_thought_and_action(step["content"])
         if action:
             function_name, kwargs = parse_action(action)
-            if not thought:
-                if idx not in save_thoughts: 
-                    save_thoughts[idx] = generate_thought(context, 'api_action', function_name, kwargs)
-                thought = save_thoughts[idx]
             return [
                 ApiAction(
                     description=thought,
@@ -208,7 +202,6 @@ for line in sys.stdin:
     raw_data = json.loads(line)
     content = []
     id = raw_data["id"]
-    print(f"{id}", file=sys.stderr)
     if id not in GENERATED_THOUGHTS:
         GENERATED_THOUGHTS[id] = {}
     for idx, step in enumerate(raw_data["conversations"]):
@@ -292,5 +285,3 @@ for line in sys.stdin:
 
     # Print the standardized data
     print(standardize_data.model_dump_json())
-    with open(GENERATED_THOUGHTS_FILE, 'w') as f: 
-        json.dump(GENERATED_THOUGHTS, f, indent=2, ensure_ascii=False)
