@@ -165,7 +165,7 @@ def process_data(data, keep_all=False):
                     if getattr(item, k, None)
                     and not (isinstance(getattr(item, k), str) and not getattr(item, k).strip())
                 ]
-                print(f"Unknown observation: {'\n'.join(obs)}", file=sys.stderr)
+                print(f"Unknown observation: {chr(10).join(obs)}", file=sys.stderr)
                 content.append(
                     TextObservation(
                         source=map_source(item.source),

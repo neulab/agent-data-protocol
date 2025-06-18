@@ -1,29 +1,28 @@
 import json
-import re
 import os
+import re
 import sys
+
+import openai
+
+from schema.action.api import ApiAction
+from schema.action.code import CodeAction
+from schema.observation.text import TextObservation
+from schema.trajectory import Trajectory
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
 
 GENERATED_THOUGHTS_FILE = os.path.join(f"datasets/{dataset}/generated_thoughts.json")
 if os.path.exists(GENERATED_THOUGHTS_FILE):
-    with open(GENERATED_THOUGHTS_FILE) as f: 
-        GENERATED_THOUGHTS = json.load(f)    
+    with open(GENERATED_THOUGHTS_FILE) as f:
+        GENERATED_THOUGHTS = json.load(f)
 else:
     GENERATED_THOUGHTS = {}
-    
-from schema.trajectory import Trajectory
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
 
-import openai
-api_key = os.getenv("OPENAI_API_KEY", "") 
+api_key = os.getenv("OPENAI_API_KEY", "")
 if not api_key:
-    print(f"openai api_key not found", file=sys.stderr)
+    print("openai api_key not found", file=sys.stderr)
 client = openai.OpenAI(api_key=api_key)
 
 STR_REPLACE_EDITOR_EXAMPLES = """
@@ -41,7 +40,7 @@ STR_REPLACE_EDITOR_EXAMPLES = """
 
     Model Output:
     {"description": "The `dask.base` module contains the `normalize_token` function, which is used to create deterministic tokens for various Python objects. To address the issue described in the PR, we need to add a new normalization function for `Enum` types. This function should be registered with the `normalize_token` dispatcher.\n\nHere's the plan:\n\n1. **Identify the Location for the New Function**: The new function should be added to the `dask.base` module, where other normalization functions are defined.\n\n2. **Implement the Function**: Implement the function `normalize_enum` as described in the PR, which returns a tuple of the enum's type name, name, and value.\n\n3. **Register the Function**: Use the `@normalize_token.register(Enum)` decorator to register the function with the `normalize_token` dispatcher.\n\nLet's implement these changes in the `dask.base` module."}
-    
+
     EXAMPLE 2:
     History:
     [{
@@ -73,7 +72,7 @@ BASH_EXAMPLES = """
 
     Model Output:
     {"description": "The script executed without any errors, which indicates that the issue might not manifest when running this code as a standalone script. The problem likely occurs when `mypy` performs type checking on this code. \n\nTo reproduce the error, we need to run `mypy` on this script using the specified command-line flags from the PR description. Let's proceed with that."}
-    
+
     EXAMPLE 2:
     History:
     [{
@@ -105,7 +104,7 @@ EXAMPLES = """
 
     Model Output:
     {"description": "To accomplish the task, I need to first find the spraybottles. I'll start with checking the shelves, as they are common places to store spraybottles."}
-    
+
     EXAMPLE 2:
     History:
     [{
@@ -122,19 +121,19 @@ EXAMPLES = """
     {"description": "The previous action seems invalid as the script reads \"On the toilet 1, you see nothing.\" I should try putting the spraybottle again in the toilet."}
 """
 
+
 def generate_thought(context, action_class, action_function, action_kwargs):
     if action_class == "api_action" and action_function == "str_replace_editor":
         examples = STR_REPLACE_EDITOR_EXAMPLES
     elif action_class == "code_action" and action_function == "bash":
         examples = BASH_EXAMPLES
-    else: 
-        
+    else:
         examples = EXAMPLES
     prompt = f"""
     Based on the history and current action, generate a reasoning of why the agent decides to perform this action from the agent's perspective, using the agent's tone.
-    Below are some example: 
+    Below are some example:
     {examples}
-    
+
     Now, consider the following:
 
     History:
@@ -172,25 +171,30 @@ def generate_thoughts_for_line(line):
     trajectory = Trajectory(**std_data)
     id = trajectory.id
     events = trajectory.content
-    if id not in GENERATED_THOUGHTS: 
+    if id not in GENERATED_THOUGHTS:
         GENERATED_THOUGHTS[id] = {}
     print(f"generting function thoughts for {id}", file=sys.stderr)
     for idx, m in enumerate(events):
         idx = str(idx)
         if isinstance(m, TextObservation):
             if len(m.content) > 100:
-                m.content=m.content[:100] + ' ......[Truncated]',
+                m.content = (m.content[:100] + " ......[Truncated]",)
         elif isinstance(m, ApiAction) and not m.description:
             if idx not in GENERATED_THOUGHTS[id]:
-                GENERATED_THOUGHTS[id][idx] = generate_thought(events[:int(idx)], 'api_action', m.function, m.kwargs)
+                GENERATED_THOUGHTS[id][idx] = generate_thought(
+                    events[: int(idx)], "api_action", m.function, m.kwargs
+                )
             m.description = GENERATED_THOUGHTS[id][idx]
         elif isinstance(m, CodeAction) and not m.description:
             if idx not in GENERATED_THOUGHTS[id]:
-                GENERATED_THOUGHTS[id][idx] = generate_thought(events[:int(idx)], 'code_action', m.language, m.content)
+                GENERATED_THOUGHTS[id][idx] = generate_thought(
+                    events[: int(idx)], "code_action", m.language, m.content
+                )
             m.description = GENERATED_THOUGHTS[id][idx]
-    with open(GENERATED_THOUGHTS_FILE, 'w') as f: 
+    with open(GENERATED_THOUGHTS_FILE, "w") as f:
         json.dump(GENERATED_THOUGHTS, f, indent=2, ensure_ascii=False)
     return
+
 
 def process_line(line):
     std_dataset = [json.loads(line)]
@@ -201,8 +205,9 @@ def process_line(line):
     for idx, m in enumerate(events):
         idx = str(idx)
         if idx in GENERATED_THOUGHTS[id]:
-            try: m.description = GENERATED_THOUGHTS[id][idx]
-            except:
+            try:
+                m.description = GENERATED_THOUGHTS[id][idx]
+            except Exception:
                 print(f"{id}")
                 assert False
     return Trajectory(
@@ -211,10 +216,12 @@ def process_line(line):
         details=trajectory.details,
     )
 
+
 def test(line):
     generate_thoughts_for_line(line)
     data_with_thoughts = process_line(line)
     return data_with_thoughts
+
 
 if __name__ == "__main__":
     # output = []
@@ -225,18 +232,19 @@ if __name__ == "__main__":
     #         output.append(data_with_thoughts.model_dump_json())
     # with open(f'datasets/{dataset}/full_std.jsonl', 'w') as f:
     #     f.write('\n'.join(output))
-    
-    
+
     output = []
-    with open(f'datasets/{dataset}/full_std.jsonl') as f: 
+    with open(f"datasets/{dataset}/full_std.jsonl") as f:
         f = f.readlines()
     from concurrent.futures import ThreadPoolExecutor, as_completed
+
     from tqdm import tqdm
+
     with ThreadPoolExecutor(max_workers=16) as executor:
         futures = [executor.submit(test, line) for line in f]
         for future in tqdm(as_completed(futures), total=len(futures)):
             data_with_thoughts = future.result()
             if data_with_thoughts:
                 output.append(data_with_thoughts.model_dump_json())
-    with open(f'datasets/{dataset}/full_std.jsonl', 'w') as f:
-        f.write('\n'.join(output))
+    with open(f"datasets/{dataset}/full_std.jsonl", "w") as f:
+        f.write("\n".join(output))

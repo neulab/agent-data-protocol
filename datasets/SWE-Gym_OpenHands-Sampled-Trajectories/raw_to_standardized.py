@@ -1,7 +1,6 @@
 import json
 import random
 import sys
-import os
 
 from schema_raw import SchemaRaw
 
