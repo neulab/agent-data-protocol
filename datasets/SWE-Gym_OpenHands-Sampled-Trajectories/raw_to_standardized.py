@@ -5,25 +5,15 @@ import os
 
 from schema_raw import SchemaRaw
 
-from generate_thought import generate_thought
-
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
-GENERATED_THOUGHTS_FILE = os.path.join(os.path.dirname(__file__), 'generated_thoughts.json')
-if os.path.exists(GENERATED_THOUGHTS_FILE):
-    with open(GENERATED_THOUGHTS_FILE) as f: 
-        GENERATED_THOUGHTS = json.load(f)    
-else:
-    GENERATED_THOUGHTS = {}
+
 def process_data(data):
     id = data.instance_id
-    if id not in GENERATED_THOUGHTS:
-        GENERATED_THOUGHTS[id] = {}
-    print(f"{id}", file=sys.stderr)
     content = []
     parallel_tool_count = 0
     for idx, msg in enumerate(data.messages):
@@ -69,19 +59,6 @@ def process_data(data):
                     elif tool_call.function.name == "execute_bash":
                         parallel_tool_count += 1
                         thought = msg.content
-                        if not thought:
-                            if idx not in GENERATED_THOUGHTS[id]: 
-                                context = []
-                                for m in content:
-                                    if isinstance(m, TextObservation):
-                                        temp = TextObservation(
-                                                content=m.content[:100] + ' ......[Truncated]',
-                                                source=m.source
-                                            )
-                                        context.append(temp)
-                                    else: context.append(m)
-                                GENERATED_THOUGHTS[id][idx] = generate_thought(context, 'code_action', "bash", kwargs)
-                            thought = GENERATED_THOUGHTS[id][idx]
                         content.append(
                             CodeAction(
                                 language="bash",
@@ -92,20 +69,6 @@ def process_data(data):
                     else:
                         parallel_tool_count += 1
                         thought = msg.content
-                        if not thought:
-                            context = []
-                            if idx not in GENERATED_THOUGHTS[id]: 
-                                for m in content:
-                                    if isinstance(m, TextObservation):
-                                        temp = TextObservation(
-                                                content=m.content[:100] + ' ......[Truncated]',
-                                                source=m.source
-                                            )
-                                        context.append(temp)
-                                    else: context.append(m)
-                                GENERATED_THOUGHTS[id][idx] = generate_thought(context, 'api_action', tool_call.function.name, kwargs)
-                            thought = GENERATED_THOUGHTS[id][idx]
-                            
                         content.append(
                             ApiAction(
                                 description=thought,
@@ -183,8 +146,7 @@ def process_data(data):
             ]
         )
         content.extend(assistant_end_message)
-    with open(GENERATED_THOUGHTS_FILE, 'w') as f: 
-        json.dump(GENERATED_THOUGHTS, f, indent=2, ensure_ascii=False)
+
     return Trajectory(
         id=id,
         content=content,
@@ -197,13 +159,7 @@ def process_data(data):
     )
 
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
-    
 if __name__ == "__main__":
-    with open('/project/flame/yueqis/agent-data-collection/datasets/SWE-Gym_OpenHands-Sampled-Trajectories/full_raw.jsonl') as f:
-        f = f.readlines()
-
     for line in sys.stdin:
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
