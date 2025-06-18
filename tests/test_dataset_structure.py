@@ -41,7 +41,12 @@ def test_dataset_structure(subdir):
         )
 
     # Check for other JSON files that shouldn't be there
-    allowed_jsons = ["sample_raw.json", "sample_std.json", "sample_sft.json"]
+    allowed_jsons = [
+        "sample_raw.json",
+        "sample_std.json",
+        "sample_sft.json",
+        "generated_thoughts.json",
+    ]
     for file in os.listdir(subdir_path):
         if file.endswith(".json") and file not in allowed_jsons:
             # Special case for androidcontrol which has a nested directory structure
