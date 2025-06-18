@@ -70,6 +70,22 @@ You can run the following command to create a sample standardized file:
 python datasets/$MY_DATASET/raw_to_standardized.py < datasets/$MY_DATASET/sample_raw.json > datasets/$MY_DATASET/sample_std.json
 ```
 
+#### (Optional) Generate Function Thoughts from Standardized Data
+This step enriches the standardized dataset by adding a thoughts for each action that doesn't have thoughts, using in-context learning examples and a language model to simulate the agent's reasoning.
+
+```bash
+export MY_DATASET=dataset_name
+export OPENAI_API_KEY=your_key_here
+cat datasets/$MY_DATASET/full_std.jsonl | python scripts/generate_thoughts_std.py
+```
+
+This script will:
+
+Read all entries from datasets/$MY_DATASET/full_std.jsonl and all saved thoughts from datasets/$MY_DATASET/generated_thoughts.json, generate thoughts if thoughts are missing and not generated already in generated_thoughts.json, save the generated thoughts to datasets/$MY_DATASET/generated_thoughts.json, and lastly write an updated full_std.jsonl that includes the descriptions in-place
+
+Note: If thoughts already exist in generated_thoughts.json, the script will skip regeneration for those entries. Delete the file if you wish to regenerate from scratch.
+
+
 #### Validate the Standardized Format
 
 To ensure your standardized format is correct, run the validation test:
@@ -102,7 +118,7 @@ cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | pyt
 
 Use `--is_web=yes` for web-based datasets like `mind2web, synatra`.
 Use `--chunk=all` by default.
-Use `--api_env=yes` for web-based datasets like `mind2web, synatra`.
+Use `--api_env=browser` for web-based datasets like `mind2web, synatra`.
 
 Run the validator script on the dataset to ensure that it is in the correct format:
 
@@ -110,7 +126,7 @@ Run the validator script on the dataset to ensure that it is in the correct form
 pytest tests/test_raw_schemas.py tests/test_standardized_schemas.py
 ```
 
-### Step 3: Write README
+### Step 4: Write README
 
 Write a README.md file in the dataset directory that describes the dataset, including the source, the format, and any other relevant information.
 
