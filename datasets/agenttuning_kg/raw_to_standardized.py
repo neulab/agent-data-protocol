@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import types
+import random
 from typing import Tuple
 
 from schema.action.action import Action
@@ -87,8 +88,8 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         answer_extract_regex = re.search(r"(.*)Final Answer:\s*(.*)", step["content"], re.DOTALL)
         return [
             MessageAction(
-                content=f"<finish> <solution> {answer_extract_regex.group(2)} </solution> </finish>",
-                description=answer_extract_regex.group(1).strip(),
+                content=f"<solution> {answer_extract_regex.group(2)} </solution>",
+                description=answer_extract_regex.group(1).strip().replace('Thought: ', ''),
             )
         ]
 
@@ -131,9 +132,75 @@ for line in sys.stdin:
         continue
 
     # All correctly parsed instances should have a finish message
-    if not isinstance(content[-1], MessageAction) or "<finish>" not in content[-1].content:
+    if not isinstance(content[-1], MessageAction) or "<solution>" not in content[-1].content:
         continue
-
+    
+    user_end_message = random.choice(
+        [
+            [
+                TextObservation(
+                    content="Congratulations! You have successfully solved the task.",
+                    source="user",
+                ),
+            ],
+            [
+                TextObservation(
+                    content="Your solution has been verified as correct. ", source="user"
+                ),
+            ],
+            [
+                TextObservation(
+                    content="Well done on successfully completing the task!", source="user"
+                ),
+            ],
+            [
+                TextObservation(
+                    content="Your implementation satisfies the task requirements.",
+                    source="user",
+                ),
+            ],
+            [
+                TextObservation(content="Task completed successfully.", source="user"),
+            ],
+        ]
+    )
+    content.extend(user_end_message)
+    assistant_end_message = random.choice(
+        [
+            [
+                MessageAction(
+                    content="<finish> I have successfully completed the task. </finish>",
+                    description="",
+                ),
+            ],
+            [
+                MessageAction(
+                    content="<finish> I did it! The task is now complete. </finish>",
+                    description="",
+                ),
+            ],
+            [
+                MessageAction(
+                    content="<finish> The objective has been achieved with no outstanding issues. </finish>",
+                    description="",
+                ),
+            ],
+            [
+                MessageAction(
+                    content="<finish> I have fulfilled all the requirements of the task. </finish>",
+                    description="",
+                ),
+            ],
+            [
+                MessageAction(
+                    content="<finish> I've wrapped up the task successfully. </finish>",
+                    description="",
+                ),
+            ],
+        ]
+    )
+    content.extend(assistant_end_message)
+    
     # Standardize the data
     standardize_data = Trajectory(
         id=raw_data["id"],
