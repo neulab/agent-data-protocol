@@ -1,10 +1,10 @@
 import inspect
 import json
 import os
+import random
 import re
 import sys
 import types
-import random
 from typing import Tuple
 
 from schema.action.action import Action
@@ -89,7 +89,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         return [
             MessageAction(
                 content=f"<solution> {answer_extract_regex.group(2)} </solution>",
-                description=answer_extract_regex.group(1).strip().replace('Thought: ', ''),
+                description=answer_extract_regex.group(1).strip().replace("Thought: ", ""),
             )
         ]
 
@@ -134,7 +134,7 @@ for line in sys.stdin:
     # All correctly parsed instances should have a finish message
     if not isinstance(content[-1], MessageAction) or "<solution>" not in content[-1].content:
         continue
-    
+
     user_end_message = random.choice(
         [
             [
@@ -200,7 +200,7 @@ for line in sys.stdin:
         ]
     )
     content.extend(assistant_end_message)
-    
+
     # Standardize the data
     standardize_data = Trajectory(
         id=raw_data["id"],
