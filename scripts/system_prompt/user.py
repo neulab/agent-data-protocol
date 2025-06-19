@@ -31,12 +31,6 @@ def get_web_user_message(
 
 # Previous Actions
 {prev_action_str}
-
-Here is an example with chain of thought of a valid action when clicking on a button:
-"
-In order to accomplish my goal I need to click on the button with bid 12
-<function=browser>\n<parameter=code>\nclick(bid="12")\n</parameter>\n</function>
-"
 """.strip()
     if USE_CONCISE_ANSWER:
         prompt += CONCISE_INSTRUCTION
