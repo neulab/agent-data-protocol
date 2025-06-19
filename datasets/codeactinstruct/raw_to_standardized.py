@@ -12,6 +12,7 @@ from schema.trajectory import Trajectory
 
 TOOL_DESCRIPTION = "Tool function available (already imported in <execute> environment):"
 WARNING_MSG = "Observation:\nI don't understand your input. \nIf you want to execute code, please use <execute> YOUR_CODE_HERE </execute>.\nIf you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>.\nFor example: The answer to the question is <solution> 42 </solution>."
+NEW_WARNING_MSG = "I don't understand your input. \nIf you want to execute code, please follow the instructions.\nIf you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>.\nFor example: The answer to the question is <solution> 42 </solution>."
 APIS = set()
 
 
@@ -36,7 +37,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
     if WARNING_MSG in step["content"]:
         return [
             TextObservation(
-                content=step["content"],
+                content=step["content"].replace(WARNING_MSG, NEW_WARNING_MSG),
                 source="environment"
                 if step["role"] == "system"
                 else "user"
