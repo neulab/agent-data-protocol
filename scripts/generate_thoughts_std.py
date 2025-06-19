@@ -173,7 +173,7 @@ def generate_thoughts_for_line(line):
     events = trajectory.content
     if id not in GENERATED_THOUGHTS:
         GENERATED_THOUGHTS[id] = {}
-    print(f"generting function thoughts for {id}", file=sys.stderr)
+    print(f"generating function thoughts for {id}", file=sys.stderr)
     for idx, m in enumerate(events):
         idx = str(idx)
         if isinstance(m, TextObservation):
