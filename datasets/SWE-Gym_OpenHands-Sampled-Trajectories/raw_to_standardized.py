@@ -10,17 +10,19 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
-
+PRIOR_INS = "2. Create a script to reproduce the error and execute it with `python <filename.py>` using the BashTool"
+NEW_INS = "2. Create a script to reproduce the error and execute it"
 def process_data(data):
     id = data.instance_id
     content = []
     parallel_tool_count = 0
     for idx, msg in enumerate(data.messages):
-        idx = str(idx)
         if msg.role == "system":
             continue
         elif msg.role in ["user", "tool"]:
             _msg = f"{msg.content}" if msg.role == "tool" else msg.content
+            if idx == 1: 
+                _msg = _msg.replace(PRIOR_INS, NEW_INS)
             if "OBSERVATION:\n" in _msg:
                 _msg = "\n".join(_msg.split("OBSERVATION:\n")[1:])
             # Map the roles to the allowed source values in the schema
