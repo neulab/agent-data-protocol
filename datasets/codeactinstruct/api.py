@@ -1,3 +1,14 @@
+def wikipedia_search(query: str) -> str:
+    """Search Wikipedia for a given query.
+
+    This tool provides access to a vast collection of articles covering a wide range of topics.
+    It can be used to retrieve accurate and comprehensive information about specific keywords or topics.
+
+    For example: wikipedia_search("Photosynthesis")
+    """
+    pass
+
+
 def put(object: str, receptacle: str) -> str:
     """Put an object in/on a receptacle.
 

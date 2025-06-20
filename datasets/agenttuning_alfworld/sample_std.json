@@ -1,15 +1,10 @@
 [
   {
-    "id": "alfworld_294",
+    "id": "alfworld_155",
     "content": [
       {
         "class_": "text_observation",
-        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.",
-        "source": "environment"
-      },
-      {
-        "class_": "text_observation",
-        "content": "Ok? Understood?",
+        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
         "source": "user"
       },
       {
@@ -19,300 +14,517 @@
       },
       {
         "class_": "text_observation",
-        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bed 1, a desk 2, a desk 1, a garbagecan 1, a shelf 5, a shelf 4, a shelf 3, a shelf 2, and a shelf 1.\nYour task is to: put two keychain in desk.",
+        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bathtubbasin 1, a garbagecan 1, a handtowelholder 1, a shelf 3, a shelf 2, a shelf 1, a sinkbasin 1, a toilet 1, a toiletpaperhanger 1, and a towelholder 1.\nYour task is to: put two spraybottle in toilet.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('shelf 1')",
-        "description": "My task is to put two keychains into a desk. I have to look for keychains around the room. I'll start by checking the shelves as they often contain small items."
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"shelf 1\""
+        },
+        "description": "My task is to put two spraybottle in the toilet. I'll start by looking around to find the spraybottles."
       },
       {
         "class_": "text_observation",
-        "content": "On the shelf 1, you see a cd 1, a creditcard 1, a keychain 2, and a keychain 1.",
+        "content": "On the shelf 1, you see a soapbottle 2, a spraybottle 2, and a spraybottle 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('keychain 1', 'shelf 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "take",
+        "kwargs": {
+          "item": "\"spraybottle 1\"",
+          "source": "\"shelf 1\""
+        },
+        "description": "I need two spraybottles to complete the task of putting them in the toilet. Shelf 1 contains two spraybottles, so I’m taking spraybottle 1 from shelf 1 as the first one to collect."
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the keychain 1 from the shelf 1.",
+        "content": "You pick up the spraybottle 1 from the shelf 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('keychain 2', 'shelf 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"toilet 1\""
+        },
+        "description": "I now have spraybottle 1 in hand; I'll go to toilet 1 to place it inside as the first step toward putting two spraybottles in the toilet."
       },
       {
         "class_": "text_observation",
-        "content": "You put the keychain 1 in/on the shelf 1.",
+        "content": "On the toilet 1, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('keychain 2', 'shelf 1')",
-        "description": "It seems I mistakenly put the keychain back on the shelf instead of picking up the second one. Let me try again."
+        "class_": "api_action",
+        "function": "put",
+        "kwargs": {
+          "item": "\"spraybottle 1\"",
+          "target": "\"toilet 1\""
+        },
+        "description": "My goal is to place two spraybottles in the toilet. Since I’ve brought spraybottle 1 to toilet 1 and it’s currently empty, I will put spraybottle 1 into the toilet to fulfill the first part of the task."
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the keychain 2 from the shelf 1.",
+        "content": "You put the spraybottle 1 in/on the toilet 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"shelf 1\""
+        },
+        "description": "I still need a second spraybottle to complete the task. Since shelf 1 previously had two spraybottles and I’ve only taken one, I’ll go back to shelf 1 to pick up the remaining spraybottle."
       },
       {
         "class_": "text_observation",
-        "content": "On the desk 1, you see a cellphone 1, and a pencil 1.",
+        "content": "On the shelf 1, you see a soapbottle 2, and a spraybottle 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('keychain 2', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "take",
+        "kwargs": {
+          "item": "\"spraybottle 2\"",
+          "source": "\"shelf 1\""
+        },
+        "description": "I still need a second spraybottle to complete the task of putting two spraybottles in the toilet, and shelf 1 has spraybottle 2 available, so I will take spraybottle 2 now."
       },
       {
         "class_": "text_observation",
-        "content": "You put the keychain 2 in/on the desk 1.",
+        "content": "You pick up the spraybottle 2 from the shelf 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('keychain 1', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"toilet 1\""
+        },
+        "description": "I have picked up the second spraybottle and now need to place it in the toilet to complete the task of putting two spraybottles in the toilet, so I will go to toilet 1."
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the cellphone 1 from the desk 1.",
+        "content": "On the toilet 1, you see a spraybottle 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('cellphone 1', 'desk 1')",
-        "description": "It appears I accidentally picked up a cellphone instead of placing the keychain on the desk. I will correct this by placing the cellphone back and then putting the keychain on the desk."
+        "class_": "api_action",
+        "function": "put",
+        "kwargs": {
+          "item": "\"spraybottle 2\"",
+          "target": "\"toilet 1\""
+        },
+        "description": "I have already placed the first spraybottle in toilet 1 and now need to complete the task by putting the second spraybottle there, so I will put spraybottle 2 into toilet 1."
       },
       {
         "class_": "text_observation",
-        "content": "You put the cellphone 1 in/on the desk 1.",
+        "content": "Task completed successfully.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('keychain 1', 'desk 1')",
-        "description": ""
+        "class_": "message_action",
+        "content": "<finish> </finish>",
+        "description": "The objective has been achieved with no outstanding issues."
+      }
+    ],
+    "details": {}
+  },
+  {
+    "id": "alfworld_219",
+    "content": [
+      {
+        "class_": "text_observation",
+        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
+        "source": "user"
+      },
+      {
+        "class_": "message_action",
+        "content": "OK. I'll follow your instructions and try my best to solve the task.",
+        "description": null
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the cellphone 1 from the desk 1.",
+        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 12, a cabinet 11, a cabinet 10, a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a diningtable 1, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: heat some potato and put it in fridge.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('cellphone 1', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 1\""
+        },
+        "description": "I need a potato to complete the task, I'll start looking in the cabinets because they're usually stored there."
       },
       {
         "class_": "text_observation",
-        "content": "You put the cellphone 1 in/on the desk 1.",
+        "content": "On the cabinet 1, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('keychain 2', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 2\""
+        },
+        "description": "Potatoes are often kept in cabinets, and cabinet 1 was empty, so I’ll move to cabinet 2 to continue my search for a potato."
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the keychain 2 from the desk 1.",
+        "content": "On the cabinet 2, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('keychain 2', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 3\""
+        },
+        "description": "Cabinet 2 was empty and potatoes are commonly stored in cabinets, so I’ll move on to check cabinet 3 next for a potato."
       },
       {
         "class_": "text_observation",
-        "content": "You put the keychain 2 in/on the desk 1.",
+        "content": "The cabinet 3 is closed.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('pencil 1', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 3\""
+        },
+        "description": "Cabinet 3 is closed, and since potatoes are commonly stored in cabinets, I need to open it to check inside for the potato."
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the pencil 1 from the desk 1.",
+        "content": "You open the cabinet 3. The cabinet 3 is open. In it, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('pencil 1', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 4\""
+        },
+        "description": "I’ve checked cabinets 1 through 3 and found no potatoes, so I’ll move on to cabinet 4 to continue searching for a potato."
       },
       {
         "class_": "text_observation",
-        "content": "You put the pencil 1 in/on the desk 1.",
+        "content": "The cabinet 4 is closed.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('keychain 2', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 4\""
+        },
+        "description": "Cabinet 4 is closed, and since I haven’t found any potatoes yet, I need to open this cabinet to check inside for a potato."
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the keychain 2 from the desk 1.",
+        "content": "You open the cabinet 4. The cabinet 4 is open. In it, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('keychain 2', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 5\""
+        },
+        "description": "I’ve checked cabinets 1 through 4 and found no potatoes, so I’ll continue my systematic search by going to cabinet 5 to look for the potato."
       },
       {
         "class_": "text_observation",
-        "content": "You put the keychain 2 in/on the desk 1.",
+        "content": "The cabinet 5 is closed.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "examine('desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 5\""
+        },
+        "description": "Cabinet 5 is closed, and since I haven’t found a potato in cabinets 1 through 4, I need to open cabinet 5 to check inside for the potato."
       },
       {
         "class_": "text_observation",
-        "content": "On the desk 1, you see a cellphone 1, a keychain 2, and a pencil 1.",
+        "content": "You open the cabinet 5. The cabinet 5 is open. In it, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('shelf 2')",
-        "description": "There's one keychain on the desk. One more is required as per the task. Let me search the other shelves."
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 6\""
+        },
+        "description": "I've systematically checked and opened cabinets 1 through 5 and found no potatoes, so I'll move to cabinet 6 to continue my search for a potato."
       },
       {
         "class_": "text_observation",
-        "content": "On the shelf 2, you see a desklamp 1, a pen 1, and a pencil 2.",
+        "content": "The cabinet 6 is closed.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('shelf 3')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 6\""
+        },
+        "description": "Cabinet 6 is closed, and since I’ve already checked cabinets 1 through 5 without finding a potato, I need to open cabinet 6 to see if it’s inside."
       },
       {
         "class_": "text_observation",
-        "content": "On the shelf 3, you see nothing.",
+        "content": "You open the cabinet 6. The cabinet 6 is open. In it, you see a peppershaker 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('shelf 4')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 7\""
+        },
+        "description": "I still haven’t found a potato after checking cabinets 1 through 6, so I will go to cabinet 7 to continue my search."
       },
       {
         "class_": "text_observation",
-        "content": "On the shelf 4, you see a cellphone 2, and a creditcard 2.",
+        "content": "On the cabinet 7, you see a bowl 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('shelf 5')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 8\""
+        },
+        "description": "I’ve checked cabinets 1 through 7 and still haven’t found a potato, so I’ll move on to cabinet 8 to continue my systematic search."
       },
       {
         "class_": "text_observation",
-        "content": "On the shelf 5, you see nothing.",
+        "content": "The cabinet 8 is closed.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('desk 2')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 8\""
+        },
+        "description": "Cabinet 8 is closed, and since I haven’t found a potato in cabinets 1 through 7, I need to open cabinet 8 to check its contents for the potato."
       },
       {
         "class_": "text_observation",
-        "content": "On the desk 2, you see a alarmclock 2, a alarmclock 1, and a book 1.",
+        "content": "You open the cabinet 8. The cabinet 8 is open. In it, you see a plate 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "examine('desk 2')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 9\""
+        },
+        "description": "I’ve systematically checked cabinets 1 through 8 and still haven’t found a potato, so I’ll proceed to cabinet 9 to continue my search."
       },
       {
         "class_": "text_observation",
-        "content": "On the desk 2, you see a alarmclock 2, a alarmclock 1, and a book 1.",
+        "content": "The cabinet 9 is closed.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('shelf 1')",
-        "description": "There's no keychain on desk 2. I'll return to the first shelf and retrieve the first keychain again."
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 9\""
+        },
+        "description": "Cabinet 9 is closed, and since I’ve already checked cabinets 1 through 8 without finding a potato, I need to open cabinet 9 to inspect its contents for the potato."
       },
       {
         "class_": "text_observation",
-        "content": "On the shelf 1, you see a cd 1, a creditcard 1, and a keychain 1.",
+        "content": "You open the cabinet 9. The cabinet 9 is open. In it, you see a saltshaker 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('keychain 1', 'shelf 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 10\""
+        },
+        "description": "I’ve systematically checked cabinets 1 through 9 and found no potato, so I will go to cabinet 10 to continue searching for the potato."
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the keychain 1 from the shelf 1.",
+        "content": "The cabinet 10 is closed.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 10\""
+        },
+        "description": "Cabinet 10 is closed and I haven’t found a potato in cabinets 1 through 9, so I need to open cabinet 10 to check inside for the potato."
       },
       {
         "class_": "text_observation",
-        "content": "On the desk 1, you see a cellphone 1, a keychain 2, and a pencil 1.",
+        "content": "You open the cabinet 10. The cabinet 10 is open. In it, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('keychain 1', 'desk 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 11\""
+        },
+        "description": "I’ve checked and opened cabinets 1 through 10 without finding a potato, so I’ll go to cabinet 11 next to continue my search for a potato."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The cabinet 11 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 11\""
+        },
+        "description": "Cabinet 11 is closed and since I’ve already checked and opened cabinets 1 through 10 without finding a potato, I need to open cabinet 11 to inspect its contents for the potato."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the cabinet 11. The cabinet 11 is open. In it, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 12\""
+        },
+        "description": "I have systematically checked and opened cabinets 1 through 11 without finding a potato, so I’ll go to cabinet 12 to continue my search for a potato."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The cabinet 12 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 12\""
+        },
+        "description": "I’ve checked and opened cabinets 1 through 11 without finding a potato, and cabinet 12 is closed, so I need to open cabinet 12 to inspect its contents for the potato."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the cabinet 12. The cabinet 12 is open. In it, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"countertop 1\""
+        },
+        "description": "There is no potato in cabinets, I should search elsewhere. Perhaps the countertop."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the countertop 1, you see a butterknife 1, and a saltshaker 1.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"countertop 2\""
+        },
+        "description": "There was no potato on countertop 1, so I will continue my search by moving to countertop 2 to look for it."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the countertop 2, you see a dishsponge 3, a ladle 2, a lettuce 3, a lettuce 2, a pan 1, a potato 2, a soapbottle 1, and a winebottle 1.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "take",
+        "kwargs": {
+          "item": "\"potato 2\"",
+          "source": "\"countertop 2\""
+        },
+        "description": "I see potato 2 on countertop 2, which is needed to heat and then store in the fridge, so I will take it now."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You pick up the potato 2 from the countertop 2.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"microwave 1\""
+        },
+        "description": "I have the potato in hand and the next step is to heat it, so I’m heading to microwave 1 to heat the potato."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The microwave 1 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "heat",
+        "kwargs": {
+          "item": "\"potato 2\"",
+          "appliance": "\"microwave 1\""
+        },
+        "description": "To fulfill the task requirement of heating a potato before storing it, I will now use the microwave to heat potato 2 in microwave 1."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You heat the potato 2 using the microwave 1.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"fridge 1\""
+        },
+        "description": "I’ve heated the potato as required; the next step is to store it in the fridge to complete the task, so I’m going to fridge 1."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The fridge 1 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"fridge 1\""
+        },
+        "description": "The fridge is closed, and to complete the task of storing the heated potato inside, I need to open fridge 1 first."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the fridge 1. The fridge 1 is open. In it, you see a egg 1, a lettuce 1, a mug 1, a potato 3, a potato 1, a tomato 2, and a tomato 1.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "put",
+        "kwargs": {
+          "item": "\"potato 2\"",
+          "target": "\"fridge 1\""
+        },
+        "description": "I have heated potato 2 as required and opened fridge 1; to complete the task of storing the heated potato, I will now put potato 2 into fridge 1."
       },
       {
         "class_": "text_observation",
@@ -322,22 +534,17 @@
       {
         "class_": "message_action",
         "content": "<finish> </finish>",
-        "description": "I have fulfilled all the requirements of the task."
+        "description": "The objective has been achieved with no outstanding issues."
       }
     ],
     "details": {}
   },
   {
-    "id": "alfworld_238",
+    "id": "alfworld_56",
     "content": [
       {
         "class_": "text_observation",
-        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.",
-        "source": "environment"
-      },
-      {
-        "class_": "text_observation",
-        "content": "Ok? Understood?",
+        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
         "source": "user"
       },
       {
@@ -347,14 +554,291 @@
       },
       {
         "class_": "text_observation",
-        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bed 1, a drawer 11, a drawer 10, a drawer 9, a drawer 8, a drawer 7, a drawer 6, a drawer 5, a drawer 4, a drawer 3, a drawer 2, a drawer 1, a dresser 1, a garbagecan 1, a laundryhamper 1, a safe 1, and a sidetable 1.\nYour task is to: put some cellphone on dresser.",
+        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 10, a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a diningtable 2, a diningtable 1, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: put two cup in microwave.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 1')",
-        "description": "The task is to put a cellphone on the dresser. I first need to find a cellphone. Cellphones are commonly kept in drawers or on sidetables. I'll start by looking in drawer 1."
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"diningtable 1\""
+        },
+        "description": "The goal is to place two cups in the microwave. I should start by checking if there are any cups in the vicinity. The dining table might have cups so I will check there first."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the diningtable 1, you see a bread 1, a cup 3, a dishsponge 1, a fork 3, a fork 1, a peppershaker 1, a plate 1, a potato 1, a soapbottle 1, a spatula 1, a spoon 2, a tomato 3, and a tomato 2.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "take",
+        "kwargs": {
+          "item": "\"cup 3\"",
+          "source": "\"diningtable 1\""
+        },
+        "description": "I need two cups to place in the microwave. Since I see cup 3 on diningtable 1, I’ll pick it up now."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You pick up the cup 3 from the diningtable 1.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"microwave 1\""
+        },
+        "description": "I’m holding cup 3 and my goal is to put two cups into the microwave; now that I have one cup, I should go to the microwave to place it inside."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The microwave 1 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"microwave 1\""
+        },
+        "description": "The microwave is closed, so I need to open it before placing the cup inside."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the microwave 1. The microwave 1 is open. In it, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "put",
+        "kwargs": {
+          "item": "\"cup 3\"",
+          "target": "\"microwave 1\""
+        },
+        "description": "To achieve the goal of placing two cups in the microwave, I must start by putting the first one inside now that I’m holding cup 3 and the microwave is open and empty."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You put the cup 3 in/on the microwave 1.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"diningtable 2\""
+        },
+        "description": "I’ve placed the first cup in the microwave and still need a second one to complete the task. Diningtable 2 hasn’t been checked yet and might have cups, so I’ll go there to find another cup."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the diningtable 2, you see a apple 2, a bread 2, a egg 1, a pot 2, and a saltshaker 1.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 1\""
+        },
+        "description": "There is no additional cup at the diningtable 2. Checking the cabinets might be the next best action, as they're often used for storing cups."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the cabinet 1, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 2\""
+        },
+        "description": "I still need a second cup to complete the task. Since cabinets often store cups and cabinet 1 was empty, I will check cabinet 2 next for a cup."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The cabinet 2 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 2\""
+        },
+        "description": "Cabinet 2 is closed and cabinets often store cups. Since I still need a second cup and cabinet 1 was empty, I will open cabinet 2 to look for one."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the cabinet 2. The cabinet 2 is open. In it, you see a bowl 2.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 3\""
+        },
+        "description": "I still need a second cup and cabinets often store cups. Since cabinet 1 was empty and cabinet 2 only had a bowl, I will check cabinet 3 next to look for a cup."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the cabinet 3, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 4\""
+        },
+        "description": "I still need a second cup to complete the task. I’ve checked cabinets 1–3 and found no cups, so I will go to cabinet 4 next since cabinets often store cups."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the cabinet 1, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 5\""
+        },
+        "description": "I still need a second cup and cabinets often store cups. I’ve already checked cabinets 1–4 and found none, so I will go to cabinet 5 next to look for a cup."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The cabinet 5 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 5\""
+        },
+        "description": "I still need a second cup to place in the microwave. I’ve already checked cabinets 1–4 and found none, and since cabinet 5 is closed and cabinets often store cups, I will open cabinet 5 to look for one."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the cabinet 5. The cabinet 5 is open. In it, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 6\""
+        },
+        "description": "I still need a second cup to complete the task. I’ve already checked cabinets 1–5 and found no cups, so I will go to cabinet 6 next since cabinets often store cups."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The cabinet 6 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 6\""
+        },
+        "description": "I still need a second cup to complete the task. Cabinets often store cups, and cabinet 6 is closed, so I will open cabinet 6 to look for one."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the cabinet 6. The cabinet 6 is open. In it, you see a bowl 3.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 7\""
+        },
+        "description": "I still need a second cup to complete the task of placing two cups in the microwave. Cabinets are likely to store cups and I’ve already checked cabinets 1–6 without finding any, so I will go to cabinet 7 next to continue my search."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the cabinet 7, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 8\""
+        },
+        "description": "I still need a second cup to complete the task. I’ve already checked diningtable 2 and cabinets 1–7 without finding any cups, so I will go to cabinet 8 next to continue my search."
+      },
+      {
+        "class_": "text_observation",
+        "content": "On the cabinet 1, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 9\""
+        },
+        "description": "I still need a second cup to complete the task of placing two cups in the microwave. I’ve checked diningtable 2 and cabinets 1–8 without finding any, and cabinets often store cups, so I will go to cabinet 9 to continue my search."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The cabinet 9 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 9\""
+        },
+        "description": "Cabinet 9 is closed and cabinets often store cups. I still need a second cup to place in the microwave, so I will open cabinet 9 to look for one."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the cabinet 9. The cabinet 9 is open. In it, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"cabinet 10\""
+        },
+        "description": "I still need a second cup to place in the microwave. I’ve checked diningtable 2 and cabinets 1–9 and found no cups, so I will go to cabinet 10 next since cabinets often store cups."
+      },
+      {
+        "class_": "text_observation",
+        "content": "The cabinet 10 is closed.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"cabinet 10\""
+        },
+        "description": "I still need a second cup to complete placing two cups in the microwave. I’ve checked diningtable 2 and cabinets 1–9 without success, and cabinets often store cups. Cabinet 10 is closed, so I will open it to look for a cup."
+      },
+      {
+        "class_": "text_observation",
+        "content": "You open the cabinet 10. The cabinet 10 is open. In it, you see nothing.",
+        "source": "user"
+      },
+      {
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"drawer 1\""
+        },
+        "description": "There is no cup in all cabinets. I will check the drawer now."
       },
       {
         "class_": "text_observation",
@@ -362,21 +846,25 @@
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"drawer 1\""
+        },
+        "description": "I still need a second cup and I’ve already checked all cabinets and diningtable 2 without success. Drawers often store cups as well, so I will open drawer 1 to look for the cup there."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 1. The drawer 1 is open. In it, you see nothing.",
+        "content": "You open the drawer 1. The drawer 1 is open. In it, you see a butterknife 1, and a knife 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 2')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"drawer 2\""
+        },
+        "description": "I still need a second cup to complete the task, and drawer 1 was empty. Drawers often store cups, so I will go to drawer 2 to look for one."
       },
       {
         "class_": "text_observation",
@@ -384,21 +872,25 @@
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 2')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"drawer 2\""
+        },
+        "description": "Drawer 2 is closed and drawers often store cups; since I still need a second cup and drawer 1 was empty, I will open drawer 2 to look for one."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 2. The drawer 2 is open. In it, you see a book 1.",
+        "content": "You open the drawer 2. The drawer 2 is open. In it, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 3')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"drawer 3\""
+        },
+        "description": "I still need a second cup to complete placing two cups in the microwave. I’ve checked diningtable 2, cabinets 1–10, and opened drawers 1 and 2 with no success. Drawers often store cups, so I will go to drawer 3 next to continue my search."
       },
       {
         "class_": "text_observation",
@@ -406,10 +898,12 @@
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 3')",
-        "description": ""
+        "class_": "api_action",
+        "function": "open",
+        "kwargs": {
+          "obj": "\"drawer 3\""
+        },
+        "description": "I’ve checked diningtable 2, cabinets 1–10, and opened drawers 1 and 2 without finding a cup. Drawers are likely to store cups, and drawer 3 is closed, so I will open it to look for the second cup needed to complete placing two cups in the microwave."
       },
       {
         "class_": "text_observation",
@@ -417,241 +911,173 @@
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 4')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"diningtable 1\""
+        },
+        "description": "Most of the places have been checked and I've been unable to find a second cup. Maybe by re-examining the initial location, I might find the missing cup."
       },
       {
         "class_": "text_observation",
-        "content": "The drawer 1 is open. In it, you see nothing.",
+        "content": "On the diningtable 1, you see a bread 1, a dishsponge 1, a fork 3, a fork 1, a peppershaker 1, a plate 1, a potato 1, a soapbottle 1, a spatula 1, a spoon 2, a tomato 3, and a tomato 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 4')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"countertop 1\""
+        },
+        "description": "Still no cup here. Maybe there is a cup on the countertop."
       },
       {
         "class_": "text_observation",
-        "content": "The drawer 4 is closed.",
+        "content": "On the countertop 1, you see a cup 2, a fork 2, a knife 1, a soapbottle 3, a spoon 1, and a tomato 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 4')",
-        "description": ""
+        "class_": "api_action",
+        "function": "take",
+        "kwargs": {
+          "item": "\"cup 2\"",
+          "source": "\"countertop 1\""
+        },
+        "description": "I still need a second cup to complete placing two cups in the microwave. I see cup 2 on countertop 1, so I will pick it up now."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 4. The drawer 4 is open. In it, you see a pen 1.",
+        "content": "You pick up the cup 2 from the countertop 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 5')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"microwave 1\""
+        },
+        "description": "I’ve picked up the second cup and my goal is to place two cups in the microwave. Now that I’m holding cup 2, I should go back to the microwave to put it inside and complete the task."
       },
       {
         "class_": "text_observation",
-        "content": "The drawer 5 is closed.",
+        "content": "The microwave 1 is open. In it, you see a cup 3.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 5')",
-        "description": ""
+        "class_": "api_action",
+        "function": "put",
+        "kwargs": {
+          "item": "\"cup 2\"",
+          "target": "\"microwave 1\""
+        },
+        "description": "I’m holding the second cup and the microwave is open with the first cup inside. To fulfill the task of placing two cups in the microwave, I will now put the second cup into the microwave."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 5. The drawer 5 is open. In it, you see a keychain 2.",
+        "content": "Well done on successfully completing the task!",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 6')",
-        "description": ""
+        "class_": "message_action",
+        "content": "<finish> </finish>",
+        "description": "I've wrapped up the task successfully."
+      }
+    ],
+    "details": {}
+  },
+  {
+    "id": "alfworld_58",
+    "content": [
+      {
+        "class_": "text_observation",
+        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
+        "source": "user"
+      },
+      {
+        "class_": "message_action",
+        "content": "OK. I'll follow your instructions and try my best to solve the task.",
+        "description": null
       },
       {
         "class_": "text_observation",
-        "content": "The drawer 6 is closed.",
+        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a drawer 13, a drawer 12, a drawer 11, a drawer 10, a drawer 9, a drawer 8, a drawer 7, a drawer 6, a drawer 5, a drawer 4, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 6, a stoveburner 5, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: put a hot apple in garbagecan.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 6')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"countertop 1\""
+        },
+        "description": "The task is to put a hot apple in garbagecan. First, I need to find an apple, heat it up, and then put it into the garbagecan. I'll start by searching for the apple."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 6. The drawer 6 is open. In it, you see a keychain 1, and a pencil 1.",
+        "content": "On the countertop 1, you see a apple 1, a bread 1, a cellphone 1, a cup 2, a dishsponge 1, a fork 2, a kettle 3, a ladle 1, a mug 2, a pan 2, a pan 1, a potato 1, a soapbottle 2, a soapbottle 1, a tomato 1, a window 3, and a window 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 7')",
-        "description": ""
+        "class_": "api_action",
+        "function": "take",
+        "kwargs": {
+          "item": "\"apple 1\"",
+          "source": "\"countertop 1\""
+        },
+        "description": "I need to heat up the apple before disposing of it, so I’m taking the apple from the countertop."
       },
       {
         "class_": "text_observation",
-        "content": "The drawer 7 is closed.",
+        "content": "You pick up the apple 1 from the countertop 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 7')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"microwave 1\""
+        },
+        "description": "I have the apple in hand and need to make it hot before disposing of it. The microwave is the appropriate appliance for heating, so I’m moving to the microwave."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 7. The drawer 7 is open. In it, you see a pencil 3.",
+        "content": "The microwave 1 is closed.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 8')",
-        "description": ""
+        "class_": "api_action",
+        "function": "heat",
+        "kwargs": {
+          "item": "\"apple 1\"",
+          "appliance": "\"microwave 1\""
+        },
+        "description": "I need to heat the apple before throwing it away, and the microwave is the appropriate appliance for this. Even though it’s closed, using the heat action will place the apple inside and start heating it."
       },
       {
         "class_": "text_observation",
-        "content": "The drawer 8 is closed.",
+        "content": "You heat the apple 1 using the microwave 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 8')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"garbagecan 1\""
+        },
+        "description": "I have heated the apple and now need to dispose of it; I’m moving to the garbagecan so I can put the hot apple into it."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 8. The drawer 8 is open. In it, you see a pen 3.",
+        "content": "On the garbagecan 1, you see nothing.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 9')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The drawer 9 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 9')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the drawer 9. The drawer 9 is open. In it, you see nothing.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 10')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The drawer 10 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 10')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the drawer 10. The drawer 10 is open. In it, you see nothing.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 11')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The drawer 11 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 11')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the drawer 11. The drawer 11 is open. In it, you see a keychain 3.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('sidetable 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the sidetable 1, you see a alarmclock 1, a cd 1, and a desklamp 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('bed 1')",
-        "description": "The cellphone isn't in the drawers or on the sidetable. The task didn't say that it had to be a certain cellphone, so I can use any cellphone that I come across. I should search elsewhere in the room to find one."
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the bed 1, you see a cellphone 4, a cellphone 3, a cellphone 1, a pillow 3, a pillow 2, and a pillow 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('cellphone 1', 'bed 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You pick up the cellphone 1 from the bed 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('dresser 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the dresser 1, you see a bowl 1, a creditcard 1, a laptop 1, a pen 2, and a pencil 2.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('cellphone 1', 'dresser 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "put",
+        "kwargs": {
+          "item": "\"apple 1\"",
+          "target": "\"garbagecan 1\""
+        },
+        "description": "I have heated the apple and now need to dispose of it to complete the task, so I’m placing the hot apple into the garbagecan."
       },
       {
         "class_": "text_observation",
@@ -667,16 +1093,11 @@
     "details": {}
   },
   {
-    "id": "alfworld_230",
+    "id": "alfworld_149",
     "content": [
       {
         "class_": "text_observation",
-        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.",
-        "source": "environment"
-      },
-      {
-        "class_": "text_observation",
-        "content": "Ok? Understood?",
+        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
         "source": "user"
       },
       {
@@ -686,548 +1107,134 @@
       },
       {
         "class_": "text_observation",
-        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a armchair 1, a bed 1, a drawer 16, a drawer 15, a drawer 14, a drawer 13, a drawer 12, a drawer 11, a drawer 10, a drawer 9, a drawer 8, a drawer 7, a drawer 6, a drawer 5, a drawer 4, a drawer 3, a drawer 2, a drawer 1, a dresser 2, a dresser 1, a garbagecan 1, a shelf 2, a shelf 1, a sidetable 2, and a sidetable 1.\nYour task is to: put two keychain in dresser.",
+        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bed 1, a desk 2, a desk 1, a garbagecan 1, a shelf 5, a shelf 4, a shelf 3, a shelf 2, and a shelf 1.\nYour task is to: put two cellphone in shelf.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('sidetable 1')",
-        "description": "It seems my task is to put two keychains in the dresser. I should first look for keychains and then move towards the dresser to complete the task. I'll begin by checking the most obvious locations where a keychain might be found. I'll check the sidetable first."
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"desk 1\""
+        },
+        "description": "Firstly, I need to locate the cellphones. Let's try to check the desks for any cellphones."
       },
       {
         "class_": "text_observation",
-        "content": "On the sidetable 1, you see a cd 1, and a statue 1.",
+        "content": "On the desk 1, you see a alarmclock 2, a alarmclock 1, a creditcard 1, a keychain 1, a pen 1, a pencil 2, and a pencil 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('sidetable 2')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"desk 2\""
+        },
+        "description": "There were no cellphones on desk 1, so I will move to desk 2 to continue searching for the cellphones."
       },
       {
         "class_": "text_observation",
-        "content": "On the sidetable 2, you see a cellphone 1, and a keychain 3.",
+        "content": "On the desk 2, you see a alarmclock 3, a book 1, a cd 1, a cellphone 2, and a cellphone 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('keychain 3', 'sidetable 2')",
-        "description": ""
+        "class_": "api_action",
+        "function": "take",
+        "kwargs": {
+          "item": "\"cellphone 1\"",
+          "source": "\"desk 2\""
+        },
+        "description": "I need to collect two cellphones to fulfill the task. I found cellphone 1 on desk 2, so I will take it now to later place it on a shelf."
       },
       {
         "class_": "text_observation",
-        "content": "You pick up the keychain 3 from the sidetable 2.",
+        "content": "You pick up the cellphone 1 from the desk 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('dresser 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"shelf 1\""
+        },
+        "description": "I have picked up the first cellphone and need to place it on a shelf to progress toward the goal of putting two cellphones on shelves. I’ll head to shelf 1 to deposit the cellphone there."
       },
       {
         "class_": "text_observation",
-        "content": "On the dresser 1, you see nothing.",
+        "content": "On the shelf 1, you see a pen 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('keychain 3', 'dresser 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "put",
+        "kwargs": {
+          "item": "\"cellphone 1\"",
+          "target": "\"shelf 1\""
+        },
+        "description": "To make progress on the goal of placing two cellphones on shelves, I need to deposit the first cellphone I picked up. Since I am at shelf 1, I will put cellphone 1 here."
       },
       {
         "class_": "text_observation",
-        "content": "You put the keychain 3 in/on the dresser 1.",
+        "content": "You put the cellphone 1 in/on the shelf 1.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 1')",
-        "description": "I have successfully placed one keychain in the dresser. Now I need to find one more. I'll check the drawers next since keychains might be placed there."
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"desk 2\""
+        },
+        "description": "I still need a second cellphone to complete placing two on shelves, and desk 2 previously had another cellphone, so I will return there to pick it up."
       },
       {
         "class_": "text_observation",
-        "content": "The drawer 1 is closed.",
+        "content": "On the desk 2, you see a alarmclock 3, a book 1, a cd 1, and a cellphone 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 1')",
-        "description": ""
+        "class_": "api_action",
+        "function": "take",
+        "kwargs": {
+          "item": "\"cellphone 2\"",
+          "source": "\"desk 2\""
+        },
+        "description": "I still need a second cellphone to complete the task of placing two cellphones on shelves, and desk 2 has the remaining cellphone, so I will take cellphone 2 from desk 2."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 1. The drawer 1 is open. In it, you see nothing.",
+        "content": "You pick up the cellphone 2 from the desk 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('drawer 2')",
-        "description": ""
+        "class_": "api_action",
+        "function": "go",
+        "kwargs": {
+          "location": "\"shelf 1\""
+        },
+        "description": "I have the second cellphone in hand and need to place two cellphones on a shelf to complete the task. Since I already used shelf 1 and it’s a valid shelf location, I’ll go back there to deposit the second cellphone."
       },
       {
         "class_": "text_observation",
-        "content": "The drawer 2 is closed.",
+        "content": "On the shelf 1, you see a cellphone 1, and a pen 2.",
         "source": "user"
       },
       {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('drawer 2')",
-        "description": ""
+        "class_": "api_action",
+        "function": "put",
+        "kwargs": {
+          "item": "\"cellphone 2\"",
+          "target": "\"shelf 1\""
+        },
+        "description": "I have the second cellphone in hand and need to place two cellphones on a shelf to complete the task. Since I’m at shelf 1 where I already placed the first cellphone, I will put cellphone 2 here."
       },
       {
         "class_": "text_observation",
-        "content": "You open the drawer 2. The drawer 2 is open. In it, you see a keychain 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('keychain 1', 'drawer 2')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You pick up the keychain 1 from the drawer 2.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('dresser 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the dresser 1, you see a keychain 3.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('keychain 1', 'dresser 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "Well done on successfully completing the task!",
+        "content": "Congratulations! You have successfully solved the task.",
         "source": "user"
       },
       {
         "class_": "message_action",
         "content": "<finish> </finish>",
         "description": "I did it! The task is now complete."
-      }
-    ],
-    "details": {}
-  },
-  {
-    "id": "alfworld_201",
-    "content": [
-      {
-        "class_": "text_observation",
-        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.",
-        "source": "environment"
-      },
-      {
-        "class_": "text_observation",
-        "content": "Ok? Understood?",
-        "source": "user"
-      },
-      {
-        "class_": "message_action",
-        "content": "OK. I'll follow your instructions and try my best to solve the task.",
-        "description": null
-      },
-      {
-        "class_": "text_observation",
-        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a countertop 1, a garbagecan 1, a handtowelholder 1, a sinkbasin 2, a sinkbasin 1, a toilet 1, a toiletpaperhanger 1, and a towelholder 1.\nYour task is to: put two spraybottle in toilet.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('cabinet 1')",
-        "description": "My goal is to put two spray bottles in the toilet. First, I need to locate where the spray bottles are. Let's begin with the cabinets."
-      },
-      {
-        "class_": "text_observation",
-        "content": "The cabinet 1 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('cabinet 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the cabinet 1. The cabinet 1 is open. In it, you see a toiletpaper 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('cabinet 2')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The cabinet 2 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('cabinet 2')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the cabinet 2. The cabinet 2 is open. In it, you see a cloth 2, and a soapbar 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('cabinet 3')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The cabinet 3 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('cabinet 3')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the cabinet 3. The cabinet 3 is open. In it, you see a soapbottle 1, and a toiletpaper 2.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('cabinet 4')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The cabinet 1 is open. In it, you see a toiletpaper 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('cabinet 4')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The cabinet 4 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('cabinet 4')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the cabinet 4. The cabinet 4 is open. In it, you see a cloth 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('countertop 1')",
-        "description": "There were no spraybottles in the cabinets. I should now check the countertop."
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the countertop 1, you see a spraybottle 2, and a spraybottle 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('spraybottle 1', 'countertop 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You pick up the spraybottle 1 from the countertop 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('spraybottle 2', 'countertop 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You put the spraybottle 1 in/on the countertop 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('spraybottle 2', 'countertop 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You pick up the spraybottle 2 from the countertop 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('toilet 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the toilet 1, you see a candle 2, and a candle 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('spraybottle 2', 'toilet 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You put the spraybottle 2 in/on the toilet 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('spraybottle 1', 'countertop 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You pick up the candle 1 from the toilet 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('spraybottle 1', 'countertop 1')",
-        "description": "It seems that I failed to take the second spraybottle properly. Let's try again."
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the countertop 1, you see a spraybottle 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('spraybottle 1', 'countertop 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You put the candle 1 in/on the countertop 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('spraybottle 1', 'countertop 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You pick up the spraybottle 1 from the countertop 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('toilet 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the toilet 1, you see a candle 2, and a spraybottle 2.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('spraybottle 1', 'toilet 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "Your solution has been verified as correct. ",
-        "source": "user"
-      },
-      {
-        "class_": "message_action",
-        "content": "<finish> </finish>",
-        "description": "I did it! The task is now complete."
-      }
-    ],
-    "details": {}
-  },
-  {
-    "id": "alfworld_52",
-    "content": [
-      {
-        "class_": "text_observation",
-        "content": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.",
-        "source": "environment"
-      },
-      {
-        "class_": "text_observation",
-        "content": "Ok? Understood?",
-        "source": "user"
-      },
-      {
-        "class_": "message_action",
-        "content": "OK. I'll follow your instructions and try my best to solve the task.",
-        "description": null
-      },
-      {
-        "class_": "text_observation",
-        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 1, a diningtable 3, a diningtable 2, a diningtable 1, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sidetable 1, a sinkbasin 1, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: cool some mug and put it in coffeemachine.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('cabinet 1')",
-        "description": "The task is to cool some mug and put it in coffeemachine. A mug is likely to be found in a cabinet or on a diningtable, so my plan is to search the cabinets and diningtables."
-      },
-      {
-        "class_": "text_observation",
-        "content": "The cabinet 1 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('cabinet 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the cabinet 1. The cabinet 1 is open. In it, you see a peppershaker 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('cabinet 2')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The cabinet 2 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('cabinet 2')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the cabinet 2. The cabinet 2 is open. In it, you see a dishsponge 1, a mug 1, and a saltshaker 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "take('mug 1', 'cabinet 2')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You pick up the mug 1 from the cabinet 2.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('fridge 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "The fridge 1 is closed.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "open('fridge 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You open the fridge 1. The fridge 1 is open. In it, you see a apple 1, a potato 1, and a tomato 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "cool('mug 1', 'fridge 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "You cool the mug 1 using the fridge 1.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "go('coffeemachine 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "On the coffeemachine 1, you see nothing.",
-        "source": "user"
-      },
-      {
-        "class_": "code_action",
-        "language": "python",
-        "content": "put('mug 1', 'coffeemachine 1')",
-        "description": ""
-      },
-      {
-        "class_": "text_observation",
-        "content": "Your implementation satisfies the task requirements.",
-        "source": "user"
-      },
-      {
-        "class_": "message_action",
-        "content": "<finish> </finish>",
-        "description": "I have fulfilled all the requirements of the task."
       }
     ],
     "details": {}

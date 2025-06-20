@@ -1,5 +1,6 @@
 import inspect
 import json
+import random
 import re
 import shlex
 import sys
@@ -8,11 +9,12 @@ import api
 from schema_raw import SchemaRaw
 
 from schema.action.api import ApiAction
+from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
-ACTIONS = [f[0] for f in inspect.getmembers(api, inspect.isfunction) if f[0] != "run"]
+ACTIONS = [f[0] for f in inspect.getmembers(api, inspect.isfunction)]
 
 
 def parse_edit_action(action_str):
@@ -26,7 +28,11 @@ def parse_edit_action(action_str):
         replacement_text = action_str.split(None, 3)[-1].strip()
     if replacement_text.endswith("end_of_edit"):
         replacement_text = replacement_text[: -len("end_of_edit")]
-    return {"start_line": start_line, "end_line": end_line, "replacement_text": replacement_text}
+    return {
+        "start_line": start_line,
+        "end_line": end_line,
+        "replacement_text": f'"{replacement_text}"',
+    }
 
 
 def parse_api_action(item):
@@ -46,25 +52,30 @@ def parse_api_action(item):
         else:
             action_args = shlex.split(action_str)[1:]
             action_params = inspect.signature(getattr(api, action_name)).parameters
-            action_kwargs = {param: arg for param, arg in zip(action_params.keys(), action_args)}
+            action_kwargs = {}
+            for param, arg in zip(action_params.items(), action_args):
+                param_name, param_obj = param
+                if param_obj.annotation is str:
+                    arg = f'"{arg}"'
+                action_kwargs[param_name] = arg
         return ApiAction(function=action_name, kwargs=action_kwargs, description=thought)
     else:
-        return ApiAction(function="run", kwargs={"command": action_str}, description=thought)
+        return CodeAction(
+            language="bash",
+            content=action_str,
+            description=thought,
+        )
 
 
 def process_item(item):
     if item.role == "system":
-        return (
-            TextObservation(content=item.system_prompt, source="environment")
-            if item.system_prompt
-            else None
-        )
+        return None
     elif item.role == "user":
         return TextObservation(content=item.text, source="user")
     elif item.role == "ai" and "```" in item.text:
         try:
             return parse_api_action(item)
-        except Exception:
+        except:
             return MessageAction(content=item.text)
     elif item.role == "ai":
         return MessageAction(content=item.text)
@@ -79,6 +90,74 @@ def process_data(data):
         observation = process_item(item)
         if observation is not None:
             content.append(observation)
+
+    # Handle finish action
+    if isinstance(content[-1], ApiAction) or isinstance(content[-1], CodeAction):
+        user_end_message = random.choice(
+            [
+                [
+                    TextObservation(
+                        content="Congratulations! You have successfully solved the task.",
+                        source="user",
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Your solution has been verified as correct. ", source="user"
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Well done on successfully completing the task!", source="user"
+                    ),
+                ],
+                [
+                    TextObservation(
+                        content="Your implementation satisfies the task requirements.",
+                        source="user",
+                    ),
+                ],
+                [
+                    TextObservation(content="Task completed successfully.", source="user"),
+                ],
+            ]
+        )
+        content.extend(user_end_message)
+        assistant_end_message = random.choice(
+            [
+                [
+                    MessageAction(
+                        content="<finish> I have successfully completed the task. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I did it! The task is now complete. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> The objective has been achieved with no outstanding issues. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I have fulfilled all the requirements of the task. </finish>",
+                        description="",
+                    ),
+                ],
+                [
+                    MessageAction(
+                        content="<finish> I've wrapped up the task successfully. </finish>",
+                        description="",
+                    ),
+                ],
+            ]
+        )
+        content.extend(assistant_end_message)
 
     return Trajectory(
         id=data.instance_id,
@@ -96,6 +175,8 @@ if __name__ == "__main__":
     # Process each line of input individually
     for line in sys.stdin:
         raw_data = json.loads(line)
+        if not raw_data["target"]:
+            continue
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
 

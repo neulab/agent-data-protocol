@@ -25,8 +25,7 @@ def convert_system(system_regex: re.Match[str]) -> list[Observation]:
     )
     sys_sql_subs = sys_sql_subs.replace("Action: Operation", "").replace("Action: Answer", "")
     return [
-        TextObservation(content=sys_sql_subs, source="environment"),
-        TextObservation(content="Ok? Understood?", source="user"),
+        TextObservation(content=sys_sql_subs + "\n\n" + "Ok? Understood?", source="user"),
     ]
 
 

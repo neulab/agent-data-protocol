@@ -1,28 +1,3 @@
-def execute_bash(command: str, is_input: bool = False, timeout: int = None) -> None:
-    """Execute a bash command in the terminal.
-
-    Args:
-    ----
-        command (str): The bash command to execute. Can be empty to view additional logs when previous exit code is `-1`. Can be `ctrl+c` to interrupt the currently running process.
-        is_input (bool): If True, the command is an input to the running process. If False, the command is a bash command to be executed in the terminal. Default is False.
-        timeout (int): Optional. Sets a hard timeout in seconds for the command execution. If not provided, the command will use the default soft timeout behavior.
-
-    """
-    pass
-
-
-def finish(message: str, task_completed: bool = True) -> None:
-    """Finish the interaction when the task is complete OR if the assistant cannot proceed further with the task.
-
-    Args:
-    ----
-        message (str): Final message to send to the user.
-        task_completed (bool): Whether you have completed the task.
-
-    """
-    pass
-
-
 def str_replace_editor(
     command: str,
     path: str,
@@ -48,13 +23,9 @@ def str_replace_editor(
     pass
 
 
-def code_execution(language: str, code: str) -> None:
-    """Execute code in the specified language.
+def submit():
+    """Finish the interaction when the task is complete OR if the assistant cannot proceed further with the task.
 
-    Args:
-    ----
-        language (str): The language of the code to execute.
-        code (str): The code to execute.
-
+    No parameters are required for this function.
     """
     pass

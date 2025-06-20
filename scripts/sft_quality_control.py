@@ -45,17 +45,25 @@ def analyze_dataset(file_path):
     finish_action_count = 0
     len1_conversation_count = 0
     invalid_tools = set()
+    valid_roles = True
 
     for conversation in data:
         conversation_has_finish = False
         if len(conversation.get("conversations", [])) == 2:
             len1_conversation_count += 1
-        for message in conversation.get("conversations", []):
+        for i, message in enumerate(conversation.get("conversations", [])):
             role = message.get("from", "unknown")
             content = message.get("value", "")
 
             # Count roles
             roles[role] += 1
+            # Check conversation have alternating roles
+            if i % 2 == 0:
+                if role not in {"human", "observation"}:
+                    valid_roles = False
+            else:
+                if role not in {"gpt", "function_call"}:
+                    valid_roles = False
 
             # Check for function calls in any message content
             match = FUNCTION_PATTERN.search(content)
@@ -106,10 +114,6 @@ def analyze_dataset(file_path):
     # Calculate thought percentage
     thought_percentage = (function_thoughts / function_calls * 100) if function_calls > 0 else 0
 
-    # Check if all roles are valid
-    valid_roles = all(
-        role in ["human", "gpt", "function_call", "observation"] for role in roles.keys()
-    )
     return {
         "dataset": dataset_name,
         "conversation_count": conversation_count,

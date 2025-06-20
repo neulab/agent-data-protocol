@@ -14,9 +14,10 @@ def add_sample(dataset):
                 sft.append(json.loads(line))
             except Exception:
                 print(line)
+                assert 1 == 2
                 continue
     print(f"sft: {len(sft)}")
-    out_sft = random.sample(sft, 5)
+    out_sft = random.sample(sft, min(5, len(sft)))
     # out_sft = sft[:10]
     with open(f"datasets/{dataset}/sample_sft.json", "w") as f:
         json.dump(out_sft, f, indent=2, ensure_ascii=False)
@@ -47,6 +48,8 @@ def add_sample(dataset):
                 out_raw.append(row)
             elif str(i) == str(sample["id"]):
                 out_raw.append(row)
+            elif "instance_id" in row and str(row["instance_id"]) == str(sample["id"]):
+                out_raw.append(row)
     with open(f"datasets/{dataset}/sample_raw.json", "w") as f:
         json.dump(out_raw, f, indent=2, ensure_ascii=False)
 
@@ -72,7 +75,7 @@ def save_sample():
 # Comment out the assertion to allow the script to run
 # save_sample()
 # assert 1 == 2
-dirs = ["openhands"]
+dirs = [os.getenv("MY_DATASET", "SWE-Gym_OpenHands-Sampled-Trajectories")]
 for d in dirs:
     # if os.path.exists(f"datasets/{d}/full_sft.jsonl"):
     print(d)

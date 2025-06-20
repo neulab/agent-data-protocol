@@ -1,34 +1,23 @@
 import ast
 import inspect
 import json
+import random
 import sys
-import time
 
 import api
 import markdown
 from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
 from schema_raw import Args, SchemaRaw
 
+from schema.action.action import Action
 from schema.action.api import ApiAction
+from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.image import ImageObservation
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-
-ACTION_MAP = {
-    "fill": "type",
-    "select_option": "select",
-}
-
-KWARGS_MAP = {
-    "bid": "element_id",
-    "value": "text",
-    "delta_x": "dx",
-    "delta_y": "dy",
-    "options": "value",
-}
 
 
 # click('48', 'example with "quotes" and, a comma', 10, button='middle', modifiers=['Shift', 'Alt'])
@@ -44,9 +33,7 @@ def parse_browser_action(action_str):
     call_node = action_ast.body
     function_name = call_node.func.id
     args = [ast.literal_eval(arg) for arg in call_node.args]
-    kwargs = {
-        KWARGS_MAP.get(kw.arg, kw.arg): ast.literal_eval(kw.value) for kw in call_node.keywords
-    }
+    kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call_node.keywords}
     return function_name, args, kwargs
 
 
@@ -108,18 +95,17 @@ def process_data(data, keep_all=False):
                     )
                 )
             elif item.observation == "run":
-                obs = [item.message]
-                obs += [f"Output:\n{item.content}\n"]
+                obs = f"{item.content}"
+                if "\r\n" in obs:
+                    obs = "\r\n".join(obs.split("\r\n")[1:])
                 content.append(
                     TextObservation(
                         source=map_source(item.source),
-                        content="\n".join(obs),
+                        content=obs,
                     )
                 )
             elif item.observation == "run_ipython":
-                obs = [item.message]
-                obs += [f"Code:\n{item.extras.code}\n"]
-                obs += [f"Output:\n{item.content}\n"]
+                obs = [f"{item.content}"]
                 content.append(
                     TextObservation(
                         source=map_source(item.source),
@@ -179,18 +165,20 @@ def process_data(data, keep_all=False):
                     if getattr(item, k, None)
                     and not (isinstance(getattr(item, k), str) and not getattr(item, k).strip())
                 ]
-                print(f"Unknown observation: {'\n'.join(obs)}", file=sys.stderr)
+                print(f"Unknown observation: {chr(10).join(obs)}", file=sys.stderr)
                 content.append(
                     TextObservation(
                         source=map_source(item.source),
                         content="\n".join(obs),
                     )
                 )
-        elif item.action == "message":
+        if item.action == "message":
             if not item.args.content:
                 print("Empty message content, skipping!", file=sys.stderr)
                 continue
             if item.source == "user":
+                # if item.args.content.lower() == "continue":
+                #     continue
                 content.append(
                     TextObservation(
                         source=map_source(item.source),
@@ -217,71 +205,77 @@ def process_data(data, keep_all=False):
             )
         elif item.action == "run":
             content.append(
-                ApiAction(
-                    function=item.action,
+                CodeAction(
+                    language="bash",
+                    content=item.args.command,
                     description=item.args.thought,
-                    kwargs={
-                        "command": item.args.command,
-                    },
                 )
             )
         elif item.action == "run_ipython":
             content.append(
-                ApiAction(
-                    function=item.action,
+                CodeAction(
+                    language="python",
+                    content=item.args.code,
                     description=item.args.thought,
-                    kwargs={
-                        "code": item.args.code,
-                        "kernel_init_code": item.args.kernel_init_code,
-                    },
                 )
             )
         elif item.action == "browse_interactive":
             # fill('a12', 'example with "quotes" and, a comma')\nclick('a51')\nclick('48', button='middle', modifiers=['Shift', 'Alt'])
             action = item.args.browser_actions.strip()
             if not action:
-                continue
+                return None
             actions = [a.strip() for a in action.split("\n") if a.strip()]
             for action in actions:
                 function_name, args, kwargs = parse_browser_action(action)
                 if not function_name:
                     print(f"Invalid browser action: {action}", file=sys.stderr)
                     continue
-                function_name = ACTION_MAP.get(function_name, function_name)
-                api_args = list(inspect.signature(getattr(api, function_name)).parameters.keys())
-                kwargs = {k: v for k, v in kwargs.items() if k in api_args}
-                for arg in zip(args, api_args):
-                    kwargs[arg[1]] = arg[0]
+                try:
+                    api_args = inspect.signature(getattr(api, function_name)).parameters
+                except:
+                    continue
+                action_kwargs = {}
+                for param, arg in zip(api_args.items(), args):
+                    param_name, param_obj = param
+                    if param_obj.annotation is str:
+                        arg = f'"{arg}"'
+                    action_kwargs[param_name] = arg
                 content.append(
                     ApiAction(
                         function=function_name,
                         description=item.args.thought,
-                        kwargs=kwargs,
+                        kwargs=action_kwargs,
                     )
                 )
         elif item.action == "finish":
-            if not keep_all:
-                continue
+            if item.args.thought:
+                thought = item.args.thought
+            elif item.message:
+                thought = item.message
+            if item.args.outputs.content:
+                output = item.args.outputs.content
+            elif item.message:
+                output = item.message
+            else:
+                output = None
             content.append(
                 ApiAction(
                     function=item.action,
-                    description=item.args.thought,
+                    description=thought,
                     kwargs={
-                        "output": item.args.outputs.content,
+                        "output": f'"{output}"',
                     },
                 )
             )
         elif item.action == "delegate":
-            if not keep_all:
-                continue
             if item.args.agent == "RagAgent":
                 content.append(
                     ApiAction(
                         function="delegate_to_RagAgent",
                         description=item.args.thought,
                         kwargs={
-                            "task": item.args.inputs.task,
-                            "query": item.args.inputs.query,
+                            "task": f'"{item.args.inputs.task}"',
+                            "query": f'"{item.args.inputs.query}"',
                         },
                     )
                 )
@@ -291,8 +285,8 @@ def process_data(data, keep_all=False):
                         function="delegate_to_CrawlAgent",
                         description=item.args.thought,
                         kwargs={
-                            "task": item.args.inputs.task,
-                            "link": item.args.inputs.link,
+                            "task": f'"{item.args.inputs.task}"',
+                            "link": f'"{item.args.inputs.link}"',
                         },
                     )
                 )
@@ -302,18 +296,19 @@ def process_data(data, keep_all=False):
                         function="delegate_to_agent",
                         description=item.args.thought,
                         kwargs={
-                            "agent": item.args.agent,
-                            "task": item.args.inputs.task,
+                            "agent": f'"{item.args.agent}"',
+                            "task": f'"{item.args.inputs.task}"',
                         },
                     )
                 )
+            content.append(TextObservation(source="user", content="Continue"))
         elif item.action == "add_task":
             content.append(
                 ApiAction(
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "goal": item.args.goal,
+                        "goal": f'"{item.args.goal}"',
                     },
                 )
             )
@@ -323,8 +318,8 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "task_id": item.args.task_id,
-                        "state": item.args.state,
+                        "task_id": f'"{item.args.task_id}"',
+                        "state": f'"{item.args.state}"',
                     },
                 )
             )
@@ -352,8 +347,8 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "task": item.args.task,
-                        "plan": plan,
+                        "task": f'"{item.args.task}"',
+                        "plan": f'"{plan}"',
                     },
                 )
             )
@@ -363,7 +358,7 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "path": item.args.path,
+                        "path": f'"{item.args.path}"',
                         "start": item.args.start,
                         "end": item.args.end,
                     },
@@ -375,8 +370,8 @@ def process_data(data, keep_all=False):
                     function="edit",
                     description=item.args.thought,
                     kwargs={
-                        "path": item.args.path,
-                        "content": item.args.content,
+                        "path": f'"{item.args.path}"',
+                        "content": f'"{item.args.content}"',
                         "start": item.args.start,
                         "end": item.args.end,
                     },
@@ -388,7 +383,7 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "link": item.args.link,
+                        "link": f'"{item.args.link}"',
                     },
                 )
             )
@@ -398,7 +393,7 @@ def process_data(data, keep_all=False):
                     function=item.action,
                     description=item.args.thought,
                     kwargs={
-                        "query": item.args.query,
+                        "query": f'"{item.args.query}"',
                     },
                 )
             )
@@ -409,15 +404,105 @@ def process_data(data, keep_all=False):
                 ApiAction(
                     function=item.action,
                     kwargs={
-                        "agent_state": item.args.agent_state,
+                        "agent_state": f'"{item.args.agent_state}"',
                     },
                 )
             )
         else:
             print(f"Unknown action: {item.action}", file=sys.stderr)
 
+        # Combine consecutive agent message + action
+        if (
+            len(content) >= 2
+            and isinstance(content[-1], Action)
+            and isinstance(content[-2], MessageAction)
+        ):
+            pre_message = content.pop(-2).content
+            if pre_message:
+                if content[-1].description:
+                    content[-1].description = pre_message + "\n\n" + content[-1].description
+                else:
+                    content[-1].description = pre_message
+                content[-1].description = content[-1].description.strip()
+
+        # Combine consecutive user message
+        if (
+            len(content) >= 2
+            and isinstance(content[-1], TextObservation)
+            and isinstance(content[-2], TextObservation)
+        ):
+            if content[-1].source != content[-2].source:
+                return None
+            pre_message = content.pop(-2).content
+            if pre_message:
+                if content[-1].content:
+                    content[-1].content = pre_message + "\n\n" + content[-1].content
+                else:
+                    content[-1].content = pre_message
+                content[-1].content = content[-1].content.strip()
+
+        if (
+            len(content) >= 2
+            and isinstance(content[-1], Action)
+            and isinstance(content[-2], Action)
+        ):
+            if isinstance(content[-1], MessageAction):
+                continue
+            return None
+
+    #
+    if not isinstance(content[0], Observation):
+        return None
+    # Handle Finish Message
+    user_end_message = random.choice(
+        [
+            "Congratulations! You have successfully solved the task.",
+            "Your solution has been verified as correct. ",
+            "Well done on successfully completing the task!",
+            "Your implementation satisfies the task requirements.",
+            "Task completed successfully.",
+        ]
+    )
+    assistant_end_message = random.choice(
+        [
+            "<finish> I have successfully completed the task. </finish>",
+            "<finish> I did it! The task is now complete. </finish>",
+            "<finish> The objective has been achieved with no outstanding issues. </finish>",
+            "<finish> I have fulfilled all the requirements of the task. </finish>",
+            "<finish> I've wrapped up the task successfully. </finish>",
+        ]
+    )
+    if isinstance(content[-1], MessageAction) and not isinstance(content[-2], Observation):
+        user_end_obs = TextObservation(
+            content=user_end_message,
+            source="user",
+        )
+        content = content[:-1] + [user_end_obs] + [content[-1]]
+        content[-1].description = content[-1].content
+        content[-1].content = assistant_end_message
+    elif isinstance(content[-1], Observation):
+        content.append(
+            MessageAction(
+                content=assistant_end_message,
+                description="",
+            ),
+        )
+    else:
+        content.append(
+            TextObservation(
+                content=user_end_message,
+                source="user",
+            )
+        )
+        content.append(
+            MessageAction(
+                content=assistant_end_message,
+                description="",
+            ),
+        )
+
     return Trajectory(
-        id=str(time.time()),
+        id=data.id,
         content=content,
         details={
             "feedback": data.feedback or "",
@@ -444,8 +529,13 @@ if __name__ == "__main__":
     # Process each line of input individually
     for line in sys.stdin:
         raw_data = json.loads(line)
+        if raw_data["feedback"] != "positive":
+            continue
+        # if raw_data["id"] == "249": continue
+        # if raw_data["id"] != "100": continue
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data, keep_all=args.keep_all)
 
         # Print the standardized data as JSON
-        print(json.dumps(standardized_data.model_dump()))
+        if standardized_data:
+            print(json.dumps(standardized_data.model_dump()))

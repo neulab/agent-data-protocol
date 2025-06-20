@@ -1,25 +1,29 @@
 import json
+import random
 import re
 import sys
 
 from schema_raw import SchemaRaw
 
 from schema.action.api import ApiAction
+from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
 
 def convert_step(step) -> list:
-    if step.role in ["system", "user"]:
+    if step.role == "system":
+        return []
+
+    elif step.role == "user":
         content = step.content
         # Handle observations that start with "OBSERVATION:"
         if content.startswith("OBSERVATION:"):
             content = content[len("OBSERVATION:") :].strip()
             return [TextObservation(content=content, source="environment")]
         else:
-            source = "user" if step.role == "user" else "environment"
-            return [TextObservation(content=content, source=source)]
+            return [TextObservation(content=content, source="user")]
 
     elif step.role == "assistant":
         result = []
@@ -39,12 +43,6 @@ def convert_step(step) -> list:
                 # Parse the function call
                 function_name = match.group(1)
                 params_content = match.group(2)
-
-                # Map function names
-                if function_name == "bash":
-                    function_name = "execute_bash"
-                elif function_name == "submit":
-                    function_name = "finish"
 
                 # Parse parameters
                 kwargs = {}
@@ -67,28 +65,28 @@ def convert_step(step) -> list:
                     else:
                         kwargs[param_name] = param_value
 
-                # Add required message parameter for finish function if not present
-                if function_name == "finish" and "message" not in kwargs:
-                    kwargs["message"] = "Task completed."
-
-                # Add the API action with description from before_text
+                # Create description from before_text
                 description = before_text if before_text else None
-                result.append(
-                    ApiAction(function=function_name, kwargs=kwargs, description=description)
-                )
+
+                if function_name == "bash":
+                    result.append(
+                        CodeAction(
+                            language="bash", content=kwargs["command"], description=description
+                        )
+                    )
+                else:
+                    result.append(
+                        ApiAction(function=function_name, kwargs=kwargs, description=description)
+                    )
 
                 current_pos = match.end()
-
-            # Add any remaining text after the last function call as a separate message
-            remaining_text = content[current_pos:].strip()
-            if remaining_text:
-                result.append(TextObservation(content=remaining_text, source="system"))
 
         else:
             # No function calls found, treat as regular message
             result.append(MessageAction(content=content))
 
         return result
+
     else:
         raise Exception(f"Invalid role: {step.role}")
 
@@ -97,7 +95,74 @@ def process_data(data):
     content = []
     for step in data.messages:
         content.extend(convert_step(step))
-
+    # Only keep successful trajectories
+    if not isinstance(content[-1], ApiAction) or content[-1].function != "submit":
+        return None
+    user_end_message = random.choice(
+        [
+            [
+                TextObservation(
+                    content="Congratulations! You have successfully solved the task.",
+                    source="user",
+                ),
+            ],
+            [
+                TextObservation(
+                    content="Your solution has been verified as correct. ", source="user"
+                ),
+            ],
+            [
+                TextObservation(
+                    content="Well done on successfully completing the task!", source="user"
+                ),
+            ],
+            [
+                TextObservation(
+                    content="Your implementation satisfies the task requirements.",
+                    source="user",
+                ),
+            ],
+            [
+                TextObservation(content="Task completed successfully.", source="user"),
+            ],
+        ]
+    )
+    content.extend(user_end_message)
+    assistant_end_message = random.choice(
+        [
+            [
+                MessageAction(
+                    content="<finish> I have successfully completed the task. </finish>",
+                    description="",
+                ),
+            ],
+            [
+                MessageAction(
+                    content="<finish> I did it! The task is now complete. </finish>",
+                    description="",
+                ),
+            ],
+            [
+                MessageAction(
+                    content="<finish> The objective has been achieved with no outstanding issues. </finish>",
+                    description="",
+                ),
+            ],
+            [
+                MessageAction(
+                    content="<finish> I have fulfilled all the requirements of the task. </finish>",
+                    description="",
+                ),
+            ],
+            [
+                MessageAction(
+                    content="<finish> I've wrapped up the task successfully. </finish>",
+                    description="",
+                ),
+            ],
+        ]
+    )
+    content.extend(assistant_end_message)
     return Trajectory(id=data.instance_id, content=content)
 
 
@@ -106,4 +171,5 @@ if __name__ == "__main__":
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
-        print(standardized_data.model_dump_json())
+        if standardized_data:
+            print(standardized_data.model_dump_json())

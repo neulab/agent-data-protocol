@@ -18,9 +18,7 @@ languages = set()
 def convert_step(step: dict[str, str], id: str) -> list[Action | Observation]:
     if step["role"] == "system":
         system_msg = step["content"]
-        return [
-            TextObservation(content=system_msg, source="environment"),
-        ]
+        return []
 
     assert step["role"] in ["assistant", "user"], f"Invalid role: {step['role']}"
 

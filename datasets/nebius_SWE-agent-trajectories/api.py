@@ -1,14 +1,3 @@
-def run(command: str):
-    """Execute a bash command.
-
-    Args:
-    ----
-        command (str): The bash command to execute.
-
-    """
-    pass
-
-
 def open(path: str, line_number: int = None):
     """Open the file at the given path in the editor. If line_number is provided, the window will be moved to include that line.
 
@@ -54,7 +43,7 @@ def create(filename: str):
 
 
 def submit():
-    """Submit your current code and terminate the session."""
+    """Submit your current code and terminate the interactive session."""
     pass
 
 

@@ -1,4 +1,4 @@
-def get_relations(variable: str) -> list[str]:
+def get_relations(variable: str):
     """Get all relations connected to an entity or variable in the knowledge base.
 
     This function helps to explore the knowledge graph by retrieving all relations
@@ -10,7 +10,7 @@ def get_relations(variable: str) -> list[str]:
     pass
 
 
-def get_neighbors(variable: str, relation: str) -> str:
+def get_neighbors(variable: str, relation: str):
     """Get all entities connected to a variable via a specific relation.
 
     This function retrieves a new variable containing all entities that are
@@ -22,7 +22,7 @@ def get_neighbors(variable: str, relation: str) -> str:
     pass
 
 
-def intersection(variable1: str, variable2: str) -> str:
+def intersection(variable1: str, variable2: str):
     """Compute the intersection of two variables.
 
     This function returns a new variable that includes only the entities
@@ -34,7 +34,7 @@ def intersection(variable1: str, variable2: str) -> str:
     pass
 
 
-def get_attributes(variable: str) -> list[str]:
+def get_attributes(variable: str):
     """Get all numerical attributes of a variable.
 
     This function helps to identify which attributes can be used in a
@@ -46,7 +46,7 @@ def get_attributes(variable: str) -> list[str]:
     pass
 
 
-def argmax(variable: str, attribute: str) -> str:
+def argmax(variable: str, attribute: str):
     """Return the entity with the maximum value of the given attribute.
 
     Use this function to find the entity with the highest value for the
@@ -57,7 +57,7 @@ def argmax(variable: str, attribute: str) -> str:
     pass
 
 
-def argmin(variable: str, attribute: str) -> str:
+def argmin(variable: str, attribute: str):
     """Return the entity with the minimum value of the given attribute.
 
     Use this function to find the entity with the lowest value for the
@@ -68,7 +68,7 @@ def argmin(variable: str, attribute: str) -> str:
     pass
 
 
-def count(variable: str) -> int:
+def count(variable: str):
     """Count the number of entities in a variable.
 
     Returns the number of distinct entities represented by the variable.

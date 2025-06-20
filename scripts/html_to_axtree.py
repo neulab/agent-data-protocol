@@ -24,7 +24,11 @@ class HTMLToAXTree:
 
     def build_axtree(self, id, html_content: str, chunk) -> str:
         self.last_html = html_content
-        temp_file = os.path.abspath(f"./temp_{self.dataset}_{id}.html")
+        temp_dir = os.path.abspath("./temp/")
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
+        temp_file = os.path.abspath(f"{temp_dir}temp_{self.dataset}_{id}.html")
+
         with open(temp_file, "w") as f:
             f.write(html_content)
 

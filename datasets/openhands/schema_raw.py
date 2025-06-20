@@ -109,6 +109,7 @@ class TrajectoryItem(BaseModel):
 
 
 class SchemaRaw(BaseModel):
+    id: Optional[str] = None
     version: Optional[str] = None
     email: Optional[str] = None
     polarity: Optional[str] = None

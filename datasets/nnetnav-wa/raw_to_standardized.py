@@ -52,33 +52,37 @@ def parse_action(content: str) -> Dict[str, Any]:
         else:
             press_enter_after = "0"
         fn_name = "type"
-        fn_kwargs = {"bid": id, "text": content, "press_enter_after": press_enter_after}
+        fn_kwargs = {
+            "bid": f'"{id}"',
+            "text": f'"{content}"',
+            "press_enter_after": press_enter_after,
+        }
     elif "press" in action:
         key_comb = action.split("[")[1].split("]")[0]
         fn_name = "keyboard_press"
-        fn_kwargs = {"key": key_comb}
+        fn_kwargs = {"key": f'"{key_comb}"'}
     elif "scroll" in action:
         direction = action.split("[")[1].split("]")[0]
         if direction == "down":
             fn_name = "scroll"
-            fn_kwargs = {"dx": 0, "dy": 500}
+            fn_kwargs = {"delta_x": 0, "delta_y": 500}
         elif direction == "up":
             fn_name = "scroll"
-            fn_kwargs = {"dx": 0, "dy": -500}
+            fn_kwargs = {"delta_x": 0, "delta_y": -500}
     elif "close_tab" in action:
         fn_name = "tab_close"
         fn_kwargs = {}
     elif "stop" in action:
         fn_name = "send_msg_to_user"
-        fn_kwargs = {"text": action.split("[")[1].split("]")[0]}
+        fn_kwargs = {"text": f'"{action.split("[")[1].split("]")[0]}"'}
     elif "click" in action:
         id = action.split("[")[1].split("]")[0]
         fn_name = "click"
-        fn_kwargs = {"bid": id}
+        fn_kwargs = {"bid": f'"{id}"'}
     elif "hover" in action:
         id = action.split("[")[1].split("]")[0]
         fn_name = "hover"
-        fn_kwargs = {"bid": id}
+        fn_kwargs = {"bid": f'"{id}"'}
     elif "new_tab" in action:
         fn_name = "new_tab"
         fn_kwargs = {}
@@ -89,7 +93,7 @@ def parse_action(content: str) -> Dict[str, Any]:
     elif "goto" in action:
         url = action.split("[")[1].split("]")[0]
         fn_name = "goto"
-        fn_kwargs = {"url": url}
+        fn_kwargs = {"url": f'"{url}"'}
     elif "go_back" in action:
         fn_name = "go_back"
         fn_kwargs = {}
@@ -97,7 +101,7 @@ def parse_action(content: str) -> Dict[str, Any]:
         fn_name = "go_forward"
         fn_kwargs = {}
     else:
-        raise ValueError(f"Unknown action: {action}")
+        raise ValueError(f"Unknown action: {content}")
 
     return ApiAction(
         function=fn_name,
@@ -124,44 +128,34 @@ def process_step(step):
         )
     )
 
-    processed_msgs.append(parse_action(action_msg["content"]))
+    try:
+        action = parse_action(action_msg["content"])
+        processed_msgs.append(action)
+    except:
+        return None, None
 
-    return obs_data["objective"], processed_msgs
+    return (
+        f"You are given the following objective: {obs_data['objective']}\nExamine the current web page and perform the next appropriate action to move toward completing the objective.",
+        processed_msgs,
+    )
 
 
 def main():
-    traj_id = -1
-    traj_content = []
-    traj_goal = None
-
     for line in sys.stdin:
         step = json.loads(line)
+        traj_id = step["id"]
+        traj_content = []
+        traj_goal = None
 
-        curr_traj_id = step["id"]
-        if traj_id != -1 and traj_id != curr_traj_id:
-            goal_message = TextObservation(content=traj_goal, source="user")
-            traj_content = [goal_message] + traj_content
-
-            traj = Trajectory(
-                id=str(traj_id), content=traj_content, details={"source": "nnetnav-wa"}
-            )
-            print(json.dumps(traj.model_dump()))
-            traj_content = []
-            traj_goal = None
-
-        try:
-            traj_goal, step_msgs = process_step(step)
-            traj_content.extend(step_msgs)
-            traj_id = curr_traj_id
-        except Exception as e:
-            print(f"Error processing step {step['id']}: {e}", file=sys.stderr)
+        traj_goal, step_msgs = process_step(step)
+        if not traj_goal or not step_msgs:
             continue
+        traj_content.extend(step_msgs)
+        goal_message = TextObservation(content=traj_goal, source="user")
+        traj_content = [goal_message] + traj_content
 
-    goal_message = TextObservation(content=traj_goal, source="user")
-    traj_content = [goal_message] + traj_content
-
-    traj = Trajectory(id=str(traj_id), content=traj_content, details={"source": "nnetnav-wa"})
-    print(json.dumps(traj.model_dump()))
+        traj = Trajectory(id=str(traj_id), content=traj_content, details={"source": "nnetnav-wa"})
+        print(json.dumps(traj.model_dump()))
 
 
 if __name__ == "__main__":

@@ -63,7 +63,7 @@ def format_code(raw_code: str) -> Tuple[str, str]:
     if not args_str:
         return func_name, {}
     # Since all apis only have one argument
-    arg = "keywords" if func_name == "search" else "bid"
+    arg = "keywords" if func_name == "search" else "element"
     args = {arg: f'"{args_str}"'}
     return func_name, args
 
@@ -80,14 +80,17 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
                 "You can use search action if search is available."
             )[0]
             return [
-                TextObservation(content=system_prompt, source="system"),
+                TextObservation(content=system_prompt, source="user"),
             ]
-
-    elif (
+    if (
         "ok." == step["content"].strip().lower()
         or "ok. i'll follow" in step["content"].strip().lower()
     ):
-        return []
+        return [
+            MessageAction(
+                content=step["content"],
+            ),
+        ]
 
     if step["role"] == "assistant":
         thought, action = extract_thought_and_action(step["content"])
@@ -113,8 +116,12 @@ for line in sys.stdin:
     raw_data = json.loads(line)
     content = []
 
-    for step in raw_data["conversations"]:
-        content.extend(convert_step(step))
+    # Adding try and except here to handle a few incorrect trajectories
+    try:
+        for step in raw_data["conversations"]:
+            content.extend(convert_step(step))
+    except Exception as e:
+        continue
 
     # Handle finish actions for natural language based tasks
     if not isinstance(content[-1], MessageAction) or "<finish>" not in content[-1].content:
