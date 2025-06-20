@@ -12,6 +12,8 @@ from schema.trajectory import Trajectory
 
 PRIOR_INS = "2. Create a script to reproduce the error and execute it with `python <filename.py>` using the BashTool"
 NEW_INS = "2. Create a script to reproduce the error and execute it"
+
+
 def process_data(data):
     id = data.instance_id
     content = []
@@ -21,7 +23,7 @@ def process_data(data):
             continue
         elif msg.role in ["user", "tool"]:
             _msg = f"{msg.content}" if msg.role == "tool" else msg.content
-            if idx == 1: 
+            if idx == 1:
                 _msg = _msg.replace(PRIOR_INS, NEW_INS)
             if "OBSERVATION:\n" in _msg:
                 _msg = "\n".join(_msg.split("OBSERVATION:\n")[1:])
