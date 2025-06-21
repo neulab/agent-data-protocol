@@ -12,4 +12,3 @@ for item in dataset["train"]:
     item["instance_id"] = f"{id}_{ids[id]}"
     ids[id] += 1
     print(json.dumps(item))
-
