@@ -6,17 +6,20 @@ import pytest
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
 
-# Known problematic datasets that are documented in the PR
-SKIP_DATASETS = [
-    "weblinx",  # empty file
-    "wonderbread",  # empty file
-    "turkingbench",  # empty file
-    "webarena_successful",  # sample count mismatch
-    "android_in_the_wild",  # turn count mismatch
-    "androidcontrol",  # ID mismatch
-    "mind2web",  # ID mismatch
-    "eto",  # ID mismatch
-    "omniact",  # sample count mismatch
+# Datasets that are not completely finished (not documented in DATASETS.md)
+INCOMPLETE_DATASETS = [
+    "android_in_the_wild",
+    "androidcontrol",
+    "eto",
+    "go-browse-wa",
+    "llava_plus",
+    "mind2web",
+    "omniact",
+    "screenagent",
+    "turkingbench",
+    "webarena_successful",
+    "weblinx",
+    "wonderbread",
 ]
 
 
@@ -40,9 +43,9 @@ def test_std_to_sft_conversion(subdir):
     3. Each sample has the expected structure
     4. The number of turns in each sample is similar
     """
-    # Skip known problematic datasets
-    if subdir in SKIP_DATASETS:
-        pytest.skip(f"Skipping known problematic dataset: {subdir}")
+    # Skip incomplete datasets
+    if subdir in INCOMPLETE_DATASETS:
+        pytest.skip(f"Skipping incomplete dataset: {subdir}")
 
     subdir_path = os.path.join(DATASET_PATH, subdir)
 

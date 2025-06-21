@@ -4,6 +4,22 @@ import random
 
 # random.seed(42)
 
+# Datasets that are not completely finished (not documented in DATASETS.md)
+INCOMPLETE_DATASETS = [
+    "android_in_the_wild",
+    "androidcontrol",
+    "eto",
+    "go-browse-wa",
+    "llava_plus",
+    "mind2web",
+    "omniact",
+    "screenagent",
+    "turkingbench",
+    "webarena_successful",
+    "weblinx",
+    "wonderbread",
+]
+
 
 def add_sample(dataset):
     sft = f"datasets/{dataset}/full_sft.jsonl"
@@ -60,7 +76,7 @@ def save_sample():
     out = []
     for dir in dirs:
         sample_sft = f"datasets/{dir}/sample_sft.json"
-        if not os.path.exists(sample_sft) or dir == "turkingbench":
+        if not os.path.exists(sample_sft) or dir in INCOMPLETE_DATASETS:
             continue
         print(dir)
         with open(sample_sft) as f:
