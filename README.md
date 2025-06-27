@@ -17,6 +17,8 @@ This is a repository for agent training data collection by CMU, OSU, and HKU.
   - `json_to_jsonl.py`: Converts a json file to a jsonl file
   - `std_to_sft.py`: Converts standardized format to SFT format
   - `install_hooks.sh`: Script to install pre-commit hooks
+- `std_to_sft_scripts_swe-agent/`: Contains specialized scripts for SWE agent datasets
+  - `std_to_sft_SWE_smith.py`: Converts standardized format to SFT format specifically for SWE agent datasets (SWE-Gym_OpenHands-Sampled-Trajectories, SWE-smith_5kTrajectories, code_feedback, codeactinstruct, nebius_SWE-agent-trajectories, openhands)
 
 ## Development Setup
 
@@ -120,6 +122,17 @@ Use `--is_web=yes` for web-based datasets like `mind2web, synatra`.
 Use `--chunk=all` by default.
 Use `--api_env=browser` for web-based datasets like `mind2web, synatra`.
 
+#### Alternative: Using the SWE Agent Specialized Script
+
+For SWE agent datasets (SWE-Gym_OpenHands-Sampled-Trajectories, SWE-smith_5kTrajectories, code_feedback, codeactinstruct, nebius_SWE-agent-trajectories, openhands), you can use the specialized conversion script:
+
+```bash
+export MY_DATASET=dataset_name
+cat datasets/$MY_DATASET/sample_std.json | python std_to_sft_scripts_swe-agent/std_to_sft_SWE_smith.py > datasets/$MY_DATASET/sample_sft.json
+```
+
+This script is specifically designed for SWE agent datasets and handles their unique format requirements.
+
 Run the validator script on the dataset to ensure that it is in the correct format:
 
 ```bash
@@ -157,3 +170,12 @@ cat datasets/$MY_DATASET/full_std.jsonl | python -u scripts/std_to_sft.py --is_w
 ```
 
 Use `--is_web=yes` for web-based datasets like `mind2web, synatra`.
+
+#### Alternative: Using the SWE Agent Specialized Script for Full Data
+
+For SWE agent datasets, you can also use the specialized conversion script for full data:
+
+```bash
+export MY_DATASET=dataset_name
+cat datasets/$MY_DATASET/full_std.jsonl | python std_to_sft_scripts_swe-agent/std_to_sft_SWE_smith.py > datasets/$MY_DATASET/full_sft.jsonl
+```
