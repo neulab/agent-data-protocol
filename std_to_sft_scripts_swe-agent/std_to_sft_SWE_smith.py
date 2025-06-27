@@ -10,7 +10,7 @@ openhands
 
 import json
 import sys
-from typing import List, Dict, Any, Union
+from typing import Any, Dict, List
 
 # The system message template that was removed during conversion
 SYSTEM_MESSAGE_TEMPLATE = """You are a helpful assistant that can interact with a computer to solve tasks.
@@ -87,6 +87,13 @@ END_USER_MESSAGES = [
     "Task completed successfully.",
 ]
 
+# Assistant end messages that were artificially added during standardization
+END_ASSISTANT_MESSAGES = [
+    "Task completed successfully.",
+    "The task has been completed.",
+    "I have successfully completed the task.",
+]
+
 # Note: Assistant finish messages are now detected by pattern matching
 # Any message with <finish>...</finish> pattern is converted to submit function
 
@@ -113,19 +120,19 @@ def convert_action_to_function_call(action: Dict[str, Any]) -> str:
         function_call += f"<parameter=command>{action['content']}</parameter>\n"
         function_call += "</function>"
         return function_call
-    
+
     elif action["class_"] == "api_action":
         function = action["function"]
         function_call = f"<function={function}>"
-        
+
         # Add parameters if any
         if action.get("kwargs"):
             function_call += "\n"
-            
+
             # Special handling for str_replace_editor to ensure proper parameter order
             # This maintains consistency with the function's parameter definition:
             # 1. command (required)
-            # 2. path (required)  
+            # 2. path (required)
             # 3. file_text (optional, for create)
             # 4. old_str (optional, for str_replace)
             # 5. new_str (optional for str_replace, required for insert)
@@ -133,8 +140,16 @@ def convert_action_to_function_call(action: Dict[str, Any]) -> str:
             # 7. view_range (optional, for view)
             if function == "str_replace_editor":
                 # Define the parameter order for str_replace_editor
-                param_order = ["command", "path", "file_text", "old_str", "new_str", "insert_line", "view_range"]
-                
+                param_order = [
+                    "command",
+                    "path",
+                    "file_text",
+                    "old_str",
+                    "new_str",
+                    "insert_line",
+                    "view_range",
+                ]
+
                 # Add parameters in the correct order
                 for param_name in param_order:
                     if param_name in action["kwargs"]:
@@ -146,17 +161,17 @@ def convert_action_to_function_call(action: Dict[str, Any]) -> str:
                 for param_name, param_value in action["kwargs"].items():
                     formatted_value = format_parameter_value(param_value)
                     function_call += f"<parameter={param_name}>{formatted_value}</parameter>\n"
-        
+
         function_call += "</function>"
         return function_call
-    
+
     elif action["class_"] == "message_action":
         # Check if this is a finish message that should be converted to submit
-        content = action["content"]
+        content = str(action["content"])
         if content.startswith("<finish>") and content.endswith("</finish>"):
             return "\n\n<function=submit>\n</function>"
         return content
-    
+
     else:
         raise ValueError(f"Unknown action type: {action['class_']}")
 
@@ -173,45 +188,43 @@ def is_end_message(content_item: Dict[str, Any]) -> bool:
 def group_content_into_messages(content: List[Dict[str, Any]]) -> List[Dict[str, str]]:
     """Group content items into messages with roles."""
     messages = []
-    
+
     # Add system message first
-    messages.append({
-        "role": "system",
-        "content": SYSTEM_MESSAGE_TEMPLATE
-    })
-    
+    messages.append({"role": "system", "content": SYSTEM_MESSAGE_TEMPLATE})
+
     i = 0
     while i < len(content):
         item = content[i]
-        
+
         # Skip end user messages, but not end assistant messages
         if item["class_"] == "text_observation" and item["content"] in END_USER_MESSAGES:
             i += 1
             continue
-        
+
         if item["class_"] == "text_observation":
             # Handle user/environment observations
             content_text = item["content"]
             if item["source"] == "environment":
                 content_text = "OBSERVATION: " + content_text
-            
-            messages.append({
-                "role": "user",
-                "content": content_text
-            })
+
+            messages.append({"role": "user", "content": content_text})
             i += 1
-            
+
         elif item["class_"] in ["code_action", "api_action", "message_action"]:
             # Group consecutive actions into one assistant message
             assistant_content_parts = []
-            
-            while i < len(content) and content[i]["class_"] in ["code_action", "api_action", "message_action"]:                    
+
+            while i < len(content) and content[i]["class_"] in [
+                "code_action",
+                "api_action",
+                "message_action",
+            ]:
                 action = content[i]
-                
+
                 # Add description if present
                 if action.get("description"):
                     assistant_content_parts.append(action["description"])
-                
+
                 # Convert action to function call or message
                 if action["class_"] in ["code_action", "api_action"]:
                     function_call = convert_action_to_function_call(action)
@@ -220,19 +233,18 @@ def group_content_into_messages(content: List[Dict[str, Any]]) -> List[Dict[str,
                     # Message action - convert or keep as is
                     message_content = convert_action_to_function_call(action)
                     assistant_content_parts.append(message_content)
-                
+
                 i += 1
-            
+
             # Join all parts with newlines
             if assistant_content_parts:
-                messages.append({
-                    "role": "assistant",
-                    "content": "\n".join(assistant_content_parts)
-                })
+                messages.append(
+                    {"role": "assistant", "content": "\n".join(assistant_content_parts)}
+                )
         else:
             # Unknown type, skip
             i += 1
-    
+
     return messages
 
 
@@ -240,28 +252,25 @@ def convert_std_to_sft_SWE_smith(standardized_data: Dict[str, Any]) -> Dict[str,
     """Convert standardized format back to raw format."""
     # Extract messages from content
     messages = group_content_into_messages(standardized_data["content"])
-    
+
     # Create raw format
-    raw_data = {
-        "instance_id": standardized_data["id"],
-        "messages": messages
-    }
-    
+    raw_data = {"instance_id": standardized_data["id"], "messages": messages}
+
     return raw_data
 
 
 if __name__ == "__main__":
     # Read all input at once
     input_data = sys.stdin.read()
-    
+
     # Parse the JSON data (expecting an array of standardized items)
     standardized_items = json.loads(input_data)
-    
+
     # Convert each item
     raw_items = []
     for standardized_data in standardized_items:
         raw_data = convert_std_to_sft_SWE_smith(standardized_data)
         raw_items.append(raw_data)
-    
+
     # Output the converted data as JSON
     print(json.dumps(raw_items, indent=2))
