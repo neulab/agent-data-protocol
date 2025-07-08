@@ -17,6 +17,7 @@ This document outlines the input argument configurations for each dataset. The a
 | code_feedback                           |         None         |     no     |
 | codeactinstruct                         | execute_ipython_cell |     no     |
 | go-browse-wa                            |        browser       |     yes    |
+| go-browse-wa                            |        browser       |     yes    |
 | mind2web                                |        browser       |     yes    |
 | nebius_SWE-agent-trajectories           |     execute_bash     |     no     |
 | nnetnav-live                            |        browser       |     yes    |
