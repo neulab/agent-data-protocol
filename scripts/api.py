@@ -108,7 +108,9 @@ def get_api_tool_description(dataset, exclude_apis={}, env="execute_ipython_cell
             f"The toolkit for {env} {also}contains the following functions. ",
         ]
         API_TOOL_DESCRIPTION = random.choice(prefixes) + "\n\n" + API_TOOL_DESCRIPTION
-        API_TOOL_DESCRIPTION = API_TOOL_DESCRIPTION.replace('xpath', 'bid').replace('element_id', 'bid')
+        API_TOOL_DESCRIPTION = API_TOOL_DESCRIPTION.replace("xpath", "bid").replace(
+            "element_id", "bid"
+        )
         return API_TOOL_DESCRIPTION, sigs
     else:
         return "", {}

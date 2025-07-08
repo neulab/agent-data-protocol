@@ -108,6 +108,7 @@ def extract_function_call(content):
 NON_OH_EVENTS = {}
 PREV_BID = None
 
+
 def standardized_event_to_openhands_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
@@ -209,7 +210,7 @@ def standardized_event_to_openhands_message(
         api_args = browser_default_apis[function_name]
         if browsergym_id:
             arguments["bid"] = browsergym_id
-            
+
         # to handle mismatching "bid" and "id" arguments
         if "bid" not in arguments:
             if "id" in arguments:
@@ -361,6 +362,7 @@ def main():
     api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, args.api_env)
     count = 0
     from datetime import datetime
+
     now = datetime.now()
     print(now, file=sys.stderr)
     for line in sys.stdin:

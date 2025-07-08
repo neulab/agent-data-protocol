@@ -327,71 +327,71 @@ if __name__ == "__main__":
 
         if isinstance(content[-1], ApiAction):
             user_end_message = random.choice(
+                [
                     [
-                        [
-                            TextObservation(
-                                content="Congratulations! You have successfully solved the task.",
-                                source="user",
-                            ),
-                        ],
-                        [
-                            TextObservation(
-                                content="Your solution has been verified as correct. ", source="user"
-                            ),
-                        ],
-                        [
-                            TextObservation(
-                                content="Well done on successfully completing the task!", source="user"
-                            ),
-                        ],
-                        [
-                            TextObservation(
-                                content="Your implementation satisfies the task requirements.",
-                                source="user",
-                            ),
-                        ],
-                        [
-                            TextObservation(content="Task completed successfully.", source="user"),
-                        ],
-                    ]
-                )
+                        TextObservation(
+                            content="Congratulations! You have successfully solved the task.",
+                            source="user",
+                        ),
+                    ],
+                    [
+                        TextObservation(
+                            content="Your solution has been verified as correct. ", source="user"
+                        ),
+                    ],
+                    [
+                        TextObservation(
+                            content="Well done on successfully completing the task!", source="user"
+                        ),
+                    ],
+                    [
+                        TextObservation(
+                            content="Your implementation satisfies the task requirements.",
+                            source="user",
+                        ),
+                    ],
+                    [
+                        TextObservation(content="Task completed successfully.", source="user"),
+                    ],
+                ]
+            )
             content.extend(user_end_message)
             assistant_end_message = random.choice(
+                [
                     [
-                        [
-                            MessageAction(
-                                content="<finish> I have successfully completed the task. </finish>",
-                                description="",
-                            ),
-                        ],
-                        [
-                            MessageAction(
-                                content="<finish> I did it! The task is now complete. </finish>",
-                                description="",
-                            ),
-                        ],
-                        [
-                            MessageAction(
-                                content="<finish> The objective has been achieved with no outstanding issues. </finish>",
-                                description="",
-                            ),
-                        ],
-                        [
-                            MessageAction(
-                                content="<finish> I have fulfilled all the requirements of the task. </finish>",
-                                description="",
-                            ),
-                        ],
-                        [
-                            MessageAction(
-                                content="<finish> I've wrapped up the task successfully. </finish>",
-                                description="",
-                            ),
-                        ],
-                    ]
-                )
+                        MessageAction(
+                            content="<finish> I have successfully completed the task. </finish>",
+                            description="",
+                        ),
+                    ],
+                    [
+                        MessageAction(
+                            content="<finish> I did it! The task is now complete. </finish>",
+                            description="",
+                        ),
+                    ],
+                    [
+                        MessageAction(
+                            content="<finish> The objective has been achieved with no outstanding issues. </finish>",
+                            description="",
+                        ),
+                    ],
+                    [
+                        MessageAction(
+                            content="<finish> I have fulfilled all the requirements of the task. </finish>",
+                            description="",
+                        ),
+                    ],
+                    [
+                        MessageAction(
+                            content="<finish> I've wrapped up the task successfully. </finish>",
+                            description="",
+                        ),
+                    ],
+                ]
+            )
             content.extend(assistant_end_message)
-                
+
         standardized_data = Trajectory(
             id=data.annotation_id,
             content=content,
