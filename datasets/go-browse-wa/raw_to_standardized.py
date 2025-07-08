@@ -4,7 +4,7 @@ import json
 import os
 import random
 import sys
-from typing import Any, Dict, Tuple, get_origin, get_args, Union, Literal
+from typing import Any, Dict, Literal, Tuple, Union, get_args, get_origin
 
 import api
 
@@ -88,6 +88,7 @@ def parse_action(action_str: str) -> Tuple[str, Dict[str, Any]]:
         if isinstance(v, list):
             return [quote(x) for x in v]
         return v
+
     kwargs = {}
     for i, arg in enumerate(call.args):
         if i < len(sig.parameters):
@@ -104,6 +105,7 @@ def parse_action(action_str: str) -> Tuple[str, Dict[str, Any]]:
         kwargs[kw.arg] = val
 
     return func_name, kwargs
+
 
 def process_step(step):
     screenshot_message = ImageObservation(
@@ -158,12 +160,14 @@ if __name__ == "__main__":
                         ],
                         [
                             TextObservation(
-                                content="Your solution has been verified as correct. ", source="user"
+                                content="Your solution has been verified as correct. ",
+                                source="user",
                             ),
                         ],
                         [
                             TextObservation(
-                                content="Well done on successfully completing the task!", source="user"
+                                content="Well done on successfully completing the task!",
+                                source="user",
                             ),
                         ],
                         [
@@ -227,7 +231,7 @@ if __name__ == "__main__":
             continue
 
         traj_goal = step["traj_data"]["goal"]
-        try: 
+        try:
             traj_content.extend(process_step(step))
         except Exception as e:
             print(f"Failed to process step: {e}\n", file=sys.stderr)
