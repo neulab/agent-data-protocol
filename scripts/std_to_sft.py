@@ -106,7 +106,7 @@ def extract_function_call(content):
 
 
 NON_OH_EVENTS = {}
-
+PREV_BID = None
 
 def standardized_event_to_openhands_message(
     id,
@@ -118,6 +118,7 @@ def standardized_event_to_openhands_message(
     api_sigs=None,
     languages: list = [],
 ) -> dict:
+    global PREV_BID
     if isinstance(event, WebObservation):
         if event.axtree is not None:
             axtree = event.axtree
@@ -125,10 +126,11 @@ def standardized_event_to_openhands_message(
             axtree = generate_axtree.build_axtree(id, event.html, chunk)
         else:
             axtree = generate_axtree.last_xtree
-        prompt = get_web_user_message("", event.url, axtree, previous_web_actions)
+        prompt = get_web_user_message("", event.url, axtree, PREV_BID)
         return {"from": "human", "value": prompt}
 
     if isinstance(event, ApiAction):
+        PREV_BID = None
         thought = event.description + "\n\n" if event.description else ""
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
@@ -185,9 +187,14 @@ def standardized_event_to_openhands_message(
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         api_env = "browser"
+        if not browsergym_id[0] == browsergym_id[-1] == '"':
+            browsergym_id = f'"{browsergym_id[0]}"'
+        PREV_BID = browsergym_id
         # for apis that are browser based but are not OH default browser apis
         # these should all be dataset specific apis
         if function_name in api_sigs:
+            if "bid" in api_sigs[function_name]["required"] and browsergym_id:
+                arguments["bid"] = browsergym_id
             if not verify_args(
                 api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
             ):
@@ -202,10 +209,12 @@ def standardized_event_to_openhands_message(
         api_args = browser_default_apis[function_name]
         if browsergym_id:
             arguments["bid"] = browsergym_id
+            
         # to handle mismatching "bid" and "id" arguments
         if "bid" not in arguments:
             if "id" in arguments:
                 arguments["bid"] = arguments.pop("id")
+                PREV_BID = arguments["bid"]
         if not verify_args(api_args["required"], api_args["optional"], arguments):
             raise ValueError(f"Function call with wrong argument: {event}")
         api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
@@ -351,9 +360,14 @@ def main():
     exclude_apis = browser_default_apis if args.is_web else {}
     api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, args.api_env)
     count = 0
+    from datetime import datetime
+    now = datetime.now()
+    print(now, file=sys.stderr)
     for line in sys.stdin:
-        if count % 10000 == 0 and count != 0:
-            print(f"Processed {count} lines", file=sys.stderr)
+        print(f"Processed {count} lines", file=sys.stderr)
+        if count % 1000 == 0 and count != 0:
+            now = datetime.now()
+            print(f"Processed {count} lines; {now}", file=sys.stderr)
         output_line = process_row(
             line,
             is_web=args.is_web,

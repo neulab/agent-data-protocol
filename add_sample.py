@@ -66,6 +66,8 @@ def add_sample(dataset):
                 out_raw.append(row)
             elif "instance_id" in row and str(row["instance_id"]) == str(sample["id"]):
                 out_raw.append(row)
+            elif "annotation_id" in row and str(row["annotation_id"]) == str(sample["id"]):
+                out_raw.append(row)
     with open(f"datasets/{dataset}/sample_raw.json", "w") as f:
         json.dump(out_raw, f, indent=2, ensure_ascii=False)
 

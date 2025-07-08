@@ -45,6 +45,8 @@ class HTMLToAXTree:
         html_string = flatten_dom_to_str(self.last_obs["dom_object"])
         tree = etree.HTML(html_string)
         try:
+            if len(x_path) >= 2 and x_path[0] == x_path[-1] == '"':
+                x_path = x_path[1:-1]
             element = tree.xpath(x_path)
             # print(x_path)
             # print(etree.tostring(element[0], pretty_print=True).decode("utf-8"))
