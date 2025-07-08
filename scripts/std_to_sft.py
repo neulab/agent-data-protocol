@@ -364,7 +364,6 @@ def main():
     now = datetime.now()
     print(now, file=sys.stderr)
     for line in sys.stdin:
-        print(f"Processed {count} lines", file=sys.stderr)
         if count % 1000 == 0 and count != 0:
             now = datetime.now()
             print(f"Processed {count} lines; {now}", file=sys.stderr)
