@@ -88,6 +88,7 @@ def parse_action(action_str: str) -> Tuple[str, Dict[str, Any]]:
         if isinstance(v, list):
             return [quote(x) for x in v]
         return v
+
     kwargs = {}
     for i, arg in enumerate(call.args):
         if i < len(sig.parameters):
@@ -104,6 +105,7 @@ def parse_action(action_str: str) -> Tuple[str, Dict[str, Any]]:
         kwargs[kw.arg] = val
 
     return func_name, kwargs
+
 
 def process_step(step):
     screenshot_message = ImageObservation(
