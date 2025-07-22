@@ -2,7 +2,6 @@ import ast
 import inspect
 import json
 import os
-import random
 import sys
 from typing import Any, Dict, Literal, Tuple, Union, get_args, get_origin
 
@@ -150,16 +149,16 @@ if __name__ == "__main__":
             try:
                 goal_message = TextObservation(content=traj_goal, source="user")
                 traj_content = [goal_message] + traj_content
-                priot_action = ''
+                priot_action = ""
                 for m in traj_content:
                     if isinstance(m, ApiAction):
-                        if priot_action == 'noop' and m.function == 'noop': 
-                            raise ValueError(f"consecutive noop")
+                        if priot_action == "noop" and m.function == "noop":
+                            raise ValueError("consecutive noop")
                         priot_action = m.function
-                if traj_content[-1].function != "send_msg_to_user": 
+                if traj_content[-1].function != "send_msg_to_user":
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
                 finish_action = MessageAction(
-                    content=f"<finish> {traj_content[-1].kwargs["text"].strip()} </finish>",
+                    content=f"<finish> {traj_content[-1].kwargs['text'].strip()} </finish>",
                     description=traj_content[-1].description,
                 )
                 traj_content = traj_content[:-1] + [finish_action]
@@ -194,16 +193,16 @@ if __name__ == "__main__":
     if traj_content:
         goal_message = TextObservation(content=traj_goal, source="user")
         traj_content = [goal_message] + traj_content
-        priot_action = ''
+        priot_action = ""
         for m in traj_content:
             if isinstance(m, ApiAction):
-                if priot_action == 'noop' and m.function == 'noop': 
-                    raise ValueError(f"consecutive noop")
+                if priot_action == "noop" and m.function == "noop":
+                    raise ValueError("consecutive noop")
                 priot_action = m.function
-        if traj_content[-1].function != "send_msg_to_user": 
+        if traj_content[-1].function != "send_msg_to_user":
             raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
         finish_action = MessageAction(
-            content=f"<finish> {traj_content[-1].kwargs["text"].strip()} </finish>",
+            content=f"<finish> {traj_content[-1].kwargs['text'].strip()} </finish>",
             description=traj_content[-1].description,
         )
         traj_content = traj_content[:-1] + [finish_action]
