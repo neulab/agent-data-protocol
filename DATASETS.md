@@ -47,8 +47,8 @@ This document outlines the input argument configurations for each dataset. The a
 | go-browse-wa                            |    9.5K    |      4.9    |
 | mind2web                                |    1.0K    |      9.6    |
 | nebius_SWE-agent-trajectories           |   13.4K    |     16.2    |
-| nnetnav-live                            |   46.8K    |      1.0    |
-| nnetnav-wa                              |   44.4K    |      1.0    |
+| nnetnav-live                            |   46.8K    |     15.5    |
+| nnetnav-wa                              |   44.4K    |     19.2    |
 | openhands                               |    0.1K    |     18.0    |
 | orca_agentinstruct                      | 1046.4K    |      1.3    |
 | SWE-Gym_OpenHands-Sampled-Trajectories  |    0.5K    |     19.7    |
