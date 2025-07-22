@@ -153,14 +153,15 @@ def main():
             try:
                 goal_message = TextObservation(content=traj_goal, source="user")
                 traj_content = [goal_message] + traj_content
-                if traj_content[-1].function != "send_msg_to_user": 
+                if traj_content[-1].function != "send_msg_to_user":
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
-                
+
+                text_value = traj_content[-1].kwargs["text"].strip()
                 finish_action = MessageAction(
-                    content=f"<finish> {traj_content[-1].kwargs["text"].strip()} </finish>",
+                    content=f"<finish> {text_value} </finish>",
                     description=traj_content[-1].description,
                 )
-                #print(f"finish_action: {finish_action}", file=sys.stderr)
+                # print(f"finish_action: {finish_action}", file=sys.stderr)
                 traj_content = traj_content[:-1] + [finish_action]
 
                 traj = Trajectory(
@@ -187,12 +188,13 @@ def main():
 
     goal_message = TextObservation(content=traj_goal, source="user")
     traj_content = [goal_message] + traj_content
-    if traj_content[-1].function != "send_msg_to_user": 
+    if traj_content[-1].function != "send_msg_to_user":
         print(f"trajectory did not complete: {traj_content[-1]}", file=sys.stderr)
         return
-                
+
+    text_value = traj_content[-1].kwargs["text"].strip()
     finish_action = MessageAction(
-        content=f"<finish> {traj_content[-1].kwargs["text"].strip()} </finish>",
+        content=f"<finish> {text_value} </finish>",
         description=traj_content[-1].description,
     )
     traj_content = traj_content[:-1] + [finish_action]
