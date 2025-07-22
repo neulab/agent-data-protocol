@@ -147,84 +147,34 @@ if __name__ == "__main__":
         curr_traj_id = step["traj_data"]["traj_num"]
 
         if traj_id != -1 and traj_id != curr_traj_id and traj_content:
-            goal_message = TextObservation(content=traj_goal, source="user")
-            traj_content = [goal_message] + traj_content
-            if isinstance(traj_content[-1], ApiAction):
-                user_end_message = random.choice(
-                    [
-                        [
-                            TextObservation(
-                                content="Congratulations! You have successfully solved the task.",
-                                source="user",
-                            ),
-                        ],
-                        [
-                            TextObservation(
-                                content="Your solution has been verified as correct. ",
-                                source="user",
-                            ),
-                        ],
-                        [
-                            TextObservation(
-                                content="Well done on successfully completing the task!",
-                                source="user",
-                            ),
-                        ],
-                        [
-                            TextObservation(
-                                content="Your implementation satisfies the task requirements.",
-                                source="user",
-                            ),
-                        ],
-                        [
-                            TextObservation(content="Task completed successfully.", source="user"),
-                        ],
-                    ]
+            try:
+                goal_message = TextObservation(content=traj_goal, source="user")
+                traj_content = [goal_message] + traj_content
+                priot_action = ''
+                for m in traj_content:
+                    if isinstance(m, ApiAction):
+                        if priot_action == 'noop' and m.function == 'noop': 
+                            raise ValueError(f"consecutive noop")
+                        priot_action = m.function
+                if traj_content[-1].function != "send_msg_to_user": 
+                    raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
+                finish_action = MessageAction(
+                    content=f"<finish> {traj_content[-1].kwargs["text"].strip()} </finish>",
+                    description=traj_content[-1].description,
                 )
-                traj_content.extend(user_end_message)
-                assistant_end_message = random.choice(
-                    [
-                        [
-                            MessageAction(
-                                content="<finish> I have successfully completed the task. </finish>",
-                                description="",
-                            ),
-                        ],
-                        [
-                            MessageAction(
-                                content="<finish> I did it! The task is now complete. </finish>",
-                                description="",
-                            ),
-                        ],
-                        [
-                            MessageAction(
-                                content="<finish> The objective has been achieved with no outstanding issues. </finish>",
-                                description="",
-                            ),
-                        ],
-                        [
-                            MessageAction(
-                                content="<finish> I have fulfilled all the requirements of the task. </finish>",
-                                description="",
-                            ),
-                        ],
-                        [
-                            MessageAction(
-                                content="<finish> I've wrapped up the task successfully. </finish>",
-                                description="",
-                            ),
-                        ],
-                    ]
+                traj_content = traj_content[:-1] + [finish_action]
+                traj = Trajectory(
+                    id=str(traj_id),
+                    content=traj_content,
+                    details={"source": "go-browse-wa"},
                 )
-                traj_content.extend(assistant_end_message)
-
-            traj = Trajectory(
-                id=str(traj_id),
-                content=traj_content,
-                details={"source": "go-browse-wa"},
-            )
-            print(json.dumps(traj.model_dump()))
-            traj_content = []
+                print(json.dumps(traj.model_dump()))
+                traj_content = []
+            except Exception as e:
+                print(f"An error occurred: {e}", file=sys.stderr)
+                traj_id = -1
+                traj_content = []
+                traj_goal = None
 
         if step["traj_data"]["reward"] < 1:
             traj_id = curr_traj_id
@@ -235,79 +185,28 @@ if __name__ == "__main__":
             traj_content.extend(process_step(step))
         except Exception as e:
             print(f"Failed to process step: {e}\n", file=sys.stderr)
+            traj_id = -1
+            traj_content = []
+            traj_goal = None
             continue
         traj_id = curr_traj_id
 
     if traj_content:
         goal_message = TextObservation(content=traj_goal, source="user")
         traj_content = [goal_message] + traj_content
-        if isinstance(traj_content[-1], ApiAction):
-            user_end_message = random.choice(
-                [
-                    [
-                        TextObservation(
-                            content="Congratulations! You have successfully solved the task.",
-                            source="user",
-                        ),
-                    ],
-                    [
-                        TextObservation(
-                            content="Your solution has been verified as correct. ", source="user"
-                        ),
-                    ],
-                    [
-                        TextObservation(
-                            content="Well done on successfully completing the task!", source="user"
-                        ),
-                    ],
-                    [
-                        TextObservation(
-                            content="Your implementation satisfies the task requirements.",
-                            source="user",
-                        ),
-                    ],
-                    [
-                        TextObservation(content="Task completed successfully.", source="user"),
-                    ],
-                ]
-            )
-            traj_content.extend(user_end_message)
-            assistant_end_message = random.choice(
-                [
-                    [
-                        MessageAction(
-                            content="<finish> I have successfully completed the task. </finish>",
-                            description="",
-                        ),
-                    ],
-                    [
-                        MessageAction(
-                            content="<finish> I did it! The task is now complete. </finish>",
-                            description="",
-                        ),
-                    ],
-                    [
-                        MessageAction(
-                            content="<finish> The objective has been achieved with no outstanding issues. </finish>",
-                            description="",
-                        ),
-                    ],
-                    [
-                        MessageAction(
-                            content="<finish> I have fulfilled all the requirements of the task. </finish>",
-                            description="",
-                        ),
-                    ],
-                    [
-                        MessageAction(
-                            content="<finish> I've wrapped up the task successfully. </finish>",
-                            description="",
-                        ),
-                    ],
-                ]
-            )
-            traj_content.extend(assistant_end_message)
-
+        priot_action = ''
+        for m in traj_content:
+            if isinstance(m, ApiAction):
+                if priot_action == 'noop' and m.function == 'noop': 
+                    raise ValueError(f"consecutive noop")
+                priot_action = m.function
+        if traj_content[-1].function != "send_msg_to_user": 
+            raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
+        finish_action = MessageAction(
+            content=f"<finish> {traj_content[-1].kwargs["text"].strip()} </finish>",
+            description=traj_content[-1].description,
+        )
+        traj_content = traj_content[:-1] + [finish_action]
         traj = Trajectory(
             id=str(traj_id),
             content=traj_content,

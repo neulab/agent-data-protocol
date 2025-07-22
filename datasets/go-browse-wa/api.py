@@ -170,17 +170,6 @@ def upload_file(bid: str, file: Union[str, List[str]]) -> None:
     pass
 
 
-def report_infeasible(reason: str) -> None:
-    """Notifies the user that their instructions are infeasible.
-
-    Args:
-    ----
-        reason (str): The reason why the instructions cannot be followed.
-
-    """
-    pass
-
-
 def go_back() -> None:
     """Navigate to the previous page in history."""
     pass
