@@ -156,9 +156,9 @@ def main():
                 if traj_content[-1].function != "send_msg_to_user":
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
 
-                text_value = traj_content[-1].kwargs["text"].strip()
+                finish_message = traj_content[-1].kwargs["text"].strip()
                 finish_action = MessageAction(
-                    content=f"<finish> {text_value} </finish>",
+                    content=f"<finish> {finish_message} </finish>",
                     description=traj_content[-1].description,
                 )
                 # print(f"finish_action: {finish_action}", file=sys.stderr)
@@ -192,9 +192,9 @@ def main():
         print(f"trajectory did not complete: {traj_content[-1]}", file=sys.stderr)
         return
 
-    text_value = traj_content[-1].kwargs["text"].strip()
+    finish_message = traj_content[-1].kwargs["text"].strip()
     finish_action = MessageAction(
-        content=f"<finish> {text_value} </finish>",
+        content=f"<finish> {finish_message} </finish>",
         description=traj_content[-1].description,
     )
     traj_content = traj_content[:-1] + [finish_action]
