@@ -74,10 +74,7 @@ def parse_action(content: str) -> Dict[str, Any]:
         fn_name = "tab_close"
         fn_kwargs = {}
     elif "stop" in action:
-        return MessageAction(
-            content=action.split("[")[1].split("]")[0],
-            description=thought
-        )
+        return MessageAction(content=action.split("[")[1].split("]")[0], description=thought)
     elif "click" in action:
         id = action.split("[")[1].split("]")[0]
         fn_name = "click"
@@ -155,7 +152,7 @@ def main():
             try:
                 goal_message = TextObservation(content=traj_goal, source="user")
                 traj_content = [goal_message] + traj_content
-                if not isinstance(traj_content[-1], MessageAction): 
+                if not isinstance(traj_content[-1], MessageAction):
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
                 traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
                 traj = Trajectory(
@@ -182,10 +179,10 @@ def main():
 
     goal_message = TextObservation(content=traj_goal, source="user")
     traj_content = [goal_message] + traj_content
-    if not isinstance(traj_content[-1], MessageAction): 
+    if not isinstance(traj_content[-1], MessageAction):
         print(f"trajectory did not complete: {traj_content[-1]}", file=sys.stderr)
         return
-                
+
     traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
 
     traj = Trajectory(id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"})

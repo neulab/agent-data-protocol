@@ -2,7 +2,6 @@ import ast
 import inspect
 import json
 import os
-import random
 import sys
 from typing import Any, Dict, Literal, Tuple, Union, get_args, get_origin
 
@@ -18,6 +17,7 @@ from schema.trajectory import Trajectory
 SCREENSHOTS_DIR = "datasets/go-browse-wa/screenshots"
 GO_BROWSE_WA_VIEWPORT_SIZE = (1280, 1440)
 
+
 def send_msg_to_user(text: str) -> None:
     """Send a message to the user.
 
@@ -28,6 +28,7 @@ def send_msg_to_user(text: str) -> None:
     """
     pass
 
+
 def parse_action(action_str: str) -> Tuple[str, Dict[str, Any]]:
     tree = ast.parse(action_str)
     if not isinstance(tree.body[0], ast.Expr) or not isinstance(tree.body[0].value, ast.Call):
@@ -35,7 +36,7 @@ def parse_action(action_str: str) -> Tuple[str, Dict[str, Any]]:
 
     call = tree.body[0].value
     func_name = call.func.id
-    
+
     if func_name == "send_msg_to_user":
         func = send_msg_to_user
     else:
@@ -140,8 +141,7 @@ def process_step(step):
     func_name, kwargs = parse_action(action)
     if func_name == "send_msg_to_user":
         action_message = MessageAction(
-            content=kwargs["text"],
-            description=thought.replace("send_msg_to_user", "finish")
+            content=kwargs["text"], description=thought.replace("send_msg_to_user", "finish")
         )
     else:
         action_message = ApiAction(
@@ -167,13 +167,13 @@ if __name__ == "__main__":
             try:
                 goal_message = TextObservation(content=traj_goal, source="user")
                 traj_content = [goal_message] + traj_content
-                priot_action = ''
+                priot_action = ""
                 for m in traj_content:
                     if isinstance(m, ApiAction):
-                        if priot_action == 'noop' and m.function == 'noop': 
-                            raise ValueError(f"consecutive noop")
+                        if priot_action == "noop" and m.function == "noop":
+                            raise ValueError("consecutive noop")
                         priot_action = m.function
-                if not isinstance(traj_content[-1], MessageAction): 
+                if not isinstance(traj_content[-1], MessageAction):
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
                 traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
                 traj = Trajectory(
@@ -207,13 +207,13 @@ if __name__ == "__main__":
     if traj_content:
         goal_message = TextObservation(content=traj_goal, source="user")
         traj_content = [goal_message] + traj_content
-        priot_action = ''
+        priot_action = ""
         for m in traj_content:
             if isinstance(m, ApiAction):
-                if priot_action == 'noop' and m.function == 'noop': 
-                    raise ValueError(f"consecutive noop")
+                if priot_action == "noop" and m.function == "noop":
+                    raise ValueError("consecutive noop")
                 priot_action = m.function
-        if not isinstance(traj_content[-1], MessageAction): 
+        if not isinstance(traj_content[-1], MessageAction):
             raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
         traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
         traj = Trajectory(
