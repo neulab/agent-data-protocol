@@ -74,8 +74,10 @@ def parse_action(content: str) -> Dict[str, Any]:
         fn_name = "tab_close"
         fn_kwargs = {}
     elif "stop" in action:
-        fn_name = "send_msg_to_user"
-        fn_kwargs = {"text": f'"{action.split("[")[1].split("]")[0]}"'}
+        return MessageAction(
+            content=action.split("[")[1].split("]")[0],
+            description=thought
+        )
     elif "click" in action:
         id = action.split("[")[1].split("]")[0]
         fn_name = "click"
@@ -128,7 +130,6 @@ def process_step(step):
             viewport_size=None,
         )
     )
-
     try:
         action = parse_action(action_msg["content"])
         processed_msgs.append(action)
@@ -154,16 +155,9 @@ def main():
             try:
                 goal_message = TextObservation(content=traj_goal, source="user")
                 traj_content = [goal_message] + traj_content
-                if traj_content[-1].function != "send_msg_to_user":
+                if not isinstance(traj_content[-1], MessageAction): 
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
-                finish_message = traj_content[-1].kwargs["text"].strip()
-                finish_action = MessageAction(
-                    content=f"<finish> {finish_message} </finish>",
-                    description=traj_content[-1].description,
-                )
-                # print(f"finish_action: {finish_action}", file=sys.stderr)
-                traj_content = traj_content[:-1] + [finish_action]
-
+                traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
                 traj = Trajectory(
                     id=str(traj_id), content=traj_content, details={"source": "nnetnav-wa"}
                 )
@@ -188,15 +182,11 @@ def main():
 
     goal_message = TextObservation(content=traj_goal, source="user")
     traj_content = [goal_message] + traj_content
-    if traj_content[-1].function != "send_msg_to_user":
+    if not isinstance(traj_content[-1], MessageAction): 
         print(f"trajectory did not complete: {traj_content[-1]}", file=sys.stderr)
         return
-    finish_message = traj_content[-1].kwargs["text"].strip()
-    finish_action = MessageAction(
-        content=f"<finish> {finish_message} </finish>",
-        description=traj_content[-1].description,
-    )
-    traj_content = traj_content[:-1] + [finish_action]
+                
+    traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
 
     traj = Trajectory(id=str(traj_id), content=traj_content, details={"source": "nnetnav-wa"})
     print(json.dumps(traj.model_dump()))
