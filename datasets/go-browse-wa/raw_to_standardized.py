@@ -2,6 +2,7 @@ import ast
 import inspect
 import json
 import os
+import random
 import sys
 from typing import Any, Dict, Literal, Tuple, Union, get_args, get_origin
 
@@ -17,6 +18,15 @@ from schema.trajectory import Trajectory
 SCREENSHOTS_DIR = "datasets/go-browse-wa/screenshots"
 GO_BROWSE_WA_VIEWPORT_SIZE = (1280, 1440)
 
+def send_msg_to_user(text: str) -> None:
+    """Send a message to the user.
+
+    Args:
+    ----
+        text (str): The message to send to the user.
+
+    """
+    pass
 
 def parse_action(action_str: str) -> Tuple[str, Dict[str, Any]]:
     tree = ast.parse(action_str)
@@ -25,8 +35,11 @@ def parse_action(action_str: str) -> Tuple[str, Dict[str, Any]]:
 
     call = tree.body[0].value
     func_name = call.func.id
-
-    func = getattr(api, func_name)
+    
+    if func_name == "send_msg_to_user":
+        func = send_msg_to_user
+    else:
+        func = getattr(api, func_name)
     sig = inspect.signature(func)
 
     def eval_ast_node(node: ast.AST) -> Any:
@@ -125,12 +138,17 @@ def process_step(step):
 
     action, thought = step["step_data"]["parsed_action"], step["step_data"]["thought"]
     func_name, kwargs = parse_action(action)
-
-    action_message = ApiAction(
-        function=func_name,
-        kwargs=kwargs,
-        description=thought,
-    )
+    if func_name == "send_msg_to_user":
+        action_message = MessageAction(
+            content=kwargs["text"],
+            description=thought.replace("send_msg_to_user", "finish")
+        )
+    else:
+        action_message = ApiAction(
+            function=func_name,
+            kwargs=kwargs,
+            description=thought,
+        )
 
     return [web_observation_message, action_message]
 
@@ -149,19 +167,15 @@ if __name__ == "__main__":
             try:
                 goal_message = TextObservation(content=traj_goal, source="user")
                 traj_content = [goal_message] + traj_content
-                priot_action = ""
+                priot_action = ''
                 for m in traj_content:
                     if isinstance(m, ApiAction):
-                        if priot_action == "noop" and m.function == "noop":
-                            raise ValueError("consecutive noop")
+                        if priot_action == 'noop' and m.function == 'noop': 
+                            raise ValueError(f"consecutive noop")
                         priot_action = m.function
-                if traj_content[-1].function != "send_msg_to_user":
+                if not isinstance(traj_content[-1], MessageAction): 
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
-                finish_action = MessageAction(
-                    content=f"<finish> {traj_content[-1].kwargs['text'].strip()} </finish>",
-                    description=traj_content[-1].description,
-                )
-                traj_content = traj_content[:-1] + [finish_action]
+                traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
                 traj = Trajectory(
                     id=str(traj_id),
                     content=traj_content,
@@ -193,19 +207,15 @@ if __name__ == "__main__":
     if traj_content:
         goal_message = TextObservation(content=traj_goal, source="user")
         traj_content = [goal_message] + traj_content
-        priot_action = ""
+        priot_action = ''
         for m in traj_content:
             if isinstance(m, ApiAction):
-                if priot_action == "noop" and m.function == "noop":
-                    raise ValueError("consecutive noop")
+                if priot_action == 'noop' and m.function == 'noop': 
+                    raise ValueError(f"consecutive noop")
                 priot_action = m.function
-        if traj_content[-1].function != "send_msg_to_user":
+        if not isinstance(traj_content[-1], MessageAction): 
             raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
-        finish_action = MessageAction(
-            content=f"<finish> {traj_content[-1].kwargs['text'].strip()} </finish>",
-            description=traj_content[-1].description,
-        )
-        traj_content = traj_content[:-1] + [finish_action]
+        traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
         traj = Trajectory(
             id=str(traj_id),
             content=traj_content,

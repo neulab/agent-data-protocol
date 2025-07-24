@@ -12,17 +12,6 @@ def noop(wait_ms: float = 1000) -> None:
     pass
 
 
-def send_msg_to_user(text: str) -> None:
-    """Send a message to the user.
-
-    Args:
-    ----
-        text (str): The message to send to the user.
-
-    """
-    pass
-
-
 def scroll(delta_x: float, delta_y: float) -> None:
     """Scroll horizontally and vertically.
 
