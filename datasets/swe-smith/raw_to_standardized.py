@@ -24,7 +24,7 @@ def convert_step(step) -> list:
             return [TextObservation(content=content, source="environment")]
         else:
             return [TextObservation(content=content, source="user")]
-    
+
     elif step.role == "tool":
         content = step.content
         # Handle observations that start with "OBSERVATION:"
@@ -192,11 +192,11 @@ if __name__ == "__main__":
                 assert isinstance(m, dict) and "role" in m and "content" in m
                 assert isinstance(m["role"], str) and isinstance(m["content"], str)
                 messages.append(m)
-            else: 
+            else:
                 print(m, file=sys.stderr)
                 assert False
         assert len(messages) == len(json.loads(raw_data["messages"]))
-                
+
         raw_data["messages"] = messages
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)

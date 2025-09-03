@@ -16,7 +16,6 @@ from scripts.api import get_api_tool_description, get_language_descriptions
 from scripts.html_to_axtree import HTMLToAXTree
 from scripts.system_prompt.system import get_system_message
 from scripts.system_prompt.user import get_web_user_message
-from scripts.trim_web_observation import parse_sft
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -391,7 +390,7 @@ def main():
         # else:
         #     print(f"Failed to process line: {line[:10]}...", file=sys.stderr)
     print(f"Number of non OH events: {NON_OH_EVENTS}", file=sys.stderr)
-    # if args.is_web: 
+    # if args.is_web:
     #     print(f"Trimming web observation", file=sys.stderr)
     #     parse_sft(f"datasets/{dataset}/full_sft.jsonl", f"datasets/{dataset}/full_sft.jsonl")
 

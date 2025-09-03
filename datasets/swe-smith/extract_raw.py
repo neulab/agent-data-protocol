@@ -8,7 +8,8 @@ ids = {}
 
 for split in ["tool", "xml", "ticks"]:
     for item in dataset[split]:
-        if not item["resolved"]: continue
+        if not item["resolved"]:
+            continue
         id = str(item["traj_id"])
         if id not in ids:
             ids[id] = 0
