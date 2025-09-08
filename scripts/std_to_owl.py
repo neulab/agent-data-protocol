@@ -76,6 +76,14 @@ logger = logging.getLogger(__name__)
 llm_client = None
 llm_model = ""
 
+# Global truncation statistics
+truncation_stats = {
+    'total_truncations': 0,
+    'truncated_chars': 0,
+    'longest_original': 0,
+    'longest_truncated': 0
+}
+
 # Template dictionaries for rule-based generation
 USER_TEMPLATES = {
     # alfworld functions
@@ -229,6 +237,63 @@ class ValidationError(STDToOWLError):
     pass
 
 
+def truncate_content(content: str, max_length: int = 5000) -> str:
+    """Truncate content if it exceeds max_length, preserving head and tail.
+    
+    Args:
+        content: The content to potentially truncate
+        max_length: Maximum allowed length
+        
+    Returns:
+        Original content if under limit, otherwise truncated with marker
+    """
+    original_length = len(content)
+    
+    # Update statistics
+    global truncation_stats
+    truncation_stats['longest_original'] = max(truncation_stats['longest_original'], original_length)
+    
+    if original_length <= max_length:
+        return content
+    
+    # Track truncation
+    truncation_stats['total_truncations'] += 1
+    truncated_chars = original_length - max_length
+    truncation_stats['truncated_chars'] += truncated_chars
+    truncation_stats['longest_truncated'] = max(truncation_stats['longest_truncated'], max_length)
+    
+    # Keep first and last portions
+    head_size = max_length // 2
+    tail_size = max_length - head_size - 50  # Reserve space for marker
+    
+    logger.debug(f"Truncating content from {original_length} to {max_length} characters ({truncated_chars} removed)")
+    
+    return (content[:head_size] + 
+            f"\n\n... [truncated {truncated_chars} characters] ...\n\n" +
+            content[-tail_size:])
+
+
+def check_trajectory_length(trajectory: Trajectory, max_tokens: int) -> Tuple[bool, int]:
+    """Check if trajectory is within acceptable length.
+    
+    Args:
+        trajectory: The trajectory to check
+        max_tokens: Maximum allowed total characters/tokens
+        
+    Returns:
+        Tuple of (is_within_limit, total_length)
+    """
+    total_length = 0
+    for event in trajectory.content:
+        if hasattr(event, 'content'):
+            total_length += len(str(event.content))
+        else:
+            # For events without content, estimate size
+            total_length += len(str(event))
+    
+    return total_length <= max_tokens, total_length
+
+
 def load_prompt_config(prompt_name: str) -> Dict[str, Any]:
     """Load LLM prompt configuration from JSON file.
     
@@ -271,11 +336,12 @@ def load_prompt_config(prompt_name: str) -> Dict[str, Any]:
         raise STDToOWLError(f"Error loading prompt config {prompt_name}: {e}")
 
 
-def identify_main_task_llm(trajectory: Trajectory) -> str:
+def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -> str:
     """Identify the main task from trajectory using LLM.
     
     Args:
         trajectory: The trajectory to analyze
+        max_obs_length: Maximum length for observation content
         
     Returns:
         Main task description string
@@ -292,10 +358,11 @@ def identify_main_task_llm(trajectory: Trajectory) -> str:
         interaction_lines = []
         for event in trajectory.content:
             if hasattr(event, 'content'):
-                content = str(event.content)
+                content = truncate_content(str(event.content), max_obs_length)
                 interaction_lines.append(f"- {event.class_}: {content}")
             else:
-                interaction_lines.append(f"- {event.class_}: {str(event)}")
+                event_str = truncate_content(str(event), max_obs_length)
+                interaction_lines.append(f"- {event.class_}: {event_str}")
         
         interaction_sequence = "\\n".join(interaction_lines)
         
@@ -350,12 +417,13 @@ def identify_main_task_llm(trajectory: Trajectory) -> str:
         raise LLMExtractionError(f"Failed to identify main task: {e}")
 
 
-def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]) -> str:
+def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet], max_obs_length: int = 5000) -> str:
     """Find task type using LLM.
     
     Args:
         action_set: The action set to analyze
         obs_set: Following observation set (if any)
+        max_obs_length: Maximum length for observation content
         
     Returns:
         Task type string (one of: code_execution, information_retrieval, other_tool, task_completion)
@@ -372,14 +440,15 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet])
         action_lines = []
         for action in action_set.actions:
             if hasattr(action, 'content'):
-                content = str(action.content)
+                content = truncate_content(str(action.content), max_obs_length)
                 action_lines.append(f"- {action.class_}: {content}")
             elif hasattr(action, 'function'):
                 function_name = getattr(action, 'function', 'unknown')
                 kwargs = getattr(action, 'kwargs', {})
                 action_lines.append(f"- {action.class_}: {function_name}({kwargs})")
             else:
-                action_lines.append(f"- {action.class_}: {str(action)}")
+                action_str = truncate_content(str(action), max_obs_length)
+                action_lines.append(f"- {action.class_}: {action_str}")
         
         actions_text = "\\n".join(action_lines)
         
@@ -433,13 +502,14 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet])
         raise LLMExtractionError(f"Failed to identify task type: {e}")
 
 
-def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet], context_obs: Optional[ObservationSet] = None) -> str:
+def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet], context_obs: Optional[ObservationSet] = None, max_obs_length: int = 5000) -> str:
     """Check if observations are caused by actions using LLM.
     
     Args:
         action_set: The action set
         obs_set: The observation set to check
         context_obs: Previous observation set for context
+        max_obs_length: Maximum length for observation content
         
     Returns:
         "YES" if causal, "NO" if not causal
@@ -460,7 +530,7 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
         if context_obs:
             context_lines = []
             for obs in context_obs.observations:
-                content = getattr(obs, 'content', str(obs))
+                content = truncate_content(str(getattr(obs, 'content', str(obs))), max_obs_length)
                 context_lines.append(f"- {obs.class_}: {content}")
             context_text = "\\n".join(context_lines)
         
@@ -468,19 +538,21 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
         action_lines = []
         for action in action_set.actions:
             if hasattr(action, 'content'):
-                action_lines.append(f"- {action.class_}: {action.content}")
+                content = truncate_content(str(action.content), max_obs_length)
+                action_lines.append(f"- {action.class_}: {content}")
             elif hasattr(action, 'function'):
                 function_name = getattr(action, 'function', 'unknown')
                 kwargs = getattr(action, 'kwargs', {})
                 action_lines.append(f"- {action.class_}: {function_name}({kwargs})")
             else:
-                action_lines.append(f"- {action.class_}: {str(action)}")
+                action_str = truncate_content(str(action), max_obs_length)
+                action_lines.append(f"- {action.class_}: {action_str}")
         actions_text = "\\n".join(action_lines)
         
         # Format observations
         obs_lines = []
         for obs in obs_set.observations:
-            content = str(getattr(obs, 'content', str(obs)))
+            content = truncate_content(str(getattr(obs, 'content', str(obs))), max_obs_length)
             obs_lines.append(f"- {obs.class_}: {content}")
         observations_text = "\\n".join(obs_lines)
         
@@ -610,12 +682,13 @@ def generate_instruction_template(action_set: ActionSet, related_obs: Optional[O
         raise STDToOWLError(f"Failed to generate template instruction: {e}")
 
 
-def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[ObservationSet]) -> str:
+def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[ObservationSet], max_obs_length: int = 5000) -> str:
     """Generate user instruction using LLM.
     
     Args:
         action_set: The action set
         related_obs: Related observations (if causal)
+        max_obs_length: Maximum length for observation content
         
     Returns:
         Formatted instruction string
@@ -632,13 +705,15 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
         action_lines = []
         for action in action_set.actions:
             if hasattr(action, 'content'):
-                action_lines.append(f"- {action.class_}: {action.content}")
+                content = truncate_content(str(action.content), max_obs_length)
+                action_lines.append(f"- {action.class_}: {content}")
             elif hasattr(action, 'function'):
                 function_name = getattr(action, 'function', 'unknown')
                 kwargs = getattr(action, 'kwargs', {})
                 action_lines.append(f"- {action.class_}: {function_name}({kwargs})")
             else:
-                action_lines.append(f"- {action.class_}: {str(action)}")
+                action_str = truncate_content(str(action), max_obs_length)
+                action_lines.append(f"- {action.class_}: {action_str}")
         actions_text = "\\n".join(action_lines)
         
         # Format observations if present
@@ -646,7 +721,7 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
         if related_obs:
             obs_lines = []
             for obs in related_obs.observations:
-                content = str(getattr(obs, 'content', str(obs)))
+                content = truncate_content(str(getattr(obs, 'content', str(obs))), max_obs_length)
                 obs_lines.append(f"- {obs.class_}: {content}")
             observations_text = "\\n".join(obs_lines)
         
@@ -700,12 +775,13 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
         raise LLMExtractionError(f"Failed to generate instruction: {e}")
 
 
-def generate_response_template(action_set: ActionSet, related_obs: Optional[ObservationSet] = None) -> str:
+def generate_response_template(action_set: ActionSet, related_obs: Optional[ObservationSet] = None, max_obs_length: int = 5000) -> str:
     """Generate assistant response using rule-based templates.
     
     Args:
         action_set: The action set
         related_obs: Related observations (if causal)
+        max_obs_length: Maximum length for observation content
         
     Returns:
         Assistant response string (without "Solution:" prefix or "Next request." suffix)
@@ -731,7 +807,7 @@ def generate_response_template(action_set: ActionSet, related_obs: Optional[Obse
             if related_obs and related_obs.observations:
                 obs_content = []
                 for obs in related_obs.observations:
-                    content = getattr(obs, 'content', str(obs)).rstrip('.')  # Remove trailing period
+                    content = truncate_content(str(getattr(obs, 'content', str(obs))), max_obs_length).rstrip('.')  # Remove trailing period
                     obs_content.append(content)
                 obs_text = "\n".join(obs_content)
                 return f"Code was executed and resulted in the following:\n{obs_text}"
@@ -744,7 +820,7 @@ def generate_response_template(action_set: ActionSet, related_obs: Optional[Obse
             if related_obs and related_obs.observations:
                 obs_content = []
                 for obs in related_obs.observations:
-                    content = getattr(obs, 'content', str(obs)).rstrip('.')  # Remove trailing period
+                    content = truncate_content(str(getattr(obs, 'content', str(obs))), max_obs_length).rstrip('.')  # Remove trailing period
                     obs_content.append(content)
                 obs_text = "\n".join(obs_content)
                 return f"{function_name} was executed and resulted in the following:\n{obs_text}"
@@ -758,12 +834,13 @@ def generate_response_template(action_set: ActionSet, related_obs: Optional[Obse
         raise STDToOWLError(f"Failed to generate template response: {e}")
 
 
-def generate_response_llm(action_set: ActionSet, related_obs: Optional[ObservationSet]) -> str:
+def generate_response_llm(action_set: ActionSet, related_obs: Optional[ObservationSet], max_obs_length: int = 5000) -> str:
     """Generate assistant response using LLM.
     
     Args:
         action_set: The action set
         related_obs: Related observations (if causal)
+        max_obs_length: Maximum length for observation content
         
     Returns:
         Assistant response string
@@ -780,13 +857,15 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
         action_lines = []
         for action in action_set.actions:
             if hasattr(action, 'content'):
-                action_lines.append(f"- {action.class_}: {action.content}")
+                content = truncate_content(str(action.content), max_obs_length)
+                action_lines.append(f"- {action.class_}: {content}")
             elif hasattr(action, 'function'):
                 function_name = getattr(action, 'function', 'unknown')
                 kwargs = getattr(action, 'kwargs', {})
                 action_lines.append(f"- {action.class_}: {function_name}({kwargs})")
             else:
-                action_lines.append(f"- {action.class_}: {str(action)}")
+                action_str = truncate_content(str(action), max_obs_length)
+                action_lines.append(f"- {action.class_}: {action_str}")
         actions_text = "\\n".join(action_lines)
         
         # Format observations if present
@@ -794,7 +873,7 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
         if related_obs:
             obs_lines = []
             for obs in related_obs.observations:
-                content = str(getattr(obs, 'content', str(obs)))
+                content = truncate_content(str(getattr(obs, 'content', str(obs))), max_obs_length)
                 obs_lines.append(f"- {obs.class_}: {content}")
             observations_text = "\\n".join(obs_lines)
         
@@ -1166,7 +1245,7 @@ def convert_action_set_to_tool_calls(action_set: ActionSet, task_type: str) -> L
 
 def process_action_set(action_set: ActionSet, obs_set: Optional[ObservationSet], 
                        main_task: str, context_obs: Optional[ObservationSet] = None, 
-                       use_templates: bool = True, use_llm_relevance: bool = False) -> ProcessingGroup:
+                       use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000) -> ProcessingGroup:
     """Process an action set through template-based or LLM pipeline.
     
     Args:
@@ -1175,6 +1254,7 @@ def process_action_set(action_set: ActionSet, obs_set: Optional[ObservationSet],
         main_task: The main task description
         context_obs: Previous observation set for context
         use_templates: Whether to use template-based generation (default True)
+        max_obs_length: Maximum length for observation content
         
     Returns:
         ProcessingGroup with all derived information
@@ -1186,7 +1266,7 @@ def process_action_set(action_set: ActionSet, obs_set: Optional[ObservationSet],
         # Template-based pipeline (new approach)
         # Step 1: Check causality 
         if use_llm_relevance and llm_client:
-            relevance = check_relevance_llm(action_set, obs_set, context_obs)
+            relevance = check_relevance_llm(action_set, obs_set, context_obs, max_obs_length)
         else:
             relevance = "YES"  # Default to assuming all observations are relevant
         related_obs = obs_set if relevance == "YES" else None
@@ -1199,25 +1279,25 @@ def process_action_set(action_set: ActionSet, obs_set: Optional[ObservationSet],
         tool_calls = convert_action_set_to_tool_calls(action_set, task_type)
         
         # Step 4: Generate assistant response using templates
-        assistant_response = generate_response_template(action_set, related_obs)
+        assistant_response = generate_response_template(action_set, related_obs, max_obs_length)
         
     else:
         # Original LLM-based pipeline
         # Step 1: Find task type
-        task_type = find_task_type_llm(action_set, obs_set)
+        task_type = find_task_type_llm(action_set, obs_set, max_obs_length)
         
         # Step 2: Check causality 
-        relevance = check_relevance_llm(action_set, obs_set, context_obs)
+        relevance = check_relevance_llm(action_set, obs_set, context_obs, max_obs_length)
         related_obs = obs_set if relevance == "YES" else None
         
         # Step 3: Generate instruction
-        instruction = generate_instruction_llm(action_set, related_obs)
+        instruction = generate_instruction_llm(action_set, related_obs, max_obs_length)
         
         # Step 4: Convert to tool calls
         tool_calls = convert_action_set_to_tool_calls(action_set, task_type)
         
         # Step 5: Generate assistant response
-        assistant_response = generate_response_llm(action_set, related_obs)
+        assistant_response = generate_response_llm(action_set, related_obs, max_obs_length)
     
     return ProcessingGroup(
         action_set=action_set,
@@ -1468,12 +1548,16 @@ def normalize_conversation_endings(user_conv: Dict, assistant_conv: Dict) -> Tup
     return normalized_user, normalized_assistant
 
 
-def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool = True, use_llm_relevance: bool = False) -> Tuple[Dict, Dict]:
+def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False) -> Tuple[Dict, Dict]:
     """Process trajectory using template-based or LLM pipeline.
     
     Args:
         trajectory: STD trajectory to convert
         use_templates: Whether to use template-based generation (default True)
+        use_llm_relevance: Whether to use LLM for relevance checking
+        max_obs_length: Maximum length for observation content
+        max_trajectory_tokens: Skip trajectories exceeding this length
+        skip_long: Skip long trajectories instead of processing with truncation
         
     Returns:
         Tuple of (user_conversation, assistant_conversation) dictionaries
@@ -1484,8 +1568,16 @@ def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool
     # Validate input
     validate_trajectory(trajectory)
     
+    # Check trajectory length
+    is_within_limit, total_length = check_trajectory_length(trajectory, max_trajectory_tokens)
+    if not is_within_limit:
+        if skip_long:
+            raise STDToOWLError(f"Trajectory {trajectory.id} exceeds length limit ({total_length} > {max_trajectory_tokens})")
+        else:
+            logger.warning(f"Trajectory {trajectory.id} exceeds length limit ({total_length} > {max_trajectory_tokens}), processing with truncation")
+    
     # Step 0: Identify main task
-    main_task = identify_main_task_llm(trajectory)
+    main_task = identify_main_task_llm(trajectory, max_obs_length)
     
     # Step 1: Group into alternating sets
     grouped_sets = group_events_alternating(trajectory.content)
@@ -1494,10 +1586,10 @@ def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool
     initial_context = ""
     if grouped_sets and isinstance(grouped_sets[0], ObservationSet):
         first_obs_set = grouped_sets[0]
-        # Format the observations as context
+        # Format the observations as context with truncation
         context_lines = []
         for obs in first_obs_set.observations:
-            content = getattr(obs, 'content', str(obs))
+            content = truncate_content(str(getattr(obs, 'content', str(obs))), max_obs_length)
             context_lines.append(f"- {obs.class_}: {content}")
         initial_context = "\n".join(context_lines)
         grouped_sets = grouped_sets[1:]  # Skip for processing
@@ -1516,7 +1608,7 @@ def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool
                 obs_set = grouped_sets[i + 1]
             
             # Process this action set
-            group = process_action_set(action_set, obs_set, main_task, context_obs, use_templates, use_llm_relevance)
+            group = process_action_set(action_set, obs_set, main_task, context_obs, use_templates, use_llm_relevance, max_obs_length)
             processing_groups.append(group)
             
             # Update context for next iteration
@@ -1586,12 +1678,17 @@ def validate_owl_output(user_conv: Dict, assistant_conv: Dict) -> bool:
     return True
 
 
-def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, use_llm_relevance: bool = False) -> bool:
+def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False) -> bool:
     """Process a single trajectory line.
     
     Args:
         line: JSON line containing STD trajectory
         output_dir: Directory to write output files
+        use_templates: Whether to use template-based generation
+        use_llm_relevance: Whether to use LLM for relevance checking
+        max_obs_length: Maximum length for observation content
+        max_trajectory_tokens: Skip trajectories exceeding this length
+        skip_long: Skip long trajectories instead of processing with truncation
         
     Returns:
         True if processing succeeded
@@ -1610,7 +1707,7 @@ def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, 
         # Convert to OWL format using pipeline
         pipeline_type = "template-based" if use_templates else "LLM-based"
         logger.debug(f"Converting trajectory {trajectory_id} to OWL format using {pipeline_type} pipeline")
-        user_conv, assistant_conv = process_trajectory_conversations(trajectory, use_templates, use_llm_relevance)
+        user_conv, assistant_conv = process_trajectory_conversations(trajectory, use_templates, use_llm_relevance, max_obs_length, max_trajectory_tokens, skip_long)
         
         logger.debug(f"User conversation has {len(user_conv['messages'])} messages")
         logger.debug(f"Assistant conversation has {len(assistant_conv['messages'])} messages")
@@ -1714,6 +1811,23 @@ Examples:
         action="store_true",
         help="Use LLM for relevance checking (default: assume all observations are relevant)"
     )
+    parser.add_argument(
+        "--max_obs_length",
+        type=int,
+        default=5000,
+        help="Maximum characters per observation before truncation (default: 5000)"
+    )
+    parser.add_argument(
+        "--max_trajectory_tokens",
+        type=int,
+        default=100000,
+        help="Skip trajectories exceeding this total character limit (default: 100000)"
+    )
+    parser.add_argument(
+        "--skip_long",
+        action="store_true",
+        help="Skip long trajectories instead of processing with truncation"
+    )
     
     args = parser.parse_args()
     
@@ -1809,7 +1923,7 @@ Examples:
                 break
                 
             try:
-                if process_trajectory(trajectory_json, output_dir, args.use_templates, args.use_llm_relevance):
+                if process_trajectory(trajectory_json, output_dir, args.use_templates, args.use_llm_relevance, args.max_obs_length, args.max_trajectory_tokens, args.skip_long):
                     successful += 1
                 else:
                     failed += 1
@@ -1833,6 +1947,18 @@ Examples:
     # Final statistics
     logger.info(f"Conversion complete: {processed} total, {successful} successful, {failed} failed")
     logger.info(f"Success rate: {successful/processed*100:.1f}%" if processed > 0 else "No trajectories processed")
+    
+    # Truncation statistics
+    global truncation_stats
+    if truncation_stats['total_truncations'] > 0:
+        logger.info(f"Truncation statistics:")
+        logger.info(f"  Total truncations: {truncation_stats['total_truncations']}")
+        logger.info(f"  Total characters truncated: {truncation_stats['truncated_chars']:,}")
+        logger.info(f"  Longest original content: {truncation_stats['longest_original']:,} characters")
+        logger.info(f"  Average truncation per event: {truncation_stats['truncated_chars'] / truncation_stats['total_truncations']:.0f} characters")
+    else:
+        logger.info("No content was truncated during processing")
+    
     logger.info(f"Log file saved to: {log_file}")
     
     if failed > 0:
@@ -1849,4 +1975,4 @@ if __name__ == "__main__":
 
 # python scripts/std_to_owl.py --input_file scripts/owl_example/test.json --output_dir ./test_owl_output --llm_api_key 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 --llm_model "qwen/qwen-2.5-72b-instruct" --use_templates
 
-# python scripts/std_to_owl.py --input_file datasets/SWE-smith_5kTrajectories/sample_std.json --output_dir ./swesmith_sample --llm_api_key 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 --llm_model "qwen/qwen-2.5-72b-instruct" --use_templates
+# python scripts/std_to_owl.py --input_file datasets/mind2web/sample_std.json --output_dir ./swesmith_sample --llm_api_key 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 --llm_model "qwen/qwen-2.5-72b-instruct" --use_templates
