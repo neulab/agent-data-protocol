@@ -10,4 +10,4 @@ class Message(BaseModel):
 
 class SchemaRaw(BaseModel):
     messages: List[Message]
-    instance_id: str
+    id: str

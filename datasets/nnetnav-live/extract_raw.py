@@ -5,7 +5,7 @@ from datasets import load_dataset
 
 
 def main():
-    ds = load_dataset("stanfordnlp/nnetnav-live", split="train", streaming=True)
+    ds = load_dataset("stanfordnlp/nnetnav-live", split="train")
 
     # Print each item as a separate line in jsonl format
     for item in ds:

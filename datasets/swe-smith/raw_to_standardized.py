@@ -25,6 +25,13 @@ def convert_step(step) -> list:
         else:
             return [TextObservation(content=content, source="user")]
 
+    elif step.role == "tool":
+        content = step.content
+        # Handle observations that start with "OBSERVATION:"
+        if content.startswith("OBSERVATION:"):
+            content = content[len("OBSERVATION:") :].strip()
+        return [TextObservation(content=content, source="environment")]
+
     elif step.role == "assistant":
         result = []
         content = step.content
@@ -163,12 +170,34 @@ def process_data(data):
         ]
     )
     content.extend(assistant_end_message)
-    return Trajectory(id=data.instance_id, content=content)
+    return Trajectory(id=data.id, content=content)
 
 
 if __name__ == "__main__":
     for line in sys.stdin:
         raw_data = json.loads(line)
+        messages = []
+        # print(raw_data["messages"], file=sys.stderr)
+        for m in json.loads(raw_data["messages"]):
+            if isinstance(m, dict) and "role" in m and "content" in m:
+                if isinstance(m["content"], list):
+                    assert len(m["content"]) == 1
+                    m["content"] = m["content"][0]
+                    assert "text" in m["content"]
+                    m["content"] = m["content"]["text"]
+                assert isinstance(m["role"], str) and isinstance(m["content"], str)
+                messages.append(m)
+            elif isinstance(m, list) and len(m) == 1:
+                m = m[0]
+                assert isinstance(m, dict) and "role" in m and "content" in m
+                assert isinstance(m["role"], str) and isinstance(m["content"], str)
+                messages.append(m)
+            else:
+                print(m, file=sys.stderr)
+                assert False
+        assert len(messages) == len(json.loads(raw_data["messages"]))
+
+        raw_data["messages"] = messages
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
         if standardized_data:
