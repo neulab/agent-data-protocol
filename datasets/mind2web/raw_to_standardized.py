@@ -2,6 +2,7 @@ import argparse
 import collections
 import json
 import os
+import random
 import re
 import sys
 
@@ -16,6 +17,7 @@ from webarena_utils import (
 )
 
 from schema.action.api import ApiAction
+from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
@@ -245,9 +247,9 @@ def convert_step(
 
     api_action = ApiAction(
         function=step.operation.op.lower(),
-        kwargs={"xpath": xpath, "value": step.operation.value}
+        kwargs={"xpath": f'"{xpath}"', "value": f'"{step.operation.value}"'}
         if step.operation.value
-        else {"xpath": xpath},
+        else {"xpath": f'"{xpath}"'},
         description=None,
     )
     return web_observation, api_action
@@ -314,7 +316,7 @@ if __name__ == "__main__":
             [
                 ApiAction(
                     function="goto",
-                    kwargs={"url": f"https://www.{data.website}.com"},
+                    kwargs={"url": f'"https://www.{data.website}.com"'},
                     description=None,
                 )
             ]
@@ -322,6 +324,73 @@ if __name__ == "__main__":
 
         for action in data.actions:
             content.extend(convert_step(action, info_mapping, data.annotation_id))
+
+        if isinstance(content[-1], ApiAction):
+            user_end_message = random.choice(
+                [
+                    [
+                        TextObservation(
+                            content="Congratulations! You have successfully solved the task.",
+                            source="user",
+                        ),
+                    ],
+                    [
+                        TextObservation(
+                            content="Your solution has been verified as correct. ", source="user"
+                        ),
+                    ],
+                    [
+                        TextObservation(
+                            content="Well done on successfully completing the task!", source="user"
+                        ),
+                    ],
+                    [
+                        TextObservation(
+                            content="Your implementation satisfies the task requirements.",
+                            source="user",
+                        ),
+                    ],
+                    [
+                        TextObservation(content="Task completed successfully.", source="user"),
+                    ],
+                ]
+            )
+            content.extend(user_end_message)
+            assistant_end_message = random.choice(
+                [
+                    [
+                        MessageAction(
+                            content="<finish> I have successfully completed the task. </finish>",
+                            description="",
+                        ),
+                    ],
+                    [
+                        MessageAction(
+                            content="<finish> I did it! The task is now complete. </finish>",
+                            description="",
+                        ),
+                    ],
+                    [
+                        MessageAction(
+                            content="<finish> The objective has been achieved with no outstanding issues. </finish>",
+                            description="",
+                        ),
+                    ],
+                    [
+                        MessageAction(
+                            content="<finish> I have fulfilled all the requirements of the task. </finish>",
+                            description="",
+                        ),
+                    ],
+                    [
+                        MessageAction(
+                            content="<finish> I've wrapped up the task successfully. </finish>",
+                            description="",
+                        ),
+                    ],
+                ]
+            )
+            content.extend(assistant_end_message)
 
         standardized_data = Trajectory(
             id=data.annotation_id,

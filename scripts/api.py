@@ -40,6 +40,12 @@ def check_exclude_tools(name: str, required: list, optional: list, exclude_apis:
     if ("id" in required or "id" in optional) and "bid" in exclude_api_required:
         required.remove("id")
         required.append("bid")
+    elif ("xpath" in required or "xpath" in optional) and "bid" in exclude_api_required:
+        required.remove("xpath")
+        required.append("bid")
+    elif ("element_id" in required or "element_id" in optional) and "bid" in exclude_api_required:
+        required.remove("element_id")
+        required.append("bid")
     if not all(api in exclude_api_required + exclude_api_optional for api in required):
         print(f"{name} is included")
         return False
@@ -68,7 +74,10 @@ def get_api_tool_description(dataset, exclude_apis={}, env="execute_ipython_cell
             optional = []
             for arg_name, param in sig.parameters.items():
                 if param.default is inspect.Parameter.empty:
-                    required.append(arg_name)
+                    if arg_name == "xpath" or arg_name == "element_id":
+                        arg_name = "bid"
+                    if arg_name not in required:
+                        required.append(arg_name)
                 else:
                     optional.append(arg_name)
             if name in openhands_default_tools and check_exclude_openhands_default_tools(
@@ -99,6 +108,9 @@ def get_api_tool_description(dataset, exclude_apis={}, env="execute_ipython_cell
             f"The toolkit for {env} {also}contains the following functions. ",
         ]
         API_TOOL_DESCRIPTION = random.choice(prefixes) + "\n\n" + API_TOOL_DESCRIPTION
+        API_TOOL_DESCRIPTION = API_TOOL_DESCRIPTION.replace("xpath", "bid").replace(
+            "element_id", "bid"
+        )
         return API_TOOL_DESCRIPTION, sigs
     else:
         return "", {}

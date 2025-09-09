@@ -4,6 +4,7 @@ import sys
 from typing import Any, Dict
 
 from schema.action.api import ApiAction
+from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
@@ -73,8 +74,7 @@ def parse_action(content: str) -> Dict[str, Any]:
         fn_name = "tab_close"
         fn_kwargs = {}
     elif "stop" in action:
-        fn_name = "send_msg_to_user"
-        fn_kwargs = {"text": f'"{action.split("[")[1].split("]")[0]}"'}
+        return MessageAction(content=action.split("[")[1].split("]")[0], description=thought)
     elif "click" in action:
         id = action.split("[")[1].split("]")[0]
         fn_name = "click"
@@ -140,21 +140,53 @@ def process_step(step):
 
 
 def main():
+    traj_id = -1
+    traj_content = []
+    traj_goal = None
+
     for line in sys.stdin:
         step = json.loads(line)
-        traj_id = step["id"]
-        traj_content = []
-        traj_goal = None
 
-        traj_goal, step_msgs = process_step(step)
-        if not traj_goal or not step_msgs:
+        curr_traj_id = step["id"]
+        if traj_id != -1 and traj_id != curr_traj_id:
+            try:
+                goal_message = TextObservation(content=traj_goal, source="user")
+                traj_content = [goal_message] + traj_content
+                if not isinstance(traj_content[-1], MessageAction):
+                    raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
+                traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
+                traj = Trajectory(
+                    id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"}
+                )
+                print(json.dumps(traj.model_dump()))
+                traj_content = []
+                traj_goal = None
+            except Exception as e:
+                print(f"Error processing step {step['id']}: {e}", file=sys.stderr)
+                traj_content = []
+                traj_goal = None
+
+        try:
+            traj_goal, step_msgs = process_step(step)
+            traj_content.extend(step_msgs)
+            traj_id = curr_traj_id
+        except Exception as e:
+            print(f"Error processing step {step['id']}: {e}", file=sys.stderr)
+            traj_id = -1
+            traj_content = []
+            traj_goal = None
             continue
-        traj_content.extend(step_msgs)
-        goal_message = TextObservation(content=traj_goal, source="user")
-        traj_content = [goal_message] + traj_content
 
-        traj = Trajectory(id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"})
-        print(json.dumps(traj.model_dump()))
+    goal_message = TextObservation(content=traj_goal, source="user")
+    traj_content = [goal_message] + traj_content
+    if not isinstance(traj_content[-1], MessageAction):
+        print(f"trajectory did not complete: {traj_content[-1]}", file=sys.stderr)
+        return
+
+    traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
+
+    traj = Trajectory(id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"})
+    print(json.dumps(traj.model_dump()))
 
 
 if __name__ == "__main__":

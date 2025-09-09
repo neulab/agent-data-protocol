@@ -45,13 +45,15 @@ class HTMLToAXTree:
         html_string = flatten_dom_to_str(self.last_obs["dom_object"])
         tree = etree.HTML(html_string)
         try:
+            if len(x_path) >= 2 and x_path[0] == x_path[-1] == '"':
+                x_path = x_path[1:-1]
             element = tree.xpath(x_path)
             # print(x_path)
             # print(etree.tostring(element[0], pretty_print=True).decode("utf-8"))
             browsergym_id = element[0].get("bid")
             return browsergym_id
         except Exception as e:
-            print("Error:", e, file=sys.stderr)
+            print("get_bid error:", e, file=sys.stderr)
             self.errors.append(
                 {
                     "id": id,
@@ -65,7 +67,7 @@ class HTMLToAXTree:
                 f"./datasets/{self.dataset}/{self.dataset}_{chunk}_bid_errors.json", "w"
             ) as f:
                 json.dump(self.errors, f, indent=4)
-            return "Error generating browsergym_id"
+            return None
 
 
 if __name__ == "__main__":

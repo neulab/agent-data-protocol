@@ -12,17 +12,6 @@ def noop(wait_ms: float = 1000) -> None:
     pass
 
 
-def send_msg_to_user(text: str) -> None:
-    """Send a message to the user.
-
-    Args:
-    ----
-        text (str): The message to send to the user.
-
-    """
-    pass
-
-
 def scroll(delta_x: float, delta_y: float) -> None:
     """Scroll horizontally and vertically.
 
@@ -165,17 +154,6 @@ def upload_file(bid: str, file: Union[str, List[str]]) -> None:
     ----
         bid (str): The browser ID of the file input element.
         file (Union[str, List[str]]): Path(s) to the file(s) to upload.
-
-    """
-    pass
-
-
-def report_infeasible(reason: str) -> None:
-    """Notifies the user that their instructions are infeasible.
-
-    Args:
-    ----
-        reason (str): The reason why the instructions cannot be followed.
 
     """
     pass
