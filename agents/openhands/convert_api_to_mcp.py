@@ -1,16 +1,15 @@
 import importlib.util
 import inspect
-import textwrap
-import json
 import os
+import textwrap
 from typing import (
-    get_type_hints,
-    get_origin,
-    get_args,
+    Any,
+    Literal,
     Optional,
     Union,
-    Literal,
-    Any,
+    get_args,
+    get_origin,
+    get_type_hints,
 )
 
 
@@ -176,13 +175,12 @@ def get_api_tools(dataset) -> dict:
         for name, func in functions:
             api_tools[name] = tool_from_function(func)
         return api_tools
-    else: 
+    else:
         return {}
 
 
 def language_tool_placeholder(code: str):
-    """
-    """
+    """ """
     pass
 
 
@@ -190,9 +188,10 @@ def get_language_tools(languages) -> dict:
     language_tools = {}
     for lan in languages:
         name_override = f"execute_{lan}"
-        description_override = (
-            f"Execute {lan} code.\n"
-            f"Ensure your {lan} is valid {lan} code."
+        description_override = f"Execute {lan} code.\nEnsure your {lan} is valid {lan} code."
+        language_tools[name_override] = tool_from_function(
+            language_tool_placeholder,
+            name_override=name_override,
+            description_override=description_override,
         )
-        language_tools[name_override] = tool_from_function(language_tool_placeholder, name_override=name_override, description_override=description_override)
     return language_tools

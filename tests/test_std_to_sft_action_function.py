@@ -5,7 +5,7 @@ import re
 def test_action_function_mapping():
     """Test that the action_function dictionary has correct mappings."""
     # Read the std_to_sft.py file directly
-    with open(os.path.join("scripts", "std_to_sft.py"), "r") as f:
+    with open(os.path.join("agents", "openhands", "std_to_sft.py"), "r") as f:
         content = f.read()
 
     # Use regex to find the action_function dictionary definition

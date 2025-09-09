@@ -5,7 +5,7 @@ base_template = """You are a helpful assistant that can interact with a computer
 
 You have access to the following functions:
 
----- BEGIN FUNCTION #1: 
+---- BEGIN FUNCTION #1:
 bash ----
 Description: Execute a bash command in the terminal.
 

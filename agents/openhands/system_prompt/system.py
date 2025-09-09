@@ -11,7 +11,6 @@ from agents.openhands.system_prompt.tools import (
     create_str_replace_editor_tool,
 )
 
-
 _script_dir = os.path.dirname(os.path.realpath(__file__))
 prompt_file = os.path.join(_script_dir, "system_prefix.txt")
 
@@ -72,8 +71,10 @@ def get_tools(
 def convert_tools_to_description(tools: list[dict]) -> str:
     ret = ""
     for i, tool in enumerate(tools):
-        try:  assert tool["type"] == "function"
-        except: raise ValueError(f"tool ({type(tool)}): {tool}")
+        try:
+            assert tool["type"] == "function"
+        except Exception:
+            raise ValueError(f"tool ({type(tool)}): {tool}")
         fn = tool["function"]
         if i > 0:
             ret += "\n"
@@ -114,7 +115,7 @@ def get_system_message(
     codeact_enable_browsing: bool = True,
     codeact_enable_llm_editor: bool = False,
     codeact_enable_jupyter: bool = True,
-    additional_tools = [],
+    additional_tools=[],
 ):
     with open(prompt_file, "r") as f:
         system_prompt = f.read()

@@ -5,6 +5,11 @@ import re
 import sys
 import traceback
 
+from agents.openhands.api import get_api_tool_description, get_language_descriptions
+from agents.openhands.html_to_axtree import HTMLToAXTree
+from agents.openhands.system_prompt.system import get_system_message
+from agents.openhands.system_prompt.user import get_web_user_message
+
 # Removed unused imports
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
@@ -12,11 +17,6 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-from agents.openhands.api import get_api_tool_description, get_language_descriptions
-from agents.openhands.html_to_axtree import HTMLToAXTree
-from agents.openhands.system_prompt.system import get_system_message
-from agents.openhands.system_prompt.user import get_web_user_message
-from agents.openhands.trim_web_observation import parse_sft
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -391,7 +391,7 @@ def main():
         # else:
         #     print(f"Failed to process line: {line[:10]}...", file=sys.stderr)
     print(f"Number of non OH events: {NON_OH_EVENTS}", file=sys.stderr)
-    # if args.is_web: 
+    # if args.is_web:
     #     print(f"Trimming web observation", file=sys.stderr)
     #     parse_sft(f"datasets/{dataset}/full_sft.jsonl", f"datasets/{dataset}/full_sft.jsonl")
 

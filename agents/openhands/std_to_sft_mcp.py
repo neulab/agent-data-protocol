@@ -2,23 +2,24 @@ import argparse
 import json
 import os
 import random
-
 import re
 import sys
 import traceback
 
+from agents.openhands.api import get_api_tool_description
+from agents.openhands.convert_api_to_mcp import (
+    get_api_tools,
+    get_language_tools,
+)
+from agents.openhands.html_to_axtree import HTMLToAXTree
+from agents.openhands.system_prompt.system import get_system_message
+from agents.openhands.system_prompt.user import get_web_user_message
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-from agents.openhands.api import get_api_tool_description, get_language_descriptions
-from agents.openhands.convert_api_to_mcp import tool_from_function, get_api_tools, get_language_tools
-from agents.openhands.html_to_axtree import HTMLToAXTree
-from agents.openhands.system_prompt.system import get_system_message
-from agents.openhands.system_prompt.user import get_web_user_message
-from agents.openhands.trim_web_observation import parse_sft
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -177,7 +178,7 @@ def standardized_event_to_openhands_message(
         # for tool calls that are not browser based since there is no browsergym_id
         # and tool calls that are specified as non-web
         # these should all be dataset specific apis
-        
+
         # tools in MCP
         if (not browsergym_id or not is_web) and function_name in mcp_tools:
             assert function_name in api_sigs
@@ -186,11 +187,9 @@ def standardized_event_to_openhands_message(
             ):
                 raise ValueError(f"Function call with wrong argument: {event}")
             # api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
-            function_call = format_function(
-                function_name, {k: arguments[k] for k in arguments}
-            )
+            function_call = format_function(function_name, {k: arguments[k] for k in arguments})
             return {"from": "function_call", "value": f"{thought}{function_call}"}
-        
+
         # tools in normal api action
         if (not browsergym_id or not is_web) and function_name in api_sigs:
             if not api_env:
@@ -312,14 +311,22 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
     languages = []
     if is_web or len(api_tools) > 12 or random.choice([True, False]):
         mcp_tools = {}
-    else: 
+    else:
         mcp_tools = api_tools
         api_tool_description = ""
     for i in range(len(events)):
         event = events[i]
         try:
             message = standardized_event_to_openhands_message(
-                id, event, previous_web_actions, is_web, chunk, api_env, api_sigs, languages, mcp_tools
+                id,
+                event,
+                previous_web_actions,
+                is_web,
+                chunk,
+                api_env,
+                api_sigs,
+                languages,
+                mcp_tools,
             )
             if not message:
                 return None
@@ -350,16 +357,19 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
             traceback.print_exc()
             print(e)
             return None
-    
+
     # Handle non python / bash / browser based coding languages
     if languages:
         language_tools = get_language_tools(languages)
-    else: 
+    else:
         language_tools = {}
     return {
         "id": trajectory.id,
         "conversations": conversations,
-        "system": get_system_message(additional_tools=[tool for tool in mcp_tools.values()] + [tool for tool in language_tools.values()]),
+        "system": get_system_message(
+            additional_tools=[tool for tool in mcp_tools.values()]
+            + [tool for tool in language_tools.values()]
+        ),
     }
 
 
@@ -385,7 +395,9 @@ def main():
     args.is_web = args.is_web == "yes"
     exclude_apis = browser_default_apis if args.is_web else {}
     api_tools = get_api_tools(dataset)
-    api_tools = {name: tool for name, tool in api_tools.items() if name not in openhands_default_tools}
+    api_tools = {
+        name: tool for name, tool in api_tools.items() if name not in openhands_default_tools
+    }
     api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, args.api_env)
     count = 0
     from datetime import datetime
@@ -403,7 +415,7 @@ def main():
             api_env=args.api_env,
             api_tool_description=api_tool_description,
             api_sigs=api_sigs,
-            api_tools=api_tools
+            api_tools=api_tools,
         )
         if output_line:
             # print("Successfully processed line", file=sys.stderr)
@@ -418,7 +430,7 @@ def main():
         # else:
         #     print(f"Failed to process line: {line[:10]}...", file=sys.stderr)
     print(f"Number of non OH events: {NON_OH_EVENTS}", file=sys.stderr)
-    # if args.is_web: 
+    # if args.is_web:
     #     print(f"Trimming web observation", file=sys.stderr)
     #     parse_sft(f"datasets/{dataset}/full_sft.jsonl", f"datasets/{dataset}/full_sft.jsonl")
 

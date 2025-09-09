@@ -1,7 +1,7 @@
 def test_main_function_exists():
     """Test that the main function exists in the std_to_sft module."""
     # Read the file content directly
-    with open("scripts/std_to_sft.py", "r") as f:
+    with open("agents/openhands/std_to_sft.py", "r") as f:
         content = f.read()
 
     # Check if main function exists
@@ -11,7 +11,7 @@ def test_main_function_exists():
 def test_if_main_block_exists():
     """Test that the if __name__ == '__main__' block exists in the std_to_sft module."""
     # Read the file content
-    with open("scripts/std_to_sft.py", "r") as f:
+    with open("agents/openhands/std_to_sft.py", "r") as f:
         content = f.read()
 
     # Check if the if __name__ == '__main__' block exists

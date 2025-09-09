@@ -1,13 +1,13 @@
-import re
-import json
 import copy
-import os
+import json
+import re
+
 
 def total_length(conv: list[dict]) -> int:
     return sum(len(msg["value"]) for msg in conv)
-    
-def trim(conversation: list[dict], max_chars: int = 70000) -> list[dict]:
 
+
+def trim(conversation: list[dict], max_chars: int = 70000) -> list[dict]:
     def is_action(msg: dict) -> bool:
         return msg["from"] in {"gpt", "function_call"}
 
@@ -28,11 +28,17 @@ def trim(conversation: list[dict], max_chars: int = 70000) -> list[dict]:
 
     def trim_axtree(value: str, overflow: int) -> str:
         trim_notice = "\nTrimming prompt to meet context window limitations\n"
-        match = re.search(r"(BEGIN accessibility tree ==============)(.*?)(END accessibility tree ==============)", value, flags=re.DOTALL)
+        match = re.search(
+            r"(BEGIN accessibility tree ==============)(.*?)(END accessibility tree ==============)",
+            value,
+            flags=re.DOTALL,
+        )
         if not match:
             return value  # Nothing to trim
         pre, tree_content, post = match.groups()
-        trimmed_tree = tree_content[: max(0, len(tree_content) - overflow - len(trim_notice))] + trim_notice
+        trimmed_tree = (
+            tree_content[: max(0, len(tree_content) - overflow - len(trim_notice))] + trim_notice
+        )
         return value.replace(tree_content, trimmed_tree)
 
     # No trimming needed
@@ -59,38 +65,42 @@ def trim(conversation: list[dict], max_chars: int = 70000) -> list[dict]:
     for i in range(len(steps)):
         if total_length(steps) <= max_chars:
             return steps
-        elif not i == len(steps)-2 and is_observation(steps[i]):
-            steps[i]['value'] = trim_axtree(steps[i]['value'], 999999999)
-        elif i == len(steps)-2:
-            steps[i]['value'] = trim_axtree(steps[i]['value'], total_length(steps) - max_chars)
+        elif not i == len(steps) - 2 and is_observation(steps[i]):
+            steps[i]["value"] = trim_axtree(steps[i]["value"], 999999999)
+        elif i == len(steps) - 2:
+            steps[i]["value"] = trim_axtree(steps[i]["value"], total_length(steps) - max_chars)
 
     return steps
+
 
 def parse_line(line):
     out = []
     for i in range(len(line["conversations"]) // 2):
-        l = copy.deepcopy(line)
-        c = l["conversations"][:((i+1)*2)]
-        l["id"] = l["id"] + f"-{i}"
-        l["conversations"] = trim(c)
-        out.append(l)
+        line_copy = copy.deepcopy(line)
+        c = line_copy["conversations"][: ((i + 1) * 2)]
+        line_copy["id"] = line_copy["id"] + f"-{i}"
+        line_copy["conversations"] = trim(c)
+        out.append(line_copy)
     # print(len(f"{line}"), len(f"{out[-1]}"), f'{[total_length(l["conversations"]) + len(l["system"]) for l in out]}')
     return out
 
+
 def parse_sft(sft_file, out_file):
-    with open(sft_file) as f: f = f.readlines()
+    with open(sft_file) as f:
+        f = f.readlines()
     out = []
     for line in f:
         line = json.loads(line)
         out += parse_line(line)
-    with open(out_file, 'w') as f: 
+    with open(out_file, "w") as f:
         f.write("\n".join([json.dumps(line) for line in out]))
+
 
 # def parse_all():
 #     home_dir = f'/project/flame/yueqis/agent-data-protocol/datasets/'
 #     dirs = [home_dir + d for d in os.listdir(home_dir)]
 #     for dir in dirs:
-        
+
 #         sft = os.path.join(dir, "full_sft.jsonl")
 #         if not os.path.exists(sft): continue
 #         out = sft.replace("full_sft", "trim_sft")

@@ -1,10 +1,9 @@
-import importlib.util
-import inspect
 import json
 import os
 import re
 import sys
-from typing import Any, Dict, List
+import traceback
+
 from agents.sweagent.api import get_api_tool_description
 from agents.sweagent.system_message import base_template
 from schema.action.api import ApiAction
@@ -13,7 +12,6 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-import traceback
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -76,7 +74,6 @@ def standardized_event_to_swe_message(
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
     api_sigs=None,
 ) -> dict:
-
     if isinstance(event, ApiAction):
         thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
         function_name = event.function
@@ -97,9 +94,7 @@ def standardized_event_to_swe_message(
             ):
                 raise ValueError(f"Function call with wrong argument: {event}")
             api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
-            function_call = format_function(
-                "bash", {"command": api_action}
-            )
+            function_call = format_function("bash", {"command": api_action})
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         raise ValueError(f"Undefined API: {event}")
@@ -111,7 +106,8 @@ def standardized_event_to_swe_message(
             if event.language == "python" or event.language == "python3":
                 # python -c $'import math\nprint(math.sqrt(2))\nfor i in range(3):\n    print(i)'
                 code_content = f"{event.language} -c $'{code_content}'"
-            else: return None
+            else:
+                return None
         code_action = format_function("bash", {"command": code_content})
         return {"from": "function_call", "value": f"{thought}{code_action}"}
 
@@ -122,9 +118,7 @@ def standardized_event_to_swe_message(
             match = re.search(r"<finish>(.*?)</finish>", event.content, re.DOTALL)
             content = match.group(1).strip()
             thought += f"\n{content}"
-            submit_function_call = format_function(
-                "submit", {}
-            )
+            submit_function_call = format_function("submit", {})
             return {"from": "function_call", "value": f"{thought.strip()}{submit_function_call}"}
         return {"from": "gpt", "value": f"{thought}{event.content}"}
 
@@ -156,9 +150,7 @@ def process_row(line, api_tool_description, api_sigs):
     for i in range(len(events)):
         event = events[i]
         try:
-            message = standardized_event_to_swe_message(
-                id, event, api_sigs
-            )
+            message = standardized_event_to_swe_message(id, event, api_sigs)
             if not message:
                 return None
             if len(conversations) == 0:
@@ -175,8 +167,10 @@ def process_row(line, api_tool_description, api_sigs):
             print(e)
             return None
     for message in conversations:
-        if message["from"] == "function_call": message["from"] = "gpt"
-        elif message["from"] == "observation":  message["from"] = "human"
+        if message["from"] == "function_call":
+            message["from"] = "gpt"
+        elif message["from"] == "observation":
+            message["from"] = "human"
     return {
         "id": trajectory.id,
         "conversations": conversations,
@@ -202,7 +196,9 @@ def main():
                     print(e)
                     continue
         count += 1
-        if count % 10000 == 0: print(count, file=sys.stderr)
+        if count % 10000 == 0:
+            print(count, file=sys.stderr)
+
 
 if __name__ == "__main__":
     main()

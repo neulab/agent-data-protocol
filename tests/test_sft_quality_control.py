@@ -4,7 +4,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from scripts.sft_quality_control import (
+from agents.openhands.sft_quality_control import (
     analyze_dataset,
     create_function_names_chart,
     create_function_thought_chart,
@@ -112,7 +112,7 @@ def test_chart_creation(chart_function, tmp_path, monkeypatch):
 
 def test_function_pattern_matching():
     """Test the regular expression patterns for function calls."""
-    from scripts.sft_quality_control import FUNCTION_PATTERN, THOUGHT_PATTERN
+    from agents.openhands.sft_quality_control import FUNCTION_PATTERN, THOUGHT_PATTERN
 
     # Test function pattern with content
     content = "<function=search>query=test</function>"
