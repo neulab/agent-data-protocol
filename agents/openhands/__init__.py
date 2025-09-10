@@ -1,1 +1,0 @@
-# OpenHands agent conversion scripts
