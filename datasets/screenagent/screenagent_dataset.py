@@ -3,12 +3,12 @@ import json
 import os
 from datetime import datetime
 
+from datasets.features import Features, Value
+from datasets.features import Image as hf_Image
 from PIL import Image
 
 import datasets
 from datasets import DatasetInfo, GeneratorBasedBuilder, Sequence
-from datasets.features import Features, Value
-from datasets.features import Image as hf_Image
 
 _HOME_PAGE = "https://github.com/niuzaisheng/ScreenAgent"
 _CITATION = """@article{niu2024screenagent,
