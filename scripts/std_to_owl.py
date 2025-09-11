@@ -17,11 +17,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Optional, Any
 try:
-    from openai import OpenAI
-    HAS_OPENAI = True
+    import litellm
+    HAS_LITELLM = True
 except ImportError:
-    HAS_OPENAI = False
-    logging.warning("OpenAI library not found.")
+    HAS_LITELLM = False
+    logging.warning("LiteLLM library not found.")
+
+try:
+    from dotenv import load_dotenv
+    HAS_DOTENV = True
+except ImportError:
+    HAS_DOTENV = False
 
 # Add project root to Python path for schema imports
 script_dir = Path(__file__).parent
@@ -72,8 +78,7 @@ class ProcessingGroup:
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Global LLM client and model
-llm_client = None
+# Global LLM model (LiteLLM handles client internally)
 llm_model = ""
 
 # Global truncation statistics
@@ -171,50 +176,91 @@ USER_TEMPLATES = {
 }
 
 
-def initialize_llm_client(api_key: str = None, base_url: str = None, model: str = llm_model) -> Optional[OpenAI]:
-    """Initialize OpenAI-compatible LLM client.
+def load_dotenv_config(custom_env_path: Optional[str] = None) -> bool:
+    """Load environment variables from .env file.
     
     Args:
-        api_key: API key for the service
-        base_url: Base URL for OpenAI-compatible endpoint
-        model: Model name to use
+        custom_env_path: Custom path to .env file (optional)
         
     Returns:
-        Initialized OpenAI client or None if not available
+        True if .env file was loaded, False otherwise
     """
-    global llm_client, llm_model
+    if not HAS_DOTENV:
+        logger.debug("python-dotenv not available, skipping .env file loading")
+        return False
+    
+    # Determine .env file paths to try
+    env_paths = []
+    
+    if custom_env_path:
+        # Use custom path if provided
+        env_paths.append(Path(custom_env_path))
+    else:
+        # Try standard locations
+        env_paths.extend([
+            script_dir / ".env",      # scripts/.env
+            project_root / ".env"     # project root .env
+        ])
+    
+    for env_path in env_paths:
+        if env_path.exists():
+            try:
+                load_dotenv(env_path, override=False)  # Don't override existing env vars
+                logger.info(f"Loaded .env file from: {env_path}")
+                return True
+            except Exception as e:
+                logger.warning(f"Failed to load .env file {env_path}: {e}")
+                continue
+    
+    logger.debug("No .env file found or loaded")
+    return False
+
+
+def initialize_llm_client(model: str = llm_model, env_file: Optional[str] = None) -> bool:
+    """Initialize LiteLLM for proxy usage.
+    
+    Args:
+        model: Model name to use
+        env_file: Custom .env file path (optional)
+        
+    Returns:
+        True if initialization succeeded, False otherwise
+    """
+    global llm_model
     
     # Store the model name globally
     llm_model = model
     
-    if not HAS_OPENAI:
-        logger.warning("OpenAI library not available for LLM integration")
-        return None
+    if not HAS_LITELLM:
+        logger.error("LiteLLM library not available. Install with: pip install litellm")
+        return False
         
     try:
-        # Default to OpenRouter if no base_url provided
-        if not base_url:
-            base_url = "https://openrouter.ai/api/v1"
-            
-        # Get API key from environment if not provided
-        if not api_key:
-            api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")
-            
-        if not api_key:
-            logger.warning("No API key found. Set OPENAI_API_KEY or OPENROUTER_API_KEY environment variable")
-            return None
+        # Load .env file if available
+        load_dotenv_config(env_file)
         
-        llm_client = OpenAI(
-            api_key=api_key,
-            base_url=base_url
-        )
+        # Get proxy credentials from environment (now includes .env variables)
+        proxy_key = os.getenv("LITELLM_PROXY_API_KEY")
+        proxy_base = os.getenv("LITELLM_PROXY_API_BASE")
         
-        logger.info(f"Initialized LLM client with base_url: {base_url}, model: {model}")
-        return llm_client
+        if not proxy_key:
+            logger.error("LITELLM_PROXY_API_KEY environment variable is required")
+            return False
+            
+        if not proxy_base:
+            logger.error("LITELLM_PROXY_API_BASE environment variable is required")
+            return False
+        
+        # Configure LiteLLM global settings
+        litellm.api_key = proxy_key
+        litellm.api_base = proxy_base
+        
+        logger.info(f"Initialized LiteLLM with proxy_base: {proxy_base}, model: {model}")
+        return True
         
     except Exception as e:
-        logger.error(f"Failed to initialize LLM client: {e}")
-        return None
+        logger.error(f"Failed to initialize LiteLLM: {e}")
+        return False
 
 
 class STDToOWLError(Exception):
@@ -349,7 +395,7 @@ def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -
     Raises:
         LLMExtractionError: If task identification fails
     """
-    global llm_client, llm_model, _last_api_call_ts
+    global llm_model, _last_api_call_ts
     
     try:
         config = load_prompt_config("0_identify_main_task")
@@ -366,7 +412,7 @@ def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -
         
         interaction_sequence = "\\n".join(interaction_lines)
         
-        if llm_client:
+        if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
                 logger.info(f"Step 0: Starting main task identification with model {model_to_use}")
@@ -388,7 +434,7 @@ def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -
                 params = config.get("parameters", {})
                 logger.info(f"Step 0: Making LLM request with max_tokens={params.get('max_tokens', 500)}")
                 
-                response = llm_client.chat.completions.create(
+                response = litellm.completion(
                     model=model_to_use,
                     messages=messages,
                     max_tokens=params.get("max_tokens", 500),
@@ -411,7 +457,7 @@ def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -
             except Exception as e:
                 raise LLMExtractionError(f"LLM task identification failed: {e}")
         else:
-            raise LLMExtractionError("No LLM client available for task identification")
+            raise LLMExtractionError("LiteLLM not available for task identification")
             
     except Exception as e:
         raise LLMExtractionError(f"Failed to identify main task: {e}")
@@ -431,7 +477,7 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet],
     Raises:
         LLMExtractionError: If task type identification fails
     """
-    global llm_client, llm_model, _last_api_call_ts
+    global llm_model, _last_api_call_ts
     
     try:
         config = load_prompt_config("1_find_task_type")
@@ -452,7 +498,7 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet],
         
         actions_text = "\\n".join(action_lines)
         
-        if llm_client:
+        if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
                 logger.info(f"Step 1: Starting task type identification with model {model_to_use}")
@@ -473,7 +519,7 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet],
                 params = config.get("parameters", {})
                 logger.info(f"Step 1: Making LLM request with max_tokens={params.get('max_tokens', 100)}")
                 
-                response = llm_client.chat.completions.create(
+                response = litellm.completion(
                     model=model_to_use,
                     messages=messages,
                     max_tokens=params.get("max_tokens", 100),
@@ -496,7 +542,7 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet],
             except Exception as e:
                 raise LLMExtractionError(f"LLM task type identification failed: {e}")
         else:
-            raise LLMExtractionError("No LLM client available for task type identification")
+            raise LLMExtractionError("LiteLLM not available for task type identification")
             
     except Exception as e:
         raise LLMExtractionError(f"Failed to identify task type: {e}")
@@ -517,7 +563,7 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
     Raises:
         LLMExtractionError: If relevance check fails
     """
-    global llm_client, llm_model, _last_api_call_ts
+    global llm_model, _last_api_call_ts
     
     if obs_set is None:
         return "NO"
@@ -556,7 +602,7 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
             obs_lines.append(f"- {obs.class_}: {content}")
         observations_text = "\\n".join(obs_lines)
         
-        if llm_client:
+        if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
                 logger.info(f"Step 2: Starting relevance check with model {model_to_use}")
@@ -581,7 +627,7 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
                 params = config.get("parameters", {})
                 logger.info(f"Step 2: Making LLM request with max_tokens={params.get('max_tokens', 50)}")
                 
-                response = llm_client.chat.completions.create(
+                response = litellm.completion(
                     model=model_to_use,
                     messages=messages,
                     max_tokens=params.get("max_tokens", 50),
@@ -600,7 +646,7 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
             except Exception as e:
                 raise LLMExtractionError(f"LLM relevance check failed: {e}")
         else:
-            raise LLMExtractionError("No LLM client available for relevance check")
+            raise LLMExtractionError("LiteLLM not available for relevance check")
             
     except Exception as e:
         raise LLMExtractionError(f"Failed to check relevance: {e}")
@@ -696,7 +742,7 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
     Raises:
         LLMExtractionError: If instruction generation fails
     """
-    global llm_client, llm_model, _last_api_call_ts
+    global llm_model, _last_api_call_ts
     
     try:
         config = load_prompt_config("3_gen_instruction")
@@ -725,7 +771,7 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
                 obs_lines.append(f"- {obs.class_}: {content}")
             observations_text = "\\n".join(obs_lines)
         
-        if llm_client:
+        if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
                 logger.info(f"Step 3: Starting instruction generation with model {model_to_use}")
@@ -749,7 +795,7 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
                 params = config.get("parameters", {})
                 logger.info(f"Step 3: Making LLM request with max_tokens={params.get('max_tokens', 500)}")
                 
-                response = llm_client.chat.completions.create(
+                response = litellm.completion(
                     model=model_to_use,
                     messages=messages,
                     max_tokens=params.get("max_tokens", 500),
@@ -769,7 +815,7 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
             except Exception as e:
                 raise LLMExtractionError(f"LLM instruction generation failed: {e}")
         else:
-            raise LLMExtractionError("No LLM client available for instruction generation")
+            raise LLMExtractionError("LiteLLM not available for instruction generation")
             
     except Exception as e:
         raise LLMExtractionError(f"Failed to generate instruction: {e}")
@@ -848,7 +894,7 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
     Raises:
         LLMExtractionError: If response generation fails
     """
-    global llm_client, llm_model, _last_api_call_ts
+    global llm_model, _last_api_call_ts
     
     try:
         config = load_prompt_config("5_gen_response")
@@ -877,7 +923,7 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
                 obs_lines.append(f"- {obs.class_}: {content}")
             observations_text = "\\n".join(obs_lines)
         
-        if llm_client:
+        if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
                 logger.info(f"Step 5: Starting response generation with model {model_to_use}")
@@ -901,7 +947,7 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
                 params = config.get("parameters", {})
                 logger.info(f"Step 5: Making LLM request with max_tokens={params.get('max_tokens', 1000)}")
                 
-                response = llm_client.chat.completions.create(
+                response = litellm.completion(
                     model=model_to_use,
                     messages=messages,
                     max_tokens=params.get("max_tokens", 1000),
@@ -921,7 +967,7 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
             except Exception as e:
                 raise LLMExtractionError(f"LLM response generation failed: {e}")
         else:
-            raise LLMExtractionError("No LLM client available for response generation")
+            raise LLMExtractionError("LiteLLM not available for response generation")
             
     except Exception as e:
         raise LLMExtractionError(f"Failed to generate response: {e}")
@@ -1265,7 +1311,7 @@ def process_action_set(action_set: ActionSet, obs_set: Optional[ObservationSet],
     if use_templates:
         # Template-based pipeline (new approach)
         # Step 1: Check causality 
-        if use_llm_relevance and llm_client:
+        if use_llm_relevance and HAS_LITELLM:
             relevance = check_relevance_llm(action_set, obs_set, context_obs, max_obs_length)
         else:
             relevance = "YES"  # Default to assuming all observations are relevant
@@ -1783,18 +1829,13 @@ Examples:
     parser.add_argument(
         "--llm_model",
         type=str,
-        default="qwen/qwen-2.5-72b-instruct:free",
-        help="LLM model to use for instruction extraction"
+        default="gpt-3.5-turbo",
+        help="LLM model to use for instruction extraction (accessed via LiteLLM proxy)"
     )
     parser.add_argument(
-        "--llm_base_url",
+        "--env_file",
         type=str,
-        help="Base URL for OpenAI-compatible LLM endpoint (default: OpenRouter)"
-    )
-    parser.add_argument(
-        "--llm_api_key",
-        type=str,
-        help="API key for LLM service (default: from environment)"
+        help="Custom .env file path for LiteLLM proxy credentials (default: searches scripts/.env and .env)"
     )
     parser.add_argument(
         "--disable_llm",
@@ -1869,11 +1910,9 @@ Examples:
     
     # Initialize LLM client if not disabled
     if not args.disable_llm:
-        initialize_llm_client(
-            api_key=args.llm_api_key,
-            base_url=args.llm_base_url,
-            model=args.llm_model
-        )
+        if not initialize_llm_client(model=args.llm_model, env_file=args.env_file):
+            logger.error("Failed to initialize LiteLLM. LLM features will be disabled.")
+            args.disable_llm = True
     
     # Determine input source and format
     trajectories = []
@@ -1971,8 +2010,9 @@ Examples:
 if __name__ == "__main__":
     main()
 
-# Experimental personal key below, please replace.
+# Create a .env in root, with the following:
+# LITELLM_PROXY_API_KEY="API_KEY"
+# LITELLM_PROXY_API_BASE="https://cmu.litellm.ai"
 
-# python scripts/std_to_owl.py --input_file scripts/owl_example/test.json --output_dir ./test_owl_output --llm_api_key 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 --llm_model "qwen/qwen-2.5-72b-instruct" --use_templates
-
-# python scripts/std_to_owl.py --input_file datasets/mind2web/sample_std.json --output_dir ./swesmith_sample --llm_api_key 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 --llm_model "qwen/qwen-2.5-72b-instruct" --use_templates
+# Then run something like:
+# python scripts/std_to_owl.py --input_file scripts/owl_example/test.json --output_dir ./test_owl_output --llm_model "litellm_proxy/gpt-4o" --use_templates
