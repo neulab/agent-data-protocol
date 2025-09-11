@@ -1,6 +1,7 @@
 import importlib.util
 import inspect
 import os
+from pydantic import TypeAdapter
 import textwrap
 from typing import (
     Any,
@@ -14,54 +15,12 @@ from typing import (
 
 
 def json_type_from_py(py_t: Any) -> dict:
-    origin = get_origin(py_t)
-    args = get_args(py_t)
-
-    # Literal[...] -> enum
-    if origin is Literal and args:
-        base_types = set(type(a) for a in args if a is not None)
-        if base_types == {str}:
-            return {"type": "string", "enum": list(args)}
-        if base_types == {int}:
-            return {"type": "integer", "enum": list(args)}
-        if base_types == {float}:
-            return {"type": "number", "enum": list(args)}
-        if base_types == {bool}:
-            return {"type": "boolean", "enum": list(args)}
-        # Mixed/other: just enum without type
-        return {"enum": list(args)}
-
-    # Optional[T] / Union[T, None]
-    if origin is Union and type(None) in args:
-        inner = [a for a in args if a is not type(None)]
-        return json_type_from_py(inner[0]) if inner else {"type": "null"}
-
-    # General Union[...] -> anyOf
-    if origin is Union:
-        return {"anyOf": [json_type_from_py(a) for a in args]}
-
-    # Containers
-    if origin in (list, tuple):
-        item_t = args[0] if args else str
-        return {"type": "array", "items": json_type_from_py(item_t)}
-    if origin is dict:
-        val_t = args[1] if len(args) == 2 else Any
-        schema = {"type": "object"}
-        schema["additionalProperties"] = json_type_from_py(val_t)
-        return schema
-
-    # Primitives
-    if py_t is str:
+    """Generate JSON schema from Python type using Pydantic's TypeAdapter."""
+    try:
+        return TypeAdapter(py_t).json_schema()
+    except Exception:
+        # Fallback for unsupported types
         return {"type": "string"}
-    if py_t is int:
-        return {"type": "integer"}
-    if py_t is float:
-        return {"type": "number"}
-    if py_t is bool:
-        return {"type": "boolean"}
-
-    # Fallback
-    return {"type": "string"}
 
 
 def split_docstring(ds: str):
