@@ -2,24 +2,24 @@
 
 # Array of dataset directories (extracted from the file paths)
 datasets=(
-    "orca_agentinstruct"
     "agenttuning_os"
-    # "agenttuning_mind2web"
+    "agenttuning_webshop"
     "swe-gym_openhands_sampled_trajectories"
     "agenttuning_db"
     "agenttuning_alfworld"
-    # "nnetnav-live"
-    # "synatra"
     "swe-smith"
-    "code_feedback"
-    # "nnetnav-wa"
-    # "go-browse-wa"
     "openhands"
     "agenttuning_kg"
-    # "mind2web"
     "codeactinstruct"
-    "nebius_SWE-agent-trajectories"
-    "agenttuning_webshop"
+    # "agenttuning_mind2web" - web
+    # "nnetnav-live" - web
+    # "synatra" - web
+    # "nnetnav-wa" - web
+    # "go-browse-wa" - web
+    # "mind2web" - web
+    # "code_feedback" - too long
+    # "orca_agentinstruct" - too long
+    # "nebius_SWE-agent-trajectories" - too long
 )
 
 # Loop through each dataset
