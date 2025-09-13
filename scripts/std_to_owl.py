@@ -19,6 +19,9 @@ from typing import Dict, List, Tuple, Union, Optional, Any
 try:
     import litellm
     HAS_LITELLM = True
+    # Suppress LiteLLM's verbose logging
+    litellm.suppress_debug_info = True
+    litellm.set_verbose = False
 except ImportError:
     HAS_LITELLM = False
     logging.warning("LiteLLM library not found.")
@@ -81,12 +84,22 @@ logger = logging.getLogger(__name__)
 # Global LLM model (LiteLLM handles client internally)
 llm_model = ""
 
+# Global rate limiting for LLM API calls (seconds between calls)
+LLM_RATE_LIMIT_SECONDS = 1.0
+
 # Global truncation statistics
 truncation_stats = {
     'total_truncations': 0,
     'truncated_chars': 0,
     'longest_original': 0,
     'longest_truncated': 0
+}
+
+# Global cost tracking
+cost_stats = {
+    'total_cost': 0.0,
+    'average_cost_per_trajectory': 0.0,
+    'llm_calls': 0,
 }
 
 # Template dictionaries for rule-based generation
@@ -382,6 +395,115 @@ def load_prompt_config(prompt_name: str) -> Dict[str, Any]:
         raise STDToOWLError(f"Error loading prompt config {prompt_name}: {e}")
 
 
+def identify_main_task_endpoints(trajectory: Trajectory, endpoint_count: int = 2, short_threshold: int = 500, max_obs_length: int = 5000) -> str:
+    """Identify the main task from trajectory endpoints using LLM.
+
+    Uses only the first and last few events instead of the entire trajectory for efficiency.
+    For very short trajectories with simple Q&A patterns, extracts task directly from first observation.
+
+    Args:
+        trajectory: The trajectory to analyze
+        endpoint_count: Number of events to take from start and end (default: 2)
+        short_threshold: Max chars in first observation to treat as direct task (default: 500)
+        max_obs_length: Maximum length for observation content
+
+    Returns:
+        Main task description string
+
+    Raises:
+        LLMExtractionError: If task identification fails
+    """
+    global llm_model, _last_api_call_ts
+
+    try:
+        events = trajectory.content
+
+        # Handle very short trajectories (likely simple Q&A)
+        if len(events) <= 3:
+            first_event = events[0]
+            if (hasattr(first_event, 'content') and
+                len(str(first_event.content)) <= short_threshold):
+                # Direct task extraction for simple Q&A
+                logger.debug(f"Step 0: Using direct task extraction for short trajectory {trajectory.id}")
+                return str(first_event.content).strip()
+
+        # Extract endpoints for efficiency
+        start_events = events[:endpoint_count]
+        end_events = events[-endpoint_count:] if len(events) > endpoint_count else []
+
+        # Combine start and end events (avoid duplicates if trajectory is very short)
+        relevant_events = start_events
+        for event in end_events:
+            if event not in start_events:
+                relevant_events.append(event)
+
+        logger.debug(f"Step 0: Using endpoint extraction for trajectory {trajectory.id} ({len(relevant_events)}/{len(events)} events)")
+
+        config = load_prompt_config("0_identify_main_task_endpoints")
+
+        # Format interaction sequence for the prompt (same as original but with fewer events)
+        interaction_lines = []
+        for event in relevant_events:
+            if hasattr(event, 'content'):
+                content = truncate_content(str(event.content), max_obs_length)
+                interaction_lines.append(f"- {event.class_}: {content}")
+            else:
+                event_str = truncate_content(str(event), max_obs_length)
+                interaction_lines.append(f"- {event.class_}: {event_str}")
+
+        interaction_sequence = "\\n".join(interaction_lines)
+
+        if HAS_LITELLM:
+            try:
+                model_to_use = llm_model or "gpt-3.5-turbo"
+                logger.debug(f"Step 0: Starting endpoint-based task identification with model {model_to_use}")
+
+                # Build messages with template variables
+                messages = []
+                for msg in config["messages"]:
+                    content = msg["content"].format(interaction_sequence=interaction_sequence)
+                    messages.append({"role": msg["role"], "content": content})
+
+                logger.debug(f"Step 0: Built {len(messages)} messages, total chars: {sum(len(m['content']) for m in messages)}")
+
+                # Rate limiting
+                now = time.time()
+                if now - _last_api_call_ts < LLM_RATE_LIMIT_SECONDS:
+                    time.sleep(LLM_RATE_LIMIT_SECONDS - (now - _last_api_call_ts))
+                _last_api_call_ts = now
+
+                params = config.get("parameters", {})
+                logger.debug(f"Step 0: Making LLM request with max_tokens={params.get('max_tokens', 500)}")
+
+                response = litellm.completion(
+                    model=model_to_use,
+                    messages=messages,
+                    max_tokens=params.get("max_tokens", 500),
+                    temperature=params.get("temperature", 0)
+                )
+
+                logger.debug(f"Step 0: LLM request completed successfully")
+
+                result = response.choices[0].message.content.strip()
+
+                # Extract task from markdown code block if present
+                if result.startswith("```") and result.endswith("```"):
+                    result = result[3:-3].strip()
+
+                if not result:
+                    raise LLMExtractionError("Empty task description returned")
+
+                return result
+
+            except Exception as e:
+                raise LLMExtractionError(f"LLM endpoint-based task identification failed: {e}")
+        else:
+            raise LLMExtractionError("LiteLLM not available for task identification")
+
+    except Exception as e:
+        raise LLMExtractionError(f"Failed to identify main task from endpoints: {e}")
+
+
 def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -> str:
     """Identify the main task from trajectory using LLM.
     
@@ -415,7 +537,7 @@ def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -
         if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
-                logger.info(f"Step 0: Starting main task identification with model {model_to_use}")
+                logger.debug(f"Step 0: Starting main task identification with model {model_to_use}")
                 
                 # Build messages with template variables
                 messages = []
@@ -427,12 +549,12 @@ def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -
                 
                 # Rate limiting
                 now = time.time()
-                if now - _last_api_call_ts < 1.0:
-                    time.sleep(1.0 - (now - _last_api_call_ts))
+                if now - _last_api_call_ts < LLM_RATE_LIMIT_SECONDS:
+                    time.sleep(LLM_RATE_LIMIT_SECONDS - (now - _last_api_call_ts))
                 _last_api_call_ts = now
                 
                 params = config.get("parameters", {})
-                logger.info(f"Step 0: Making LLM request with max_tokens={params.get('max_tokens', 500)}")
+                logger.debug(f"Step 0: Making LLM request with max_tokens={params.get('max_tokens', 500)}")
                 
                 response = litellm.completion(
                     model=model_to_use,
@@ -441,17 +563,17 @@ def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -
                     temperature=params.get("temperature", 0)
                 )
                 
-                logger.info(f"Step 0: LLM request completed successfully")
-                
+                logger.debug(f"Step 0: LLM request completed successfully")
+
                 result = response.choices[0].message.content.strip()
-                
+
                 # Extract task from markdown code block if present
                 if result.startswith("```") and result.endswith("```"):
                     result = result[3:-3].strip()
-                
+
                 if not result:
                     raise LLMExtractionError("Empty task description returned")
-                
+
                 return result
                 
             except Exception as e:
@@ -501,7 +623,7 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet],
         if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
-                logger.info(f"Step 1: Starting task type identification with model {model_to_use}")
+                logger.debug(f"Step 1: Starting task type identification with model {model_to_use}")
                 
                 messages = []
                 for msg in config["messages"]:
@@ -512,12 +634,12 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet],
                 
                 # Rate limiting
                 now = time.time()
-                if now - _last_api_call_ts < 1.0:
-                    time.sleep(1.0 - (now - _last_api_call_ts))
+                if now - _last_api_call_ts < LLM_RATE_LIMIT_SECONDS:
+                    time.sleep(LLM_RATE_LIMIT_SECONDS - (now - _last_api_call_ts))
                 _last_api_call_ts = now
                 
                 params = config.get("parameters", {})
-                logger.info(f"Step 1: Making LLM request with max_tokens={params.get('max_tokens', 100)}")
+                logger.debug(f"Step 1: Making LLM request with max_tokens={params.get('max_tokens', 100)}")
                 
                 response = litellm.completion(
                     model=model_to_use,
@@ -526,7 +648,7 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet],
                     temperature=params.get("temperature", 0)
                 )
                 
-                logger.info(f"Step 1: LLM request completed successfully")
+                logger.debug(f"Step 1: LLM request completed successfully")
                 
                 result = response.choices[0].message.content.strip()
 
@@ -605,7 +727,7 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
         if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
-                logger.info(f"Step 2: Starting relevance check with model {model_to_use}")
+                logger.debug(f"Step 2: Starting relevance check with model {model_to_use}")
                 
                 messages = []
                 for msg in config["messages"]:
@@ -620,12 +742,12 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
                 
                 # Rate limiting
                 now = time.time()
-                if now - _last_api_call_ts < 1.0:
-                    time.sleep(1.0 - (now - _last_api_call_ts))
+                if now - _last_api_call_ts < LLM_RATE_LIMIT_SECONDS:
+                    time.sleep(LLM_RATE_LIMIT_SECONDS - (now - _last_api_call_ts))
                 _last_api_call_ts = now
                 
                 params = config.get("parameters", {})
-                logger.info(f"Step 2: Making LLM request with max_tokens={params.get('max_tokens', 50)}")
+                logger.debug(f"Step 2: Making LLM request with max_tokens={params.get('max_tokens', 50)}")
                 
                 response = litellm.completion(
                     model=model_to_use,
@@ -634,7 +756,7 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
                     temperature=params.get("temperature", 0)
                 )
                 
-                logger.info(f"Step 2: LLM request completed successfully")
+                logger.debug(f"Step 2: LLM request completed successfully")
                 
                 result = response.choices[0].message.content.strip().upper()
                 
@@ -774,7 +896,7 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
         if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
-                logger.info(f"Step 3: Starting instruction generation with model {model_to_use}")
+                logger.debug(f"Step 3: Starting instruction generation with model {model_to_use}")
                 
                 messages = []
                 for msg in config["messages"]:
@@ -788,12 +910,12 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
                 
                 # Rate limiting
                 now = time.time()
-                if now - _last_api_call_ts < 1.0:
-                    time.sleep(1.0 - (now - _last_api_call_ts))
+                if now - _last_api_call_ts < LLM_RATE_LIMIT_SECONDS:
+                    time.sleep(LLM_RATE_LIMIT_SECONDS - (now - _last_api_call_ts))
                 _last_api_call_ts = now
                 
                 params = config.get("parameters", {})
-                logger.info(f"Step 3: Making LLM request with max_tokens={params.get('max_tokens', 500)}")
+                logger.debug(f"Step 3: Making LLM request with max_tokens={params.get('max_tokens', 500)}")
                 
                 response = litellm.completion(
                     model=model_to_use,
@@ -802,7 +924,7 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
                     temperature=params.get("temperature", 0)
                 )
                 
-                logger.info(f"Step 3: LLM request completed successfully")
+                logger.debug(f"Step 3: LLM request completed successfully")
                 
                 result = response.choices[0].message.content.strip()
                 
@@ -926,7 +1048,7 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
         if HAS_LITELLM:
             try:
                 model_to_use = llm_model or "gpt-3.5-turbo"
-                logger.info(f"Step 5: Starting response generation with model {model_to_use}")
+                logger.debug(f"Step 5: Starting response generation with model {model_to_use}")
                 
                 messages = []
                 for msg in config["messages"]:
@@ -940,12 +1062,12 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
                 
                 # Rate limiting
                 now = time.time()
-                if now - _last_api_call_ts < 1.0:
-                    time.sleep(1.0 - (now - _last_api_call_ts))
+                if now - _last_api_call_ts < LLM_RATE_LIMIT_SECONDS:
+                    time.sleep(LLM_RATE_LIMIT_SECONDS - (now - _last_api_call_ts))
                 _last_api_call_ts = now
                 
                 params = config.get("parameters", {})
-                logger.info(f"Step 5: Making LLM request with max_tokens={params.get('max_tokens', 1000)}")
+                logger.debug(f"Step 5: Making LLM request with max_tokens={params.get('max_tokens', 1000)}")
                 
                 response = litellm.completion(
                     model=model_to_use,
@@ -954,7 +1076,7 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
                     temperature=params.get("temperature", 0)
                 )
                 
-                logger.info(f"Step 5: LLM request completed successfully")
+                logger.debug(f"Step 5: LLM request completed successfully")
                 
                 result = response.choices[0].message.content.strip()
                 
@@ -1175,7 +1297,7 @@ def group_events_alternating(events: List[Event]) -> List[Union[ObservationSet, 
         if not next_obs_exists:
             raise GroupingError(f"Action set at index {action_idx} has no following observation set")
     
-    logger.info(f"Grouped {len(events)} events into {len(groups)} alternating sets (skipped initial acknowledgments)")
+    logger.debug(f"Grouped {len(events)} events into {len(groups)} alternating sets (skipped initial acknowledgments)")
     return groups
 
 
@@ -1486,6 +1608,43 @@ def build_parallel_conversations(processing_groups: List[ProcessingGroup], main_
 
             assistant_messages.append(assistant_msg)
         
+        # Now, we check for the very specific case where there is one input (observation) set
+        # followed by one finishing action set, because that would lead to no conversation (the finish
+        # would turn into <CAMEL_TASK_DONE> without the relevant information being conveyed.)
+        first_action_is_finish = (
+            len(processing_groups) == 1 and
+            processing_groups[0].action_set.actions and
+            isinstance(processing_groups[0].action_set.actions[0], MessageAction) and
+            has_finish_tag(processing_groups[0].action_set.actions[0])
+        )
+        if first_action_is_finish:
+            # Before the <CAMEL_TASK_DONE> (a user-message)
+            # Add "Complete the task: {task}" as user message, then:
+            # Add the processing_groups[0].action_set.actions[0].content (stripped of tags) as assistant message
+            user_messages.insert(-1, {
+                "role": "assistant",
+                "content": f"Complete the task: {main_task}"
+            })
+            assistant_messages.insert(-1, {
+                "role": "user",
+                "content": f"Complete the task: {main_task}"
+            })
+            finish_content = processing_groups[0].action_set.actions[0].content
+            import re
+            match = re.search(r'<finish>(.*?)</finish>', finish_content, re.DOTALL)
+            if match:
+                finish_message = match.group(1).strip()
+                user_messages.insert(-1, {
+                    "role": "user",
+                    "content": finish_message
+                })
+                assistant_messages.insert(-1, {
+                    "role": "assistant",
+                    "content": finish_message,
+                    "refusal": None,
+                    "reasoning": None
+                })
+
         user_conv = {
             "conversation_id": f"{trajectory_id}_user",
             "messages": user_messages
@@ -1594,7 +1753,7 @@ def normalize_conversation_endings(user_conv: Dict, assistant_conv: Dict) -> Tup
     return normalized_user, normalized_assistant
 
 
-def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False) -> Tuple[Dict, Dict]:
+def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False, use_endpoint_task_id: bool = False, endpoint_count: int = 2, short_task_threshold: int = 500) -> Tuple[Dict, Dict]:
     """Process trajectory using template-based or LLM pipeline.
     
     Args:
@@ -1623,7 +1782,10 @@ def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool
             logger.warning(f"Trajectory {trajectory.id} exceeds length limit ({total_length} > {max_trajectory_tokens}), processing with truncation")
     
     # Step 0: Identify main task
-    main_task = identify_main_task_llm(trajectory, max_obs_length)
+    if use_endpoint_task_id:
+        main_task = identify_main_task_endpoints(trajectory, endpoint_count, short_task_threshold, max_obs_length)
+    else:
+        main_task = identify_main_task_llm(trajectory, max_obs_length)
     
     # Step 1: Group into alternating sets
     grouped_sets = group_events_alternating(trajectory.content)
@@ -1724,7 +1886,7 @@ def validate_owl_output(user_conv: Dict, assistant_conv: Dict) -> bool:
     return True
 
 
-def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False) -> bool:
+def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False, use_endpoint_task_id: bool = False, endpoint_count: int = 2, short_task_threshold: int = 500, current_idx: int = 0, total_count: int = 0) -> bool:
     """Process a single trajectory line.
     
     Args:
@@ -1746,14 +1908,16 @@ def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, 
         data = json.loads(line.strip())
         trajectory = Trajectory(**data)
         trajectory_id = trajectory.id
-        
-        logger.info(f"Processing trajectory {trajectory_id}")
+
+        # Create progress prefix if we have counting info
+        progress_prefix = f"[{current_idx}/{total_count}] " if total_count > 0 else ""
+        logger.info(f"{progress_prefix}Processing {trajectory_id}")
         logger.debug(f"Trajectory has {len(trajectory.content)} events")
         
         # Convert to OWL format using pipeline
         pipeline_type = "template-based" if use_templates else "LLM-based"
         logger.debug(f"Converting trajectory {trajectory_id} to OWL format using {pipeline_type} pipeline")
-        user_conv, assistant_conv = process_trajectory_conversations(trajectory, use_templates, use_llm_relevance, max_obs_length, max_trajectory_tokens, skip_long)
+        user_conv, assistant_conv = process_trajectory_conversations(trajectory, use_templates, use_llm_relevance, max_obs_length, max_trajectory_tokens, skip_long, use_endpoint_task_id, endpoint_count, short_task_threshold)
         
         logger.debug(f"User conversation has {len(user_conv['messages'])} messages")
         logger.debug(f"Assistant conversation has {len(assistant_conv['messages'])} messages")
@@ -1772,20 +1936,20 @@ def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, 
             
         with open(assistant_file, 'w', encoding='utf-8') as f:
             json.dump(assistant_conv, f, indent=2, ensure_ascii=False)
-            
-        logger.info(f"Successfully wrote {user_file.name} and {assistant_file.name}")
+
+        logger.info(f"{progress_prefix}✓ {trajectory_id} converted successfully")
         return True
         
     except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in input line for trajectory {trajectory_id}: {e}")
+        logger.error(f"{progress_prefix}✗ {trajectory_id}: Invalid JSON - {e}")
         logger.debug(f"Problematic line: {line}")
         return False
     except ValidationError as e:
-        logger.error(f"Validation error for trajectory {trajectory_id}: {e}")
+        logger.error(f"{progress_prefix}✗ {trajectory_id}: {e}")
         logger.debug(traceback.format_exc())
         return False
     except Exception as e:
-        logger.error(f"Unexpected error processing trajectory {trajectory_id}: {e}")
+        logger.error(f"{progress_prefix}✗ {trajectory_id}: Unexpected error - {e}")
         logger.debug(f"Full traceback: {traceback.format_exc()}")
         return False
 
@@ -1869,6 +2033,23 @@ Examples:
         action="store_true",
         help="Skip long trajectories instead of processing with truncation"
     )
+    parser.add_argument(
+        "--use_endpoint_task_id",
+        action="store_true",
+        help="Use endpoint-based task identification (first/last events only) for efficiency"
+    )
+    parser.add_argument(
+        "--endpoint_count",
+        type=int,
+        default=2,
+        help="Number of events to take from start and end for endpoint task identification (default: 2)"
+    )
+    parser.add_argument(
+        "--short_task_threshold",
+        type=int,
+        default=500,
+        help="Max characters in first observation to treat as direct task for short trajectories (default: 500)"
+    )
     
     args = parser.parse_args()
     
@@ -1905,6 +2086,13 @@ Examples:
     )
     
     logger = logging.getLogger(__name__)
+
+    # Suppress LiteLLM's verbose logging
+    if HAS_LITELLM:
+        logging.getLogger("LiteLLM").setLevel(logging.WARNING)
+        logging.getLogger("litellm").setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)  # Also suppress httpx used by LiteLLM
+
     logger.info(f"Logging to file: {log_file}")
     logger.info(f"Command line args: {vars(args)}")
     
@@ -1951,27 +2139,35 @@ Examples:
     processed = 0
     successful = 0
     failed = 0
-    
+    total_trajectories = len(trajectories)
+
     try:
         for i, trajectory_json in enumerate(trajectories):
             if not trajectory_json:
                 continue
-                
+
             if args.max_trajectories and processed >= args.max_trajectories:
                 logger.info(f"Reached maximum trajectories limit: {args.max_trajectories}")
                 break
-                
+
             try:
-                if process_trajectory(trajectory_json, output_dir, args.use_templates, args.use_llm_relevance, args.max_obs_length, args.max_trajectory_tokens, args.skip_long):
+                # Pass trajectory count info to process_trajectory
+                result = process_trajectory(
+                    trajectory_json, output_dir, args.use_templates, args.use_llm_relevance,
+                    args.max_obs_length, args.max_trajectory_tokens, args.skip_long,
+                    args.use_endpoint_task_id, args.endpoint_count, args.short_task_threshold,
+                    processed + 1, total_trajectories  # Add progress info
+                )
+                if result:
                     successful += 1
                 else:
                     failed += 1
-                    
+
                 processed += 1
-                
+
                 if processed % 100 == 0:
-                    logger.info(f"Processed {processed} trajectories ({successful} successful, {failed} failed)")
-                    
+                    logger.info(f"Progress: {processed}/{total_trajectories} trajectories ({successful} successful, {failed} failed)")
+
             except KeyboardInterrupt:
                 logger.info("Interrupted by user")
                 break
@@ -2015,4 +2211,4 @@ if __name__ == "__main__":
 # LITELLM_PROXY_API_BASE="https://cmu.litellm.ai"
 
 # Then run something like:
-# python scripts/std_to_owl.py --input_file scripts/owl_example/test.json --output_dir ./test_owl_output --llm_model "litellm_proxy/gpt-4o" --use_templates
+# python scripts/std_to_owl.py --input_file datasets/orca_agentinstruct/sample_std.json --output_dir ./test_owl_output --llm_model "litellm_proxy/gpt-4o-mini" --use_templates
