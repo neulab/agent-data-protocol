@@ -85,7 +85,10 @@ logger = logging.getLogger(__name__)
 llm_model = ""
 
 # Global rate limiting for LLM API calls (seconds between calls)
-LLM_RATE_LIMIT_SECONDS = 1.0
+LLM_RATE_LIMIT_SECONDS = 0.5
+
+# Global spending limit (USD) - breaks processing if exceeded
+LLM_SPENDING_LIMIT = 5.0
 
 # Global truncation statistics
 truncation_stats = {
@@ -484,6 +487,9 @@ def identify_main_task_endpoints(trajectory: Trajectory, endpoint_count: int = 2
 
                 logger.debug(f"Step 0: LLM request completed successfully")
 
+                # Track cost
+                track_llm_cost(response, "endpoint_task_identification")
+
                 result = response.choices[0].message.content.strip()
 
                 # Extract task from markdown code block if present
@@ -562,8 +568,11 @@ def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -
                     max_tokens=params.get("max_tokens", 500),
                     temperature=params.get("temperature", 0)
                 )
-                
+
                 logger.debug(f"Step 0: LLM request completed successfully")
+
+                # Track cost
+                track_llm_cost(response, "task_identification")
 
                 result = response.choices[0].message.content.strip()
 
@@ -647,8 +656,11 @@ def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet],
                     max_tokens=params.get("max_tokens", 100),
                     temperature=params.get("temperature", 0)
                 )
-                
+
                 logger.debug(f"Step 1: LLM request completed successfully")
+
+                # Track cost
+                track_llm_cost(response, "task_type_identification")
                 
                 result = response.choices[0].message.content.strip()
 
@@ -755,8 +767,11 @@ def check_relevance_llm(action_set: ActionSet, obs_set: Optional[ObservationSet]
                     max_tokens=params.get("max_tokens", 50),
                     temperature=params.get("temperature", 0)
                 )
-                
+
                 logger.debug(f"Step 2: LLM request completed successfully")
+
+                # Track cost
+                track_llm_cost(response, "relevance_check")
                 
                 result = response.choices[0].message.content.strip().upper()
                 
@@ -923,8 +938,11 @@ def generate_instruction_llm(action_set: ActionSet, related_obs: Optional[Observ
                     max_tokens=params.get("max_tokens", 500),
                     temperature=params.get("temperature", 0)
                 )
-                
+
                 logger.debug(f"Step 3: LLM request completed successfully")
+
+                # Track cost
+                track_llm_cost(response, "instruction_generation")
                 
                 result = response.choices[0].message.content.strip()
                 
@@ -1075,8 +1093,11 @@ def generate_response_llm(action_set: ActionSet, related_obs: Optional[Observati
                     max_tokens=params.get("max_tokens", 1000),
                     temperature=params.get("temperature", 0)
                 )
-                
+
                 logger.debug(f"Step 5: LLM request completed successfully")
+
+                # Track cost
+                track_llm_cost(response, "response_generation")
                 
                 result = response.choices[0].message.content.strip()
                 
@@ -1302,6 +1323,40 @@ def group_events_alternating(events: List[Event]) -> List[Union[ObservationSet, 
 
 
 _last_api_call_ts = 0.0
+
+
+def track_llm_cost(response, step_name: str = "unknown"):
+    """Track the cost of an LLM API call using response cost information.
+
+    Args:
+        response: LiteLLM completion response object
+        step_name: Name of the processing step for logging
+    """
+    try:
+        # Primary: Use built-in cost from response hidden params
+        cost = None
+        if hasattr(response, '_hidden_params') and response._hidden_params:
+            cost = response._hidden_params.get("response_cost", None)
+
+        # Fallback: Calculate cost from response
+        if cost is None and HAS_LITELLM:
+            from litellm import completion_cost
+            cost = completion_cost(completion_response=response)
+
+        if cost is not None:
+            # Update global cost_stats
+            global cost_stats
+            cost_stats['total_cost'] += cost
+            cost_stats['llm_calls'] += 1
+
+            logger.debug(f"Cost for {step_name}: ${cost:.6f}")
+
+        else:
+            logger.debug(f"Could not determine cost for {step_name}")
+
+    except Exception as e:
+        # Log cost tracking errors but continue processing
+        logger.debug(f"Could not track cost for {step_name}: {e}")
 
 def generate_tool_call_id() -> str:
     """Generate a unique tool call ID."""
@@ -2095,7 +2150,15 @@ Examples:
 
     logger.info(f"Logging to file: {log_file}")
     logger.info(f"Command line args: {vars(args)}")
-    
+
+    # Reset cost tracking for this run
+    global cost_stats, truncation_stats
+    cost_stats = {
+        'total_cost': 0.0,
+        'average_cost_per_trajectory': 0.0,
+        'llm_calls': 0,
+    }
+
     # Initialize LLM client if not disabled
     if not args.disable_llm:
         if not initialize_llm_client(model=args.llm_model, env_file=args.env_file):
@@ -2165,6 +2228,12 @@ Examples:
 
                 processed += 1
 
+                # Check spending limit after each trajectory
+                if cost_stats['total_cost'] > LLM_SPENDING_LIMIT:
+                    logger.error(f"LLM spending limit exceeded: ${cost_stats['total_cost']:.6f} > ${LLM_SPENDING_LIMIT:.2f}")
+                    logger.info(f"Stopping processing after {processed} trajectories due to spending limit")
+                    break
+
                 if processed % 100 == 0:
                     logger.info(f"Progress: {processed}/{total_trajectories} trajectories ({successful} successful, {failed} failed)")
 
@@ -2184,7 +2253,6 @@ Examples:
     logger.info(f"Success rate: {successful/processed*100:.1f}%" if processed > 0 else "No trajectories processed")
     
     # Truncation statistics
-    global truncation_stats
     if truncation_stats['total_truncations'] > 0:
         logger.info(f"Truncation statistics:")
         logger.info(f"  Total truncations: {truncation_stats['total_truncations']}")
@@ -2193,7 +2261,20 @@ Examples:
         logger.info(f"  Average truncation per event: {truncation_stats['truncated_chars'] / truncation_stats['total_truncations']:.0f} characters")
     else:
         logger.info("No content was truncated during processing")
-    
+
+    # Cost statistics
+    if cost_stats['llm_calls'] > 0:
+        avg_cost_per_call = cost_stats['total_cost'] / cost_stats['llm_calls']
+        logger.info(f"LLM cost statistics:")
+        logger.info(f"  Total spending: ${cost_stats['total_cost']:.6f}")
+        logger.info(f"  Total API calls: {cost_stats['llm_calls']}")
+        logger.info(f"  Average cost per call: ${avg_cost_per_call:.6f}")
+        if processed > 0:
+            cost_stats['average_cost_per_trajectory'] = cost_stats['total_cost'] / processed
+            logger.info(f"  Average cost per trajectory: ${cost_stats['average_cost_per_trajectory']:.6f}")
+    else:
+        logger.info("No LLM costs tracked (LLM disabled or no calls made)")
+
     logger.info(f"Log file saved to: {log_file}")
     
     if failed > 0:
