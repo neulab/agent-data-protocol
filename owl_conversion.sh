@@ -1,4 +1,11 @@
 #!/bin/bash
+#SBATCH --job-name=std_to_owl
+#SBATCH --partition=cpu
+#SBATCH --time=6:00:00
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+
+source .venv/bin/activate
 
 # Array of dataset directories (extracted from the file paths)
 datasets=(
@@ -8,25 +15,25 @@ datasets=(
     "agenttuning_db"
     "agenttuning_alfworld"
     "swe-smith"
-    "openhands"
+    # "openhands" - web
     "agenttuning_kg"
     "codeactinstruct"
-    # "agenttuning_mind2web" - web
+    "agenttuning_mind2web"
     # "nnetnav-live" - web
     # "synatra" - web
     # "nnetnav-wa" - web
     # "go-browse-wa" - web
     # "mind2web" - web
-    # "code_feedback" - too long
-    # "orca_agentinstruct" - too long
-    # "nebius_SWE-agent-trajectories" - too long
+    "code_feedback" # - too long
+    "orca_agentinstruct" # - too long
+    "nebius_SWE-agent-trajectories" # - too long
 )
 
 # Loop through each dataset
 for dataset in "${datasets[@]}"; do
     echo "Processing dataset: $dataset"
     
-    input_file="datasets/$dataset/full_std.jsonl"
+    input_file="datasets/$dataset/sample_std.json"
     output_dir="datasets/$dataset/full_owl"
     
     # Check if input file exists
@@ -39,7 +46,7 @@ for dataset in "${datasets[@]}"; do
     python scripts/std_to_owl.py \
         --input_file "$input_file" \
         --output_dir "$output_dir" \
-        --llm_model "litellm_proxy/gpt-4o" \
+        --llm_model "litellm_proxy/gpt-4o-mini" \
         --use_templates
     
     # Check if the command was successful
