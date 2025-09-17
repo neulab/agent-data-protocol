@@ -9,6 +9,7 @@ import argparse
 import json
 import logging
 import os
+import random
 import sys
 import time
 import traceback
@@ -1808,7 +1809,7 @@ def normalize_conversation_endings(user_conv: Dict, assistant_conv: Dict) -> Tup
     return normalized_user, normalized_assistant
 
 
-def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False, use_endpoint_task_id: bool = False, endpoint_count: int = 2, short_task_threshold: int = 500) -> Tuple[Dict, Dict]:
+def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 50000, skip_long: bool = False, use_endpoint_task_id: bool = True, endpoint_count: int = 2, short_task_threshold: int = 500) -> Tuple[Dict, Dict]:
     """Process trajectory using template-based or LLM pipeline.
     
     Args:
@@ -1832,7 +1833,7 @@ def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool
     is_within_limit, total_length = check_trajectory_length(trajectory, max_trajectory_tokens)
     if not is_within_limit:
         if skip_long:
-            raise STDToOWLError(f"Trajectory {trajectory.id} exceeds length limit ({total_length} > {max_trajectory_tokens})")
+            raise STDToOWLError(f"Trajectory {trajectory.id} exceeds length limit ({total_length} > {max_trajectory_tokens}), skipping.")
         else:
             logger.warning(f"Trajectory {trajectory.id} exceeds length limit ({total_length} > {max_trajectory_tokens}), processing with truncation")
     
@@ -2041,11 +2042,6 @@ Examples:
         help="Enable verbose logging"
     )
     parser.add_argument(
-        "--max_trajectories",
-        type=int,
-        help="Maximum number of trajectories to process (for testing)"
-    )
-    parser.add_argument(
         "--llm_model",
         type=str,
         default="gpt-3.5-turbo",
@@ -2102,8 +2098,18 @@ Examples:
     parser.add_argument(
         "--short_task_threshold",
         type=int,
-        default=500,
-        help="Max characters in first observation to treat as direct task for short trajectories (default: 500)"
+        default=1000,
+        help="Max characters in first observation to treat as direct task for short trajectories (default: 1000)"
+    )
+    parser.add_argument(
+        "--sample_ratio",
+        type=float,
+        help="Ratio of trajectories to process (0.0-1.0, randomly sampled)"
+    )
+    parser.add_argument(
+        "--random_seed",
+        type=int,
+        help="Random seed for reproducible sampling"
     )
     
     args = parser.parse_args()
@@ -2197,7 +2203,18 @@ Examples:
         # Read from stdin (assume JSONL format)
         trajectories = [line.strip() for line in sys.stdin if line.strip()]
         logger.info(f"Read {len(trajectories)} trajectories from stdin")
-    
+
+    # Calculate target sample size and apply random shuffling if sampling is requested
+    target_sample_size = None
+    if args.sample_ratio is not None:
+        target_sample_size = int(len(trajectories) * args.sample_ratio)
+        if args.random_seed is not None:
+            random.seed(args.random_seed)
+            logger.info(f"Set random seed to {args.random_seed}")
+
+        random.shuffle(trajectories)
+        logger.info(f"Shuffled {len(trajectories)} trajectories for random sampling (ratio: {args.sample_ratio}, target: {target_sample_size} successful)")
+
     # Process trajectories
     processed = 0
     successful = 0
@@ -2209,8 +2226,10 @@ Examples:
             if not trajectory_json:
                 continue
 
-            if args.max_trajectories and processed >= args.max_trajectories:
-                logger.info(f"Reached maximum trajectories limit: {args.max_trajectories}")
+            # Check if we've successfully processed enough trajectories
+            if target_sample_size and successful >= target_sample_size:
+                logger.info(f"Reached target sample size: {target_sample_size} successful trajectories")
+                logger.info(f"(Processed {processed} total, {failed} failed)")
                 break
 
             try:
@@ -2247,9 +2266,36 @@ Examples:
                 
     finally:
         pass
-    
+
+    # Check if we couldn't reach the target sample size
+    if target_sample_size and successful < target_sample_size:
+        logger.warning(f"Could not reach target sample size!")
+        logger.info(f"  Target sample ratio: {args.sample_ratio}")
+        logger.info(f"  Target sample size: {target_sample_size}")
+        logger.info(f"  Successfully processed: {successful}")
+        logger.info(f"  Failed/invalid trajectories skipped: {failed}")
+        logger.info(f"  Total trajectories attempted: {processed}")
+        logger.info(f"  Total trajectories available: {len(trajectories)}")
+        logger.info(f"  Trajectories not attempted: {len(trajectories) - processed}")
+        logger.info(f"  Still needed: {target_sample_size - successful}")
+
+        if len(trajectories) - processed > 0:
+            logger.info(f"Note: There were {len(trajectories) - processed} trajectories not attempted. "
+                       f"The high failure rate ({failed}/{processed} = {failed/processed*100:.1f}%) "
+                       f"prevented reaching the target.")
+        else:
+            logger.info(f"All available trajectories were attempted. "
+                       f"Failure rate: {failed}/{processed} = {failed/processed*100:.1f}%")
+
     # Final statistics
     logger.info(f"Conversion complete: {processed} total, {successful} successful, {failed} failed")
+
+    if target_sample_size:
+        if successful >= target_sample_size:
+            logger.info(f"Successfully reached target sample size of {target_sample_size} ({args.sample_ratio:.1%} of {len(trajectories)})")
+        else:
+            logger.info(f"Only processed {successful}/{target_sample_size} target samples ({args.sample_ratio:.1%} of {len(trajectories)})")
+
     logger.info(f"Success rate: {successful/processed*100:.1f}%" if processed > 0 else "No trajectories processed")
     
     # Truncation statistics
