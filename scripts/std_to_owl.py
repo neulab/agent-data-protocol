@@ -86,10 +86,10 @@ logger = logging.getLogger(__name__)
 llm_model = ""
 
 # Global rate limiting for LLM API calls (seconds between calls)
-LLM_RATE_LIMIT_SECONDS = 0.5
+LLM_RATE_LIMIT_SECONDS = 0.1
 
 # Global spending limit (USD) - breaks processing if exceeded
-LLM_SPENDING_LIMIT = 5.0
+LLM_SPENDING_LIMIT = 10.0
 
 # Global truncation statistics
 truncation_stats = {
@@ -1992,25 +1992,25 @@ def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, 
             
         with open(assistant_file, 'w', encoding='utf-8') as f:
             json.dump(assistant_conv, f, indent=2, ensure_ascii=False)
-
-        logger.info(f"{progress_prefix}✓ {trajectory_id} converted successfully")
+        
         return True
         
     except json.JSONDecodeError as e:
-        logger.error(f"{progress_prefix}✗ {trajectory_id}: Invalid JSON - {e}")
+        logger.error(f"{progress_prefix}X {trajectory_id}: Invalid JSON - {e}")
         logger.debug(f"Problematic line: {line}")
         return False
     except ValidationError as e:
-        logger.error(f"{progress_prefix}✗ {trajectory_id}: {e}")
+        logger.error(f"{progress_prefix}X {trajectory_id}: {e}")
         logger.debug(traceback.format_exc())
         return False
     except Exception as e:
-        logger.error(f"{progress_prefix}✗ {trajectory_id}: Unexpected error - {e}")
+        logger.error(f"{progress_prefix}X {trajectory_id}: Unexpected error - {e}")
         logger.debug(f"Full traceback: {traceback.format_exc()}")
         return False
 
 
-def main():
+def get_args():
+    
     """Main CLI interface for STD to OWL conversion."""
     parser = argparse.ArgumentParser(
         description="Convert STD (Standardized) trajectories to OWL (dual-agent) format",
@@ -2113,7 +2113,12 @@ Examples:
     )
     
     args = parser.parse_args()
+    return args
+
+def main():
     
+    args = get_args()
+
     # Validate output directory first
     output_dir = Path(args.output_dir)
     try:
@@ -2254,7 +2259,14 @@ Examples:
                     break
 
                 if processed % 100 == 0:
-                    logger.info(f"Progress: {processed}/{total_trajectories} trajectories ({successful} successful, {failed} failed)")
+                    success_rate = (successful / processed) * 100 if processed > 0 else 0.0
+                    avg_cost_per_traj = (cost_stats['total_cost'] / processed) if processed > 0 else 0.0
+                    logger.info(f"Progress: {processed}/{total_trajectories} total processed, target: {target_sample_size if target_sample_size else 'N/A'}")
+                    logger.info(f"  Successful: {successful}, Failed: {failed}")
+                    logger.info(f"  Success rate: {success_rate:.1f}%")
+                    logger.info(f"  Total LLM cost: ${cost_stats['total_cost']:.6f}")
+                    logger.info(f"  Average cost per trajectory: ${avg_cost_per_traj:.6f}")
+
 
             except KeyboardInterrupt:
                 logger.info("Interrupted by user")
