@@ -86,7 +86,7 @@ logger = logging.getLogger(__name__)
 llm_model = ""
 
 # Global rate limiting for LLM API calls (seconds between calls)
-LLM_RATE_LIMIT_SECONDS = 0.1
+LLM_RATE_LIMIT_SECONDS = 0.11
 
 # Global spending limit (USD) - breaks processing if exceeded
 LLM_SPENDING_LIMIT = 10.0
@@ -509,91 +509,6 @@ def identify_main_task_endpoints(trajectory: Trajectory, endpoint_count: int = 2
 
     except Exception as e:
         raise LLMExtractionError(f"Failed to identify main task from endpoints: {e}")
-
-
-def identify_main_task_llm(trajectory: Trajectory, max_obs_length: int = 5000) -> str:
-    """Identify the main task from trajectory using LLM.
-    
-    Args:
-        trajectory: The trajectory to analyze
-        max_obs_length: Maximum length for observation content
-        
-    Returns:
-        Main task description string
-        
-    Raises:
-        LLMExtractionError: If task identification fails
-    """
-    global llm_model, _last_api_call_ts
-    
-    try:
-        config = load_prompt_config("0_identify_main_task")
-        
-        # Format interaction sequence for the prompt
-        interaction_lines = []
-        for event in trajectory.content:
-            if hasattr(event, 'content'):
-                content = truncate_content(str(event.content), max_obs_length)
-                interaction_lines.append(f"- {event.class_}: {content}")
-            else:
-                event_str = truncate_content(str(event), max_obs_length)
-                interaction_lines.append(f"- {event.class_}: {event_str}")
-        
-        interaction_sequence = "\\n".join(interaction_lines)
-        
-        if HAS_LITELLM:
-            try:
-                model_to_use = llm_model or "gpt-3.5-turbo"
-                logger.debug(f"Step 0: Starting main task identification with model {model_to_use}")
-                
-                # Build messages with template variables
-                messages = []
-                for msg in config["messages"]:
-                    content = msg["content"].format(interaction_sequence=interaction_sequence)
-                    messages.append({"role": msg["role"], "content": content})
-                
-                logger.debug(f"Step 0: Built {len(messages)} messages, total chars: {sum(len(m['content']) for m in messages)}")
-                
-                # Rate limiting
-                now = time.time()
-                if now - _last_api_call_ts < LLM_RATE_LIMIT_SECONDS:
-                    time.sleep(LLM_RATE_LIMIT_SECONDS - (now - _last_api_call_ts))
-                _last_api_call_ts = now
-                
-                params = config.get("parameters", {})
-                logger.debug(f"Step 0: Making LLM request with max_tokens={params.get('max_tokens', 500)}")
-                
-                response = litellm.completion(
-                    model=model_to_use,
-                    messages=messages,
-                    max_tokens=params.get("max_tokens", 500),
-                    temperature=params.get("temperature", 0)
-                )
-
-                logger.debug(f"Step 0: LLM request completed successfully")
-
-                # Track cost
-                track_llm_cost(response, "task_identification")
-
-                result = response.choices[0].message.content.strip()
-
-                # Extract task from markdown code block if present
-                if result.startswith("```") and result.endswith("```"):
-                    result = result[3:-3].strip()
-
-                if not result:
-                    raise LLMExtractionError("Empty task description returned")
-
-                return result
-                
-            except Exception as e:
-                raise LLMExtractionError(f"LLM task identification failed: {e}")
-        else:
-            raise LLMExtractionError("LiteLLM not available for task identification")
-            
-    except Exception as e:
-        raise LLMExtractionError(f"Failed to identify main task: {e}")
-
 
 def find_task_type_llm(action_set: ActionSet, obs_set: Optional[ObservationSet], max_obs_length: int = 5000) -> str:
     """Find task type using LLM.
@@ -1809,7 +1724,7 @@ def normalize_conversation_endings(user_conv: Dict, assistant_conv: Dict) -> Tup
     return normalized_user, normalized_assistant
 
 
-def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 50000, skip_long: bool = False, use_endpoint_task_id: bool = True, endpoint_count: int = 2, short_task_threshold: int = 500) -> Tuple[Dict, Dict]:
+def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 50000, skip_long: bool = False, endpoint_count: int = 2, short_task_threshold: int = 500) -> Tuple[Dict, Dict]:
     """Process trajectory using template-based or LLM pipeline.
     
     Args:
@@ -1838,10 +1753,10 @@ def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool
             logger.warning(f"Trajectory {trajectory.id} exceeds length limit ({total_length} > {max_trajectory_tokens}), processing with truncation")
     
     # Step 0: Identify main task
-    if use_endpoint_task_id:
-        main_task = identify_main_task_endpoints(trajectory, endpoint_count, short_task_threshold, max_obs_length)
+    if use_templates:
+        main_task = ""
     else:
-        main_task = identify_main_task_llm(trajectory, max_obs_length)
+        main_task = identify_main_task_endpoints(trajectory, endpoint_count, short_task_threshold, max_obs_length)
     
     # Step 1: Group into alternating sets
     grouped_sets = group_events_alternating(trajectory.content)
@@ -1884,6 +1799,10 @@ def process_trajectory_conversations(trajectory: Trajectory, use_templates: bool
     if not processing_groups:
         raise STDToOWLError("No action sets found to process")
     
+    # Find main task if not already identified; we do it here as this is expensive (time + money), so we make sure there aren't errors.
+    if main_task == "":
+        main_task = identify_main_task_endpoints(trajectory, endpoint_count, short_task_threshold, max_obs_length)
+
     # Step 8: Build OWL conversations in parallel
     user_conv, assistant_conv = build_parallel_conversations(processing_groups, main_task, trajectory.id, initial_context)
     
@@ -1942,7 +1861,7 @@ def validate_owl_output(user_conv: Dict, assistant_conv: Dict) -> bool:
     return True
 
 
-def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False, use_endpoint_task_id: bool = False, endpoint_count: int = 2, short_task_threshold: int = 500, current_idx: int = 0, total_count: int = 0) -> bool:
+def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, use_llm_relevance: bool = False, max_obs_length: int = 5000, max_trajectory_tokens: int = 100000, skip_long: bool = False, endpoint_count: int = 2, short_task_threshold: int = 500, current_idx: int = 0, total_count: int = 0) -> bool:
     """Process a single trajectory line.
     
     Args:
@@ -1973,7 +1892,7 @@ def process_trajectory(line: str, output_dir: Path, use_templates: bool = True, 
         # Convert to OWL format using pipeline
         pipeline_type = "template-based" if use_templates else "LLM-based"
         logger.debug(f"Converting trajectory {trajectory_id} to OWL format using {pipeline_type} pipeline")
-        user_conv, assistant_conv = process_trajectory_conversations(trajectory, use_templates, use_llm_relevance, max_obs_length, max_trajectory_tokens, skip_long, use_endpoint_task_id, endpoint_count, short_task_threshold)
+        user_conv, assistant_conv = process_trajectory_conversations(trajectory, use_templates, use_llm_relevance, max_obs_length, max_trajectory_tokens, skip_long, endpoint_count, short_task_threshold)
         
         logger.debug(f"User conversation has {len(user_conv['messages'])} messages")
         logger.debug(f"Assistant conversation has {len(assistant_conv['messages'])} messages")
@@ -2083,11 +2002,6 @@ Examples:
         "--skip_long",
         action="store_true",
         help="Skip long trajectories instead of processing with truncation"
-    )
-    parser.add_argument(
-        "--use_endpoint_task_id",
-        action="store_true",
-        help="Use endpoint-based task identification (first/last events only) for efficiency"
     )
     parser.add_argument(
         "--endpoint_count",
@@ -2241,8 +2155,7 @@ def main():
                 # Pass trajectory count info to process_trajectory
                 result = process_trajectory(
                     trajectory_json, output_dir, args.use_templates, args.use_llm_relevance,
-                    args.max_obs_length, args.max_trajectory_tokens, args.skip_long,
-                    args.use_endpoint_task_id, args.endpoint_count, args.short_task_threshold,
+                    args.max_obs_length, args.max_trajectory_tokens, args.skip_long, args.endpoint_count, args.short_task_threshold,
                     processed + 1, total_trajectories  # Add progress info
                 )
                 if result:
