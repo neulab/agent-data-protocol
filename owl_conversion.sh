@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=std_to_owl
-#SBATCH --partition=cpu
+#SBATCH --partition=general
 #SBATCH --time=8:00:00
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=1
 #SBATCH --mem=16G
 
 source .venv/bin/activate
@@ -52,7 +52,8 @@ for dataset_entry in "${datasets[@]}"; do
         --llm_model "litellm_proxy/gpt-4o-mini" \
         --use_templates \
         --random_seed 42 \
-        --sample_ratio "$ratio"
+        --sample_ratio "$ratio" \
+        --quiet
     
     # Check if the command was successful
     if [ $? -eq 0 ]; then
