@@ -503,7 +503,10 @@ def identify_main_task_endpoints(trajectory: Trajectory, endpoint_count: int = 2
                 return result
 
             except Exception as e:
-                raise LLMExtractionError(f"LLM endpoint-based task identification failed: {e}")
+                e_str = str(e)
+                if len(e_str) > 1000 and ("blocked" in e_str):
+                    e_str = e_str[:1000] + "..."
+                raise LLMExtractionError(f"LLM endpoint-based task identification failed: {e_str}")
         else:
             raise LLMExtractionError("LiteLLM not available for task identification")
 
@@ -1987,6 +1990,11 @@ Examples:
         help="Use LLM for relevance checking (default: assume all observations are relevant)"
     )
     parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Disables console logging (file only)"
+    )
+    parser.add_argument(
         "--max_obs_length",
         type=int,
         default=5000,
@@ -2054,9 +2062,10 @@ def main():
     
     # Set up new handlers
     handlers = [
-        logging.StreamHandler(sys.stdout),  # Console output
         logging.FileHandler(log_file, mode='w', encoding='utf-8')  # File output
     ]
+    if not args.quiet:
+        handlers.append(logging.StreamHandler(sys.stdout))  # Console output
     
     log_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
@@ -2192,67 +2201,25 @@ def main():
     finally:
         pass
 
-    # Check if we couldn't reach the target sample size
+    # Summary statistics
+    final_message = f"\n************************************\nProcessed {processed} ({successful} Successes / {failed} Failures) out of {len(trajectories)} trajectories\n"
     if target_sample_size and successful < target_sample_size:
-        logger.warning(f"Could not reach target sample size!")
-        logger.info(f"  Target sample ratio: {args.sample_ratio}")
-        logger.info(f"  Target sample size: {target_sample_size}")
-        logger.info(f"  Successfully processed: {successful}")
-        logger.info(f"  Failed/invalid trajectories skipped: {failed}")
-        logger.info(f"  Total trajectories attempted: {processed}")
-        logger.info(f"  Total trajectories available: {len(trajectories)}")
-        logger.info(f"  Trajectories not attempted: {len(trajectories) - processed}")
-        logger.info(f"  Still needed: {target_sample_size - successful}")
-
-        if len(trajectories) - processed > 0:
-            logger.info(f"Note: There were {len(trajectories) - processed} trajectories not attempted. "
-                       f"The high failure rate ({failed}/{processed} = {failed/processed*100:.1f}%) "
-                       f"prevented reaching the target.")
-        else:
-            logger.info(f"All available trajectories were attempted. "
-                       f"Failure rate: {failed}/{processed} = {failed/processed*100:.1f}%")
-
-    # Final statistics
-    logger.info(f"Conversion complete: {processed} total, {successful} successful, {failed} failed")
-
-    if target_sample_size:
-        if successful >= target_sample_size:
-            logger.info(f"Successfully reached target sample size of {target_sample_size} ({args.sample_ratio:.1%} of {len(trajectories)})")
-        else:
-            logger.info(f"Only processed {successful}/{target_sample_size} target samples ({args.sample_ratio:.1%} of {len(trajectories)})")
-
-    logger.info(f"Success rate: {successful/processed*100:.1f}%" if processed > 0 else "No trajectories processed")
+        final_message += f"[!] Did not reach target sample size of {target_sample_size} ({args.sample_ratio:.1%} of {len(trajectories)})\n"
+        final_message += f"    Trajectory Success Rate: {successful / processed * 100:.1f}%\n"
+    elif target_sample_size:
+        final_message += f"Reached target sample size of {target_sample_size} ({args.sample_ratio:.1%} of {len(trajectories)})\n"
     
-    # Truncation statistics
     if truncation_stats['total_truncations'] > 0:
-        logger.info(f"Truncation statistics:")
-        logger.info(f"  Total truncations: {truncation_stats['total_truncations']}")
-        logger.info(f"  Total characters truncated: {truncation_stats['truncated_chars']:,}")
-        logger.info(f"  Longest original content: {truncation_stats['longest_original']:,} characters")
-        logger.info(f"  Average truncation per event: {truncation_stats['truncated_chars'] / truncation_stats['total_truncations']:.0f} characters")
-    else:
-        logger.info("No content was truncated during processing")
-
-    # Cost statistics
+        final_message += f"[I] Total Truncations: {truncation_stats['total_truncations']} events, {truncation_stats['truncated_chars']} chars\n"
+        final_message += f"    Average truncation per event: {truncation_stats['truncated_chars'] / truncation_stats['total_truncations']:.0f} chars\n"
+    
     if cost_stats['llm_calls'] > 0:
         avg_cost_per_call = cost_stats['total_cost'] / cost_stats['llm_calls']
-        logger.info(f"LLM cost statistics:")
-        logger.info(f"  Total spending: ${cost_stats['total_cost']:.6f}")
-        logger.info(f"  Total API calls: {cost_stats['llm_calls']}")
-        logger.info(f"  Average cost per call: ${avg_cost_per_call:.6f}")
+        final_message += f"[I] Total LLM Spending: ${cost_stats['total_cost']:.6f} over {cost_stats['llm_calls']} calls\n"
+        final_message += f"    Average cost per call: ${avg_cost_per_call:.6f}\n"
         if processed > 0:
             cost_stats['average_cost_per_trajectory'] = cost_stats['total_cost'] / processed
-            logger.info(f"  Average cost per trajectory: ${cost_stats['average_cost_per_trajectory']:.6f}")
-    else:
-        logger.info("No LLM costs tracked (LLM disabled or no calls made)")
-
-    logger.info(f"Log file saved to: {log_file}")
-    
-    if failed > 0:
-        logger.error(f"Conversion completed with {failed} failures. Check log file for details.")
-        sys.exit(1)
-    else:
-        logger.info("Conversion completed successfully!")
+            final_message += f"    Average cost per trajectory: ${cost_stats['average_cost_per_trajectory']:.6f}\n"
 
 
 if __name__ == "__main__":
