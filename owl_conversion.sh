@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=std_to_owl
-#SBATCH --partition=general
+#SBATCH --partition=cpu
+#SBATCH --qos=cpu_qos
 #SBATCH --time=8:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=16G
