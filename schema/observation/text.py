@@ -8,6 +8,7 @@ from schema.observation.observation import Observation
 class TextObservation(Observation):
     class_: str = Field("text_observation", description="The class of the observation")
     content: str = Field(..., description="A textual observation")
+    name: str | None = Field(None, description="An optional name for the participant")
     source: Literal["user", "agent", "environment"] = Field(
         ..., description="The source of the observation."
     )
