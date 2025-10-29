@@ -11,19 +11,14 @@ def standardized_to_sft(trajectory):
 
     The SFT format has:
     - id: trajectory ID
-    - system: system prompt (extracted from first user observation)
+    - system: system prompt (empty for mini-coder)
     - conversations: list of turns with "from" and "value" fields
     """
     conversations = []
     system_prompt = ""
 
-    for i, item in enumerate(trajectory["content"]):
+    for item in trajectory["content"]:
         class_name = item["class_"]
-
-        # Extract system prompt from first user observation
-        if i == 0 and class_name == "text_observation" and item.get("source") == "user":
-            system_prompt = item["content"]
-            continue  # Don't add to conversations
 
         # Convert based on class type
         if class_name == "text_observation":

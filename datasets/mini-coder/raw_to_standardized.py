@@ -14,8 +14,8 @@ from schema.trajectory import Trajectory
 
 def convert_step(step) -> list:
     if step.role == "system":
-        # Include system prompt as a user observation (matches other datasets like swe-smith)
-        return [TextObservation(content=step.content, source="user")]
+        # Skip system prompt - it only contains formatting instructions, not task content
+        return []
 
     elif step.role == "user":
         content = step.content
