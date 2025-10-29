@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script to install pre-commit hooks for OpenHands
+# Script to install pre-commit hooks
 
 set -e
 

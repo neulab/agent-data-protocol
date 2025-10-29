@@ -83,27 +83,3 @@ def parse_line(line):
         out.append(line_copy)
     # print(len(f"{line}"), len(f"{out[-1]}"), f'{[total_length(l["conversations"]) + len(l["system"]) for l in out]}')
     return out
-
-
-def parse_sft(sft_file, out_file):
-    with open(sft_file) as f:
-        f = f.readlines()
-    out = []
-    for line in f:
-        line = json.loads(line)
-        out += parse_line(line)
-    with open(out_file, "w") as f:
-        f.write("\n".join([json.dumps(line) for line in out]))
-
-
-# def parse_all():
-#     home_dir = f'/project/flame/yueqis/agent-data-protocol/datasets/'
-#     dirs = [home_dir + d for d in os.listdir(home_dir)]
-#     for dir in dirs:
-
-#         sft = os.path.join(dir, "full_sft.jsonl")
-#         if not os.path.exists(sft): continue
-#         out = sft.replace("full_sft", "trim_sft")
-#         parse_sft(sft, out)
-#         print(f"finished trimming {dir.split('/')[-1]}")
-# parse_all()

@@ -5,12 +5,11 @@ import re
 import sys
 import traceback
 
-from agents.openhands.api import get_api_tool_description, get_language_descriptions
-from agents.openhands.html_to_axtree import HTMLToAXTree
+from agents.openhands.api import browser_default_apis, get_api_tool_description, get_language_descriptions, openhands_default_tools
+from scripts.html_to_axtree import HTMLToAXTree
 from agents.openhands.system_prompt.system import get_system_message
 from agents.openhands.system_prompt.user import get_web_user_message
 
-# Removed unused imports
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
@@ -20,49 +19,10 @@ from schema.trajectory import Trajectory
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
-
-openhands_default_tools = {
-    "execute_bash": {"required": ["command"], "optional": ["is_input"]},
-    "think": {"required": ["thought"], "optional": []},
-    "finish": {"required": ["message", "task_completed"], "optional": []},
-    "web_read": {"required": ["url"], "optional": []},
-    "browser": {"required": ["code"], "optional": []},
-    "execute_ipython_cell": {"code": ["command"], "optional": []},
-    "str_replace_editor": {
-        "required": ["command", "path"],
-        "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"],
-    },
-    "edit_file": {"required": ["path", "content"], "optional": ["start", "end"]},
-}
-
-action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
-
-function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
-
-browser_default_apis = {
-    "goto": {"required": ["url"], "optional": []},
-    "go_back": {"required": [], "optional": []},
-    "go_forward": {"required": [], "optional": []},
-    "noop": {"required": [], "optional": ["wait_ms"]},
-    "scroll": {"required": ["delta_x", "delta_y"], "optional": []},
-    "fill": {"required": ["bid", "value"], "optional": []},
-    "select_option": {"required": ["bid", "options"], "optional": []},
-    "click": {"required": ["bid"], "optional": ["button", "modifiers"]},
-    "dblclick": {"required": ["bid"], "optional": ["button", "modifiers"]},
-    "hover": {"required": ["bid"], "optional": []},
-    "press": {"required": ["bid", "key_comb"], "optional": []},
-    "focus": {"required": ["bid"], "optional": []},
-    "clear": {"required": ["bid"], "optional": []},
-    "drag_and_drop": {"required": ["from_bid", "to_bid"], "optional": []},
-    "upload_file": {"required": ["bid", "file"], "optional": []},
-}
-
-USE_NAV = (
-    os.environ.get("USE_NAV", "true") == "true"
-)  # only disable NAV actions when running webarena and miniwob benchmarks
-
 generate_axtree = HTMLToAXTree(dataset)
 
+action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
+function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
 
 def verify_args(required_args, optional_args, input_args):
     # all required args should be included
@@ -89,7 +49,6 @@ def format_function(function_name, parameters):
     </parameter>
     </function>
     """
-
     function_call = ""
     for parameter in parameters:
         value = parameters[parameter]
@@ -105,17 +64,12 @@ def extract_function_call(content):
             return tool
     return None
 
-
-NON_OH_EVENTS = {}
 PREV_BID = None
-
-
 def standardized_event_to_openhands_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
     previous_web_actions: list,
     is_web: bool,
-    chunk: str,
     api_env: str = None,
     api_sigs=None,
     languages: list = [],
@@ -125,7 +79,7 @@ def standardized_event_to_openhands_message(
         if event.axtree is not None:
             axtree = event.axtree
         elif generate_axtree.last_html != event.html:
-            axtree = generate_axtree.build_axtree(id, event.html, chunk)
+            axtree = generate_axtree.build_axtree(id, event.html, "all")
         else:
             axtree = generate_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, PREV_BID)
@@ -170,7 +124,7 @@ def standardized_event_to_openhands_message(
         if not browsergym_id:
             event_xpath = event.kwargs.get("xpath", None)
             if event_xpath:
-                browsergym_id = generate_axtree.get_bid(id, event_xpath, chunk)
+                browsergym_id = generate_axtree.get_bid(id, event_xpath, "all")
         # for tool calls that are not browser based since there is no browsergym_id
         # and tool calls that are specified as non-web
         # these should all be dataset specific apis
@@ -229,11 +183,6 @@ def standardized_event_to_openhands_message(
         function_name = action_function.get(event.language, f"execute_{event.language}")
         code_content = event.content
         if function_name not in openhands_default_tools:
-            if function_name not in NON_OH_EVENTS:
-                NON_OH_EVENTS[function_name] = 0
-            NON_OH_EVENTS[function_name] += 1
-            # raise ValueError(f"Event with unknown code action type: {type(event)}\n{function_name}{event}")
-            # return None
             languages.append(event.language)
             function_name = "execute_ipython_cell"
             code_content = f'{event.language}("{code_content}")'
@@ -284,7 +233,7 @@ def standardized_event_to_openhands_message(
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
 
 
-def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
+def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     std_dataset = [json.loads(line)]
     std_data = std_dataset[0]
     trajectory = Trajectory(**std_data)
@@ -298,7 +247,7 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
         event = events[i]
         try:
             message = standardized_event_to_openhands_message(
-                id, event, previous_web_actions, is_web, chunk, api_env, api_sigs, languages
+                id, event, previous_web_actions, is_web, api_env, api_sigs, languages
             )
             if not message:
                 return None
@@ -327,11 +276,14 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
 
         except Exception as e:
             traceback.print_exc()
-            print(e)
+            print(e, file=sys.stderr)
             return None
     if languages:
         language_descriptions = get_language_descriptions(languages)
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
+    for m in conversations:
+        if m["from"] == "function_call": m["from"] = "gpt"
+        if m["from"] == "observation": m["from"] = "human"
     return {
         "id": trajectory.id,
         "conversations": conversations,
@@ -339,7 +291,29 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs):
     }
 
 
-def main():
+def main(line, is_web, api_env):
+    exclude_apis = browser_default_apis if is_web else {}
+    api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, api_env)
+    output_line = process_row(
+        line,
+        is_web=is_web,
+        api_env=api_env,
+        api_tool_description=api_tool_description,
+        api_sigs=api_sigs,
+    )
+    output_line = json.dumps(output_line)
+    # if output_line:
+    #     # print("Successfully processed line", file=sys.stderr)
+    #     with open(f"datasets/{dataset}/full_sft_openhands.jsonl", "a") as f:
+    #         try:
+    #             f.write(json.dumps(output_line) + "\n")
+    #         except Exception as e:
+    #             traceback.print_exc()
+    #             print(e)
+    #             continue
+    return output_line
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert standardized data to SFT format")
     parser.add_argument(
         "--is_web",
@@ -349,7 +323,6 @@ def main():
         required=True,
         default="no",
     )
-    parser.add_argument("--chunk", type=str, help="Dataset name", required=True)
     parser.add_argument(
         "--api_env",
         type=str,
@@ -359,42 +332,5 @@ def main():
     )
     args = parser.parse_args()
     args.is_web = args.is_web == "yes"
-    exclude_apis = browser_default_apis if args.is_web else {}
-    api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, args.api_env)
-    count = 0
-    from datetime import datetime
-
-    now = datetime.now()
-    print(now, file=sys.stderr)
     for line in sys.stdin:
-        if count % 1000 == 0 and count != 0:
-            now = datetime.now()
-            print(f"Processed {count} lines; {now}", file=sys.stderr)
-        output_line = process_row(
-            line,
-            is_web=args.is_web,
-            chunk=args.chunk,
-            api_env=args.api_env,
-            api_tool_description=api_tool_description,
-            api_sigs=api_sigs,
-        )
-        if output_line:
-            # print("Successfully processed line", file=sys.stderr)
-            with open(f"datasets/{dataset}/full_sft.jsonl", "a") as f:
-                try:
-                    f.write(json.dumps(output_line) + "\n")
-                    count += 1
-                except Exception as e:
-                    traceback.print_exc()
-                    print(e)
-                    continue
-        # else:
-        #     print(f"Failed to process line: {line[:10]}...", file=sys.stderr)
-    print(f"Number of non OH events: {NON_OH_EVENTS}", file=sys.stderr)
-    # if args.is_web:
-    #     print(f"Trimming web observation", file=sys.stderr)
-    #     parse_sft(f"datasets/{dataset}/full_sft.jsonl", f"datasets/{dataset}/full_sft.jsonl")
-
-
-if __name__ == "__main__":
-    main()
+        print(main(line, args.is_web, args.api_env))

@@ -177,6 +177,8 @@ if __name__ == "__main__":
     for line in sys.stdin:
         raw_data = json.loads(line)
         messages = []
+        if not isinstance(raw_data["messages"], str): 
+            raw_data["messages"] = json.dumps(raw_data["messages"])
         # print(raw_data["messages"], file=sys.stderr)
         for m in json.loads(raw_data["messages"]):
             if isinstance(m, dict) and "role" in m and "content" in m:

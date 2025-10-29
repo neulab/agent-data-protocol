@@ -2,6 +2,7 @@ import importlib.util
 import inspect
 import os
 import random
+import sys
 
 openhands_default_tools = {
     "execute_bash": {"required": ["command"], "optional": ["is_input"]},
@@ -17,19 +18,36 @@ openhands_default_tools = {
     "edit_file": {"required": ["path", "content"], "optional": ["start", "end"]},
 }
 
+browser_default_apis = {
+    "goto": {"required": ["url"], "optional": []},
+    "go_back": {"required": [], "optional": []},
+    "go_forward": {"required": [], "optional": []},
+    "noop": {"required": [], "optional": ["wait_ms"]},
+    "scroll": {"required": ["delta_x", "delta_y"], "optional": []},
+    "fill": {"required": ["bid", "value"], "optional": []},
+    "select_option": {"required": ["bid", "options"], "optional": []},
+    "click": {"required": ["bid"], "optional": ["button", "modifiers"]},
+    "dblclick": {"required": ["bid"], "optional": ["button", "modifiers"]},
+    "hover": {"required": ["bid"], "optional": []},
+    "press": {"required": ["bid", "key_comb"], "optional": []},
+    "focus": {"required": ["bid"], "optional": []},
+    "clear": {"required": ["bid"], "optional": []},
+    "drag_and_drop": {"required": ["from_bid", "to_bid"], "optional": []},
+    "upload_file": {"required": ["bid", "file"], "optional": []},
+}
 
 def check_exclude_openhands_default_tools(name, sig, required, optional):
     if not all(
         api in openhands_default_tools[name]["required"] + openhands_default_tools[name]["optional"]
         for api in required
     ):
-        print(f"mismatch required arguments: {name}, {sig}")
+        # print(f"mismatch required arguments: {name}, {sig}", file=sys.stderr)
         return False
     if not all(api in openhands_default_tools[name]["optional"] for api in optional):
-        print(f"mismatch optional arguments: {name}, {sig}")
+        # print(f"mismatch optional arguments: {name}, {sig}", file=sys.stderr)
         return False
     if not all(api in required for api in openhands_default_tools[name]["required"]):
-        print(f"mismatch required arguments: {name}, {sig}")
+        # print(f"mismatch required arguments: {name}, {sig}", file=sys.stderr)
         return False
     return True
 
@@ -47,13 +65,13 @@ def check_exclude_tools(name: str, required: list, optional: list, exclude_apis:
         required.remove("element_id")
         required.append("bid")
     if not all(api in exclude_api_required + exclude_api_optional for api in required):
-        print(f"{name} is included")
+        # print(f"{name} is included", file=sys.stderr)
         return False
     if not all(api in exclude_api_optional for api in optional):
-        print(f"{name} is included")
+        # print(f"{name} is included", file=sys.stderr)
         return False
     if not all(api in required for api in exclude_api_required):
-        print(f"{name} is included")
+        # print(f"{name} is included", file=sys.stderr)
         return False
     return True
 
@@ -83,10 +101,10 @@ def get_api_tool_description(dataset, exclude_apis={}, env="execute_ipython_cell
             if name in openhands_default_tools and check_exclude_openhands_default_tools(
                 name, sig, required, optional
             ):
-                print(f"excluded {name}")
+                # print(f"excluded {name}", file=sys.stderr)
                 continue
             if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
-                print(f"excluded {name}")
+                # print(f"excluded {name}", file=sys.stderr)
                 continue
             docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
             API_TOOL_DESCRIPTION += docstring

@@ -163,8 +163,8 @@ def process_row(line, api_tool_description, api_sigs):
             conversations.extend([message])
 
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            # traceback.print_exc()
+            print(e, file=sys.stderr)
             return None
     for message in conversations:
         if message["from"] == "function_call":
@@ -180,7 +180,6 @@ def process_row(line, api_tool_description, api_sigs):
 
 def main():
     api_tool_description, api_sigs = get_api_tool_description(dataset)
-    count = 0
     for line in sys.stdin:
         output_line = process_row(
             line,
@@ -188,16 +187,15 @@ def main():
             api_sigs=api_sigs,
         )
         if output_line:
-            with open(f"datasets/{dataset}/full_sft_swe.jsonl", "a") as f:
-                try:
-                    f.write(json.dumps(output_line) + "\n")
-                except Exception as e:
-                    traceback.print_exc()
-                    print(e)
-                    continue
-        count += 1
-        if count % 10000 == 0:
-            print(count, file=sys.stderr)
+            assert json.loads(json.dumps(output_line))
+            print(json.dumps(output_line))
+            # with open(f"datasets/{dataset}/full_sft_swe.jsonl", "a") as f:
+            #     try:
+            #         f.write(json.dumps(output_line) + "\n")
+            #     except Exception as e:
+            #         traceback.print_exc()
+            #         print(e)
+            #         continue
 
 
 if __name__ == "__main__":

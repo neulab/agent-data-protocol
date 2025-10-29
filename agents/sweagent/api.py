@@ -18,13 +18,13 @@ def check_exclude_openhands_default_tools(name, sig, required, optional):
         api in sweagent_default_tools[name]["required"] + sweagent_default_tools[name]["optional"]
         for api in required
     ):
-        print(f"mismatch required arguments: {name}, {sig}")
+        # print(f"mismatch required arguments: {name}, {sig}")
         return False
     if not all(api in sweagent_default_tools[name]["optional"] for api in optional):
-        print(f"mismatch optional arguments: {name}, {sig}")
+        # print(f"mismatch optional arguments: {name}, {sig}")
         return False
     if not all(api in required for api in sweagent_default_tools[name]["required"]):
-        print(f"mismatch required arguments: {name}, {sig}")
+        # print(f"mismatch required arguments: {name}, {sig}")
         return False
     return True
 
@@ -42,13 +42,13 @@ def check_exclude_tools(name: str, required: list, optional: list, exclude_apis:
         required.remove("element_id")
         required.append("bid")
     if not all(api in exclude_api_required + exclude_api_optional for api in required):
-        print(f"{name} is included")
+        # print(f"{name} is included")
         return False
     if not all(api in exclude_api_optional for api in optional):
-        print(f"{name} is included")
+        # print(f"{name} is included")
         return False
     if not all(api in required for api in exclude_api_required):
-        print(f"{name} is included")
+        # print(f"{name} is included")
         return False
     return True
 
@@ -76,10 +76,10 @@ def get_api_tool_description(dataset, exclude_apis={}, env="bash"):
             if name in sweagent_default_tools and check_exclude_openhands_default_tools(
                 name, sig, required, optional
             ):
-                print(f"excluded {name}")
+                # print(f"excluded {name}")
                 continue
             if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
-                print(f"excluded {name}")
+                # print(f"excluded {name}")
                 continue
             docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
             API_TOOL_DESCRIPTION += docstring

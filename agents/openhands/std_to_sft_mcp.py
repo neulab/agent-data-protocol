@@ -6,12 +6,12 @@ import re
 import sys
 import traceback
 
-from agents.openhands.api import get_api_tool_description
+from agents.openhands.api import get_api_tool_description, openhands_default_tools
 from agents.openhands.convert_api_to_mcp import (
     get_api_tools,
     get_language_tools,
 )
-from agents.openhands.html_to_axtree import HTMLToAXTree
+from scripts.html_to_axtree import HTMLToAXTree
 from agents.openhands.system_prompt.system import get_system_message
 from agents.openhands.system_prompt.user import get_web_user_message
 from schema.action.api import ApiAction

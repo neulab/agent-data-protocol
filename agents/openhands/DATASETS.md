@@ -1,4 +1,4 @@
-# Dataset Argument Documentation
+# OpenHands SFT Dataset Argument Documentation
 
 This document outlines the input argument configurations for each dataset. The arguments are:
 
@@ -23,8 +23,8 @@ This document outlines the input argument configurations for each dataset. The a
 | nnetnav-wa                              |        browser       |     yes    |
 | openhands                               | execute_ipython_cell |     yes    |
 | orca_agentinstruct                      |         None         |     no     |
-| SWE-Gym_OpenHands-Sampled-Trajectories  |         None         |     no     |
-| SWE-smith_5kTrajectories                |     execute_bash     |     no     |
+| swe-gym_openhands_sampled_trajectories  |         None         |     no     |
+| swe-smith                               |     execute_bash     |     no     |
 | synatra                                 |        browser       |     yes    |
 
 
