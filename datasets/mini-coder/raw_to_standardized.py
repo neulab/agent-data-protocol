@@ -14,7 +14,8 @@ from schema.trajectory import Trajectory
 
 def convert_step(step) -> list:
     if step.role == "system":
-        return []
+        # Include system prompt as a user observation (matches other datasets like swe-smith)
+        return [TextObservation(content=step.content, source="user")]
 
     elif step.role == "user":
         content = step.content
@@ -51,6 +52,10 @@ def convert_step(step) -> list:
             # Extract everything before the code block as the description/thought
             first_match = bash_matches[0]
             description = content[: first_match.start()].strip()
+
+            # Remove "THOUGHT: " prefix to match other datasets
+            if description.startswith("THOUGHT: "):
+                description = description[len("THOUGHT: ") :].strip()
 
             # Extract the bash command
             bash_command = first_match.group(1).strip()
