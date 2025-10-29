@@ -18,79 +18,72 @@ def convert_step(step) -> list:
 
     elif step.role == "user":
         content = step.content
-        # Handle observations that start with "OBSERVATION:"
-        if content.startswith("OBSERVATION:"):
-            content = content[len("OBSERVATION:") :].strip()
-            return [TextObservation(content=content, source="environment")]
-        else:
-            return [TextObservation(content=content, source="user")]
 
-    elif step.role == "tool":
-        content = step.content
-        # Handle observations that start with "OBSERVATION:"
-        if content.startswith("OBSERVATION:"):
-            content = content[len("OBSERVATION:") :].strip()
-        return [TextObservation(content=content, source="environment")]
+        # Check if this is the initial task description or a command execution result
+        # Command execution results have <returncode> and <output> tags
+        returncode_pattern = r"<returncode>(\d+)</returncode>"
+        output_pattern = r"<output>(.*?)</output>"
+
+        returncode_match = re.search(returncode_pattern, content, re.DOTALL)
+        output_match = re.search(output_pattern, content, re.DOTALL)
+
+        if returncode_match and output_match:
+            # This is a command execution result
+            returncode = returncode_match.group(1)
+            output = output_match.group(1).strip()
+
+            # Format as plain text observation (similar to other coding datasets)
+            observation_content = output if output else ""
+            return [TextObservation(content=observation_content, source="environment")]
+        else:
+            # This is the initial task description from user
+            return [TextObservation(content=content, source="user")]
 
     elif step.role == "assistant":
         result = []
         content = step.content
 
-        # Check for function calls in the format <function=name>\n<parameter=param>value</parameter>\n</function>
-        function_pattern = r"<function=([^>]+)>\s*(.*?)\s*</function>"
-        function_matches = list(re.finditer(function_pattern, content, re.DOTALL))
+        # Check for bash code blocks in the format ```bash\ncommand\n```
+        bash_block_pattern = r"```bash\n(.*?)\n```"
+        bash_matches = list(re.finditer(bash_block_pattern, content, re.DOTALL))
 
-        if function_matches:
-            current_pos = 0
+        if bash_matches:
+            # Extract everything before the code block as the description/thought
+            first_match = bash_matches[0]
+            description = content[: first_match.start()].strip()
 
-            for match in function_matches:
-                # Get text before this function call to use as description
-                before_text = content[current_pos : match.start()].strip()
+            # Extract the bash command
+            bash_command = first_match.group(1).strip()
 
-                # Parse the function call
-                function_name = match.group(1)
-                params_content = match.group(2)
-
-                # Parse parameters
-                kwargs = {}
-                param_pattern = r"<parameter=([^>]+)>(.*?)</parameter>"
-                param_matches = re.findall(param_pattern, params_content, re.DOTALL)
-
-                for param_name, param_value in param_matches:
-                    param_value = param_value.strip()
-
-                    # Try to parse as JSON for arrays/objects, otherwise keep as string
-                    if param_value.startswith("[") and param_value.endswith("]"):
-                        try:
-                            kwargs[param_name] = json.loads(param_value)
-                        except:
-                            kwargs[param_name] = param_value
-                    elif param_value.isdigit():
-                        kwargs[param_name] = int(param_value)
-                    elif param_value in ["true", "false"]:
-                        kwargs[param_name] = param_value == "true"
-                    else:
-                        kwargs[param_name] = param_value
-
-                # Create description from before_text
-                description = before_text if before_text else None
-
-                if function_name == "bash":
-                    result.append(
-                        CodeAction(
-                            language="bash", content=kwargs["command"], description=description
-                        )
-                    )
-                else:
-                    result.append(
-                        ApiAction(function=function_name, kwargs=kwargs, description=description)
-                    )
-
-                current_pos = match.end()
-
+            # Create a CodeAction for the bash command
+            result.append(
+                CodeAction(
+                    language="bash",
+                    content=bash_command,
+                    description=description if description else None,
+                )
+            )
         else:
-            # No function calls found, treat as regular message
-            result.append(MessageAction(content=content))
+            # Check for function calls in the format <function=name>
+            function_pattern = r"<function=([^>]+)>"
+            function_match = re.search(function_pattern, content)
+
+            if function_match:
+                # Get text before the function call as description
+                description = content[: function_match.start()].strip()
+                function_name = function_match.group(1)
+
+                # For submit and other simple functions without parameters
+                result.append(
+                    ApiAction(
+                        function=function_name,
+                        kwargs={},
+                        description=description if description else None,
+                    )
+                )
+            else:
+                # No code blocks or function calls, treat as regular message
+                result.append(MessageAction(content=content))
 
         return result
 
@@ -179,7 +172,11 @@ def process_data(data):
 
 
 if __name__ == "__main__":
+    # Read input as newline-delimited JSON (JSONL)
     for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
