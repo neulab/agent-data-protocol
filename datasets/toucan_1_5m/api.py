@@ -9,5 +9,6 @@ def exa_search_web_search_exa(query: str, numResults: int = 5) -> dict:
     Returns:
     -------
         dict: Search results containing success status and results list
+
     """
     pass
