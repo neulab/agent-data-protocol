@@ -67,7 +67,7 @@ cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py 
 The repository includes datasets from various domains (we welcome more contributions!):
 
 - **Coding**: `code_feedback`, `codeactinstruct`
-- **Software Engineering**: `swe-smith`, `swe-gym_openhands_sampled_trajectories`, 
+- **Software Engineering**: `swe-smith`, `swe-gym_openhands_sampled_trajectories`,
 - **Web Browsing**: `mind2web`, `nnetnav-live`, `nnetnav-wa`, `go-browse-wa`, `synatra`
 - **Multi-domain**: `agenttuning_*`, `orca_agentinstruct`, `openhands`
 
@@ -197,10 +197,10 @@ If you use this repository in your research, please cite:
 
 ```bibtex
 @misc{song2025agentdataprotocolunifying,
-    title={Agent Data Protocol: Unifying Datasets for Diverse, Effective Fine-tuning of LLM Agents}, 
+    title={Agent Data Protocol: Unifying Datasets for Diverse, Effective Fine-tuning of LLM Agents},
     author={Yueqi Song and Ketan Ramaneti and Zaid Sheikh and Ziru Chen and Boyu Gou and Tianbao Xie and Yiheng Xu and Danyang Zhang and Apurva Gandhi and Fan Yang and Joseph Liu and Tianyue Ou and Zhihao Yuan and Frank Xu and Shuyan Zhou and Xingyao Wang and Xiang Yue and Tao Yu and Huan Sun and Yu Su and Graham Neubig},
     year={2025},
-    url={https://arxiv.org/abs/2510.24702}, 
+    url={https://arxiv.org/abs/2510.24702},
 }
 ```
 
