@@ -4,8 +4,11 @@ A standardized protocol for collecting, processing, and converting agent trainin
 
 ## Recent Release
 Check out our arXiv preprint: [https://arxiv.org/abs/2510.24702](https://arxiv.org/abs/2510.24702)
+
 Try a demo of data conversion on our Project Website: [https://www.agentdataprotocol.com/](https://www.agentdataprotocol.com/)
+
 Download ADP data: [https://huggingface.co/collections/neulab/agent-data-protocol](https://huggingface.co/collections/neulab/agent-data-protocol)
+
 ## Overview
 
 The Agent Data Protocol provides a systematic approach to handle agent training data across different domains, environments, and agent architectures. It standardizes the representation of agent trajectories, actions, and observations, enabling seamless conversion between raw datasets and agent-specific training formats.
