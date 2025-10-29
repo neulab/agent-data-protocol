@@ -114,7 +114,7 @@ def extract_raw_data():
     # Your extraction logic here
     # This should read from the original data source
     # and yield individual samples
-    
+
     for sample in your_data_source:
         yield {
             "id": sample.id,
@@ -195,9 +195,9 @@ from schema.observation.text import TextObservation
 
 def convert_raw_to_standardized(raw_data):
     """Convert a raw data sample to standardized format."""
-    
+
     content = []
-    
+
     # Example conversion logic
     for item in raw_data["content"]:
         if item["type"] == "message":
@@ -226,7 +226,7 @@ def convert_raw_to_standardized(raw_data):
                 text=item["text"],
                 source="environment"
             ))
-    
+
     return Trajectory(
         id=raw_data["id"],
         content=content,
@@ -247,7 +247,7 @@ if __name__ == "__main__":
    def convert_raw_to_standardized(raw_data):
        # Validate and parse raw data
        data = SchemaRaw(**raw_data)
-       
+
        # Now use typed data with IDE support and validation
        content = []
        for item in data.items:
@@ -273,11 +273,11 @@ if __name__ == "__main__":
    ```python
    def function_name(param1: type, param2: type) -> return_type:
        """Clear description of what the function does.
-       
+
        Args:
            param1 (type): Description of parameter 1
            param2 (type): Description of parameter 2
-           
+
        Example:
            function_name("example_value", 123)
        """
@@ -288,22 +288,22 @@ if __name__ == "__main__":
    ```python
    def click(xpath: str) -> None:
        """Click on a web element.
-       
+
        Args:
            xpath (str): The xpath of the element to click.
-           
+
        Example:
            click("//button[@id='submit']")
        """
        pass
-   
+
    def type(xpath: str, text: str) -> None:
        """Type text into an input field.
-       
+
        Args:
            xpath (str): The xpath of the input element.
            text (str): The text to type.
-           
+
        Example:
            type("//input[@name='username']", "john_doe")
        """
@@ -313,7 +313,7 @@ if __name__ == "__main__":
    Then in your `raw_to_standardized.py`, use `ApiAction` for structured actions:
    ```python
    from schema.action.api import ApiAction
-   
+
    # Convert structured actions to ApiAction
    if action_type == "click":
        content.append(ApiAction(
@@ -437,15 +437,15 @@ from schema.trajectory import Trajectory
 
 def convert_trajectory_to_sft(trajectory: Trajectory) -> Dict[str, Any]:
     """Convert a standardized trajectory to SFT format."""
-    
+
     messages = []
-    
+
     # Add system message
     messages.append({
         "role": "system",
         "content": "Your agent's system prompt here"
     })
-    
+
     # Convert ADP action and observation content to agent specific messages
     for item in trajectory.content:
         if item.class_ == "MessageAction":
@@ -459,7 +459,7 @@ def convert_trajectory_to_sft(trajectory: Trajectory) -> Dict[str, Any]:
                 "content": f"Observation: {item.text}"
             })
         # Handle other observation types...
-    
+
     return {
         "id": trajectory.id,
         "conversations": messages,
@@ -585,10 +585,10 @@ Brief description of the changes made.
 - [ ] Other (please describe)
 
 ## Dataset/Agent Information
-- **Name**: 
-- **Source**: 
-- **Size**: 
-- **Domain**: 
+- **Name**:
+- **Source**:
+- **Size**:
+- **Domain**:
 
 ## Testing
 - [ ] All tests pass

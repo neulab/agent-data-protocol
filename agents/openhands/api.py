@@ -2,7 +2,6 @@ import importlib.util
 import inspect
 import os
 import random
-import sys
 
 openhands_default_tools = {
     "execute_bash": {"required": ["command"], "optional": ["is_input"]},
@@ -35,6 +34,7 @@ browser_default_apis = {
     "drag_and_drop": {"required": ["from_bid", "to_bid"], "optional": []},
     "upload_file": {"required": ["bid", "file"], "optional": []},
 }
+
 
 def check_exclude_openhands_default_tools(name, sig, required, optional):
     if not all(

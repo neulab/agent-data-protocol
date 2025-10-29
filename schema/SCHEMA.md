@@ -38,7 +38,7 @@ Base Class Implementation: [`schema/action/action.py`](../schema/action/action.p
 Represents function/API calls made by the agent.
 
 **Fields**:
-- `class_` (str): Always "api_action" 
+- `class_` (str): Always "api_action"
 - `function` (str): Name of the function being called
 - `kwargs` (dict): Arguments passed to the function
 - `description` (str, optional): Agent's reasoning or thought process

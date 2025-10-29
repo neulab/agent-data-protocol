@@ -2,7 +2,6 @@ import json
 import os
 import re
 import sys
-import traceback
 
 from agents.sweagent.api import get_api_tool_description
 from agents.sweagent.system_message import base_template

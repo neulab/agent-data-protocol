@@ -5,17 +5,21 @@ import re
 import sys
 import traceback
 
-from agents.openhands.api import browser_default_apis, get_api_tool_description, get_language_descriptions, openhands_default_tools
-from scripts.html_to_axtree import HTMLToAXTree
+from agents.openhands.api import (
+    browser_default_apis,
+    get_api_tool_description,
+    get_language_descriptions,
+    openhands_default_tools,
+)
 from agents.openhands.system_prompt.system import get_system_message
 from agents.openhands.system_prompt.user import get_web_user_message
-
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
+from scripts.html_to_axtree import HTMLToAXTree
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -23,6 +27,7 @@ generate_axtree = HTMLToAXTree(dataset)
 
 action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
+
 
 def verify_args(required_args, optional_args, input_args):
     # all required args should be included
@@ -64,7 +69,10 @@ def extract_function_call(content):
             return tool
     return None
 
+
 PREV_BID = None
+
+
 def standardized_event_to_openhands_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
@@ -282,8 +290,10 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
         language_descriptions = get_language_descriptions(languages)
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
     for m in conversations:
-        if m["from"] == "function_call": m["from"] = "gpt"
-        if m["from"] == "observation": m["from"] = "human"
+        if m["from"] == "function_call":
+            m["from"] = "gpt"
+        if m["from"] == "observation":
+            m["from"] = "human"
     return {
         "id": trajectory.id,
         "conversations": conversations,
@@ -291,7 +301,7 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     }
 
 
-def main(line, is_web, api_env):
+def process_line(line, is_web, api_env):
     exclude_apis = browser_default_apis if is_web else {}
     api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, api_env)
     output_line = process_row(
@@ -313,7 +323,13 @@ def main(line, is_web, api_env):
     #             continue
     return output_line
 
-if __name__ == "__main__":
+
+# Keep the old main function for backward compatibility
+def main_with_args(line, is_web, api_env):
+    return process_line(line, is_web, api_env)
+
+
+def main():
     parser = argparse.ArgumentParser(description="Convert standardized data to SFT format")
     parser.add_argument(
         "--is_web",
@@ -333,4 +349,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.is_web = args.is_web == "yes"
     for line in sys.stdin:
-        print(main(line, args.is_web, args.api_env))
+        print(main_with_args(line, args.is_web, args.api_env))
+
+
+if __name__ == "__main__":
+    main()
