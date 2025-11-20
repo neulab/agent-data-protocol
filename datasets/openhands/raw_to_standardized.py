@@ -1,6 +1,8 @@
 import ast
+import base64
 import inspect
 import json
+import os
 import random
 import sys
 
@@ -49,8 +51,35 @@ def map_source(source):
         return "environment"
 
 
+def save_screenshot_to_file(base64_data, trajectory_id, screenshot_index):
+    """Save base64 screenshot data to a file and return the path.
+
+    Args:
+        base64_data: Base64-encoded image data (may include data URL prefix)
+        trajectory_id: The trajectory ID for organizing files
+        screenshot_index: Index of the screenshot within the trajectory
+
+    Returns:
+        Relative path to the saved screenshot file
+    """
+    output_dir = f"datasets/openhands/screenshots/{trajectory_id}"
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = f"{output_dir}/screenshot_{screenshot_index}.png"
+
+    # Remove data URL prefix if present (e.g., "data:image/png;base64,...")
+    if "," in base64_data and base64_data.startswith("data:"):
+        base64_data = base64_data.split(",", 1)[1]
+
+    # Decode and write to file
+    with open(filepath, "wb") as f:
+        f.write(base64.b64decode(base64_data))
+
+    return filepath
+
+
 def process_data(data, keep_all=False):
     content = []
+    screenshot_counter = 0  # Track screenshots for unique filenames
     for item in data.trajectory:
         # In the huggingface dataset, args have been moved to extras
         if item.extras:
@@ -77,6 +106,18 @@ def process_data(data, keep_all=False):
                 )
                 if not _html and item.content.strip():
                     _html = markdown.markdown(item.content)
+                # Save screenshot to file if present
+                image_obs = None
+                if item.extras.screenshot:
+                    screenshot_path = save_screenshot_to_file(
+                        item.extras.screenshot, data.id, screenshot_counter
+                    )
+                    image_obs = ImageObservation(
+                        source=map_source(item.source),
+                        content=screenshot_path,
+                    )
+                    screenshot_counter += 1
+
                 content.append(
                     WebObservation(
                         source=map_source(item.source),
@@ -85,12 +126,7 @@ def process_data(data, keep_all=False):
                         axtree=None
                         if not item.extras.axtree_object
                         else flatten_axtree_to_str(item.extras.axtree_object),
-                        image_observation=None
-                        if not item.extras.screenshot
-                        else ImageObservation(
-                            source=map_source(item.source),
-                            content=item.extras.screenshot,  # Base64-encoded image data, not a path
-                        ),
+                        image_observation=image_obs,
                         viewport_size=None,
                     )
                 )

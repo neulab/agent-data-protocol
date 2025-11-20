@@ -53,6 +53,20 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
                 element_text = element["edit text"]
             else:
                 element_text = ""
+
+            # Build natural language content description from non-visual metadata
+            desc_parts = []
+            if element["resource_id"]:
+                desc_parts.append(f"Resource ID: {element['resource_id']}")
+            # Include hint_text if it wasn't already used in element_text
+            if element["hint_text"] and element["hint_text"] != element_text:
+                desc_parts.append(f"Hint: {element['hint_text']}")
+            # Include tooltip if it wasn't already used in element_text
+            if element["tooltip"] and element["tooltip"] != element_text:
+                desc_parts.append(f"Tooltip: {element['tooltip']}")
+
+            content_desc = ", ".join(desc_parts) if desc_parts else None
+
             image_annotation = ImageAnnotation(
                 # text=element["text"],
                 # element_type=element["class_name"],
@@ -64,6 +78,9 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
                     width=element["bbox_pixels"]["width"],
                     height=element["bbox_pixels"]["height"],
                 ),
+                content_description=content_desc,
+                clickable=element["is_clickable"],
+                editable=element["is_editable"],
             )
             annotations.append(image_annotation)
         content.append(ImageObservation(content=screenshot, annotations=annotations, source="user"))
