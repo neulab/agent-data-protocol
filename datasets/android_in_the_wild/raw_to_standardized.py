@@ -41,8 +41,7 @@ def _point_in_bbox(point_yx: List[float], bbox: List[float]) -> bool:
     bbox_y, bbox_x, bbox_height, bbox_width = bbox
 
     # Check if point is within the box boundaries
-    return (bbox_y <= y <= bbox_y + bbox_height and
-            bbox_x <= x <= bbox_x + bbox_width)
+    return bbox_y <= y <= bbox_y + bbox_height and bbox_x <= x <= bbox_x + bbox_width
 
 
 def process_episode(episode_data: List[Dict]) -> Dict:
@@ -186,7 +185,7 @@ if __name__ == "__main__":
             all_data = [all_data]
     except json.JSONDecodeError:
         # Fall back to newline-delimited JSON
-        all_data = [json.loads(line) for line in input_text.strip().split('\n') if line.strip()]
+        all_data = [json.loads(line) for line in input_text.strip().split("\n") if line.strip()]
 
     for data in all_data:
         # If we encounter a new episode, process the previous one

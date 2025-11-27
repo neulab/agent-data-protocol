@@ -19,9 +19,7 @@ class ImageAnnotation(BaseModel):
     content_description: str | None = Field(
         None, description="A description of the content of the element"
     )
-    clickable: bool | None = Field(
-        None, description="Whether the element can be clicked/tapped"
-    )
+    clickable: bool | None = Field(None, description="Whether the element can be clicked/tapped")
     editable: bool | None = Field(
         None, description="Whether the element can be edited (text input)"
     )
