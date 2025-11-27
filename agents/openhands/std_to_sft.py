@@ -16,9 +16,9 @@ from agents.openhands.system_prompt.user import get_web_user_message
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
+from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.observation.image import ImageObservation
 from schema.trajectory import Trajectory
 from scripts.html_to_axtree import HTMLToAXTree
 
@@ -102,14 +102,20 @@ def standardized_event_to_openhands_message(
             prompt += "\n\n---\nVISUAL OBSERVATION:\n<image>"
 
             # Add image annotations if present (using enhanced parsing)
-            if hasattr(event.image_observation, "annotations") and event.image_observation.annotations:
+            if (
+                hasattr(event.image_observation, "annotations")
+                and event.image_observation.annotations
+            ):
                 annotations = []
                 for annotation in event.image_observation.annotations:
                     # Build annotation description from available fields
                     parts = []
                     if hasattr(annotation, "text") and annotation.text:
                         parts.append(annotation.text)
-                    elif hasattr(annotation, "content_description") and annotation.content_description:
+                    elif (
+                        hasattr(annotation, "content_description")
+                        and annotation.content_description
+                    ):
                         parts.append(annotation.content_description)
 
                     # Add element type
@@ -181,7 +187,10 @@ def standardized_event_to_openhands_message(
                 # Use xpath hash as placeholder to maintain some consistency
                 placeholder_id = f"placeholder_bid_{abs(hash(event_xpath)) % 10000}"
                 browsergym_id = f'"{placeholder_id}"'
-                print(f"Warning: Generated placeholder bid {browsergym_id} for xpath: {event_xpath}", file=sys.stderr)
+                print(
+                    f"Warning: Generated placeholder bid {browsergym_id} for xpath: {event_xpath}",
+                    file=sys.stderr,
+                )
 
         # for tool calls that are not browser based since there is no browsergym_id
         # and tool calls that are specified as non-web
@@ -316,7 +325,7 @@ def standardized_event_to_openhands_message(
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
 
 
-def process_row(line, is_web, api_env, api_tool_description, api_sigs):
+def process_row(line, is_web, api_env, api_tool_description, api_sigs, output_format="default"):
     std_dataset = [json.loads(line)]
     std_data = std_dataset[0]
     trajectory = Trajectory(**std_data)
@@ -373,7 +382,7 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
         language_descriptions = get_language_descriptions(languages)
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
     for m in conversations:
-        if m["from"] == "function_call":
+        if output_format == "finetune" and m["from"] == "function_call":
             m["from"] = "gpt"
         if m["from"] == "observation":
             m["from"] = "human"
@@ -390,7 +399,7 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     return output
 
 
-def process_line(line, is_web, api_env):
+def process_line(line, is_web, api_env, output_format="default"):
     exclude_apis = browser_default_apis if is_web else {}
     api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, api_env)
     output_line = process_row(
@@ -399,6 +408,7 @@ def process_line(line, is_web, api_env):
         api_env=api_env,
         api_tool_description=api_tool_description,
         api_sigs=api_sigs,
+        output_format=output_format,
     )
     output_line = json.dumps(output_line)
     # if output_line:
@@ -414,8 +424,8 @@ def process_line(line, is_web, api_env):
 
 
 # Keep the old main function for backward compatibility
-def main_with_args(line, is_web, api_env):
-    return process_line(line, is_web, api_env)
+def main_with_args(line, is_web, api_env, output_format="default"):
+    return process_line(line, is_web, api_env, output_format)
 
 
 def main():
@@ -435,10 +445,17 @@ def main():
         help="The environment in which the APIs are pre-defined",
         default=None,
     )
+    parser.add_argument(
+        "--output_format",
+        type=str,
+        choices=["default", "finetune"],
+        default="default",
+        help="Output format: 'default' keeps function_call, 'finetune' converts to gpt",
+    )
     args = parser.parse_args()
     args.is_web = args.is_web == "yes"
     for line in sys.stdin:
-        print(main_with_args(line, args.is_web, args.api_env))
+        print(main_with_args(line, args.is_web, args.api_env, args.output_format))
 
 
 if __name__ == "__main__":
