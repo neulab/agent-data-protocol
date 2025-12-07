@@ -210,7 +210,7 @@ def standardized_event_to_openhands_message(
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         api_env = "browser"
-        # Fix: Add None check before accessing browsergym_id indices
+
         if browsergym_id and not browsergym_id[0] == browsergym_id[-1] == '"':
             browsergym_id = f'"{browsergym_id[0]}"'
         PREV_BID = browsergym_id
@@ -325,7 +325,7 @@ def standardized_event_to_openhands_message(
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
 
 
-def process_row(line, is_web, api_env, api_tool_description, api_sigs, output_format="default"):
+def process_row(line, is_web, api_env, api_tool_description, api_sigs, export_for="explicit"):
     std_dataset = [json.loads(line)]
     std_data = std_dataset[0]
     trajectory = Trajectory(**std_data)
@@ -382,7 +382,7 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs, output_fo
         language_descriptions = get_language_descriptions(languages)
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
     for m in conversations:
-        if output_format == "finetune" and m["from"] == "function_call":
+        if export_for == "training" and m["from"] == "function_call":
             m["from"] = "gpt"
         if m["from"] == "observation":
             m["from"] = "human"
@@ -399,7 +399,7 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs, output_fo
     return output
 
 
-def process_line(line, is_web, api_env, output_format="default"):
+def process_line(line, is_web, api_env, export_for="explicit"):
     exclude_apis = browser_default_apis if is_web else {}
     api_tool_description, api_sigs = get_api_tool_description(dataset, exclude_apis, api_env)
     output_line = process_row(
@@ -408,7 +408,7 @@ def process_line(line, is_web, api_env, output_format="default"):
         api_env=api_env,
         api_tool_description=api_tool_description,
         api_sigs=api_sigs,
-        output_format=output_format,
+        export_for=export_for,
     )
     output_line = json.dumps(output_line)
     # if output_line:
@@ -421,11 +421,6 @@ def process_line(line, is_web, api_env, output_format="default"):
     #             print(e)
     #             continue
     return output_line
-
-
-# Keep the old main function for backward compatibility
-def main_with_args(line, is_web, api_env, output_format="default"):
-    return process_line(line, is_web, api_env, output_format)
 
 
 def main():
@@ -446,16 +441,16 @@ def main():
         default=None,
     )
     parser.add_argument(
-        "--output_format",
+        "--export_for",
         type=str,
-        choices=["default", "finetune"],
-        default="default",
-        help="Output format: 'default' keeps function_call, 'finetune' converts to gpt",
+        choices=["explicit", "training"],
+        default="explicit",
+        help="'explicit' preserves function_call message role, 'training' replaces it with gpt role for LLaMA Factory",
     )
     args = parser.parse_args()
     args.is_web = args.is_web == "yes"
     for line in sys.stdin:
-        print(main_with_args(line, args.is_web, args.api_env, args.output_format))
+        print(process_line(line, args.is_web, args.api_env, args.export_for))
 
 
 if __name__ == "__main__":
