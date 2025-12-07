@@ -1,3 +1,4 @@
+import argparse
 import base64
 import io
 import json
@@ -13,6 +14,25 @@ from android_env_utils.android_env.proto.a11y import android_accessibility_fores
 # import pandas as pd
 from PIL import Image
 from tqdm import tqdm
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Extract raw data from Android Control dataset")
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Output directory for screenshots (default: ./android_control_screenshots)",
+    )
+    parser.add_argument(
+        "--use-remote",
+        action="store_true",
+        help="Use remote GCS TFRecord files instead of local files",
+    )
+    return parser.parse_args()
+
+
+args = parse_args()
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -135,15 +155,27 @@ def process_tfrecord_file(tfrecord_file):
 
 # Directory containing the TFRecord files
 data_dir = os.path.join(script_dir, "android_control")
-output_dir = os.path.join(script_dir, "android_control_screenshots")
+output_dir = (
+    args.output_dir
+    if args.output_dir
+    else os.environ.get(
+        "DATASET_OUTPUT_DIR", os.path.join(script_dir, "android_control_screenshots")
+    )
+)
 # Ensure the output directory exists
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 # Get the list of TFRecord files
-tfrecord_files = [
-    os.path.join(data_dir, f) for f in os.listdir(data_dir) if not f.endswith(".json")
-]
+tfrecord_files_local = (
+    [os.path.join(data_dir, f) for f in os.listdir(data_dir) if not f.endswith(".json")]
+    if os.path.exists(data_dir)
+    else []
+)
 tfrecord_files_remote = tf.io.gfile.glob("gs://gresearch/android_control/android_control*")
+# Choose which files to use based on --use-remote flag or availability
+tfrecord_files = (
+    tfrecord_files_remote if args.use_remote or not tfrecord_files_local else tfrecord_files_local
+)
 # Create a list to store parsed data
 data = []
 # Use ThreadPoolExecutor to process files in parallel
@@ -152,7 +184,6 @@ with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         executor.submit(process_tfrecord_file, tfrecord_file): tfrecord_file
         for tfrecord_file in tfrecord_files
     }
-    # TODO: If you want to skip downloading the tf record files, you can use 'tfrecord_files_remote' instead of 'tfrecord_files'
     for future in tqdm(as_completed(futures), total=len(futures), desc="Processing TFRecord files"):
         try:
             file_data = future.result()

@@ -1,10 +1,26 @@
+import argparse
 import json
 import os
 import subprocess
 import urllib.parse
 import zipfile
 
-root = "datasets/wonderbread"
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Extract raw data from Wonderbread dataset")
+    parser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Root directory for dataset (default: datasets/wonderbread)",
+    )
+    return parser.parse_args()
+
+
+args = parse_args()
+
+# Root directory - configurable via argument, environment variable, or default
+root = args.root if args.root else os.environ.get("WONDERBREAD_ROOT", "datasets/wonderbread")
 zenodo_link = "https://zenodo.org/records/12671568/files/demos.zip?download=1"
 source_file_name = root + "/" + os.path.basename(urllib.parse.urlparse(zenodo_link).path)
 data_folder = source_file_name.split(".")[0]

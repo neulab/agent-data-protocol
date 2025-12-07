@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import argparse
 import json
 import os
 from typing import Any, Dict, List, Tuple
@@ -10,6 +11,28 @@ import tensorflow as tf
 
 # import io
 from PIL import Image, ImageDraw
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Extract raw data from Android in the Wild dataset"
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Limit samples per category (0=all, default: 0)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Output directory for screenshots (default: ./screenshots)",
+    )
+    return parser.parse_args()
+
+
+args = parse_args()
 
 credential_path = os.path.join(
     os.environ["HOME"], ".config/gcloud/application_default_credentials.json"
@@ -33,7 +56,7 @@ dataset_directories = {
 
 # get the path that the script is in
 script_dir = os.path.dirname(os.path.abspath(__file__))
-image_dir = os.path.join(script_dir, "screenshots")
+image_dir = args.output_dir if args.output_dir else os.path.join(script_dir, "screenshots")
 os.makedirs(image_dir, exist_ok=True)
 
 
@@ -68,7 +91,7 @@ for dataset_name, directory in dataset_directories.items():
     dataset = tf.data.TFRecordDataset(file_names, compression_type="GZIP")
     json_list: List[Dict[str, Any]] = []
     for i, rcd in enumerate(dataset):
-        if i >= 5:
+        if args.limit > 0 and i >= args.limit:
             break
 
         example = tf.train.Example()
