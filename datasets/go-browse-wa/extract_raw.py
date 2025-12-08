@@ -13,12 +13,15 @@ def main():
     ds = load_dataset("apurvaga/go-browse-wa-raw", split="train")
     # Print each item as a separate line in jsonl format
     for item in ds:
-        # Save PIL screenshot
-        # screenshot_path = os.path.join(SCREENSHOTS_DIR, f"{item['__key__']}.png")
-        # screenshot = item["png"]
-        # screenshot.save(screenshot_path)
+        # Save PIL screenshot with correct filename format
+        json_data = item["json"]
+        traj_num = json_data["traj_data"]["traj_num"]
+        step_number = json_data["step_data"]["step_number"]
+        screenshot_path = os.path.join(SCREENSHOTS_DIR, f"{traj_num:05d}-{step_number:02d}.png")
+        screenshot = item["png"]
+        screenshot.save(screenshot_path)
         # Print textual content as json
-        print(json.dumps(item["json"]))
+        print(json.dumps(json_data))
 
 
 if __name__ == "__main__":

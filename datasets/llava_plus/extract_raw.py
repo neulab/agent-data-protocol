@@ -3,11 +3,11 @@ import json
 from huggingface_hub import hf_hub_download
 
 # Using load_dataset() directly will lead to issues due to misaligned formats in llava plus
+# Uses HF_HUB_CACHE for download location (set in SLURM script)
 dataset_llava_plus_fname = hf_hub_download(
     repo_id="LLaVA-VL/llava-plus-data",
     repo_type="dataset",
     filename="llava-plus-v1-117k-tool-merge.json",
-    local_dir="./",
 )
 
 with open(dataset_llava_plus_fname) as f:

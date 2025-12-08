@@ -9,7 +9,7 @@ from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
 
-root = "datasets/wonderbread"
+root = os.environ.get("WONDERBREAD_ROOT", "datasets/wonderbread")
 
 
 def map_keypress(key: str) -> str:
