@@ -34,10 +34,12 @@ def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
             ]
 
             for act in step["actions"]:
+                # Normalize API name: replace - and + with _ for valid Python identifiers
+                api_name = act["API_name"].replace("-", "_").replace("+", "_")
                 content.extend(
                     [
                         ApiAction(
-                            function=act["API_name"],
+                            function=api_name,
                             kwargs=act["API_params"],
                             description=None,
                         )
