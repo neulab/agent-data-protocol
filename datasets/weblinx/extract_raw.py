@@ -1,5 +1,8 @@
 import json
+import sys
 from pathlib import Path
+
+from tqdm import tqdm
 
 download_instructions = """
     cd datasets/weblinx/
@@ -13,7 +16,7 @@ assert weblinx_dump.is_dir(), "Please download the dataset first: " + download_i
 
 splits = json.loads((weblinx_dump / "splits.json").read_text())
 
-for shortcode in splits["train"]:
+for shortcode in tqdm(splits["train"], desc="Processing demos", file=sys.stderr):
     demo_dir = weblinx_dump / "demonstrations" / shortcode
     replay = json.loads((demo_dir / "replay.json").read_text())
     metadata = json.loads((demo_dir / "form.json").read_text())

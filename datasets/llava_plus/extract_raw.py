@@ -1,6 +1,8 @@
 import json
+import sys
 
 from huggingface_hub import hf_hub_download
+from tqdm import tqdm
 
 # Using load_dataset() directly will lead to issues due to misaligned formats in llava plus
 # Uses HF_HUB_CACHE for download location (set in SLURM script)
@@ -20,7 +22,7 @@ useful_attrs = ["unique_id", "image", "conversations", "data_source"]
 
 removed_num_examples = 0
 
-for example in dataset_llava_plus:
+for example in tqdm(dataset_llava_plus, desc="Cleaning data", file=sys.stderr):
     cleaned_example = {}
     for attr in useful_attrs:
         try:
@@ -43,5 +45,5 @@ for example in dataset_llava_plus:
 # print("Final dataset size:", len(dataset))
 # print("Number of removed examples:", removed_num_examples)
 
-for sample in dataset:
+for sample in tqdm(dataset, desc="Writing output", file=sys.stderr):
     print(json.dumps(sample))

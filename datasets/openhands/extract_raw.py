@@ -1,7 +1,9 @@
 import json
+import sys
 from datetime import datetime
 
 from datasets import load_dataset
+from tqdm import tqdm
 
 
 def default_converter(o):
@@ -12,7 +14,7 @@ def default_converter(o):
 
 
 dataset = load_dataset("all-hands/openhands-feedback")
-for i, item in enumerate(dataset["train"]):
+for i, item in enumerate(tqdm(dataset["train"], desc="Processing trajectories", file=sys.stderr)):
     for step in item.get("trajectory", []):
         if isinstance(step.get("extras"), str):
             step["extras"] = json.loads(step["extras"])

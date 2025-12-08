@@ -7,6 +7,8 @@ import sys
 import urllib.parse
 import zipfile
 
+from tqdm import tqdm
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Extract raw data from Wonderbread dataset")
@@ -60,7 +62,7 @@ else:
     print(f"Using previously extracted data: {data_folder}", file=sys.stderr)
 
 # enumerate the files
-for task_stamp in os.listdir(data_folder):
+for task_stamp in tqdm(os.listdir(data_folder), desc="Processing tasks", file=sys.stderr):
     task_folder = f"{data_folder}/{task_stamp}"
     if task_stamp == ".DS_Store":
         continue

@@ -3,11 +3,13 @@
 import argparse
 import json
 import os
+import sys
 from typing import Any, Dict, List, Tuple
 
 import certifi
 import numpy as np
 import tensorflow as tf
+from tqdm import tqdm
 
 # import io
 from PIL import Image, ImageDraw
@@ -90,7 +92,7 @@ for dataset_name, directory in dataset_directories.items():
 
     dataset = tf.data.TFRecordDataset(file_names, compression_type="GZIP")
     json_list: List[Dict[str, Any]] = []
-    for i, rcd in enumerate(dataset):
+    for i, rcd in enumerate(tqdm(dataset, desc=f"Processing {dataset_name}", file=sys.stderr)):
         if args.limit > 0 and i >= args.limit:
             break
 
