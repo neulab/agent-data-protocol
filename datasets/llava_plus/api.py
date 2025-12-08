@@ -131,3 +131,15 @@ def openseed(mode: str = None, prompt: dict = None) -> None:
 
     """
     pass
+
+
+def controlnet(prompt: str = None, mask: str = None) -> None:
+    """Generate images with ControlNet using mask conditioning.
+
+    Args:
+    ----
+        prompt (str): Text prompt or caption for image generation (optional).
+        mask (str): Mask image for conditioning (optional).
+
+    """
+    pass
