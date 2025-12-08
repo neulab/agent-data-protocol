@@ -25,7 +25,17 @@ def parse_function_call(function_call_data: dict) -> ApiAction:
         kwargs = arguments
 
     # Convert function name to valid Python identifier
+    # First replace all hyphens with underscores
     python_function_name = function_name.replace("-", "_")
+
+    # Remove common prefixes that are redundant
+    # The MCP server names are prefixed to the tool names in the raw data
+    # e.g., "exa-search-web_search_exa" -> "web_search_exa"
+    # Pattern: "PREFIX-actual_tool_name" where PREFIX is the server name
+
+    # Remove "exa_search_" prefix from exa tools
+    if python_function_name.startswith("exa_search_"):
+        python_function_name = python_function_name[len("exa_search_") :]
 
     return ApiAction(function=python_function_name, kwargs=kwargs, description=None)
 
