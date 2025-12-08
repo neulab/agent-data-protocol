@@ -87,10 +87,12 @@ def standardized_event_to_openhands_message(
     if isinstance(event, WebObservation):
         if event.axtree is not None:
             axtree = event.axtree
-        elif generate_axtree.last_html != event.html:
+        elif event.html is not None and generate_axtree.last_html != event.html:
             axtree = generate_axtree.build_axtree(id, event.html, "all")
-        else:
+        elif event.html is not None:
             axtree = generate_axtree.last_xtree
+        else:
+            axtree = None  # No HTML available, skip axtree generation
         prompt = get_web_user_message("", event.url, axtree, PREV_BID)
 
         # Handle nested image observation
