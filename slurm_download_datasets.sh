@@ -136,7 +136,7 @@ mkdir -p $DATA_DIR/.hf_cache
 # ============================================
 echo ""
 echo "Installing Python dependencies..."
-pip install tensorflow certifi huggingface_hub "datasets>=2.14.0" "pyarrow<21.0.0" "fsspec==2023.9.2" markdown tqdm protobuf pillow
+pip install tensorflow certifi huggingface_hub "datasets>=2.18.0,<4.0.0" "pyarrow<21.0.0" "fsspec==2023.9.2" markdown tqdm protobuf pillow
 
 # Install browsergym-core for openhands processing
 echo "Installing browsergym-core..."
@@ -335,8 +335,9 @@ echo "========================================="
 FAILED_DATASETS=""
 SUCCEEDED_DATASETS=""
 
-# Simple HuggingFace datasets first
-for dataset_info in "llava_plus|no|execute_bash" "omniact|no|execute_bash" "go-browse-wa|yes|browser" "openhands|no|execute_bash"; do
+# Simple HuggingFace datasets first; omniact is done
+# for dataset_info in "llava_plus|no|execute_bash" "omniact|no|execute_bash" "go-browse-wa|yes|browser" "openhands|no|execute_bash"; do
+for dataset_info in "llava_plus|no|execute_bash" "go-browse-wa|yes|browser" "openhands|no|execute_bash"; do
     IFS='|' read -r name is_web api_env <<< "$dataset_info"
     if process_dataset "$name" "$is_web" "$api_env"; then
         SUCCEEDED_DATASETS="$SUCCEEDED_DATASETS $name"
