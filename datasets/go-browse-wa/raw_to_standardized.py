@@ -18,6 +18,14 @@ SCREENSHOTS_DIR = "datasets/go-browse-wa/screenshots"
 GO_BROWSE_WA_VIEWPORT_SIZE = (1280, 1440)
 
 
+def truncate_for_log(data: Any, max_len: int = 200) -> str:
+    """Truncate data to max_len chars for logging, replacing newlines."""
+    s = repr(data).replace("\n", "\\n").replace("\r", "\\r")
+    if len(s) > max_len:
+        s = s[: max_len - 3] + "..."
+    return s
+
+
 def send_msg_to_user(text: str) -> None:
     """Send a message to the user.
 
@@ -184,7 +192,8 @@ if __name__ == "__main__":
                 print(json.dumps(traj.model_dump()))
                 traj_content = []
             except Exception as e:
-                print(f"An error occurred: {e}", file=sys.stderr)
+                print(f"[WARNING] Skipping trajectory {traj_id} (data quality issue): {e}", file=sys.stderr)
+                print(f"  >>> {truncate_for_log(traj_goal)}", file=sys.stderr)
                 traj_id = -1
                 traj_content = []
                 traj_goal = None
@@ -197,7 +206,9 @@ if __name__ == "__main__":
         try:
             traj_content.extend(process_step(step))
         except Exception as e:
-            print(f"Failed to process step: {e}\n", file=sys.stderr)
+            action_str = step.get("step_data", {}).get("parsed_action", "<no action>")
+            print(f"[WARNING] Skipping step (malformed action in raw data): {e}", file=sys.stderr)
+            print(f"  >>> {truncate_for_log(action_str)}", file=sys.stderr)
             traj_id = -1
             traj_content = []
             traj_goal = None

@@ -1,7 +1,9 @@
 import argparse
 import json
 import os
+import shutil
 import subprocess
+import sys
 import urllib.parse
 import zipfile
 
@@ -24,6 +26,7 @@ root = args.root if args.root else os.environ.get("WONDERBREAD_ROOT", "datasets/
 zenodo_link = "https://zenodo.org/records/12671568/files/demos.zip?download=1"
 source_file_name = root + "/" + os.path.basename(urllib.parse.urlparse(zenodo_link).path)
 data_folder = source_file_name.split(".")[0]
+extraction_complete_marker = data_folder + "/.extraction_complete"
 
 
 def extract_sop(s: str) -> str:
@@ -34,16 +37,27 @@ def extract_sop(s: str) -> str:
     return "\n".join(sop)
 
 
-if not os.path.exists(data_folder):
-    # download the file
+if not os.path.exists(extraction_complete_marker):
+    # Clean up partial extraction if it exists
+    if os.path.exists(data_folder):
+        print(f"Removing incomplete extraction: {data_folder}", file=sys.stderr)
+        shutil.rmtree(data_folder)
+
+    # Download the file (wget -c resumes partial downloads)
     subprocess.run(["wget", "-c", zenodo_link, "-O", source_file_name], check=True)
 
-    # unzip the file
+    # Unzip the file
     with zipfile.ZipFile(source_file_name, "r") as zip_ref:
         zip_ref.extractall(root)
 
-    # remove the zip file
+    # Create completion marker
+    with open(extraction_complete_marker, "w") as f:
+        f.write("extraction complete\n")
+
+    # Remove the zip file
     os.remove(source_file_name)
+else:
+    print(f"Using previously extracted data: {data_folder}", file=sys.stderr)
 
 # enumerate the files
 for task_stamp in os.listdir(data_folder):
