@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 from typing import List, Union
 
@@ -8,6 +9,42 @@ from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
+
+
+def convert_function_name(function_name: str) -> str:
+    """Convert function name to valid Python identifier.
+
+    Converts hyphenated names to underscored names and removes common prefixes.
+    e.g., "exa-search-web_search_exa" -> "web_search_exa"
+    """
+    # First replace all hyphens with underscores
+    python_function_name = function_name.replace("-", "_")
+
+    # Remove common prefixes that are redundant
+    # The MCP server names are prefixed to the tool names in the raw data
+    # e.g., "exa-search-web_search_exa" -> "web_search_exa"
+    # Pattern: "PREFIX-actual_tool_name" where PREFIX is the server name
+
+    # Remove "exa_search_" prefix from exa tools
+    if python_function_name.startswith("exa_search_"):
+        python_function_name = python_function_name[len("exa_search_") :]
+
+    return python_function_name
+
+
+def convert_tool_declarations_in_content(content: str) -> str:
+    """Convert function names in tool declaration content."""
+
+    # Pattern to match function names in tool declarations
+    # e.g., "name": "exa-search-web_search_exa"
+    def replace_function_name(match):
+        original_name = match.group(1)
+        converted_name = convert_function_name(original_name)
+        return f'"name": "{converted_name}"'
+
+    # Replace function names in JSON-like content
+    pattern = r'"name":\s*"([^"]+)"'
+    return re.sub(pattern, replace_function_name, content)
 
 
 def parse_function_call(function_call_data: dict) -> ApiAction:
@@ -24,18 +61,7 @@ def parse_function_call(function_call_data: dict) -> ApiAction:
     else:
         kwargs = arguments
 
-    # Convert function name to valid Python identifier
-    # First replace all hyphens with underscores
-    python_function_name = function_name.replace("-", "_")
-
-    # Remove common prefixes that are redundant
-    # The MCP server names are prefixed to the tool names in the raw data
-    # e.g., "exa-search-web_search_exa" -> "web_search_exa"
-    # Pattern: "PREFIX-actual_tool_name" where PREFIX is the server name
-
-    # Remove "exa_search_" prefix from exa tools
-    if python_function_name.startswith("exa_search_"):
-        python_function_name = python_function_name[len("exa_search_") :]
+    python_function_name = convert_function_name(function_name)
 
     return ApiAction(function=python_function_name, kwargs=kwargs, description=None)
 
@@ -51,7 +77,11 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
     if role == "system":
         # Skip system messages or convert to environment observation
         if content.strip():
-            result.append(TextObservation(content=content, source="environment", name="system"))
+            # Convert function names in tool declarations within system message content
+            converted_content = convert_tool_declarations_in_content(content)
+            result.append(
+                TextObservation(content=converted_content, source="environment", name="system")
+            )
 
     elif role == "user":
         result.append(TextObservation(content=content, source="user"))
@@ -67,11 +97,10 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
 
     elif role == "function":
         # Function results are observations from the environment
-        result.append(
-            TextObservation(
-                content=content, source="environment", name=message.get("name", "function_result")
-            )
-        )
+        # Convert the function name to Python identifier format
+        raw_name = message.get("name", "function_result")
+        converted_name = convert_function_name(raw_name)
+        result.append(TextObservation(content=content, source="environment", name=converted_name))
 
     return result
 
