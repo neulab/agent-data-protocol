@@ -102,6 +102,8 @@ for dataset_name, directory in dataset_directories.items():
         json_dict: Dict[str, Any] = {}
         for k, ftr in example.features.feature.items():
             data_type: str = ftr.WhichOneof("kind")
+            if data_type is None:
+                continue  # Skip features with no value set
             json_dict[k] = list(getattr(ftr, data_type).value)
 
         # string data

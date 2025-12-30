@@ -64,7 +64,7 @@ else:
 # enumerate the files
 for task_stamp in tqdm(os.listdir(data_folder), desc="Processing tasks", file=sys.stderr):
     task_folder = f"{data_folder}/{task_stamp}"
-    if task_stamp == ".DS_Store":
+    if task_stamp == ".DS_Store" or not os.path.isdir(task_folder):
         continue
 
     # move screenshots to "./screenshots/task_stamp"

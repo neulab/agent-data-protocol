@@ -79,7 +79,7 @@ def convert_step(
         web_observation = WebObservation(
             html=(
                 WEBLINX_DUMP / "demonstrations" / shortcode / "pages" / step.state.page
-            ).read_text(),
+            ).read_text(encoding="utf-8", errors="replace"),
             url=args["metadata"]["url"],
             viewport_size=[
                 args["metadata"]["viewportWidth"],
