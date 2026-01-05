@@ -11,3 +11,16 @@ The agent uses a minimal, focused tool set optimized for software development: b
 **Repository**: https://github.com/SWE-agent/SWE-agent
 
 **Key Features**: Software engineering focus, minimal tool set (bash, str_replace_editor, submit), explicit `<think>` blocks for reasoning
+
+**Citation**:
+
+```bibtex
+@article{yang2024swe,
+  title={Swe-agent: Agent-computer interfaces enable automated software engineering},
+  author={Yang, John and Jimenez, Carlos E and Wettig, Alexander and Lieret, Kilian and Yao, Shunyu and Narasimhan, Karthik and Press, Ofir},
+  journal={Advances in Neural Information Processing Systems},
+  volume={37},
+  pages={50528--50652},
+  year={2024}
+}
+```
