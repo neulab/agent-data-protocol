@@ -151,6 +151,7 @@ def process_row(line, api_tool_description, api_sigs):
         try:
             message = standardized_event_to_swe_message(id, event, api_sigs)
             if not message:
+                print(event, file=sys.stderr)
                 return None
             if len(conversations) == 0:
                 # append api function docs to first user message when available

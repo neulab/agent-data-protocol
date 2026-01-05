@@ -349,7 +349,9 @@ def main():
     args = parser.parse_args()
     args.is_web = args.is_web == "yes"
     for line in sys.stdin:
-        print(main_with_args(line, args.is_web, args.api_env))
+        out = main_with_args(line, args.is_web, args.api_env)
+        if out: 
+            print(out)
 
 
 if __name__ == "__main__":

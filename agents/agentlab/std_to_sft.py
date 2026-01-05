@@ -3,6 +3,7 @@ import os
 import re
 import sys
 
+from agents.openhands.std_to_sft import main_with_args as main_openhands
 from schema.trajectory import Trajectory
 
 dataset = os.getenv("MY_DATASET")
@@ -16,16 +17,12 @@ with open("agents/agentlab/suffix.txt") as f:
     suffix = f.read().strip()
 
 
-def process_row(line, id_to_openhands_sft):
+def process_row(line):
     std_dataset = [json.loads(line)]
     std_data = std_dataset[0]
     trajectory = Trajectory(**std_data)
     events = trajectory.content
-    if trajectory.id not in id_to_openhands_sft:
-        print(f"{trajectory.id} not found", file=sys.stderr)
-        return None
-    output_line = id_to_openhands_sft[trajectory.id]
-    # output_line = json.loads(main_openhands(line, is_web=True, api_env="browser"))
+    output_line = json.loads(main_openhands(line, is_web=True, api_env="browser"))
     goal = "# Goal\n" + events[0].content + "\n\n"
     past_actions = []
     observation = ""
@@ -47,13 +44,13 @@ def process_row(line, id_to_openhands_sft):
                 if match:
                     thought = match.group("thought").strip()
                     message = match.group("action").strip()
-                elif "<function=" not in output_line["conversations"][step]["value"]:
+                elif '<function=' not in output_line["conversations"][step]["value"]:
                     thought = ""
                     message = output_line["conversations"][step]["value"]
                 else:
-                    raise ValueError(f"no match: {output_line['conversations'][step]['value']}")
+                    raise ValueError(f'no match: {output_line["conversations"][step]["value"]}')
                 action = f'send_msg_to_user(text="{message}")'
-
+                
             else:
                 thought = match.group("thought").strip()
                 action = match.group("action").strip()
@@ -61,15 +58,13 @@ def process_row(line, id_to_openhands_sft):
             past_actions.append(action)
             action = {"role": "assistant", "content": action}
             if observation:
-                ret.append(
-                    {
-                        "id": f"{trajectory.id}-{step // 2}",
-                        "conversations": [observation, action],
-                        "system": system,
-                    }
-                )
-            else:
-                raise ValueError(f"no observation: {output_line['conversations'][step]['value']}")
+                ret.append({
+                    "id": f"{trajectory.id}-{step // 2}",
+                    "conversations": [observation, action],
+                    "system": system,
+                })
+            else: 
+                raise ValueError(f'no observation: {output_line["conversations"][step]["value"]}')
         else:
             match = re.search(
                 r"(============== BEGIN accessibility tree ==============)(.*?)(============== END accessibility tree ==============)",
@@ -85,17 +80,9 @@ def process_row(line, id_to_openhands_sft):
             observation = {"role": "user", "content": goal + tree + action_space + history + suffix}
     return ret
 
-
-def main():
-    with open(
-        "/home/yueqis/agent-data-protocol/datasets/mind2web/full_sft/full_sft_openhands.jsonl"
-    ) as f:
-        f = f.readlines()
-    openhands_sft = [json.loads(line) for line in f]
-    id_to_openhands_sft = {line["id"]: line for line in openhands_sft}
-
+def main():    
     for line in sys.stdin:
-        output_lines = process_row(line, id_to_openhands_sft)
+        output_lines = process_row(line)
         if output_lines:
             for output_line in output_lines:
                 output_line = json.dumps(output_line)

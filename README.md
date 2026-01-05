@@ -64,10 +64,10 @@ cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py 
 
 ### Available Datasets
 
-The repository includes datasets from various domains (we welcome more contributions!):
+The repository currently supports datasets from various domains (we welcome more contributions!):
 
 - **Coding**: `code_feedback`, `codeactinstruct`
-- **Software Engineering**: `swe-smith`, `swe-gym_openhands_sampled_trajectories`,
+- **Software Engineering**: `swe-smith`, `swe-gym_openhands_sampled_trajectories`, `nebius_SWE-agent-trajectories`
 - **Web Browsing**: `mind2web`, `nnetnav-live`, `nnetnav-wa`, `go-browse-wa`, `synatra`
 - **Multi-domain**: `agenttuning_*`, `orca_agentinstruct`, `openhands`
 
@@ -118,7 +118,14 @@ agent-data-protocol/
 │   │   ├── extract_raw.py
 │   │   ├── raw_to_standardized.py
 │   │   ├── api.py
-│   │   └── sample_*.json
+│   │   ├── sample_raw.json
+│   │   ├── sample_std.json
+│   │   ├── sample_sft/   # Sample SFT format
+│   │   │   ├── sample_sft_openhands.json
+│   │   │   ├── sample_sft_sweagent.json
+│   │   │   └── ...
+│   │   ├── README.md
+│   │   └── LICENSE
 │   └── ...
 ├── agents/            # Agent implementations
 │   ├── openhands/     # OpenHands agent
@@ -139,7 +146,7 @@ agent-data-protocol/
 ### Converting a Single Dataset
 
 ```bash
-# Example: Convert swe-smith dataset for OpenHands
+# Example: Convert swe-smith dataset -> ADP -> OpenHands SFT
 export MY_DATASET=swe-smith
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
