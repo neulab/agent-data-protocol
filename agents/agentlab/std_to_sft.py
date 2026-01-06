@@ -9,8 +9,7 @@ from schema.trajectory import Trajectory
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
 
-with open("agents/agentlab/system.txt") as f:
-    system = f.read()
+system = '# Instructions\nYou are a UI Assistant, your goal is to help the user perform tasks using a web browser. \nReview the instructions from the user, the current state of the page and all other information to find the best possible next action to accomplish your goal. Your answer will be interpreted and executed by a program, make sure to follow the formatting instructions.\n'
 with open("agents/agentlab/action_space.txt") as f:
     action_space = f.read().strip()
 with open("agents/agentlab/suffix.txt") as f:
@@ -44,13 +43,13 @@ def process_row(line):
                 if match:
                     thought = match.group("thought").strip()
                     message = match.group("action").strip()
-                elif "<function=" not in output_line["conversations"][step]["value"]:
+                elif '<function=' not in output_line["conversations"][step]["value"]:
                     thought = ""
                     message = output_line["conversations"][step]["value"]
                 else:
-                    raise ValueError(f"no match: {output_line['conversations'][step]['value']}")
+                    raise ValueError(f'no match: {output_line["conversations"][step]["value"]}')
                 action = f'send_msg_to_user(text="{message}")'
-
+                
             else:
                 thought = match.group("thought").strip()
                 action = match.group("action").strip()
@@ -58,15 +57,13 @@ def process_row(line):
             past_actions.append(action)
             action = {"role": "assistant", "content": action}
             if observation:
-                ret.append(
-                    {
-                        "id": f"{trajectory.id}-{step // 2}",
-                        "conversations": [observation, action],
-                        "system": system,
-                    }
-                )
-            else:
-                raise ValueError(f"no observation: {output_line['conversations'][step]['value']}")
+                ret.append({
+                    "id": f"{trajectory.id}-{step // 2}",
+                    "conversations": [observation, action],
+                    "system": system,
+                })
+            else: 
+                raise ValueError(f'no observation: {output_line["conversations"][step]["value"]}')
         else:
             match = re.search(
                 r"(============== BEGIN accessibility tree ==============)(.*?)(============== END accessibility tree ==============)",
@@ -82,8 +79,7 @@ def process_row(line):
             observation = {"role": "user", "content": goal + tree + action_space + history + suffix}
     return ret
 
-
-def main():
+def main():    
     for line in sys.stdin:
         output_lines = process_row(line)
         if output_lines:
