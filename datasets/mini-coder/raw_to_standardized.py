@@ -17,11 +17,14 @@ _FORMATTING_RULES_RE = re.compile(
     re.DOTALL | re.IGNORECASE,
 )
 
-_TAG_WRAPPER_RE = re.compile(r"^\s*<(?P<tag>[a-zA-Z0-9_:-]+)>\s*(?P<body>.*)\s*</\1>\s*$", re.DOTALL)
+_TAG_WRAPPER_RE = re.compile(
+    r"^\s*<(?P<tag>[a-zA-Z0-9_:-]+)>\s*(?P<body>.*)\s*</\1>\s*$", re.DOTALL
+)
 _STOP_BASH_FENCE_RE = re.compile(
     r"```bash\s*\n(.*?COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT.*?)\n```",
     re.DOTALL | re.IGNORECASE,
 )
+
 
 def strip_user_formatting(content: str) -> str:
     """
@@ -40,11 +43,7 @@ def strip_user_formatting(content: str) -> str:
         instructions = re.sub(_FORMATTING_RULES_RE, "", instructions).strip()
 
         # Replace original instructions block with the cleaned version
-        content = (
-            content[: m.start()]
-            + instructions
-            + content[m.end() :]
-        )
+        content = content[: m.start()] + instructions + content[m.end() :]
 
     # Unwrap <pr_description> if it is the outer wrapper
     wrapper = _TAG_WRAPPER_RE.match(content)
@@ -143,10 +142,10 @@ def process_data(data):
     content = []
     for step in data.messages:
         content.extend(convert_step(step))
-    if not isinstance(content[-1], CodeAction): 
+    if not isinstance(content[-1], CodeAction):
         print(f"not codeaction: {content[-1]}", file=sys.stderr)
         return None
-    if "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT" not in content[-1].content: 
+    if "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT" not in content[-1].content:
         print(f"not COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT: {content[-1]}", file=sys.stderr)
         return None
     # Add success message from user

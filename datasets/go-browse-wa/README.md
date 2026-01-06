@@ -2,7 +2,7 @@
 
 ## Description
 
-Go-Browse is a dataset of web browsing trajectories collected through structured exploration of web environments. The dataset was created to address the fundamental problem of digital agents lacking understanding of their environment, particularly web browsing agents that may get lost in unfamiliar websites. Go-Browse frames data collection as a graph search problem, enabling reuse of information across exploration episodes. 
+Go-Browse is a dataset of web browsing trajectories collected through structured exploration of web environments. The dataset was created to address the fundamental problem of digital agents lacking understanding of their environment, particularly web browsing agents that may get lost in unfamiliar websites. Go-Browse frames data collection as a graph search problem, enabling reuse of information across exploration episodes.
 
 The dataset focuses on:
 - Structured exploration web rollouts

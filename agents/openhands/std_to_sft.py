@@ -350,7 +350,7 @@ def main():
     args.is_web = args.is_web == "yes"
     for line in sys.stdin:
         out = main_with_args(line, args.is_web, args.api_env)
-        if out: 
+        if out:
             print(out)
 
 

@@ -2,7 +2,7 @@
 
 ## Description
 
-SWE-smith is a dataset containing trajectories of agents working on synthesized bug-fix tasks. The dataset was created using SWE-smith, a novel pipeline for generating software engineering training data at scale by automatically synthesizing task instances that break existing tests in Python codebases. SWE-smith addresses the significant pain point of collecting training data for software engineering by providing a scalable approach that generates 100s to 1,000s of task instances from any Python codebase. 
+SWE-smith is a dataset containing trajectories of agents working on synthesized bug-fix tasks. The dataset was created using SWE-smith, a novel pipeline for generating software engineering training data at scale by automatically synthesizing task instances that break existing tests in Python codebases. SWE-smith addresses the significant pain point of collecting training data for software engineering by providing a scalable approach that generates 100s to 1,000s of task instances from any Python codebase.
 
 The dataset focuses on:
 - Trajectories of agents on synthesized bug-fix tasks

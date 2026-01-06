@@ -10,7 +10,7 @@ The dataset focuses on:
 - Dynamic action revision based on execution results and new observations
 - Integration of code execution with natural language collaboration
 
-CodeActInstruct enables training of agents that can perform sophisticated tasks using existing Python libraries, autonomously self-debug, and interact with environments through interpretable code execution. 
+CodeActInstruct enables training of agents that can perform sophisticated tasks using existing Python libraries, autonomously self-debug, and interact with environments through interpretable code execution.
 
 ## Paper Citation
 

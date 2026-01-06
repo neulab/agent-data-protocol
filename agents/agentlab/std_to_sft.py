@@ -44,13 +44,13 @@ def process_row(line):
                 if match:
                     thought = match.group("thought").strip()
                     message = match.group("action").strip()
-                elif '<function=' not in output_line["conversations"][step]["value"]:
+                elif "<function=" not in output_line["conversations"][step]["value"]:
                     thought = ""
                     message = output_line["conversations"][step]["value"]
                 else:
-                    raise ValueError(f'no match: {output_line["conversations"][step]["value"]}')
+                    raise ValueError(f"no match: {output_line['conversations'][step]['value']}")
                 action = f'send_msg_to_user(text="{message}")'
-                
+
             else:
                 thought = match.group("thought").strip()
                 action = match.group("action").strip()
@@ -58,13 +58,15 @@ def process_row(line):
             past_actions.append(action)
             action = {"role": "assistant", "content": action}
             if observation:
-                ret.append({
-                    "id": f"{trajectory.id}-{step // 2}",
-                    "conversations": [observation, action],
-                    "system": system,
-                })
-            else: 
-                raise ValueError(f'no observation: {output_line["conversations"][step]["value"]}')
+                ret.append(
+                    {
+                        "id": f"{trajectory.id}-{step // 2}",
+                        "conversations": [observation, action],
+                        "system": system,
+                    }
+                )
+            else:
+                raise ValueError(f"no observation: {output_line['conversations'][step]['value']}")
         else:
             match = re.search(
                 r"(============== BEGIN accessibility tree ==============)(.*?)(============== END accessibility tree ==============)",
@@ -80,7 +82,8 @@ def process_row(line):
             observation = {"role": "user", "content": goal + tree + action_space + history + suffix}
     return ret
 
-def main():    
+
+def main():
     for line in sys.stdin:
         output_lines = process_row(line)
         if output_lines:
