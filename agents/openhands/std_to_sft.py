@@ -8,6 +8,7 @@ import traceback
 from agents.openhands.api import (
     browser_default_apis,
     get_api_tool_description,
+    get_api_tool_description_from_available_tools,
     get_language_descriptions,
     openhands_default_tools,
 )
@@ -247,7 +248,12 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     trajectory = Trajectory(**std_data)
     id = trajectory.id
     events = trajectory.content
-    # details = trajectory.details
+    details = trajectory.details
+    if "available_apis" in details:
+        try: api_tool_description, api_sigs = get_api_tool_description_from_available_tools(details["available_apis"], env=api_env)
+        except Exception as e: 
+            print(e, file=sys.stderr)
+            return None
     conversations = []
     previous_web_actions = []
     languages = []
