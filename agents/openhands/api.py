@@ -3,7 +3,6 @@ import inspect
 import os
 import random
 import types
-from typing import Any, Dict, List, Optional, Union
 
 openhands_default_tools = {
     "execute_bash": {"required": ["command"], "optional": ["is_input"]},
@@ -136,7 +135,9 @@ def get_api_tool_description(dataset, exclude_apis={}, env="execute_ipython_cell
         return "", {}
 
 
-def get_api_tool_description_from_available_tools(available_tools, exclude_apis=None, env="execute_ipython_cell"):
+def get_api_tool_description_from_available_tools(
+    available_tools, exclude_apis=None, env="execute_ipython_cell"
+):
     if exclude_apis is None:
         exclude_apis = {}
 
@@ -144,8 +145,8 @@ def get_api_tool_description_from_available_tools(available_tools, exclude_apis=
 
     if available_tools:
         # Create a temporary module from string content
-        import typing
         import builtins
+        import typing
 
         api_module = types.ModuleType("api")
 
@@ -156,7 +157,6 @@ def get_api_tool_description_from_available_tools(available_tools, exclude_apis=
         exec(available_tools, safe_globals)
 
         api_module.__dict__.update(safe_globals)
-
 
         functions = inspect.getmembers(api_module, inspect.isfunction)
         sigs = {}
@@ -183,18 +183,13 @@ def get_api_tool_description_from_available_tools(available_tools, exclude_apis=
             ):
                 continue
 
-            if name in exclude_apis and check_exclude_tools(
-                name, required, optional, exclude_apis
-            ):
+            if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
                 continue
 
             docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
             API_TOOL_DESCRIPTION += docstring
 
-            sigs[name] = {
-                "required": required,
-                "optional": optional
-            }
+            sigs[name] = {"required": required, "optional": optional}
 
         if not API_TOOL_DESCRIPTION:
             return "", {}
@@ -214,15 +209,14 @@ def get_api_tool_description_from_available_tools(available_tools, exclude_apis=
 
         API_TOOL_DESCRIPTION = random.choice(prefixes) + "\n\n" + API_TOOL_DESCRIPTION
 
-        API_TOOL_DESCRIPTION = (
-            API_TOOL_DESCRIPTION
-            .replace("xpath", "bid")
-            .replace("element_id", "bid")
+        API_TOOL_DESCRIPTION = API_TOOL_DESCRIPTION.replace("xpath", "bid").replace(
+            "element_id", "bid"
         )
 
         return API_TOOL_DESCRIPTION, sigs
 
     return "", {}
+
 
 def get_language_descriptions(languages):
     language_description = ""

@@ -24,12 +24,12 @@ for id, sample in enumerate(ds):
         "response_quality_assessment": sample.get("response_quality_assessment", ""),
         "metadata": sample.get("metadata", {}),
     }
-   
+
     if not raw_sample["question_quality_assessment"]:
         continue
-    try: 
+    try:
         response_quality_assessment = json.loads(raw_sample["response_quality_assessment"])
-    except: 
+    except:
         continue
     if "desired_tools_used_percentage" in response_quality_assessment:
         if response_quality_assessment["desired_tools_used_percentage"] != 1:

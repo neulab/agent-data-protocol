@@ -250,8 +250,11 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     events = trajectory.content
     details = trajectory.details
     if "available_apis" in details:
-        try: api_tool_description, api_sigs = get_api_tool_description_from_available_tools(details["available_apis"], env=api_env)
-        except Exception as e: 
+        try:
+            api_tool_description, api_sigs = get_api_tool_description_from_available_tools(
+                details["available_apis"], env=api_env
+            )
+        except Exception as e:
             print(e, file=sys.stderr)
             return None
     conversations = []
@@ -356,7 +359,7 @@ def main():
     args.is_web = args.is_web == "yes"
     for line in sys.stdin:
         out = main_with_args(line, args.is_web, args.api_env)
-        if out: 
+        if out:
             print(out)
 
 

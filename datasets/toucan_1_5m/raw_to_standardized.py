@@ -1,7 +1,7 @@
 import json
 import re
 import sys
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 from schema.action.action import Action
 from schema.action.api import ApiAction
@@ -150,8 +150,8 @@ def parse_available_tools(available_tools: str) -> str:
         generated_functions.append(generate_function_wrapper(tool))
 
     return "\n\n\n".join(generated_functions)
-    
-    
+
+
 def convert_message(message: dict, message_id: str) -> List[Union[Action, Observation]]:
     """Convert a single message to standardized format."""
     role = message.get("role", "")
@@ -163,7 +163,7 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
     if role == "system":
         # Skip system messages or convert to environment observation
         return []
-    
+
     elif role == "user":
         result.append(TextObservation(content=content, source="user"))
 
@@ -172,7 +172,7 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
             api_action = parse_function_call(function_call)
             api_action.description = content
             result.append(api_action)
-        
+
         # If there's a function call, create an ApiAction
         elif function_call:
             result.append(parse_function_call(function_call))
@@ -180,7 +180,7 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
         # If there's content, create a MessageAction
         elif content.strip():
             result.append(MessageAction(content=content, description=None))
-        
+
         else:
             raise ValueError(f"No useful information retrieved from message {message}")
 
@@ -193,14 +193,16 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
 
     return result
 
+
 def combine_message_and_api_actions(message_action, api_action):
     description = "\n" + api_action.description if api_action.description else ""
     description = message_action.content + description
     api_action.description = description
     return api_action
 
+
 def interleave_api_and_text_observation(
-    content: List[Union[Action, Observation]]
+    content: List[Union[Action, Observation]],
 ) -> List[Union[Action, Observation]]:
     """
     Reorder consecutive blocks of ApiAction followed by
@@ -246,6 +248,7 @@ def interleave_api_and_text_observation(
 
     return new_content
 
+
 def convert_trajectory(raw_data: dict) -> Trajectory:
     """Convert raw Toucan data to standardized trajectory format."""
     trajectory_id = raw_data["id"]
@@ -253,7 +256,7 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
     available_tools = raw_data.get("available_tools", "[]")
     available_apis_doc = parse_available_tools(available_tools)
     details = {"available_apis": available_apis_doc}
-    
+
     messages = json.loads(messages)
 
     content = []
@@ -262,7 +265,11 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
         converted_steps = convert_message(message, f"{trajectory_id}_{i}")
         if not converted_steps:
             continue
-        if content and isinstance(content[-1], MessageAction) and isinstance(converted_steps[0], ApiAction):
+        if (
+            content
+            and isinstance(content[-1], MessageAction)
+            and isinstance(converted_steps[0], ApiAction)
+        ):
             content[-1] = combine_message_and_api_actions(content[-1], converted_steps[0])
             converted_steps = converted_steps[1:]
         content.extend(converted_steps)

@@ -3,7 +3,10 @@ import os
 import re
 import sys
 
-from agents.sweagent.api import get_api_tool_description, get_api_tool_description_from_available_tools
+from agents.sweagent.api import (
+    get_api_tool_description,
+    get_api_tool_description_from_available_tools,
+)
 from agents.sweagent.system_message import base_template
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
@@ -147,7 +150,9 @@ def process_row(line, api_tool_description, api_sigs):
     events = trajectory.content
     details = trajectory.details
     if "available_apis" in details:
-        api_tool_description, api_sigs = get_api_tool_description_from_available_tools(details["available_apis"])
+        api_tool_description, api_sigs = get_api_tool_description_from_available_tools(
+            details["available_apis"]
+        )
     conversations = []
     for i in range(len(events)):
         event = events[i]

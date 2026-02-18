@@ -3,7 +3,6 @@ import inspect
 import os
 import random
 import types
-from typing import Any, Dict, List, Optional, Union
 
 sweagent_default_tools = {
     "bash": {"required": ["command"], "optional": []},
@@ -119,8 +118,8 @@ def get_api_tool_description_from_available_tools(available_tools, exclude_apis=
 
     if available_tools:
         # Create a temporary module from string content
-        import typing
         import builtins
+        import typing
 
         api_module = types.ModuleType("api")
 
@@ -178,4 +177,3 @@ def get_api_tool_description_from_available_tools(available_tools, exclude_apis=
         return API_TOOL_DESCRIPTION, sigs
     else:
         return "", {}
-
