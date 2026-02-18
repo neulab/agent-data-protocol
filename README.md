@@ -67,9 +67,9 @@ cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py 
 The repository currently supports datasets from various domains (we welcome more contributions!):
 
 - **Coding**: `code_feedback`, `codeactinstruct`
-- **Software Engineering**: `swe-smith`, `swe-gym_openhands_sampled_trajectories`, `nebius_SWE-agent-trajectories`
+- **Software Engineering**: `swe-smith`, `swe-gym_openhands_sampled_trajectories`, `nebius_SWE-agent-trajectories`, `mini-coder`
 - **Web Browsing**: `mind2web`, `nnetnav-live`, `nnetnav-wa`, `go-browse-wa`, `synatra`
-- **Multi-domain**: `agenttuning_*`, `orca_agentinstruct`, `openhands`
+- **Multi-domain**: `agenttuning_*`, `orca_agentinstruct`, `openhands`, `toucan_1_5m`
 
 ### Supported Agents
 
