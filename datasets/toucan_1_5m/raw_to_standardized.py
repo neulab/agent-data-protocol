@@ -1,7 +1,8 @@
+import ast
 import json
 import re
 import sys
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from schema.action.action import Action
 from schema.action.api import ApiAction
@@ -47,12 +48,44 @@ def convert_tool_declarations_in_content(content: str) -> str:
     return re.sub(pattern, replace_function_name, content)
 
 
-def parse_function_call(function_call_data: dict) -> ApiAction:
-    """Parse function call data into ApiAction."""
+def _add_additional_quotes_to_strings(x):
+    """
+    Recursively wrap every string value with an extra pair of double quotes.
+    Example: "abc" -> '"abc"'
+    """
+    if isinstance(x, str):
+        # If you want to avoid double-wrapping already wrapped strings, uncomment:
+        # if len(x) >= 2 and x[0] == '"' and x[-1] == '"':
+        #     return x
+        return f'"{x}"'
+    if isinstance(x, list):
+        return [_add_additional_quotes_to_strings(v) for v in x]
+    if isinstance(x, dict):
+        return {k: _add_additional_quotes_to_strings(v) for k, v in x.items()}
+    return x
+
+
+def parse_function_call(function_call_data: Union[dict, str]) -> ApiAction:
+    """Parse function call data into ApiAction.
+
+    Supports:
+      - dict input: {"name": "...", "arguments": "..."} or {"arguments": {...}}
+      - str input: "{'name': '...', 'arguments': '{\"k\": \"v\"}'}"
+    """
+    # NEW: accept a string that represents a Python dict
+    if isinstance(function_call_data, str):
+        try:
+            function_call_data = ast.literal_eval(function_call_data)
+        except Exception:
+            # couldn't parse into dict; keep raw
+            return ApiAction(
+                function="unknown_function",
+                kwargs={"raw_function_call_data": function_call_data},
+                description=None,
+            )
     function_name = function_call_data.get("name", "")
     arguments = function_call_data.get("arguments", "{}")
 
-    # Parse arguments if they're a string
     if isinstance(arguments, str):
         try:
             kwargs = json.loads(arguments)
@@ -61,8 +94,9 @@ def parse_function_call(function_call_data: dict) -> ApiAction:
     else:
         kwargs = arguments
 
-    python_function_name = convert_function_name(function_name)
+    kwargs = _add_additional_quotes_to_strings(kwargs)
 
+    python_function_name = convert_function_name(function_name)
     return ApiAction(function=python_function_name, kwargs=kwargs, description=None)
 
 
@@ -150,12 +184,13 @@ def parse_available_tools(available_tools: str) -> str:
         generated_functions.append(generate_function_wrapper(tool))
 
     return "\n\n\n".join(generated_functions)
-
-
+    
+    
 def convert_message(message: dict, message_id: str) -> List[Union[Action, Observation]]:
     """Convert a single message to standardized format."""
     role = message.get("role", "")
     content = message.get("content", "")
+    reasoning = message.get("reasoning_content", "")
     function_call = message.get("function_call")
 
     result = []
@@ -163,26 +198,43 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
     if role == "system":
         # Skip system messages or convert to environment observation
         return []
-
+    
     elif role == "user":
         result.append(TextObservation(content=content, source="user"))
 
     elif role == "assistant":
-        if function_call and content.strip():
+        if function_call and (content.strip() or reasoning.strip()):
             api_action = parse_function_call(function_call)
-            api_action.description = content
+            description = (reasoning + "\n").strip() + content
+            api_action.description = description
             result.append(api_action)
-
+        
         # If there's a function call, create an ApiAction
         elif function_call:
             result.append(parse_function_call(function_call))
 
         # If there's content, create a MessageAction
-        elif content.strip():
-            result.append(MessageAction(content=content, description=None))
-
+        elif content.strip() or reasoning.strip():
+            if content and reasoning:
+                result.append(MessageAction(content=content, description=reasoning))
+            elif content:
+                result.append(MessageAction(content=content, description=None))
+            elif reasoning:
+                result.append(MessageAction(content="", description=reasoning))
+            else: 
+                raise ValueError(f"No useful information retrieved from message {message}")
+        
         else:
             raise ValueError(f"No useful information retrieved from message {message}")
+
+    elif role == "tool_call":
+        if content.strip():
+            api_action = parse_function_call(content)
+            result.append(api_action)
+        
+        else:
+            raise ValueError(f"No useful information retrieved from message {message}")
+
 
     elif role == "function":
         # Function results are observations from the environment
@@ -191,7 +243,24 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
         converted_name = convert_function_name(raw_name)
         result.append(TextObservation(content=content, source="environment"))
 
+    elif role == "tool_response":
+        # Function results are observations from the environment
+        # Convert the function name to Python identifier format
+        result.append(TextObservation(content=content, source="environment"))
+
     return result
+
+def combine_message_actions(prev: MessageAction, nxt: MessageAction) -> MessageAction:
+    """Merge two consecutive MessageActions into one."""
+    # Merge content
+    content_parts = [x for x in [prev.content, nxt.content] if x]
+    prev.content = "\n".join(content_parts)
+
+    # Merge descriptions (reasoning)
+    desc_parts = [x for x in [prev.description, nxt.description] if x]
+    prev.description = "\n".join(desc_parts) if desc_parts else None
+
+    return prev
 
 
 def combine_message_and_api_actions(message_action, api_action):
@@ -202,7 +271,7 @@ def combine_message_and_api_actions(message_action, api_action):
 
 
 def interleave_api_and_text_observation(
-    content: List[Union[Action, Observation]],
+    content: List[Union[Action, Observation]]
 ) -> List[Union[Action, Observation]]:
     """
     Reorder consecutive blocks of ApiAction followed by
@@ -256,7 +325,7 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
     available_tools = raw_data.get("available_tools", "[]")
     available_apis_doc = parse_available_tools(available_tools)
     details = {"available_apis": available_apis_doc}
-
+    
     messages = json.loads(messages)
 
     content = []
@@ -265,13 +334,20 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
         converted_steps = convert_message(message, f"{trajectory_id}_{i}")
         if not converted_steps:
             continue
-        if (
+        # If consecutive message actions, combine MessageAction with previous MessageAction(s).
+        while (
             content
+            and converted_steps
             and isinstance(content[-1], MessageAction)
-            and isinstance(converted_steps[0], ApiAction)
+            and isinstance(converted_steps[0], MessageAction)
         ):
+            content[-1] = combine_message_actions(content[-1], converted_steps[0])
+            converted_steps = converted_steps[1:]
+            
+        if content and converted_steps and isinstance(content[-1], MessageAction) and isinstance(converted_steps[0], ApiAction):
             content[-1] = combine_message_and_api_actions(content[-1], converted_steps[0])
             converted_steps = converted_steps[1:]
+            
         content.extend(converted_steps)
     content = interleave_api_and_text_observation(content)
     # Ensure the trajectory ends with a finish action if it doesn't already
@@ -292,6 +368,7 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
 
 # Process each line of input individually
 for line in sys.stdin:
+    # print(line, file=sys.stderr)
     try:
         raw_data = json.loads(line)
         standardized_trajectory = convert_trajectory(raw_data)
