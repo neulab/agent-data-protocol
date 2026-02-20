@@ -150,9 +150,13 @@ def process_row(line, api_tool_description, api_sigs):
     events = trajectory.content
     details = trajectory.details
     if "available_apis" in details:
-        api_tool_description, api_sigs = get_api_tool_description_from_available_tools(
-            details["available_apis"]
-        )
+        try:
+            api_tool_description, api_sigs = get_api_tool_description_from_available_tools(
+                details["available_apis"]
+            )
+        except Exception as e:
+            print(e, file=sys.stderr)
+            return None
     conversations = []
     for i in range(len(events)):
         event = events[i]
