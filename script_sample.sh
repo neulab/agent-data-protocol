@@ -2,7 +2,7 @@ export MY_DATASET=nnetnav-wa
 mkdir -p datasets/$MY_DATASET/sample_sft
 
 echo RAW
-python datasets/$MY_DATASET/extract_raw.py 2>/dev/null | head -n 100 | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_raw.json
+python datasets/$MY_DATASET/extract_raw.py 2>/dev/null | head -n 5 | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_raw.json
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
 echo STD
