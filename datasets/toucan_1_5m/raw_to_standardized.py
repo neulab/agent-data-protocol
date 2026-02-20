@@ -2,7 +2,7 @@ import ast
 import json
 import re
 import sys
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 from schema.action.action import Action
 from schema.action.api import ApiAction
@@ -184,8 +184,8 @@ def parse_available_tools(available_tools: str) -> str:
         generated_functions.append(generate_function_wrapper(tool))
 
     return "\n\n\n".join(generated_functions)
-    
-    
+
+
 def convert_message(message: dict, message_id: str) -> List[Union[Action, Observation]]:
     """Convert a single message to standardized format."""
     role = message.get("role", "")
@@ -198,7 +198,7 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
     if role == "system":
         # Skip system messages or convert to environment observation
         return []
-    
+
     elif role == "user":
         result.append(TextObservation(content=content, source="user"))
 
@@ -208,7 +208,7 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
             description = (reasoning + "\n").strip() + content
             api_action.description = description
             result.append(api_action)
-        
+
         # If there's a function call, create an ApiAction
         elif function_call:
             result.append(parse_function_call(function_call))
@@ -221,9 +221,9 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
                 result.append(MessageAction(content=content, description=None))
             elif reasoning:
                 result.append(MessageAction(content="", description=reasoning))
-            else: 
+            else:
                 raise ValueError(f"No useful information retrieved from message {message}")
-        
+
         else:
             raise ValueError(f"No useful information retrieved from message {message}")
 
@@ -231,10 +231,9 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
         if content.strip():
             api_action = parse_function_call(content)
             result.append(api_action)
-        
+
         else:
             raise ValueError(f"No useful information retrieved from message {message}")
-
 
     elif role == "function":
         # Function results are observations from the environment
@@ -249,6 +248,7 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
         result.append(TextObservation(content=content, source="environment"))
 
     return result
+
 
 def combine_message_actions(prev: MessageAction, nxt: MessageAction) -> MessageAction:
     """Merge two consecutive MessageActions into one."""
@@ -271,7 +271,7 @@ def combine_message_and_api_actions(message_action, api_action):
 
 
 def interleave_api_and_text_observation(
-    content: List[Union[Action, Observation]]
+    content: List[Union[Action, Observation]],
 ) -> List[Union[Action, Observation]]:
     """
     Reorder consecutive blocks of ApiAction followed by
@@ -325,7 +325,7 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
     available_tools = raw_data.get("available_tools", "[]")
     available_apis_doc = parse_available_tools(available_tools)
     details = {"available_apis": available_apis_doc}
-    
+
     messages = json.loads(messages)
 
     content = []
@@ -343,11 +343,16 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
         ):
             content[-1] = combine_message_actions(content[-1], converted_steps[0])
             converted_steps = converted_steps[1:]
-            
-        if content and converted_steps and isinstance(content[-1], MessageAction) and isinstance(converted_steps[0], ApiAction):
+
+        if (
+            content
+            and converted_steps
+            and isinstance(content[-1], MessageAction)
+            and isinstance(converted_steps[0], ApiAction)
+        ):
             content[-1] = combine_message_and_api_actions(content[-1], converted_steps[0])
             converted_steps = converted_steps[1:]
-            
+
         content.extend(converted_steps)
     content = interleave_api_and_text_observation(content)
     # Ensure the trajectory ends with a finish action if it doesn't already
