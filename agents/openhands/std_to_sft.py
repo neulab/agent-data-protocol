@@ -30,6 +30,24 @@ action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "we
 function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
 
 
+def _build_thought_text(reasoning_content: str | None, description: str | None) -> str:
+    """Build thought text with reasoning_content wrapped in <think> tags.
+
+    Args:
+        reasoning_content: Extended chain-of-thought reasoning (wrapped in <think> tags)
+        description: Brief action description (included as plain text)
+
+    Returns:
+        Formatted thought text, or empty string if no content
+    """
+    parts = []
+    if reasoning_content:
+        parts.append(f"<think>\n{reasoning_content}\n</think>")
+    if description:
+        parts.append(description)
+    return "\n\n".join(parts) + "\n\n" if parts else ""
+
+
 def verify_args(required_args, optional_args, input_args):
     # all required args should be included
     for arg in required_args:
@@ -96,13 +114,11 @@ def standardized_event_to_openhands_message(
 
     if isinstance(event, ApiAction):
         PREV_BID = None
-        # Combine reasoning_content (extended thinking) and description (brief)
-        thought_parts = []
-        if hasattr(event, "reasoning_content") and event.reasoning_content:
-            thought_parts.append(event.reasoning_content)
-        if event.description:
-            thought_parts.append(event.description)
-        thought = "\n\n".join(thought_parts) + "\n\n" if thought_parts else ""
+        # Build thought text: reasoning_content wrapped in <think> tags, description as plain text
+        thought = _build_thought_text(
+            getattr(event, "reasoning_content", None),
+            event.description,
+        )
 
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
@@ -195,14 +211,11 @@ def standardized_event_to_openhands_message(
         return {"from": "function_call", "value": f"{thought}{function_call}"}
 
     if isinstance(event, CodeAction):
-        # Combine reasoning_content (extended thinking) and description (brief)
-        # reasoning_content takes precedence if both are present
-        thought_parts = []
-        if hasattr(event, "reasoning_content") and event.reasoning_content:
-            thought_parts.append(event.reasoning_content)
-        if event.description:
-            thought_parts.append(event.description)
-        thought = "\n\n".join(thought_parts) + "\n\n" if thought_parts else ""
+        # Build thought text: reasoning_content wrapped in <think> tags, description as plain text
+        thought = _build_thought_text(
+            getattr(event, "reasoning_content", None),
+            event.description,
+        )
 
         function_name = action_function.get(event.language, f"execute_{event.language}")
         code_content = event.content
@@ -215,13 +228,11 @@ def standardized_event_to_openhands_message(
         return {"from": "function_call", "value": f"{thought}{code_action}"}
 
     elif isinstance(event, MessageAction):
-        # Combine reasoning_content (extended thinking) and description (brief)
-        thought_parts = []
-        if hasattr(event, "reasoning_content") and event.reasoning_content:
-            thought_parts.append(event.reasoning_content)
-        if event.description:
-            thought_parts.append(event.description)
-        thought = "\n\n".join(thought_parts) + "\n\n" if thought_parts else ""
+        # Build thought text: reasoning_content wrapped in <think> tags, description as plain text
+        thought = _build_thought_text(
+            getattr(event, "reasoning_content", None),
+            event.description,
+        )
 
         if "<finish>" in event.content and "</finish>" in event.content:
             match = re.search(r"<finish>(.*?)</finish>", event.content, re.DOTALL)
