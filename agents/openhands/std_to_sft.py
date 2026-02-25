@@ -96,7 +96,14 @@ def standardized_event_to_openhands_message(
 
     if isinstance(event, ApiAction):
         PREV_BID = None
-        thought = event.description + "\n\n" if event.description else ""
+        # Combine reasoning_content (extended thinking) and description (brief)
+        thought_parts = []
+        if hasattr(event, "reasoning_content") and event.reasoning_content:
+            thought_parts.append(event.reasoning_content)
+        if event.description:
+            thought_parts.append(event.description)
+        thought = "\n\n".join(thought_parts) + "\n\n" if thought_parts else ""
+
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
 
@@ -188,7 +195,15 @@ def standardized_event_to_openhands_message(
         return {"from": "function_call", "value": f"{thought}{function_call}"}
 
     if isinstance(event, CodeAction):
-        thought = event.description + "\n\n" if event.description else ""
+        # Combine reasoning_content (extended thinking) and description (brief)
+        # reasoning_content takes precedence if both are present
+        thought_parts = []
+        if hasattr(event, "reasoning_content") and event.reasoning_content:
+            thought_parts.append(event.reasoning_content)
+        if event.description:
+            thought_parts.append(event.description)
+        thought = "\n\n".join(thought_parts) + "\n\n" if thought_parts else ""
+
         function_name = action_function.get(event.language, f"execute_{event.language}")
         code_content = event.content
         if function_name not in openhands_default_tools:
@@ -200,7 +215,14 @@ def standardized_event_to_openhands_message(
         return {"from": "function_call", "value": f"{thought}{code_action}"}
 
     elif isinstance(event, MessageAction):
-        thought = event.description + "\n\n" if event.description else ""
+        # Combine reasoning_content (extended thinking) and description (brief)
+        thought_parts = []
+        if hasattr(event, "reasoning_content") and event.reasoning_content:
+            thought_parts.append(event.reasoning_content)
+        if event.description:
+            thought_parts.append(event.description)
+        thought = "\n\n".join(thought_parts) + "\n\n" if thought_parts else ""
+
         if "<finish>" in event.content and "</finish>" in event.content:
             match = re.search(r"<finish>(.*?)</finish>", event.content, re.DOTALL)
             content = match.group(1).strip()

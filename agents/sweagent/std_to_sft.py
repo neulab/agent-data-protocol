@@ -71,13 +71,26 @@ def verify_args(required_args, optional_args, input_args):
     return True
 
 
+def _build_thought_text(event) -> str:
+    """Build thought text from reasoning_content and/or description."""
+    thought_parts = []
+    if hasattr(event, "reasoning_content") and event.reasoning_content:
+        thought_parts.append(event.reasoning_content)
+    if hasattr(event, "description") and event.description:
+        thought_parts.append(event.description)
+    if thought_parts:
+        combined = "\n\n".join(thought_parts)
+        return f"<think>\n{combined}\n</think>\n\n"
+    return ""
+
+
 def standardized_event_to_swe_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
     api_sigs=None,
 ) -> dict:
     if isinstance(event, ApiAction):
-        thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
+        thought = _build_thought_text(event)
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
 
@@ -102,7 +115,7 @@ def standardized_event_to_swe_message(
         raise ValueError(f"Undefined API: {event}")
 
     if isinstance(event, CodeAction):
-        thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
+        thought = _build_thought_text(event)
         code_content = event.content
         if event.language != "bash":
             if event.language == "python" or event.language == "python3":
@@ -114,7 +127,7 @@ def standardized_event_to_swe_message(
         return {"from": "function_call", "value": f"{thought}{code_action}"}
 
     elif isinstance(event, MessageAction):
-        thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
+        thought = _build_thought_text(event)
         # convert finish actions to submit actions
         if "<finish>" in event.content and "</finish>" in event.content:
             match = re.search(r"<finish>(.*?)</finish>", event.content, re.DOTALL)

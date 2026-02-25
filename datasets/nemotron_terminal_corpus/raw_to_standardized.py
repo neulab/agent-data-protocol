@@ -53,13 +53,13 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
         thinking, json_data = extract_thinking_and_json(content)
 
         if json_data:
-            # Extract analysis as description
+            # Extract analysis as brief description
             description = json_data.get("analysis") or json_data.get("plan")
 
             # Process commands
             commands = json_data.get("commands", [])
             if commands:
-                for cmd in commands:
+                for idx, cmd in enumerate(commands):
                     keystrokes = cmd.get("keystrokes", "")
                     if keystrokes:
                         # Clean keystrokes - remove trailing newline for display
@@ -69,10 +69,12 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
                                 CodeAction(
                                     language="bash",
                                     content=clean_cmd,
-                                    description=thinking,
+                                    # Use reasoning_content for think blocks,
+                                    # description for brief action description
+                                    reasoning_content=thinking if idx == 0 else None,
+                                    description=description if idx == 0 else None,
                                 )
                             )
-                            thinking = None  # Only use thinking for first command
 
             # Check if task is complete
             task_complete = json_data.get("task_complete", False)
@@ -80,6 +82,7 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
                 result.append(
                     MessageAction(
                         content="<finish> Task completed successfully. </finish>",
+                        reasoning_content=thinking,
                         description=description,
                     )
                 )
@@ -88,16 +91,22 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
                 result.append(
                     MessageAction(
                         content="<finish> Task completed successfully. </finish>",
+                        reasoning_content=None,
                         description=None,
                     )
                 )
         else:
             # No JSON found, treat as plain message
-            result.append(MessageAction(content=content, description=None))
+            # Check if there's a think block in the content
+            result.append(
+                MessageAction(content=content, reasoning_content=thinking, description=None)
+            )
 
         if not result:
             # Return a message action if no commands were extracted
-            result.append(MessageAction(content=content, description=None))
+            result.append(
+                MessageAction(content=content, reasoning_content=thinking, description=None)
+            )
 
         return result
 
