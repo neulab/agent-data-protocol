@@ -28,18 +28,14 @@ def filter_valid_trajectory(sample):
 
 # Load dataset from skill_based_easy config (most accessible)
 # Other configs: skill_based_medium, skill_based_mixed
-dataset = load_dataset(
-    "nvidia/Nemotron-Terminal-Corpus", "skill_based_easy", split="train"
-)
+dataset = load_dataset("nvidia/Nemotron-Terminal-Corpus", "skill_based_easy", split="train")
 
 for sample in dataset:
     if not filter_valid_trajectory(sample):
         continue
 
     output = {
-        "conversations": [
-            normalize_conversation(turn) for turn in sample["conversations"]
-        ],
+        "conversations": [normalize_conversation(turn) for turn in sample["conversations"]],
         "agent": sample.get("agent"),
         "model": sample.get("model"),
         "model_provider": sample.get("model_provider"),

@@ -8,7 +8,7 @@ The dataset contains approximately 366k high-quality execution trajectories for 
 
 The dataset includes multiple configurations:
 - `skill_based_easy`: Easy skill-based tasks
-- `skill_based_medium`: Medium difficulty skill-based tasks  
+- `skill_based_medium`: Medium difficulty skill-based tasks
 - `skill_based_mixed`: Mixed difficulty skill-based tasks
 
 ## Paper Citation

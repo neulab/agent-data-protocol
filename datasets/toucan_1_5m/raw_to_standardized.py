@@ -218,12 +218,18 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
         elif content.strip() or reasoning.strip():
             if content and reasoning:
                 # reasoning_content for extended thinking, description stays None
-                result.append(MessageAction(content=content, reasoning_content=reasoning, description=None))
+                result.append(
+                    MessageAction(content=content, reasoning_content=reasoning, description=None)
+                )
             elif content:
-                result.append(MessageAction(content=content, reasoning_content=None, description=None))
+                result.append(
+                    MessageAction(content=content, reasoning_content=None, description=None)
+                )
             elif reasoning:
                 # Just reasoning, no visible content
-                result.append(MessageAction(content="", reasoning_content=reasoning, description=None))
+                result.append(
+                    MessageAction(content="", reasoning_content=reasoning, description=None)
+                )
             else:
                 raise ValueError(f"No useful information retrieved from message {message}")
 
