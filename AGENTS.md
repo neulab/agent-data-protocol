@@ -47,7 +47,7 @@ sample_raw.json  →  sample_std.json      →  sample_sft.json
 **Critical**: Messages containing function call patterns MUST use `"from": "function_call"`, not `"from": "gpt"`.
 
 Function call patterns that trigger this requirement:
-- `<function=` 
+- `<function=`
 - `<function_calls>`
 - `<invoke name=`
 
@@ -63,7 +63,7 @@ Example correct format:
 
 **Actions:**
 - `MessageAction`: Text-based communication
-- `CodeAction`: Code execution requests  
+- `CodeAction`: Code execution requests
 - `ApiAction`: API/function calls with `function` and `kwargs` fields
 
 **Observations:**
