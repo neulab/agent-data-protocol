@@ -57,7 +57,6 @@ def _split_observation_chunks(obs_text: str) -> List[str]:
     return chunks
 
 
-
 def convert_step(step: dict, is_first_user: bool = False) -> list:
     """Convert a conversation step to standardized format."""
     role = step["role"]
