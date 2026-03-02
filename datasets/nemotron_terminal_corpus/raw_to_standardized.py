@@ -85,7 +85,8 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
             commands = json_data.get("commands", [])
             if commands:
                 for idx, cmd in enumerate(commands):
-                    if isinstance(cmd, str): return []
+                    if isinstance(cmd, str):
+                        return []
                     keystrokes = cmd.get("keystrokes", "")
                     if keystrokes:
                         # Clean keystrokes - remove trailing newline for display
@@ -163,10 +164,18 @@ def process_trajectory(raw_data: dict) -> Trajectory | None:
             continue
 
         # Classify converted items
-        env_observations = [x for x in converted if isinstance(x, TextObservation) and x.source == "environment"]
-        user_observations = [x for x in converted if isinstance(x, TextObservation) and x.source == "user"]
+        env_observations = [
+            x for x in converted if isinstance(x, TextObservation) and x.source == "environment"
+        ]
+        user_observations = [
+            x for x in converted if isinstance(x, TextObservation) and x.source == "user"
+        ]
         code_actions = [x for x in converted if getattr(x, "class_", None) == "code_action"]
-        other_actions = [x for x in converted if getattr(x, "class_", None) not in ("code_action", "text_observation")]
+        other_actions = [
+            x
+            for x in converted
+            if getattr(x, "class_", None) not in ("code_action", "text_observation")
+        ]
 
         if user_observations:
             content.extend(user_observations)
