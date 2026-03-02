@@ -85,6 +85,7 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
             commands = json_data.get("commands", [])
             if commands:
                 for idx, cmd in enumerate(commands):
+                    if isinstance(cmd, str): return []
                     keystrokes = cmd.get("keystrokes", "")
                     if keystrokes:
                         # Clean keystrokes - remove trailing newline for display
@@ -193,7 +194,8 @@ def process_trajectory(raw_data: dict) -> Trajectory | None:
 
     # Flush any remaining
     if pending_code:
-        content.extend(pending_code)
+        # Unpaired code actions present -> drop trajectory
+        return None
     if pending_other:
         content.extend(pending_other)
 
