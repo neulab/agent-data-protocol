@@ -1,6 +1,7 @@
 import json
 import re
 import sys
+from typing import List
 
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
@@ -32,21 +33,45 @@ def extract_thinking_and_json(content: str) -> tuple[str | None, dict | None]:
     return thinking, json_data
 
 
+def _split_observation_chunks(obs_text: str) -> List[str]:
+    """Split an environment observation into chunks per shell prompt line.
+
+    If no prompt-like lines are found, returns an empty list to signal 'no split'.
+    """
+    if not obs_text:
+        return []
+    prompt_regex = re.compile(r"(?m)^[^\n]*# .*$")
+    matches = list(prompt_regex.finditer(obs_text))
+    if not matches:
+        return []
+
+    chunks: List[str] = []
+    header = obs_text[: matches[0].start()]
+    for i, m in enumerate(matches):
+        start = m.start()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(obs_text)
+        segment = obs_text[start:end]
+        if i == 0 and header:
+            segment = header + segment
+        chunks.append(segment)
+    return chunks
+
+
+
 def convert_step(step: dict, is_first_user: bool = False) -> list:
     """Convert a conversation step to standardized format."""
     role = step["role"]
     content = step["content"]
 
     if role == "user":
-        # User messages are task descriptions or terminal outputs
+        content = content.replace("New Terminal Output:\n", "")
         if is_first_user:
-            # First user message contains system prompt and task description
-            # Extract just the task part
-            source = "user"
-        else:
-            # Subsequent user messages are terminal outputs
-            source = "environment"
-        return [TextObservation(content=content, source=source)]
+            return [TextObservation(content=content, source="user")]
+        # Environment observation: detect and split into multiple chunks if present
+        chunks = _split_observation_chunks(content)
+        if len(chunks) > 1:
+            return [TextObservation(content=c, source="environment") for c in chunks]
+        return [TextObservation(content=content, source="environment")]
 
     elif role == "assistant":
         result = []
@@ -114,16 +139,63 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
 
 
 def process_trajectory(raw_data: dict) -> Trajectory | None:
-    """Process a raw trajectory into standardized format."""
+    """Process a raw trajectory and pair code actions with subsequent observations.
+
+    - Buffer code actions when assistant outputs them
+    - Split environment observations (already split in convert_step when needed)
+    - Pair code actions to environment observations in order
+    - Append message actions once buffered code actions are drained
+    """
     conversations = raw_data["conversations"]
-    content = []
+    content: List = []
     is_first_user = True
+
+    pending_code: List = []
+    pending_other: List = []  # message actions to emit after a batch of code actions
 
     for step in conversations:
         converted = convert_step(step, is_first_user=is_first_user)
         if step["role"] == "user" and is_first_user:
+            # First user task description
+            content.extend(converted)
             is_first_user = False
-        content.extend(converted)
+            continue
+
+        # Classify converted items
+        env_observations = [x for x in converted if isinstance(x, TextObservation) and x.source == "environment"]
+        user_observations = [x for x in converted if isinstance(x, TextObservation) and x.source == "user"]
+        code_actions = [x for x in converted if getattr(x, "class_", None) == "code_action"]
+        other_actions = [x for x in converted if getattr(x, "class_", None) not in ("code_action", "text_observation")]
+
+        if user_observations:
+            content.extend(user_observations)
+
+        if code_actions:
+            pending_code.extend(code_actions)
+
+        if env_observations:
+            i = 0
+            while i < len(env_observations) and pending_code:
+                content.append(pending_code.pop(0))
+                content.append(env_observations[i])
+                i += 1
+            if i < len(env_observations):
+                content.extend(env_observations[i:])
+            if not pending_code and pending_other:
+                content.extend(pending_other)
+                pending_other = []
+
+        if other_actions:
+            if pending_code:
+                pending_other.extend(other_actions)
+            else:
+                content.extend(other_actions)
+
+    # Flush any remaining
+    if pending_code:
+        content.extend(pending_code)
+    if pending_other:
+        content.extend(pending_other)
 
     if not content:
         return None
