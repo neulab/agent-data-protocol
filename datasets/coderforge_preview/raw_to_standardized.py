@@ -58,16 +58,16 @@ def process_data(data):
                     elif tool_call.function.name in ["execute_bash", "terminal"]:
                         parallel_tool_count += 1
                         thought = msg.content
+                        bash_content = kwargs.get("command", "")
+                        if not bash_content.strip(): 
+                            print(f"Unknown bash command: {kwargs}", file=sys.stderr)
                         content.append(
                             CodeAction(
                                 language="bash",
-                                content=kwargs.get("command", ""),
+                                content=bash_content,
                                 description=thought,
                             )
                         )
-                    elif tool_call.function.name == "think":
-                        # Skip think tool calls as they are internal thoughts
-                        pass
                     else:
                         parallel_tool_count += 1
                         thought = msg.content
@@ -162,9 +162,6 @@ if __name__ == "__main__":
     for line in sys.stdin:
         raw_data = json.loads(line)
         data = SchemaRaw(**raw_data)
-        # Only process trajectories with positive reward (successful)
-        if data.reward <= 0:
-            continue
         standardized_data = process_data(data)
         if standardized_data:
             print(standardized_data.model_dump_json())

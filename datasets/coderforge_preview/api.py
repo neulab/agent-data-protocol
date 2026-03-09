@@ -23,28 +23,6 @@ def str_replace_editor(
     pass
 
 
-def finish(message: str = None):
-    """Finish the interaction when the task is complete OR if the assistant cannot proceed further with the task.
-
-    Args:
-    ----
-        message (str): Optional final message to the user.
-
-    """
-    pass
-
-
-def execute_bash(command: str):
-    """Execute a bash command in the terminal.
-
-    Args:
-    ----
-        command (str): The bash command to execute.
-
-    """
-    pass
-
-
 def think(thought: str):
     """Log a thought for reasoning.
 
