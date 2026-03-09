@@ -42,7 +42,7 @@ def process_data(data):
                 for tool_call in msg.tool_calls:
                     if tool_call.type != "function":
                         print(f"Unknown tool call type: {tool_call.type}", file=sys.stderr)
-                        continue
+                        return None
                     # Arguments are already a dict in CoderForge
                     kwargs = tool_call.function.arguments
                     # Add required message parameter for finish function if not present
@@ -59,8 +59,9 @@ def process_data(data):
                         parallel_tool_count += 1
                         thought = msg.content
                         bash_content = kwargs.get("command", "")
-                        if not bash_content.strip(): 
+                        if not isinstance(bash_content, str) or not bash_content.strip(): 
                             print(f"Unknown bash command: {kwargs}", file=sys.stderr)
+                            return None
                         content.append(
                             CodeAction(
                                 language="bash",
