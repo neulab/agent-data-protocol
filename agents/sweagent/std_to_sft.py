@@ -71,34 +71,13 @@ def verify_args(required_args, optional_args, input_args):
     return True
 
 
-def _build_thought_text(reasoning_content: str | None, description: str | None) -> str:
-    """Build thought text with reasoning_content wrapped in <think> tags.
-
-    Args:
-        reasoning_content: Extended chain-of-thought reasoning (wrapped in <think> tags)
-        description: Brief action description (included as plain text, not wrapped)
-
-    Returns:
-        Formatted thought text, or empty string if no content
-    """
-    parts = []
-    if reasoning_content:
-        parts.append(f"<think>\n{reasoning_content}\n</think>")
-    if description:
-        parts.append(description)
-    return "\n\n".join(parts) + "\n\n" if parts else ""
-
-
 def standardized_event_to_swe_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
     api_sigs=None,
 ) -> dict:
     if isinstance(event, ApiAction):
-        thought = _build_thought_text(
-            getattr(event, "reasoning_content", None),
-            getattr(event, "description", None),
-        )
+        thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
 
@@ -123,10 +102,7 @@ def standardized_event_to_swe_message(
         raise ValueError(f"Undefined API: {event}")
 
     if isinstance(event, CodeAction):
-        thought = _build_thought_text(
-            getattr(event, "reasoning_content", None),
-            getattr(event, "description", None),
-        )
+        thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
         code_content = event.content
         if event.language != "bash":
             if event.language == "python" or event.language == "python3":
@@ -138,10 +114,7 @@ def standardized_event_to_swe_message(
         return {"from": "function_call", "value": f"{thought}{code_action}"}
 
     elif isinstance(event, MessageAction):
-        thought = _build_thought_text(
-            getattr(event, "reasoning_content", None),
-            getattr(event, "description", None),
-        )
+        thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
         # convert finish actions to submit actions
         if "<finish>" in event.content and "</finish>" in event.content:
             match = re.search(r"<finish>(.*?)</finish>", event.content, re.DOTALL)
