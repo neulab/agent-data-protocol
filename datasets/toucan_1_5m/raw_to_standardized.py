@@ -205,8 +205,9 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
     elif role == "assistant":
         if function_call and (content.strip() or reasoning.strip()):
             api_action = parse_function_call(function_call)
-            description = (reasoning + "\n").strip() + content
-            api_action.description = description
+            # Use reasoning_content for extended thinking, description for brief summary
+            api_action.reasoning_content = reasoning if reasoning else None
+            api_action.description = content if content.strip() else None
             result.append(api_action)
 
         # If there's a function call, create an ApiAction
@@ -216,11 +217,19 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
         # If there's content, create a MessageAction
         elif content.strip() or reasoning.strip():
             if content and reasoning:
-                result.append(MessageAction(content=content, description=reasoning))
+                # reasoning_content for extended thinking, description stays None
+                result.append(
+                    MessageAction(content=content, reasoning_content=reasoning, description=None)
+                )
             elif content:
-                result.append(MessageAction(content=content, description=None))
+                result.append(
+                    MessageAction(content=content, reasoning_content=None, description=None)
+                )
             elif reasoning:
-                result.append(MessageAction(content="", description=reasoning))
+                # Just reasoning, no visible content
+                result.append(
+                    MessageAction(content="", reasoning_content=reasoning, description=None)
+                )
             else:
                 raise ValueError(f"No useful information retrieved from message {message}")
 
@@ -256,7 +265,15 @@ def combine_message_actions(prev: MessageAction, nxt: MessageAction) -> MessageA
     content_parts = [x for x in [prev.content, nxt.content] if x]
     prev.content = "\n".join(content_parts)
 
-    # Merge descriptions (reasoning)
+    # Merge reasoning_content (extended thinking)
+    reasoning_parts = []
+    if hasattr(prev, "reasoning_content") and prev.reasoning_content:
+        reasoning_parts.append(prev.reasoning_content)
+    if hasattr(nxt, "reasoning_content") and nxt.reasoning_content:
+        reasoning_parts.append(nxt.reasoning_content)
+    prev.reasoning_content = "\n".join(reasoning_parts) if reasoning_parts else None
+
+    # Merge descriptions (brief)
     desc_parts = [x for x in [prev.description, nxt.description] if x]
     prev.description = "\n".join(desc_parts) if desc_parts else None
 
@@ -264,9 +281,19 @@ def combine_message_actions(prev: MessageAction, nxt: MessageAction) -> MessageA
 
 
 def combine_message_and_api_actions(message_action, api_action):
+    # Combine reasoning_content from message_action if present
+    if hasattr(message_action, "reasoning_content") and message_action.reasoning_content:
+        if hasattr(api_action, "reasoning_content") and api_action.reasoning_content:
+            api_action.reasoning_content = (
+                message_action.reasoning_content + "\n" + api_action.reasoning_content
+            )
+        else:
+            api_action.reasoning_content = message_action.reasoning_content
+
+    # Use message content as part of description
     description = "\n" + api_action.description if api_action.description else ""
     description = message_action.content + description
-    api_action.description = description
+    api_action.description = description if description.strip() else None
     return api_action
 
 

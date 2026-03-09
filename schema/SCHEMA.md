@@ -31,6 +31,10 @@ Actions represent steps taken by an agent during task execution.
 
 Base Class Implementation: [`schema/action/action.py`](../schema/action/action.py)
 
+All action types inherit from the base `Action` class which provides a common field:
+
+- `reasoning_content` (str, optional): Extended chain-of-thought reasoning or internal thinking from the agent. This captures deliberate reasoning processes (e.g., `<think>` blocks) that are separate from the action's brief description. This field aligns with Harbor ATIF's `reasoning_content` field and Agent Client Protocol's `agent_thought_chunk` concept.
+
 #### ApiAction
 
 **File**: [`schema/action/api.py`](../schema/action/api.py)

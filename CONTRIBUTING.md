@@ -77,6 +77,7 @@ Each dataset must follow this directory structure:
 ```
 datasets/$YOUR_DATASET_NAME/
 ├── README.md                   # Dataset description and usage
+├── LICENSE                     # Dataset description and usage
 ├── requirements.txt            # Dataset-specific dependencies (optional)
 ├── schema_raw.py               # Raw data schema (optional)
 ├── extract_raw.py              # Script to extract raw data
