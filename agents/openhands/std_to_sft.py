@@ -228,7 +228,7 @@ def _trim_axtree_in_messages(conversations: list[dict], overflow_chars: int) -> 
         if remaining <= 0:
             break
 
-        def _trimmer(match, _remaining=remaining):
+        def _trimmer(match):
             """Callback for re.sub: trim each axtree block found."""
             nonlocal remaining
             if remaining <= 0:
@@ -526,13 +526,15 @@ def standardized_event_to_openhands_message(
     is_web: bool,
     api_env: str = None,
     api_sigs=None,
-    languages: list = [],
+    languages: list | None = None,
     max_axtree_chars: int = DEFAULT_MAX_AXTREE_CHARS,
     round_float_sigfigs: int | None = None,
     axtree_filter_som: bool = False,
     axtree_filter_visible: bool = False,
 ) -> dict:
     global PREV_BID, _CURRENT_AXTREE_BIDS
+    if languages is None:
+        languages = []
     if isinstance(event, WebObservation):
         gen = get_axtree_generator(
             filter_som=axtree_filter_som, filter_visible=axtree_filter_visible,
@@ -671,7 +673,7 @@ def standardized_event_to_openhands_message(
         api_env = "browser"
 
         if browsergym_id and not browsergym_id[0] == browsergym_id[-1] == '"':
-            browsergym_id = f'"{browsergym_id[0]}"'
+            browsergym_id = f'"{browsergym_id}"'
         PREV_BID = browsergym_id
         # for apis that are browser based but are not OH default browser apis
         # these should all be dataset specific apis
@@ -771,11 +773,11 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs,
                 image_max_pixels=None, image_min_pixels=None,
                 round_float_sigfigs=None,
                 axtree_filter_som=False, axtree_filter_visible=False):
-    global _CURRENT_AXTREE_BIDS
+    global _CURRENT_AXTREE_BIDS, PREV_BID
     _CURRENT_AXTREE_BIDS = set()
+    PREV_BID = None
 
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
+    std_data = json.loads(line)
     trajectory = Trajectory(**std_data)
     id = trajectory.id
     events = trajectory.content
@@ -937,15 +939,6 @@ def process_line(line, is_web, api_env, export_for="explicit", media_dir=None,
     if output_line is None:
         return None
     output_line = json.dumps(output_line)
-    # if output_line:
-    #     # print("Successfully processed line", file=sys.stderr)
-    #     with open(f"datasets/{dataset}/full_sft_openhands.jsonl", "a") as f:
-    #         try:
-    #             f.write(json.dumps(output_line) + "\n")
-    #         except Exception as e:
-    #             traceback.print_exc()
-    #             print(e)
-    #             continue
     return output_line
 
 

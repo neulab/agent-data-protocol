@@ -161,7 +161,9 @@ class OmniACT(datasets.GeneratorBasedBuilder):
             if self.config.include_image:
                 image = image_to_base64(os.path.join(datapath, doc["image"]))
             else:
-                image = doc["image"]
+                # Store absolute path so downstream stages can find the file.
+                # Images live inside the extracted data.zip in HF cache.
+                image = os.path.join(datapath, doc["image"])
 
             with open(os.path.join(ocrpath, doc["ocr"]), "r") as f:
                 ocr_data = json.load(f)

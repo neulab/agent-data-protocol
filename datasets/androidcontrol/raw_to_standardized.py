@@ -14,15 +14,12 @@ from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
-prev_id = None
-content: list[Action | Observation] = []
-
 
 def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
     content: List[Union[ApiAction, MessageAction, TextObservation, ImageObservation]] = []
-    # print(data)
-    # Add the goal as a MessageAction
-    content.append(MessageAction(content=data["goal"]))
+
+    # Add the goal as the first user observation (maps to "human" in SFT)
+    content.append(TextObservation(content=data["goal"], source="user"))
     #
     # # Add the image observations
     for i, (screenshot, tree) in enumerate(zip(data["screenshots"], data["accessibility_trees"])):
@@ -48,7 +45,7 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
             elif element["class_name"] and element["class_name"].endswith("Switch"):
                 element_text = "Switch:" + ("on" if element["is_checked"] else "off")
             elif element["resource_id"]:
-                element_text = element.resource_id.split("/")[-1]
+                element_text = element["resource_id"].split("/")[-1]
             elif element["class_name"] and element["class_name"].endswith("EditText"):
                 element_text = element["edit text"]
             else:
@@ -83,12 +80,11 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
                 editable=element["is_editable"],
             )
             annotations.append(image_annotation)
-        content.append(ImageObservation(content=screenshot, annotations=annotations, source="user"))
+        content.append(ImageObservation(content=f"datasets/androidcontrol/screenshots/{screenshot}", annotations=annotations, source="user"))
         if i != len(data["screenshots"]) - 1:
             action = data["actions"][i]
             step_inst = data["step_instructions"][i]
             if action["action_type"] == "click":
-                # print("click")
                 content.append(
                     ApiAction(
                         function="click",
@@ -136,32 +132,19 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
                 )
             elif action["action_type"] == "wait":
                 content.append(ApiAction(function="wait", kwargs={}, description=step_inst))
-    # print(content)
     return Trajectory(id=str(data["episode_id"]), content=content)
 
 
+record_count = 0
+error_count = 0
 for line in sys.stdin:
-    raw_data = json.loads(line)
-    trajectory = convert_to_trajectory(raw_data)
-    output_file = "output_trajectory.json"
-    print(trajectory.model_dump_json())
+    try:
+        raw_data = json.loads(line)
+        trajectory = convert_to_trajectory(raw_data)
+        print(trajectory.model_dump_json())
+        record_count += 1
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
+        error_count += 1
+        print(f"Warning: Skipping record: {e}", file=sys.stderr)
 
-
-#
-# # Load the JSON data
-# file_path = "sample_raw.json"
-# with open(file_path, "r") as f:
-#     raw_data = json.load(f)
-#
-# for i in raw_data:
-#     # Convert and print the results
-#     trajectory = convert_to_trajectory(i)
-#     # print(trajectory.json(indent=2))
-#
-#     output_file = "output_trajectory.json"
-#     # BOYU: It seems that the actions are missing in a directly dumped json file. I'm not sure whether I understand the raw_to_standardized.py correctly. The printed content is good though.
-#     with open(output_file, "w") as f:
-#         f.write(trajectory.model_dump_json(indent=2))
-#     print(trajectory.model_dump_json())
-#
-# # print(f"Trajectory saved to {output_file}")
+print(f"Processed {record_count} episodes ({error_count} errors)", file=sys.stderr)

@@ -216,8 +216,6 @@ class HTMLToAXTree:
             if len(x_path) >= 2 and x_path[0] == x_path[-1] and x_path[0] in ('"', "'"):
                 x_path = x_path[1:-1]
             element = tree.xpath(x_path)
-            # print(x_path)
-            # print(etree.tostring(element[0], pretty_print=True).decode("utf-8"))
             browsergym_id = element[0].get("bid")
             return browsergym_id
         except Exception as e:

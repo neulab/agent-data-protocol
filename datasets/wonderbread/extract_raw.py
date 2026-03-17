@@ -67,6 +67,12 @@ for task_stamp in tqdm(os.listdir(data_folder), desc="Processing tasks", file=sy
     if task_stamp == ".DS_Store" or not os.path.isdir(task_folder):
         continue
 
+    # Strip duplicate suffix before using task_stamp for screenshot paths
+    # or output. The zip contains duplicate folders like "XYZ (1)" whose
+    # internal files are still named with the canonical "XYZ" prefix.
+    if task_stamp.endswith(" (1)"):
+        task_stamp = task_stamp[:-4]
+
     # move screenshots to "./screenshots/task_stamp"
     screenshots_folder = f"{root}/screenshots/{task_stamp}"
     os.makedirs(screenshots_folder, exist_ok=True)
@@ -75,9 +81,6 @@ for task_stamp in tqdm(os.listdir(data_folder), desc="Processing tasks", file=sy
             os.path.join(f"{task_folder}/screenshots", img),
             os.path.join(screenshots_folder, img),
         )
-
-    if task_stamp[-3:] == "(1)":
-        task_stamp = task_stamp[:-4]
     with open(f"{task_folder}/{task_stamp}.json") as f:
         data = json.load(f)
         wa_info = data.pop("webarena")

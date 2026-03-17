@@ -7,6 +7,7 @@ from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.observation import Observation
+from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
 # Constants from Android in the Wild action matching code
@@ -59,8 +60,14 @@ def process_episode(episode_data: List[Dict]) -> Dict:
     episode_id = episode_data[0]["episode_id"]
     content: list[Action | Observation] = []
 
-    # Add the goal info as the first message
-    content.append(MessageAction(content=episode_data[0]["goal_info"]))
+    # Add the goal info as the first user observation (maps to "human" in SFT)
+    content.append(TextObservation(content=episode_data[0]["goal_info"], source="user"))
+
+    # Check for duplicate step_ids
+    step_ids = [d["step_id"] for d in episode_data]
+    if len(step_ids) != len(set(step_ids)):
+        dupes = [s for s in step_ids if step_ids.count(s) > 1]
+        print(f"Warning: Duplicate step_ids in episode {episode_id}: {set(dupes)}", file=sys.stderr)
 
     # Pass 1: Analyze actions to determine clickability and editability
     # Structure: {step_id: {annotation_idx: {"clickable": bool, "editable": bool}}}
@@ -170,40 +177,74 @@ def process_episode(episode_data: List[Dict]) -> Dict:
 
 
 if __name__ == "__main__":
-    # Process data line by line, but group by episode_id
+    import itertools
+
     current_episode_id = None
     current_episode_data = []
+    record_count = 0
+    episode_count = 0
+    error_count = 0
 
-    # Read all input first to detect format
-    input_text = sys.stdin.read()
+    def process_and_output(episode_data):
+        """Process a collected episode and write to stdout."""
+        global episode_count, error_count
+        if episode_data:
+            try:
+                result = process_episode(episode_data)
+            except (ValueError, KeyError) as e:
+                error_count += 1
+                print(f"Warning: Skipping episode: {e}", file=sys.stderr)
+                return
+            if result:
+                print(json.dumps(result))
+                episode_count += 1
 
-    # Try to parse as a JSON array first (for sample files)
-    try:
-        all_data = json.loads(input_text)
-        # If it's a single object, wrap it in a list
-        if isinstance(all_data, dict):
-            all_data = [all_data]
-    except json.JSONDecodeError:
-        # Fall back to newline-delimited JSON
-        all_data = [json.loads(line) for line in input_text.strip().split("\n") if line.strip()]
-
-    for data in all_data:
-        # If we encounter a new episode, process the previous one
+    def handle_record(data):
+        """Accumulate records by episode_id, flushing when the episode changes."""
+        global current_episode_id, current_episode_data, record_count
+        record_count += 1
         if current_episode_id is not None and current_episode_id != data["episode_id"]:
-            # Process and output the current episode
-            standardized_trajectory = process_episode(current_episode_data)
-            if standardized_trajectory:
-                print(json.dumps(standardized_trajectory))
-            # Start a new episode
+            process_and_output(current_episode_data)
             current_episode_data = [data]
         else:
-            # Add to the current episode
             current_episode_data.append(data)
-
         current_episode_id = data["episode_id"]
 
+    # Peek at first non-empty line to detect format
+    first_line = ""
+    for line in sys.stdin:
+        first_line = line.strip()
+        if first_line:
+            break
+
+    if first_line.startswith("["):
+        # JSON array format (small sample files) - read entire input
+        rest = sys.stdin.read()
+        all_data = json.loads(first_line + rest)
+        if isinstance(all_data, dict):
+            all_data = [all_data]
+        for data in all_data:
+            handle_record(data)
+    else:
+        # JSONL format - stream line by line (constant memory)
+        lines = itertools.chain([first_line + "\n"], sys.stdin)
+        for line_num, line in enumerate(lines, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError as e:
+                print(f"Warning: Skipping corrupt line {line_num}: {e}", file=sys.stderr)
+                truncated = line[:500] + "..." if len(line) > 500 else line
+                print(f"  Content: {truncated}", file=sys.stderr)
+                continue
+            handle_record(data)
+
     # Process the last episode
-    if current_episode_data:
-        standardized_trajectory = process_episode(current_episode_data)
-        if standardized_trajectory:
-            print(json.dumps(standardized_trajectory))
+    process_and_output(current_episode_data)
+    print(
+        f"Processed {record_count} records into {episode_count} episodes"
+        f" ({error_count} errors)",
+        file=sys.stderr,
+    )

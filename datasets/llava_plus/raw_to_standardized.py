@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 
 from schema.action.action import Action
@@ -12,18 +13,24 @@ from schema.trajectory import Trajectory
 
 
 def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
+    """Convert a single conversation step to standardized actions/observations."""
     if step["from"] == "human":
-        if step["value"].startswith("<image>\n"):
-            return [
+        text = step["value"]
+        if "<image>" in text:
+            # Strip all <image> occurrences and surrounding whitespace
+            cleaned = re.sub(r"\s*<image>\s*", "", text).strip()
+            result = [
                 ImageObservation(
                     content=os.path.join("images/", metadata["data_source"], metadata["image"]),
                     annotations=None,
                     source="environment",
                 ),
-                TextObservation(content=step["value"][len("<image>\n") :], source="user"),
             ]
+            if cleaned:
+                result.append(TextObservation(content=cleaned, source="user"))
+            return result
         else:
-            return [TextObservation(content=step["value"], source="user")]
+            return [TextObservation(content=text, source="user")]
     elif step["from"] == "gpt":
         if len(step["actions"]) > 0:
             content = [
