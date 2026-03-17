@@ -85,7 +85,7 @@ class TestWebObservationWithNestedImage:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Mock generate_axtree for WebObservation tests."""
-        with patch("agents.openhands.std_to_sft.generate_axtree") as mock_axtree:
+        with patch("agents.openhands.std_to_sft._generate_axtree") as mock_axtree:
             mock_axtree.last_html = None
             mock_axtree.last_xtree = "[1] button 'Test'"
             yield mock_axtree
@@ -239,7 +239,7 @@ class TestStandaloneImageObservation:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Mock generate_axtree (not used for ImageObservation, but needed for import)."""
-        with patch("agents.openhands.std_to_sft.generate_axtree"):
+        with patch("agents.openhands.std_to_sft._generate_axtree"):
             yield
 
     def test_image_observation_no_annotations(self, setup):
@@ -340,7 +340,7 @@ class TestImagePathCollection:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Mock generate_axtree and create test directory."""
-        with patch("agents.openhands.std_to_sft.generate_axtree") as mock_axtree:
+        with patch("agents.openhands.std_to_sft._generate_axtree") as mock_axtree:
             mock_axtree.last_html = None
             mock_axtree.last_xtree = "[1] button 'Test'"
             mock_axtree.build_axtree = MagicMock(return_value="[1] button 'Test'")
