@@ -1,20 +1,20 @@
-def click(xpath: str) -> None:
+def click(bid: str) -> None:
     """Click on the element.
 
     Args:
     ----
-        xpath (str): The xpath of the element to click.
+        bid (str): The browsergym ID of the element to click.
 
     """
     pass
 
 
-def type(xpath: str, value: str) -> None:
+def type(bid: str, value: str) -> None:
     """Type some text into an input element.
 
     Args:
     ----
-        xpath (str): The xpath of the element to type into.
+        bid (str): The browsergym ID of the element to type into.
         value (str): The text to type.
 
     """
@@ -44,24 +44,24 @@ def goto(url: str) -> None:
     pass
 
 
-def select(xpath: str, value: str) -> None:
+def select(bid: str, value: str) -> None:
     """Select an option from a dropdown menu.
 
     Args:
     ----
-        xpath (str): The xpath of the select element.
+        bid (str): The browsergym ID of the select element.
         value (str): The select option to choose.
 
     """
     pass
 
 
-def submit(xpath: str) -> None:
+def submit(bid: str) -> None:
     """Submit the form.
 
     Args:
     ----
-        xpath (str): The xpath of the form to submit.
+        bid (str): The browsergym ID of the form to submit.
 
     """
     pass
