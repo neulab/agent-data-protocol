@@ -536,17 +536,19 @@ def standardized_event_to_openhands_message(
     if languages is None:
         languages = []
     if isinstance(event, WebObservation):
-        gen = get_axtree_generator(
-            filter_som=axtree_filter_som, filter_visible=axtree_filter_visible,
-        )
         if event.axtree is not None:
-            axtree = event.axtree  # Pre-existing text: no filtering (Path B deferred)
-        elif event.html is not None and gen.last_html != event.html:
-            axtree = gen.build_axtree(id, event.html, "all")
+            axtree = event.axtree  # Pre-existing text: no browser needed
         elif event.html is not None:
-            axtree = gen.last_xtree
+            # Lazy-init browser only when we actually need to generate from HTML
+            gen = get_axtree_generator(
+                filter_som=axtree_filter_som, filter_visible=axtree_filter_visible,
+            )
+            if gen.last_html != event.html:
+                axtree = gen.build_axtree(id, event.html, "all")
+            else:
+                axtree = gen.last_xtree
         else:
-            axtree = None  # No HTML available, skip axtree generation
+            axtree = None  # No HTML or axtree available
 
         # Strip RSS/XML <image> tags from axtree to prevent false image token counts.
         # RSS 2.0 uses <image> for channel logos; these leak into axtree when browsers
