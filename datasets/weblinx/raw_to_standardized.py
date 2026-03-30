@@ -231,15 +231,17 @@ def convert_step(
 
         # Resolve element identifier: prefer BID over xpath
         _elid = args["element"]["attributes"].get("data-webtasks-id")
-        if _elid and axtree_text is not None:
+        if not _elid:
+            # Skip actions without data-webtasks-id — matches weblinx-browsergym
+            # filtering (~1.7% of element actions, excluded from their dataset)
+            return [web_observation]
+
+        if axtree_text is not None:
             # data-webtasks-id IS browsergym_id directly (verified)
             element_ref = {"bid": f'"{_elid}"'}
-        elif _elid:
+        else:
             # Have data-webtasks-id but no axtree — use xpath fallback
             element_ref = {"xpath": f"//*[@data-webtasks-id='{_elid}']"}
-        else:
-            # No data-webtasks-id — use raw xpath (~1% of actions)
-            element_ref = {"xpath": args["element"]["xpath"]}
 
         if step.action["intent"] in ["click", "submit"]:
             return [

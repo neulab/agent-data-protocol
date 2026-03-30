@@ -38,8 +38,11 @@ from download_utils import (
 logger = logging.getLogger(__name__)
 
 DATASET_REPO = "ychenNLP/oven"
-# OVEN image tar shards
-SHARD_FILES = [f"shard{i:02d}.tar" for i in range(1, 9)]  # shard01.tar - shard08.tar
+# OVEN image tar shards + the wikipedia images archive
+SHARD_FILES = [
+    *[f"shard{i:02d}.tar" for i in range(1, 9)],  # shard01.tar - shard08.tar
+    "all_wikipedia_images.tar",                      # ~30 GB, contains remaining images
+]
 
 
 def process_shard(

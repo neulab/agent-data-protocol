@@ -14,6 +14,10 @@ import urllib.request
 import requests
 from tqdm import tqdm
 
+# Default data directory (overridable via DATA_DIR env var)
+DEFAULT_DATA_DIR = "/data/user_data/josephl4/datasets"
+
+
 def get_paths(source_name: str) -> tuple[str, str, str, str]:
     """Return standard paths for a given image source.
 
@@ -22,13 +26,8 @@ def get_paths(source_name: str) -> tuple[str, str, str, str]:
 
     Returns:
         Tuple of (llava_plus_dir, image_list_file, output_dir, failed_list_path).
-
-    Raises:
-        RuntimeError: If DATA_DIR environment variable is not set.
     """
-    data_dir = os.environ.get("DATA_DIR")
-    if not data_dir:
-        raise RuntimeError("DATA_DIR environment variable must be set")
+    data_dir = os.environ.get("DATA_DIR", DEFAULT_DATA_DIR)
     llava_plus_dir = os.path.join(data_dir, "llava_plus")
     image_list_file = os.path.join(llava_plus_dir, f"{source_name}_images_needed.txt")
     output_dir = os.path.join(llava_plus_dir, "images", source_name)
