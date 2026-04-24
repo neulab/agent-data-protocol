@@ -9,3 +9,8 @@ class Action(BaseModel):
         "from the action's brief description. Aligns with Harbor ATIF's reasoning_content field "
         "and Agent Client Protocol's agent_thought_chunk concept.",
     )
+    reward: float | None = Field(
+        None,
+        description="Per-step reward signal associated with this action. "
+        "Used for reinforcement learning training data.",
+    )
