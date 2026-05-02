@@ -1,0 +1,39 @@
+---
+name: PR Review by OpenHands
+
+on:
+  # Use pull_request_target so maintainers can trigger reviews on fork PRs.
+  # Security: this workflow runs automatically only for non-draft PRs from
+  # contributors who are not first-time/NONE contributors, or when a maintainer
+  # adds the review-this label or requests an OpenHands reviewer.
+  pull_request_target:
+    types: [opened, ready_for_review, labeled, review_requested]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  pr-review:
+    if: |
+      (github.event.action == 'opened' && github.event.pull_request.draft == false && github.event.pull_request.author_association != 'FIRST_TIME_CONTRIBUTOR' && github.event.pull_request.author_association != 'NONE') ||
+      (github.event.action == 'ready_for_review' && github.event.pull_request.author_association != 'FIRST_TIME_CONTRIBUTOR' && github.event.pull_request.author_association != 'NONE') ||
+      github.event.label.name == 'review-this' ||
+      github.event.requested_reviewer.login == 'openhands-agent' ||
+      github.event.requested_reviewer.login == 'all-hands-bot'
+    concurrency:
+      group: pr-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Run PR Review
+        uses: OpenHands/extensions/plugins/pr-review@main
+        with:
+          llm-model: litellm_proxy/claude-sonnet-4-5-20250929
+          llm-base-url: https://llm-proxy.app.all-hands.dev
+          use-sub-agents: 'false'
+          require-evidence: 'true'
+          llm-api-key: ${{ secrets.LLM_API_KEY }}
+          github-token: ${{ github.token }}
+          lmnr-api-key: ${{ secrets.LMNR_PROJECT_API_KEY }}
