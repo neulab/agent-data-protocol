@@ -153,12 +153,17 @@ def get_api_tool_description_from_available_tools(
         safe_globals = {}
         safe_globals.update(vars(builtins))
         safe_globals.update(vars(typing))
+        base_names = set(safe_globals)
 
         exec(available_tools, safe_globals)
 
         api_module.__dict__.update(safe_globals)
 
-        functions = inspect.getmembers(api_module, inspect.isfunction)
+        functions = [
+            (name, func)
+            for name, func in inspect.getmembers(api_module, inspect.isfunction)
+            if name not in base_names
+        ]
         sigs = {}
 
         for name, func in functions:
