@@ -299,8 +299,6 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
         language_descriptions = get_language_descriptions(languages)
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
     for m in conversations:
-        if m["from"] == "function_call":
-            m["from"] = "gpt"
         if m["from"] == "observation":
             m["from"] = "human"
     return {
