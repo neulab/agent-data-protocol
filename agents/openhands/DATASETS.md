@@ -17,6 +17,7 @@ This document outlines the input argument configurations for each dataset. The a
 | agenttuning_webshop                     | execute_ipython_cell |     no     |
 | code_feedback                           |         None         |     no     |
 | codeactinstruct                         | execute_ipython_cell |     no     |
+| CharlieDreemur_OpenManus-RL             | execute_ipython_cell |     no     |
 | go-browse-wa                            |        browser       |     yes    |
 | mind2web                                |        browser       |     yes    |
 | nebius_SWE-agent-trajectories           |     execute_bash     |     no     |
@@ -46,6 +47,7 @@ This document outlines the input argument configurations for each dataset. The a
 | agenttuning_webshop                     |    0.4K    |      5.7    |
 | code_feedback                           |   66.4K    |      4.0    |
 | codeactinstruct                         |    7.1K    |      4.0    |
+| CharlieDreemur_OpenManus-RL             |   48.9K    |     4-20    |
 | go-browse-wa                            |    7.9K    |      6.8    |
 | mind2web                                |    1.0K    |      9.6    |
 | nebius_SWE-agent-trajectories           |   13.4K    |     16.2    |
