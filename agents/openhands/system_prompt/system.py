@@ -1,15 +1,12 @@
 import os
 
-from agents.openhands.system_prompt.tools import (
-    BrowserTool,
-    FinishTool,
-    IPythonTool,
-    LLMBasedFileEditTool,
-    ThinkTool,
-    WebReadTool,
-    create_cmd_run_tool,
-    create_str_replace_editor_tool,
-)
+from agents.openhands.system_prompt.tools.bash import create_cmd_run_tool
+from agents.openhands.system_prompt.tools.finish import FinishTool
+from agents.openhands.system_prompt.tools.ipython import IPythonTool
+from agents.openhands.system_prompt.tools.llm_based_edit import LLMBasedFileEditTool
+from agents.openhands.system_prompt.tools.str_replace_editor import create_str_replace_editor_tool
+from agents.openhands.system_prompt.tools.think import ThinkTool
+from agents.openhands.system_prompt.tools.web_read import WebReadTool
 
 _script_dir = os.path.dirname(os.path.realpath(__file__))
 prompt_file = os.path.join(_script_dir, "system_prefix.txt")
@@ -55,6 +52,8 @@ def get_tools(
         FinishTool,
     ]
     if codeact_enable_browsing:
+        from agents.openhands.system_prompt.tools.browser import BrowserTool
+
         tools.append(WebReadTool)
         tools.append(BrowserTool)
     if codeact_enable_jupyter:
