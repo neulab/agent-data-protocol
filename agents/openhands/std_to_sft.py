@@ -63,6 +63,11 @@ def format_function(function_name, parameters):
     return function_call
 
 
+def format_api_call(function_name, arguments):
+    formatted_args = ", ".join(f"{key}={value!r}" for key, value in arguments.items())
+    return f"{function_name}({formatted_args})"
+
+
 # Extract the tool in a OH format function call
 def extract_function_call(content):
     for tool in openhands_default_tools:
@@ -145,7 +150,7 @@ def standardized_event_to_openhands_message(
                 api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
             ):
                 raise ValueError(f"Function call with wrong argument: {event}")
-            api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
+            api_action = format_api_call(function_name, arguments)
             function_call = format_function(
                 api_env, {function_args.get(api_env, "code"): api_action}
             )
@@ -298,11 +303,6 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     if languages:
         language_descriptions = get_language_descriptions(languages)
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
-    for m in conversations:
-        if m["from"] == "function_call":
-            m["from"] = "gpt"
-        if m["from"] == "observation":
-            m["from"] = "human"
     return {
         "id": trajectory.id,
         "conversations": conversations,
