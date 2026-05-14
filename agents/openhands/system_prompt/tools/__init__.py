@@ -1,5 +1,10 @@
 from .bash import create_cmd_run_tool
-from .browser import BrowserTool
+
+try:
+    from .browser import BrowserTool
+except ModuleNotFoundError:
+    BrowserTool = None
+
 from .finish import FinishTool
 from .ipython import IPythonTool
 from .llm_based_edit import LLMBasedFileEditTool
