@@ -1,3 +1,4 @@
+import ast
 import importlib.util
 import inspect
 import os
@@ -154,11 +155,20 @@ def get_api_tool_description_from_available_tools(
         safe_globals.update(vars(builtins))
         safe_globals.update(vars(typing))
 
+        tool_names = {
+            node.name
+            for node in ast.parse(available_tools).body
+            if isinstance(node, ast.FunctionDef)
+        }
         exec(available_tools, safe_globals)
 
         api_module.__dict__.update(safe_globals)
 
-        functions = inspect.getmembers(api_module, inspect.isfunction)
+        functions = [
+            (name, func)
+            for name, func in inspect.getmembers(api_module, inspect.isfunction)
+            if name in tool_names
+        ]
         sigs = {}
 
         for name, func in functions:
