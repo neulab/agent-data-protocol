@@ -15,6 +15,7 @@ This document outlines the input argument configurations for each dataset. The a
 | agenttuning_mind2web                    |         None         |     no     |
 | agenttuning_os                          |         None         |     no     |
 | agenttuning_webshop                     | execute_ipython_cell |     no     |
+| allenai_Sera-4.6-Lite-T2                |     execute_bash     |     no     |
 | code_feedback                           |         None         |     no     |
 | codeactinstruct                         | execute_ipython_cell |     no     |
 | go-browse-wa                            |        browser       |     yes    |
@@ -44,6 +45,7 @@ This document outlines the input argument configurations for each dataset. The a
 | agenttuning_mind2web                    |    0.1K    |      1.0    |
 | agenttuning_os                          |    0.2K    |      6.9    |
 | agenttuning_webshop                     |    0.4K    |      5.7    |
+| allenai_Sera-4.6-Lite-T2                |   36.1K    |     57.0    |
 | code_feedback                           |   66.4K    |      4.0    |
 | codeactinstruct                         |    7.1K    |      4.0    |
 | go-browse-wa                            |    7.9K    |      6.8    |

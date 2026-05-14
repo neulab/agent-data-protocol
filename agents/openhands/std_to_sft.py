@@ -20,11 +20,10 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-from scripts.html_to_axtree import HTMLToAXTree
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
-generate_axtree = HTMLToAXTree(dataset)
+generate_axtree = None
 
 action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
@@ -74,6 +73,15 @@ def extract_function_call(content):
 PREV_BID = None
 
 
+def get_axtree_generator():
+    global generate_axtree
+    if generate_axtree is None:
+        from scripts.html_to_axtree import HTMLToAXTree
+
+        generate_axtree = HTMLToAXTree(dataset)
+    return generate_axtree
+
+
 def standardized_event_to_openhands_message(
     id,
     event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
@@ -85,12 +93,13 @@ def standardized_event_to_openhands_message(
 ) -> dict:
     global PREV_BID
     if isinstance(event, WebObservation):
+        axtree_generator = get_axtree_generator()
         if event.axtree is not None:
             axtree = event.axtree
-        elif generate_axtree.last_html != event.html:
-            axtree = generate_axtree.build_axtree(id, event.html, "all")
+        elif axtree_generator.last_html != event.html:
+            axtree = axtree_generator.build_axtree(id, event.html, "all")
         else:
-            axtree = generate_axtree.last_xtree
+            axtree = axtree_generator.last_xtree
         prompt = get_web_user_message("", event.url, axtree, PREV_BID)
         return {"from": "human", "value": prompt}
 
@@ -133,7 +142,7 @@ def standardized_event_to_openhands_message(
         if not browsergym_id:
             event_xpath = event.kwargs.get("xpath", None)
             if event_xpath:
-                browsergym_id = generate_axtree.get_bid(id, event_xpath, "all")
+                browsergym_id = get_axtree_generator().get_bid(id, event_xpath, "all")
         # for tool calls that are not browser based since there is no browsergym_id
         # and tool calls that are specified as non-web
         # these should all be dataset specific apis
@@ -298,11 +307,6 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     if languages:
         language_descriptions = get_language_descriptions(languages)
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
-    for m in conversations:
-        if m["from"] == "function_call":
-            m["from"] = "gpt"
-        if m["from"] == "observation":
-            m["from"] = "human"
     return {
         "id": trajectory.id,
         "conversations": conversations,
