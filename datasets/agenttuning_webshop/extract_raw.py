@@ -58,11 +58,9 @@ df = df[df["conversations"].apply(lambda x: x[0]["role"] != "assistant")]
 # find if there are consecutive assistant turns
 df = df[
     df["conversations"].apply(
-        lambda x: (
-            not any(
-                x[i]["role"] == "assistant" and x[i + 1]["role"] == "assistant"
-                for i in range(len(x) - 1)
-            )
+        lambda x: not any(
+            x[i]["role"] == "assistant" and x[i + 1]["role"] == "assistant"
+            for i in range(len(x) - 1)
         )
     )
 ]
