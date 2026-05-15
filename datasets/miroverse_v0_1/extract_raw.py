@@ -57,8 +57,10 @@ def _open_hf_file(path):
     except urllib.error.HTTPError as exc:
         if exc.code in {401, 403}:
             raise RuntimeError(
-                "MiroVerse-v0.1 is gated on Hugging Face. Accept the dataset terms and "
-                "provide an authorized HF_TOKEN, or set MIROVERSE_SOURCE_DATASET and "
+                f"MiroVerse-v0.1 is gated on Hugging Face (HTTP {exc.code}). "
+                "Accept the dataset terms at "
+                "https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1 "
+                "and provide an authorized HF_TOKEN, or set MIROVERSE_SOURCE_DATASET and "
                 "MIROVERSE_FLAT_LAYOUT for a mirror with the same JSONL files."
             ) from exc
         raise

@@ -27,11 +27,16 @@ def _parse_arguments(raw_arguments: str | None) -> dict[str, Any] | str:
         return {}
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        print(
+            f"Warning: Failed to parse MCP arguments as JSON: {text[:100]}... Error: {exc}",
+            file=sys.stderr,
+        )
         return text
 
 
 def _convert_assistant_message(content: str):
+    """Convert assistant text with optional MCP XML tags into ADP actions."""
     content = content.strip()
     if not content:
         return []
@@ -76,6 +81,7 @@ def _convert_message(message, previous_was_tool_call: bool):
 
 
 def _mark_final_answer(content):
+    """Wrap the final assistant message as an ADP finish action."""
     if not content:
         return
     last = content[-1]
