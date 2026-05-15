@@ -111,7 +111,9 @@ def process_data(data: SchemaRaw):
             "repo": data.repo,
             "exit_status": data.exit_status or "",
             "resolved": str(data.resolved),
-            "gen_tests_correct": "" if data.gen_tests_correct is None else str(data.gen_tests_correct),
+            "gen_tests_correct": ""
+            if data.gen_tests_correct is None
+            else str(data.gen_tests_correct),
             "pred_passes_gen_tests": ""
             if data.pred_passes_gen_tests is None
             else str(data.pred_passes_gen_tests),
