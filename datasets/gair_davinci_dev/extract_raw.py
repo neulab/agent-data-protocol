@@ -4,7 +4,6 @@ import sys
 
 from datasets import load_dataset
 
-
 DATASET_NAME = "GAIR/daVinci-Dev"
 CONFIG_NAME = "env_native"
 SPLIT = "train"
