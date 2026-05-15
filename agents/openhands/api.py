@@ -155,11 +155,12 @@ def get_api_tool_description_from_available_tools(
         safe_globals.update(vars(builtins))
         safe_globals.update(vars(typing))
 
-        tool_names = {
-            node.name
-            for node in ast.parse(available_tools).body
-            if isinstance(node, ast.FunctionDef)
-        }
+        try:
+            parsed_tools = ast.parse(available_tools)
+        except SyntaxError as exc:
+            raise ValueError(f"Invalid Python syntax in available_tools: {exc}") from exc
+
+        tool_names = {node.name for node in parsed_tools.body if isinstance(node, ast.FunctionDef)}
         exec(available_tools, safe_globals)
 
         api_module.__dict__.update(safe_globals)
