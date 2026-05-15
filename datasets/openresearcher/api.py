@@ -1,5 +1,5 @@
 def search(query: str, topn: int = 10, source: str | None = None) -> None:
-    """Searches for information related to a query and returns ranked results."""
+    """Search for information related to a query and return ranked results."""
     pass
 
 
@@ -11,10 +11,10 @@ def open(
     source: str | None = None,
     view_source: bool = False,
 ) -> None:
-    """Opens a search result, URL, local resource, or cursor location."""
+    """Open a search result, URL, local resource, or cursor location."""
     pass
 
 
 def find(pattern: str, cursor: int = -1) -> None:
-    """Finds exact matches of a pattern in the current page or cursor."""
+    """Find exact matches of a pattern in the current page or cursor."""
     pass
