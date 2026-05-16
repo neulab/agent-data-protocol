@@ -56,9 +56,9 @@ def _convert_assistant_message(content: str):
         ApiAction(
             function="use_mcp_tool",
             kwargs={
-                "server_name": server_name,
-                "tool_name": tool_name,
-                "arguments": arguments,
+                "server_name": repr(server_name),
+                "tool_name": repr(tool_name),
+                "arguments": repr(arguments),
             },
             description=before or None,
         )
