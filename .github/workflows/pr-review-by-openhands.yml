@@ -2,10 +2,11 @@
 name: PR Review by OpenHands
 
 on:
-  # Use pull_request_target so maintainers can trigger reviews on fork PRs.
-  # Security: this workflow runs automatically only for non-draft PRs from
-  # contributors who are not first-time/NONE contributors, or when a maintainer
-  # adds the review-this label or requests an OpenHands reviewer.
+  # Use pull_request for same-repo PRs so workflow changes can self-verify in PRs.
+  pull_request:
+    types: [opened, ready_for_review, labeled, review_requested]
+  # Use pull_request_target for fork PRs so maintainers can explicitly trigger
+  # reviews without exposing repository secrets to untrusted fork workflow code.
   pull_request_target:
     types: [opened, ready_for_review, labeled, review_requested]
 
@@ -16,12 +17,32 @@ permissions:
 
 jobs:
   pr-review:
+    # Run on same-repo PRs via pull_request and on fork PRs via
+    # pull_request_target. First-time/NONE contributors still require a
+    # maintainer trigger through the review-this label or reviewer request.
     if: |
-      (github.event.action == 'opened' && github.event.pull_request.draft == false && github.event.pull_request.author_association != 'FIRST_TIME_CONTRIBUTOR' && github.event.pull_request.author_association != 'NONE') ||
-      (github.event.action == 'ready_for_review' && github.event.pull_request.author_association != 'FIRST_TIME_CONTRIBUTOR' && github.event.pull_request.author_association != 'NONE') ||
-      github.event.label.name == 'review-this' ||
-      github.event.requested_reviewer.login == 'openhands-agent' ||
-      github.event.requested_reviewer.login == 'all-hands-bot'
+      (
+        (
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        ) ||
+        (
+          github.event_name == 'pull_request_target' &&
+          github.event.pull_request.head.repo.full_name != github.repository
+        )
+      ) &&
+      (
+        (github.event.action == 'opened' && github.event.pull_request.draft == false && github.event.pull_request.author_association != 'FIRST_TIME_CONTRIBUTOR' && github.event.pull_request.author_association != 'NONE') ||
+        (github.event.action == 'ready_for_review' && github.event.pull_request.author_association != 'FIRST_TIME_CONTRIBUTOR' && github.event.pull_request.author_association != 'NONE') ||
+        (github.event.action == 'labeled' && github.event.label.name == 'review-this') ||
+        (
+          github.event.action == 'review_requested' &&
+          (
+            github.event.requested_reviewer.login == 'openhands-agent' ||
+            github.event.requested_reviewer.login == 'all-hands-bot'
+          )
+        )
+      )
     concurrency:
       group: pr-review-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -30,8 +51,8 @@ jobs:
       - name: Run PR Review
         uses: OpenHands/extensions/plugins/pr-review@main
         with:
-          llm-model: litellm_proxy/claude-sonnet-4-5-20250929
-          llm-base-url: https://llm-proxy.app.all-hands.dev
+          llm-model: ${{ secrets.LLM_MODEL || vars.LLM_MODEL || 'litellm_proxy/claude-sonnet-4-5-20250929' }}
+          llm-base-url: ${{ secrets.LLM_BASE_URL || vars.LLM_BASE_URL || 'https://llm-proxy.app.all-hands.dev' }}
           use-sub-agents: 'false'
           require-evidence: 'true'
           llm-api-key: ${{ secrets.LLM_API_KEY }}
