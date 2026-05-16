@@ -1,19 +1,18 @@
 from .bash import create_cmd_run_tool
+
+try:
+    from .browser import BrowserTool
+except ModuleNotFoundError as exc:
+    if not (exc.name or "").startswith("browsergym"):
+        raise
+    BrowserTool = None
+
 from .finish import FinishTool
 from .ipython import IPythonTool
 from .llm_based_edit import LLMBasedFileEditTool
 from .str_replace_editor import create_str_replace_editor_tool
 from .think import ThinkTool
 from .web_read import WebReadTool
-
-
-def __getattr__(name):
-    if name == "BrowserTool":
-        from .browser import BrowserTool
-
-        return BrowserTool
-    raise AttributeError(name)
-
 
 __all__ = [
     "BrowserTool",
