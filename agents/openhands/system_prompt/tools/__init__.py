@@ -2,7 +2,9 @@ from .bash import create_cmd_run_tool
 
 try:
     from .browser import BrowserTool
-except ModuleNotFoundError:
+except ModuleNotFoundError as exc:
+    if not (exc.name or "").startswith("browsergym"):
+        raise
     BrowserTool = None
 
 from .finish import FinishTool
