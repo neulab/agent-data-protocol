@@ -2,6 +2,7 @@ import importlib.util
 import inspect
 import os
 import random
+import types
 
 openhands_default_tools = {
     "execute_bash": {"required": ["command"], "optional": ["is_input"]},
@@ -132,6 +133,89 @@ def get_api_tool_description(dataset, exclude_apis={}, env="execute_ipython_cell
         return API_TOOL_DESCRIPTION, sigs
     else:
         return "", {}
+
+
+def get_api_tool_description_from_available_tools(
+    available_tools, exclude_apis=None, env="execute_ipython_cell"
+):
+    if exclude_apis is None:
+        exclude_apis = {}
+
+    API_TOOL_DESCRIPTION = ""
+
+    if available_tools:
+        # Create a temporary module from string content
+        import builtins
+        import typing
+
+        api_module = types.ModuleType("api")
+
+        safe_globals = {}
+        safe_globals.update(vars(builtins))
+        safe_globals.update(vars(typing))
+
+        exec(available_tools, safe_globals)
+
+        api_module.__dict__.update(safe_globals)
+
+        functions = inspect.getmembers(api_module, inspect.isfunction)
+        sigs = {}
+
+        for name, func in functions:
+            docstring = "\n" + (inspect.getdoc(func) or "")
+            sig = inspect.signature(func)
+
+            required = []
+            optional = []
+
+            for arg_name, param in sig.parameters.items():
+                if param.default is inspect.Parameter.empty:
+                    if arg_name in ("xpath", "element_id"):
+                        arg_name = "bid"
+                    if arg_name not in required:
+                        required.append(arg_name)
+                else:
+                    optional.append(arg_name)
+
+            # Optional filtering logic (assuming these exist in scope)
+            if name in openhands_default_tools and check_exclude_openhands_default_tools(
+                name, sig, required, optional
+            ):
+                continue
+
+            if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
+                continue
+
+            docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
+            API_TOOL_DESCRIPTION += docstring
+
+            sigs[name] = {"required": required, "optional": optional}
+
+        if not API_TOOL_DESCRIPTION:
+            return "", {}
+
+        also = "also " if exclude_apis else ""
+
+        prefixes = [
+            f"The following pre-defined functions are {also}available in {env}. ",
+            f"The environment {env} {also}provides the following pre-defined functions: ",
+            f"In {env}, you can {also}use the following pre-defined functions: ",
+            f"Available functions in {env}: ",
+            f"The following functions are {also}defined and ready for use in {env}: ",
+            f"Note that {env} {also}supports the following pre-defined functions: ",
+            f"Below is a list of functions you can {also}use in the {env} environment. ",
+            f"The toolkit for {env} {also}contains the following functions. ",
+        ]
+
+        API_TOOL_DESCRIPTION = random.choice(prefixes) + "\n\n" + API_TOOL_DESCRIPTION
+
+        API_TOOL_DESCRIPTION = API_TOOL_DESCRIPTION.replace("xpath", "bid").replace(
+            "element_id", "bid"
+        )
+
+        return API_TOOL_DESCRIPTION, sigs
+
+    return "", {}
 
 
 def get_language_descriptions(languages):

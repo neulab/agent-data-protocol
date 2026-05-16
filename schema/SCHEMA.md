@@ -31,6 +31,11 @@ Actions represent steps taken by an agent during task execution.
 
 Base Class Implementation: [`schema/action/action.py`](../schema/action/action.py)
 
+All action types inherit from the base `Action` class which provides common fields:
+
+- `reasoning_content` (str, optional): Extended chain-of-thought reasoning or internal thinking from the agent. This captures deliberate reasoning processes (e.g., `<think>` blocks) that are separate from the action's brief description. This field aligns with Harbor ATIF's `reasoning_content` field and Agent Client Protocol's `agent_thought_chunk` concept.
+- `reward` (float, optional): Per-step reward signal associated with this action. Used for capturing rewards earned during reinforcement learning training and evaluation.
+
 #### ApiAction
 
 **File**: [`schema/action/api.py`](../schema/action/api.py)
@@ -77,6 +82,10 @@ Represents communication/messages from the agent.
 Observations represent information received by the agent from its environment.
 
 Base Observation Implementation: [`schema/observation/observation.py`](../schema/observation/observation.py)
+
+All observation types inherit from the base `Observation` class which provides a common field:
+
+- `reward` (float, optional): Per-step reward signal associated with this observation. Used for reinforcement learning training data.
 
 #### TextObservation
 

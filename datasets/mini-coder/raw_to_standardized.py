@@ -11,6 +11,47 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
+# Remove ONLY formatting / style constraints, not termination semantics
+_FORMATTING_RULES_RE = re.compile(
+    r"^.*?(?=##\s*Submission)",
+    re.DOTALL | re.IGNORECASE,
+)
+
+_TAG_WRAPPER_RE = re.compile(
+    r"^\s*<(?P<tag>[a-zA-Z0-9_:-]+)>\s*(?P<body>.*)\s*</\1>\s*$", re.DOTALL
+)
+_STOP_BASH_FENCE_RE = re.compile(
+    r"```bash\s*\n(.*?COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT.*?)\n```",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def strip_user_formatting(content: str) -> str:
+    """
+    Removes formatting-specific instructions but preserves
+    semantic control instructions (e.g. how to signal task completion).
+    """
+    if not content:
+        return content
+
+    # Extract <instructions> block if present
+    m = re.search(r"<instructions>(.*?)</instructions>", content, re.DOTALL | re.IGNORECASE)
+    if m:
+        instructions = m.group(1)
+
+        # Remove formatting rules but KEEP the Submission / stop protocol
+        instructions = re.sub(_FORMATTING_RULES_RE, "", instructions).strip()
+
+        # Replace original instructions block with the cleaned version
+        content = content[: m.start()] + instructions + content[m.end() :]
+
+    # Unwrap <pr_description> if it is the outer wrapper
+    wrapper = _TAG_WRAPPER_RE.match(content)
+    if wrapper and wrapper.group("tag").lower() == "pr_description":
+        content = wrapper.group("body").strip()
+    content = re.sub(_STOP_BASH_FENCE_RE, r"\1", content)
+    return content.strip()
+
 
 def convert_step(step) -> list:
     if step.role == "system":
@@ -38,6 +79,7 @@ def convert_step(step) -> list:
             return [TextObservation(content=observation_content, source="environment")]
         else:
             # This is the initial task description from user
+            content = strip_user_formatting(content)
             return [TextObservation(content=content, source="user")]
 
     elif step.role == "assistant":
@@ -100,11 +142,12 @@ def process_data(data):
     content = []
     for step in data.messages:
         content.extend(convert_step(step))
-
-    # Only keep successful trajectories (those that end with a submit action)
-    if not isinstance(content[-1], ApiAction) or content[-1].function != "submit":
+    if not isinstance(content[-1], CodeAction):
+        print(f"not codeaction: {content[-1]}", file=sys.stderr)
         return None
-
+    if "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT" not in content[-1].content:
+        print(f"not COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT: {content[-1]}", file=sys.stderr)
+        return None
     # Add success message from user
     user_end_message = random.choice(
         [

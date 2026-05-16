@@ -2,7 +2,8 @@
 
 This document outlines the input argument configurations for each dataset. The arguments are:
 
-- `--api_env`: The API environment used for non OH default APIs.
+- `--api_env`: The API environment used for non OpenHands default APIs.
+- `--is_web`: Whether the dataset contains website operations.
 
 ## Dataset Argument Table
 
@@ -31,6 +32,7 @@ This document outlines the input argument configurations for each dataset. The a
 ## Notes
 
 - The `--api_env=None` option means the dataset does not rely on any particular API-based execution environment and thus does not have any APIs that are not defined in OpenHands.
+
 
 # Dataset Statistics
 

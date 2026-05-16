@@ -1,29 +1,32 @@
-# mind2web
+# Mind2Web Dataset
 
-[Mind2Web](https://osu-nlp-group.github.io/Mind2Web/) is a dataset for developing and evaluating generalist agents for the web that can follow language instructions to complete complex tasks on any website.
+## Description
 
-## Downloading the Dataset
+Mind2Web is the first dataset for developing and evaluating generalist agents for the web that can follow language instructions to complete complex tasks on any website. The dataset addresses the limitations of existing web agent datasets that either use simulated websites or only cover a limited set of websites and tasks.
 
-Our extraction script is based on the raw dumps from mind2web. In order to download them, you need to use some specialized "globus" software, please follow the [directions on the site](https://github.com/OSU-NLP-Group/Mind2Web?tab=readme-ov-file#raw-dump-with-full-traces-and-snapshots).
+The dataset focuses on:
+- Human web demonstrations on real websites
+- Over 2,000 open-ended tasks collected from 137 websites spanning 31 domains
+- Crowdsourced action sequences for complex web tasks
+- Real-world websites instead of simulated environments
 
-## Extracting Data
+Mind2Web provides three necessary ingredients for building generalist web agents: 1) diverse domains, websites, and tasks, 2) use of real-world websites instead of simulated and simplified ones, and 3) a broad spectrum of user interaction patterns. The dataset includes complex interactions like clicking, selecting, and typing in any elements on websites, significantly expanding the space of possible tasks.
 
-Once you have downloaded the raw dumps, first install requirements.
+## Paper Citation
 
-```bash
-pip install -r datasets/mind2web/requirements.txt
-playwright install --with-deps chromium
+```bibtex
+@article{deng2023mind2web,
+  title={Mind2web: Towards a generalist agent for the web},
+  author={Deng, Xiang and Gu, Yu and Zheng, Boyuan and Chen, Shijie and Stevens, Sam and Wang, Boshi and Sun, Huan and Su, Yu},
+  journal={Advances in Neural Information Processing Systems},
+  volume={36},
+  pages={28091--28114},
+  year={2023}
+}
 ```
 
-You can extract the data using the following command.
+## Dataset Information
 
-```bash
-python datasets/mind2web/extract_raw.py | head -n 3 | python scripts/jsonl_to_indented_json.py > datasets/mind2web/sample_raw.json
-```
+**Source URL**: https://huggingface.co/datasets/osunlp/Mind2Web
 
-Then you can use the following command to convert the extracted data to the format used by the dataset, where `PATH_TO_DUMP` is replaced with the actual path to the dump.
-
-```bash
-export PATH_TO_DUMP=/path/to/mind2web/dump
-cat datasets/mind2web/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/mind2web/raw_to_standardized.py --raw-dump $PATH_TO_DUMP | python scripts/jsonl_to_indented_json.py > datasets/mind2web/sample.json
-```
+**License**: CC BY 4.0

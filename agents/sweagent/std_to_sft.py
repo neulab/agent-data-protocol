@@ -3,7 +3,10 @@ import os
 import re
 import sys
 
-from agents.sweagent.api import get_api_tool_description
+from agents.sweagent.api import (
+    get_api_tool_description,
+    get_api_tool_description_from_available_tools,
+)
 from agents.sweagent.system_message import base_template
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
@@ -145,12 +148,22 @@ def process_row(line, api_tool_description, api_sigs):
     trajectory = Trajectory(**std_data)
     id = trajectory.id
     events = trajectory.content
+    details = trajectory.details
+    if "available_apis" in details:
+        try:
+            api_tool_description, api_sigs = get_api_tool_description_from_available_tools(
+                details["available_apis"]
+            )
+        except Exception as e:
+            print(e, file=sys.stderr)
+            return None
     conversations = []
     for i in range(len(events)):
         event = events[i]
         try:
             message = standardized_event_to_swe_message(id, event, api_sigs)
             if not message:
+                print(event, file=sys.stderr)
                 return None
             if len(conversations) == 0:
                 # append api function docs to first user message when available

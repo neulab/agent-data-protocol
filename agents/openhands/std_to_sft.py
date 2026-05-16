@@ -8,6 +8,7 @@ import traceback
 from agents.openhands.api import (
     browser_default_apis,
     get_api_tool_description,
+    get_api_tool_description_from_available_tools,
     get_language_descriptions,
     openhands_default_tools,
 )
@@ -331,7 +332,15 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs, export_fo
     trajectory = Trajectory(**std_data)
     id = trajectory.id
     events = trajectory.content
-    # details = trajectory.details
+    details = trajectory.details
+    if "available_apis" in details:
+        try:
+            api_tool_description, api_sigs = get_api_tool_description_from_available_tools(
+                details["available_apis"], env=api_env
+            )
+        except Exception as e:
+            print(e, file=sys.stderr)
+            return None
     conversations = []
     previous_web_actions = []
     languages = []
@@ -381,12 +390,6 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs, export_fo
     if languages:
         language_descriptions = get_language_descriptions(languages)
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
-    for m in conversations:
-        if export_for == "training" and m["from"] == "function_call":
-            m["from"] = "gpt"
-        if m["from"] == "observation":
-            m["from"] = "human"
-
     output = {
         "id": trajectory.id,
         "conversations": conversations,
@@ -450,7 +453,9 @@ def main():
     args = parser.parse_args()
     args.is_web = args.is_web == "yes"
     for line in sys.stdin:
-        print(process_line(line, args.is_web, args.api_env, args.export_for))
+        out = process_line(line, args.is_web, args.api_env, args.export_for)
+        if out:
+            print(out)
 
 
 if __name__ == "__main__":

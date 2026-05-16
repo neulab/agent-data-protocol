@@ -23,9 +23,12 @@ def str_replace_editor(
     pass
 
 
-def submit():
-    """Finish the interaction when the task is complete OR if the assistant cannot proceed further with the task.
+def think(thought: str):
+    """Log a thought for reasoning.
 
-    No parameters are required for this function.
+    Args:
+    ----
+        thought (str): The thought to log.
+
     """
     pass
