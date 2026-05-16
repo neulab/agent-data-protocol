@@ -72,8 +72,12 @@ def process_single_data(raw_traj: Dict) -> Dict:
                 element_type = state["tag"]
                 text = state.get("text", "")
                 xpath = state.get("xpath", None)
+                content_desc = f"XPath: {xpath}" if xpath else None
                 annotation = ImageAnnotation(
-                    text=text, element_type=element_type, bounding_box=bbox, xpath=xpath
+                    text=text,
+                    element_type=element_type,
+                    bounding_box=bbox,
+                    content_description=content_desc,
                 )
                 annotations.append(annotation)
             image_observation = ImageObservation(

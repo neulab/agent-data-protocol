@@ -13,9 +13,16 @@ class BoundingBox(BaseModel):
 
 
 class ImageAnnotation(BaseModel):
-    text: str = Field(..., description="The text annotation")
     element_type: str = Field(..., description="The type of element")
     bounding_box: BoundingBox = Field(..., description="The boxes of the annotation")
+    text: str | None = Field(..., description="The exact text annotation (OCR text)")
+    content_description: str | None = Field(
+        None, description="A description of the content of the element"
+    )
+    clickable: bool | None = Field(None, description="Whether the element can be clicked/tapped")
+    editable: bool | None = Field(
+        None, description="Whether the element can be edited (text input)"
+    )
 
 
 class ImageObservation(Observation):

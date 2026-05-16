@@ -19,7 +19,7 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
     try:
         annotations = [
             ImageAnnotation(
-                text=example["box"]["label"][index],
+                text=None,  # Raw data doesn't map OCR text to specific boxes
                 element_type="button",
                 bounding_box=BoundingBox(
                     x=example["box"]["top_left"][index][0],
@@ -29,6 +29,8 @@ def convert_example(example: dict[str, str]) -> list[Action | Observation]:
                     height=example["box"]["bottom_right"][index][1]
                     - example["box"]["top_left"][index][1],
                 ),
+                content_description=example["box"]["label"][index],  # Semantic label
+                clickable=True,
             )
             for index in range(len(example["box"]["label"]))
         ]

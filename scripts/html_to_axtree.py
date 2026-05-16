@@ -29,7 +29,7 @@ class HTMLToAXTree:
             os.mkdir(temp_dir)
         temp_file = os.path.abspath(f"{temp_dir}temp_{self.dataset}_{id}.html")
 
-        with open(temp_file, "w") as f:
+        with open(temp_file, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         obs, info = self.env.reset()
