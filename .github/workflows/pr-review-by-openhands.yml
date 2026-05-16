@@ -51,8 +51,8 @@ jobs:
       - name: Run PR Review
         uses: OpenHands/extensions/plugins/pr-review@main
         with:
-          llm-model: ${{ vars.LLM_MODEL || 'litellm_proxy/claude-sonnet-4-5-20250929' }}
-          llm-base-url: ${{ vars.LLM_BASE_URL || 'https://llm-proxy.app.all-hands.dev' }}
+          llm-model: ${{ secrets.LLM_MODEL || vars.LLM_MODEL || 'litellm_proxy/claude-sonnet-4-5-20250929' }}
+          llm-base-url: ${{ secrets.LLM_BASE_URL || vars.LLM_BASE_URL || 'https://llm-proxy.app.all-hands.dev' }}
           use-sub-agents: 'false'
           require-evidence: 'true'
           llm-api-key: ${{ secrets.LLM_API_KEY }}
