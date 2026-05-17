@@ -14,11 +14,12 @@ The source Hugging Face repository is gated. Run `extract_raw.py` after acceptin
 
 ## Schema mapping
 
-Raw rows contain a `messages` list with OpenAI-style `system`, `user`, and `assistant` messages plus a `split` name.
+Raw rows contain a `messages` list with OpenAI-style `system`, `user`, and `assistant` messages plus a `split` name. The extractor also parses each row's system prompt and stores the row-specific MCP tools in `available_tools`.
 
 - Raw `system` messages are preserved in `Trajectory.details["system_prompt"]` rather than emitted as a conversation turn.
+- Tool declarations are parsed from the `## Server name` / `### Tool name` JSON-schema blocks in the system prompt, sanitized into direct Python-callable names such as `tool_google_search__scrape`, and emitted as `Trajectory.details["available_apis"]` following the same per-instance API-doc pattern used by tool-calling datasets such as Toucan.
 - Raw `user` messages become `TextObservation(source="user")`, except the user message immediately following a parsed tool call becomes `TextObservation(source="environment")` because MiroVerse stores MCP tool results as user-role messages.
-- Assistant messages containing `<use_mcp_tool>...</use_mcp_tool>` become `ApiAction(function="use_mcp_tool")`; the assistant reasoning before the XML call is preserved as the action description.
+- Assistant messages containing `<use_mcp_tool>...</use_mcp_tool>` become direct `ApiAction` calls to the parsed tool function; the assistant reasoning before the XML call is preserved as the action description.
 - Other assistant messages become `MessageAction`. The final assistant answer is wrapped as a finish message during standardization so the OpenHands SFT sample has an explicit completion action.
 
 ## Sample generation
@@ -27,6 +28,8 @@ Raw rows contain a `messages` list with OpenAI-style `system`, `user`, and `assi
 export MY_DATASET=miroverse_v0_1
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
+MIROVERSE_SOURCE_DATASET=WaltonFuture/agentic-sft-new \
+MIROVERSE_FLAT_LAYOUT=1 \
 MIROVERSE_MAX_PER_CONFIG=1 \
 MIROVERSE_CONFIGS="MiroVerse-HotpotQA,MiroVerse-WebWalkerQA-Silver,MiroVerse-WikiTables" \
 python datasets/$MY_DATASET/extract_raw.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_raw.json

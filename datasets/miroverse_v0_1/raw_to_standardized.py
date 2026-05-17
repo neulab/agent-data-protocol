@@ -3,6 +3,12 @@ import re
 import sys
 from typing import Any
 
+from extract_raw import (
+    extract_available_tools_from_messages,
+    generate_available_apis,
+    sanitize_identifier,
+    tool_function_name,
+)
 from schema_raw import SchemaRaw
 
 from schema.action.api import ApiAction
@@ -35,7 +41,24 @@ def _parse_arguments(raw_arguments: str | None) -> dict[str, Any] | str:
         return text
 
 
-def _convert_assistant_message(content: str):
+def _tool_index(tools: list[dict[str, Any]]) -> dict[tuple[str, str], dict[str, Any]]:
+    return {(tool["server_name"], tool["tool_name"]): tool for tool in tools}
+
+
+def _python_literal(value: Any) -> Any:
+    return repr(value) if isinstance(value, str) else value
+
+
+def _api_kwargs(arguments: dict[str, Any], tool: dict[str, Any] | None) -> dict[str, Any]:
+    argument_map = (tool or {}).get("argument_name_map", {})
+    kwargs = {}
+    for key, value in arguments.items():
+        param_name = argument_map.get(key, sanitize_identifier(key))
+        kwargs[param_name] = _python_literal(value)
+    return kwargs
+
+
+def _convert_assistant_message(content: str, tools_by_name: dict[tuple[str, str], dict[str, Any]]):
     """Convert assistant text with optional MCP XML tags into ADP actions."""
     content = content.strip()
     if not content:
@@ -52,14 +75,24 @@ def _convert_assistant_message(content: str):
     tool_name = _extract_tag(block, "tool_name") or ""
     arguments = _parse_arguments(_extract_tag(block, "arguments"))
 
+    if isinstance(arguments, str):
+        function_name = "use_mcp_tool"
+        kwargs = {
+            "server_name": repr(server_name),
+            "tool_name": repr(tool_name),
+            "arguments": repr(arguments),
+        }
+    else:
+        tool = tools_by_name.get((server_name, tool_name))
+        function_name = (tool or {}).get("function_name") or tool_function_name(
+            server_name, tool_name
+        )
+        kwargs = _api_kwargs(arguments, tool)
+
     converted = [
         ApiAction(
-            function="use_mcp_tool",
-            kwargs={
-                "server_name": repr(server_name),
-                "tool_name": repr(tool_name),
-                "arguments": repr(arguments),
-            },
+            function=function_name,
+            kwargs=kwargs,
             description=before or None,
         )
     ]
@@ -68,13 +101,13 @@ def _convert_assistant_message(content: str):
     return converted
 
 
-def _convert_message(message, previous_was_tool_call: bool):
+def _convert_message(message, previous_was_tool_call: bool, tools_by_name):
     role = message.role
     content = message.content
     if role == "system":
         return []
     if role == "assistant":
-        return _convert_assistant_message(content)
+        return _convert_assistant_message(content, tools_by_name)
     if previous_was_tool_call:
         return [TextObservation(content=content, source="environment")]
     return [TextObservation(content=content, source="user")]
@@ -92,6 +125,12 @@ def _mark_final_answer(content):
 for line in sys.stdin:
     raw_data = json.loads(line)
     data = SchemaRaw(**raw_data)
+    available_tools = (
+        [tool.model_dump() for tool in data.available_tools]
+        if data.available_tools
+        else extract_available_tools_from_messages(data.messages)
+    )
+    tools_by_name = _tool_index(available_tools)
     content = []
     previous_was_tool_call = False
     system_prompt = "\n\n".join(
@@ -99,13 +138,16 @@ for line in sys.stdin:
     )
 
     for message in data.messages:
-        converted = _convert_message(message, previous_was_tool_call)
+        converted = _convert_message(message, previous_was_tool_call, tools_by_name)
         content.extend(converted)
         previous_was_tool_call = bool(converted) and isinstance(converted[-1], ApiAction)
 
     _mark_final_answer(content)
 
     details = {"split": data.split or ""}
+    available_apis = generate_available_apis(available_tools)
+    if available_apis:
+        details["available_apis"] = available_apis
     if system_prompt:
         details["system_prompt"] = system_prompt
 
