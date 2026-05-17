@@ -22,7 +22,8 @@ The root container for all agent interaction data.
 - `schema_version` (str): ADP standardized schema version used by this trajectory. Defaults to the current schema version for backward-compatible parsing, but committed `sample_std.json` files must include it explicitly.
 - `id` (str): Unique identifier for the trajectory
 - `content` (list): Sequence of actions and observations that make up the trajectory
-- `details` (dict): Additional dataset-specific metadata (typically not used for training)
+- `available_apis` (list, optional): API function names available for this trajectory. Only populate this for datasets that have `api.py` and whose source data explicitly specifies per-instance tool/API availability; do not populate it by copying all functions from `api.py` or inferring it from APIs used in the trajectory. When present, it must be a subset of the dataset's `api.py` functions and cover every `ApiAction.function` in the trajectory.
+- `details` (dict): Additional dataset-specific metadata.
 
 **Purpose**: Represents a complete sequence of agent interactions, containing both actions taken by the agent and observations received from the environment / user.
 
@@ -122,7 +123,7 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "id": "example_trajectory_001",
   "content": [
     {

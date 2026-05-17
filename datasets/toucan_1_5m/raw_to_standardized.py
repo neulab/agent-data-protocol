@@ -175,15 +175,13 @@ def {python_name}({args_signature}) -> dict:
 """.strip()
 
 
-def parse_available_tools(available_tools: str) -> str:
-    tools = json.loads(available_tools)
+def parse_available_tools(available_tools: Union[str, List[Dict[str, Any]]]) -> List[str]:
+    if isinstance(available_tools, str):
+        tools = json.loads(available_tools)
+    else:
+        tools = available_tools
 
-    generated_functions = []
-
-    for tool in tools:
-        generated_functions.append(generate_function_wrapper(tool))
-
-    return "\n\n\n".join(generated_functions)
+    return [convert_function_name(tool["function"]["name"]) for tool in tools]
 
 
 def convert_message(message: dict, message_id: str) -> List[Union[Action, Observation]]:
@@ -349,11 +347,12 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
     """Convert raw Toucan data to standardized trajectory format."""
     trajectory_id = raw_data["id"]
     messages = raw_data.get("messages", [])
-    available_tools = raw_data.get("available_tools", "[]")
-    available_apis_doc = parse_available_tools(available_tools)
-    details = {"available_apis": available_apis_doc}
+    available_apis = None
+    if "available_tools" in raw_data:
+        available_apis = parse_available_tools(raw_data["available_tools"])
 
-    messages = json.loads(messages)
+    if isinstance(messages, str):
+        messages = json.loads(messages)
 
     content = []
 
@@ -395,7 +394,7 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
                 MessageAction(content="<finish> Task completed. </finish>", description=None)
             )
 
-    return Trajectory(id=trajectory_id, content=content, details=details)
+    return Trajectory(id=trajectory_id, content=content, available_apis=available_apis)
 
 
 # Process each line of input individually
