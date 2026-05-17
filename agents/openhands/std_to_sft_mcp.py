@@ -305,15 +305,33 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
     trajectory = Trajectory(**std_data)
     id = trajectory.id
     events = trajectory.content
-    # details = trajectory.details
+    row_api_tool_description = api_tool_description
+    row_api_sigs = api_sigs
+    row_api_tools = api_tools
+    if trajectory.available_apis is not None:
+        try:
+            exclude_apis = browser_default_apis if is_web else {}
+            row_api_tool_description, row_api_sigs = get_api_tool_description(
+                dataset,
+                exclude_apis,
+                api_env,
+                include_apis=trajectory.available_apis,
+            )
+            available_api_names = set(trajectory.available_apis)
+            row_api_tools = {
+                name: tool for name, tool in api_tools.items() if name in available_api_names
+            }
+        except Exception as e:
+            print(e)
+            return None
     conversations = []
     previous_web_actions = []
     languages = []
-    if is_web or len(api_tools) > 12 or random.choice([True, False]):
+    if is_web or len(row_api_tools) > 12 or random.choice([True, False]):
         mcp_tools = {}
     else:
-        mcp_tools = api_tools
-        api_tool_description = ""
+        mcp_tools = row_api_tools
+        row_api_tool_description = ""
     for i in range(len(events)):
         event = events[i]
         try:
@@ -324,7 +342,7 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
                 is_web,
                 chunk,
                 api_env,
-                api_sigs,
+                row_api_sigs,
                 languages,
                 mcp_tools,
             )
@@ -333,7 +351,7 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
             if len(conversations) == 0:
                 # append api function docs to first user message when available
                 if api_env:
-                    message["value"] = api_tool_description + message["value"]
+                    message["value"] = row_api_tool_description + message["value"]
                 conversations.extend([message])
                 continue
 
