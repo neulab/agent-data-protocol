@@ -123,7 +123,7 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "id": "example_trajectory_001",
   "content": [
     {
