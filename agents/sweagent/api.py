@@ -83,7 +83,7 @@ def get_api_tool_description(dataset, exclude_apis=None, env="bash", include_api
         for name, func in functions:
             if include_api_names is not None and name not in include_api_names:
                 continue
-            docstring = "\n" + inspect.getdoc(func)
+            docstring = "\n" + (inspect.getdoc(func) or "")
             sig = inspect.signature(func)
             required = []
             optional = []
