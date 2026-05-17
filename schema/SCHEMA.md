@@ -155,6 +155,8 @@ Any PR that changes schema-impacting Python files under `schema/` must increase 
 
 Committed standardized samples must include a root-level `schema_version` equal to the current `SCHEMA_VERSION`. The `Trajectory` model still defaults missing versions to the current version so older external data can be parsed during migration.
 
+`SUPPORTED_SCHEMA_VERSIONS` should include prior versions when a bump is intended to preserve compatibility with existing standardized data. Remove older versions only when the schema intentionally drops parsing support for that version.
+
 ## Schema Validation
 
 The repository uses **Pydantic validation** to ensure data integrity and type safety. All schemas are built on Pydantic BaseModel, providing:

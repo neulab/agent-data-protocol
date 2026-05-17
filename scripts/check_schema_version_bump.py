@@ -55,7 +55,7 @@ def parse_semver(version: str) -> tuple[int, int, int]:
     match = _SEMVER_RE.fullmatch(version)
     if match is None:
         raise ValueError(f"{version!r} is not a valid MAJOR.MINOR.PATCH version")
-    return tuple(int(part) for part in match.groups())
+    return (int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
 
 def file_at_ref(ref: str, path: str, cwd: Path) -> str | None:
