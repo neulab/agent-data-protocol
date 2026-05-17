@@ -19,6 +19,7 @@ All schema implementation could be found at [`schema`](../schema/)
 The root container for all agent interaction data.
 
 **Fields**:
+- `schema_version` (str): ADP standardized schema version used by this trajectory. Defaults to the current schema version for backward-compatible parsing, but committed `sample_std.json` files must include it explicitly.
 - `id` (str): Unique identifier for the trajectory
 - `content` (list): Sequence of actions and observations that make up the trajectory
 - `details` (dict): Additional dataset-specific metadata (typically not used for training)
@@ -121,6 +122,7 @@ Represents web page state and structure.
 
 ```json
 {
+  "schema_version": "1.0.0",
   "id": "example_trajectory_001",
   "content": [
     {
@@ -140,6 +142,20 @@ Represents web page state and structure.
   }
 }
 ```
+
+## Schema Versioning
+
+The current ADP standardized schema version is defined in [`schema/version.py`](../schema/version.py) as `SCHEMA_VERSION`. Versions use `MAJOR.MINOR.PATCH` semantics:
+
+- **Major**: Backward-incompatible changes such as removing or renaming fields, adding required fields, or narrowing accepted values.
+- **Minor**: Backward-compatible additions such as optional fields, new action/observation types, or additional accepted values.
+- **Patch**: Validation or documentation fixes that preserve compatibility.
+
+Any PR that changes schema-impacting Python files under `schema/` must increase `SCHEMA_VERSION`. CI enforces this with `scripts/check_schema_version_bump.py`. Documentation-only changes to `schema/SCHEMA.md` do not require a version bump.
+
+Committed standardized samples must include a root-level `schema_version` equal to the current `SCHEMA_VERSION`. The `Trajectory` model still defaults missing versions to the current version so older external data can be parsed during migration.
+
+`SUPPORTED_SCHEMA_VERSIONS` should include prior versions when a bump is intended to preserve compatibility with existing standardized data. Remove older versions only when the schema intentionally drops parsing support for that version.
 
 ## Schema Validation
 
