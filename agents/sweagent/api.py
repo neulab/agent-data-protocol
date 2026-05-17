@@ -1,7 +1,6 @@
 import importlib.util
 import inspect
 import os
-import random
 
 sweagent_default_tools = {
     "bash": {"required": ["command"], "optional": []},
@@ -121,11 +120,10 @@ def get_api_tool_description(dataset, exclude_apis=None, env="bash", include_api
             f"Below is a list of functions you can {also}use in the {env} environment. ",
             f"The toolkit for {env} {also}contains the following functions. ",
         ]
-        API_TOOL_DESCRIPTION = random.choice(prefixes) + "\n\n" + API_TOOL_DESCRIPTION
+        API_TOOL_DESCRIPTION = prefixes[0] + "\n\n" + API_TOOL_DESCRIPTION
         API_TOOL_DESCRIPTION = API_TOOL_DESCRIPTION.replace("xpath", "bid").replace(
             "element_id", "bid"
         )
         return API_TOOL_DESCRIPTION, sigs
     else:
         return "", {}
-

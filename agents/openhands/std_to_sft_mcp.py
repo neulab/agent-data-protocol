@@ -322,7 +322,7 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
                 name: tool for name, tool in api_tools.items() if name in available_api_names
             }
         except Exception as e:
-            print(e)
+            print(e, file=sys.stderr)
             return None
     conversations = []
     previous_web_actions = []
@@ -372,8 +372,8 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
             conversations.extend([message])
 
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            traceback.print_exc(file=sys.stderr)
+            print(e, file=sys.stderr)
             return None
 
     # Handle non python / bash / browser based coding languages
@@ -442,8 +442,8 @@ def main():
                     f.write(json.dumps(output_line) + "\n")
                     count += 1
                 except Exception as e:
-                    traceback.print_exc()
-                    print(e)
+                    traceback.print_exc(file=sys.stderr)
+                    print(e, file=sys.stderr)
                     continue
         # else:
         #     print(f"Failed to process line: {line[:10]}...", file=sys.stderr)

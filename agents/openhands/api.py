@@ -1,7 +1,6 @@
 import importlib.util
 import inspect
 import os
-import random
 
 openhands_default_tools = {
     "execute_bash": {"required": ["command"], "optional": ["is_input"]},
@@ -148,7 +147,7 @@ def get_api_tool_description(
             f"Below is a list of functions you can {also}use in the {env} environment. ",
             f"The toolkit for {env} {also}contains the following functions. ",
         ]
-        API_TOOL_DESCRIPTION = random.choice(prefixes) + "\n\n" + API_TOOL_DESCRIPTION
+        API_TOOL_DESCRIPTION = prefixes[0] + "\n\n" + API_TOOL_DESCRIPTION
         API_TOOL_DESCRIPTION = API_TOOL_DESCRIPTION.replace("xpath", "bid").replace(
             "element_id", "bid"
         )
