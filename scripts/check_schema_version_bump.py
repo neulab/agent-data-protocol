@@ -86,13 +86,6 @@ def check_schema_version_bump(base_ref: str, head_ref: str, cwd: Path) -> tuple[
     if not schema_files:
         return True, "No schema-impacting Python files changed."
 
-    if SCHEMA_VERSION_PATH not in files:
-        return (
-            False,
-            "Schema-impacting files changed, but schema/version.py was not updated.\n"
-            f"Changed schema files:\n{format_paths(schema_files)}",
-        )
-
     try:
         base_version = schema_version_at_ref(base_ref, cwd)
         head_version = schema_version_at_ref(head_ref, cwd)
