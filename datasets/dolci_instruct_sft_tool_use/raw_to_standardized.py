@@ -35,40 +35,29 @@ def json_type_to_python(schema: dict[str, Any]) -> str:
     return TYPE_MAP.get(schema.get("type", "Any"), "Any")
 
 
-def parse_available_apis(messages: list[dict[str, Any]]) -> str:
+def parse_available_apis(messages: list[dict[str, Any]]) -> list[str]:
+    """Return the identifiers of the tools advertised on this trajectory's `functions` payload.
+
+    The Dolci raw schema stores the tool catalog as a JSON string on the
+    `functions` field of one of the messages. Each tool entry contains a
+    `function.name` whose identifier we record on the top-level
+    `Trajectory.available_apis` field. The dataset's `api.py` carries the
+    matching stub for every advertised identifier.
+    """
     functions_json = next(
         (message.get("functions") for message in messages if message.get("functions")), None
     )
     if not functions_json:
-        return ""
+        return []
 
     tools = json.loads(functions_json)
-    wrappers = []
+    names: list[str] = []
     for tool in tools:
         function = tool.get("function", {})
         name = convert_function_name(function.get("name", "tool"))
-        description = function.get("description", "")
-        properties = function.get("parameters", {}).get("properties", {})
-        args = []
-        doc_lines = []
-        for raw_param, param_schema in properties.items():
-            param = to_identifier(raw_param, default="param")
-            args.append(f"{param}: {json_type_to_python(param_schema)} | None = None")
-            param_description = param_schema.get("description", "")
-            doc_lines.append(f"        {param}: {param_description}")
-
-        signature = ", ".join(args)
-        args_doc = "\n".join(doc_lines) if doc_lines else "        None"
-        wrappers.append(
-            f"def {name}({signature}) -> dict:\n"
-            f'    """{description}\n\n'
-            f"    Args:\n"
-            f"    ----\n"
-            f"{args_doc}\n\n"
-            f'    """\n'
-            f"    pass"
-        )
-    return "\n\n\n".join(wrappers)
+        if name and name not in names:
+            names.append(name)
+    return names
 
 
 def function_name_from_ast(node: ast.AST) -> str:
@@ -198,11 +187,14 @@ def convert_trajectory(raw_data: dict[str, Any]) -> Trajectory:
             MessageAction(content="<finish> Task completed. </finish>", description=None)
         )
 
-    details = {
-        "dataset_source": raw_data.get("dataset_source", ""),
-        "available_apis": parse_available_apis(messages),
-    }
-    return Trajectory(id=raw_data["id"], content=content, details=details)
+    available_apis = parse_available_apis(messages)
+    details = {"dataset_source": raw_data.get("dataset_source", "")}
+    return Trajectory(
+        id=raw_data["id"],
+        content=content,
+        available_apis=available_apis or None,
+        details=details,
+    )
 
 
 for line in sys.stdin:

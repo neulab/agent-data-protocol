@@ -24,7 +24,7 @@ The dataset focuses on:
 - Raw assistant `function_calls` strings are parsed as Python-style calls and become `ApiAction` entries. Dotted tool names are converted to valid Python identifiers by replacing non-identifier characters with underscores.
 - Raw `environment` messages become `TextObservation` entries with `source="environment"`; newline-separated tool results are split and interleaved with matching batched tool calls when counts align.
 - Raw assistant natural-language responses become `MessageAction` entries. The final response is wrapped in `<finish>` tags for the OpenHands SFT converter.
-- Per-example tool schemas from the raw system message are converted into Python stub functions and stored in `details.available_apis` so agent converters can expose the appropriate tool documentation.
+- The advertised tool names from the raw `functions` payload are recorded on the top-level `Trajectory.available_apis` field, and the dataset's `api.py` carries matching Python stubs. The OpenHands SFT converter uses `include_apis=trajectory.available_apis` to expose only the per-trajectory subset of tool documentation.
 
 ## Known Limitations
 
