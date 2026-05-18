@@ -107,6 +107,14 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
             continue
 
         if message.role == "tool":
+            # Defensive fallback for orphaned tool messages — a `tool` message
+            # that is NOT immediately preceded by an `assistant` with
+            # `tool_calls`. Well-formed raw rollouts pre-consume tool messages
+            # in the assistant branch below via `tool_observations()` and
+            # advance past them with `index = next_index`, so this branch only
+            # fires for malformed inputs (none observed in either CodeScout
+            # source). Emit them as environment observations to preserve
+            # round-trip fidelity rather than silently dropping the content.
             content.append(TextObservation(content=text, source="environment"))
             index += 1
             continue
