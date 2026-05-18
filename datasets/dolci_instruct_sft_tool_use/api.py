@@ -87,32 +87,32 @@ def calculate_calorie_intake(
     activity_level: Any = None,
     goal: Any = None,
 ) -> dict:
-    """Calculates the recommended daily calorie intake and macronutrient distribution based on personal characteristics and goals."""
+    """Stub for the advertised Dolci tool."""
     pass
 
 
 def can_attend_all_meetings(intervals: Any = None) -> dict:
-    """Determines if a person can attend all meetings given a list of meeting time intervals."""
+    """Stub for the advertised Dolci tool."""
     pass
 
 
 def daily_match_list_all(date: Any = None) -> dict:
-    """Fetches the daily match list including scheduled, live, and finished matches for a given date."""
+    """Stub for the advertised Dolci tool."""
     pass
 
 
 def get_ip_zipcode(ip: Any = None) -> dict:
-    """Retrieves the ZIP code of a given IP address using the ip-api.com API."""
+    """Stub for the advertised Dolci tool."""
     pass
 
 
 def get_pokemon_move_info(pokemon_name: Any = None, move_name: Any = None) -> dict:
-    """Retrieves information about a Pokémon's move using the PokéAPI."""
+    """Stub for the advertised Dolci tool."""
     pass
 
 
 def predict_evolution_rate(species: Any = None, years: Any = None, model: Any = None) -> dict:
-    """Predict the evolutionary rate for a specific species for a given timeframe."""
+    """Stub for the advertised Dolci tool."""
     pass
 
 
