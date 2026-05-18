@@ -31,4 +31,3 @@ def sha_text_hash():
 def trend_id():
     """Fetches trending topics from Twitter based on a given 'Where On Earth IDentifier' (WOEID) using the Toolbench RapidAPI service."""
     return None
-
