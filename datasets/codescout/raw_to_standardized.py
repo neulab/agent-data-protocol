@@ -50,6 +50,16 @@ def tool_observations(messages: list[Message], start: int) -> tuple[OrderedDict[
         # still pair with their producing tool call when there is a single
         # such pair (the only case observed in practice).
         key = messages[index].tool_call_id or ""
+        if key in observations:
+            # Multiple tool messages sharing the same key — the previous
+            # observation will be lost and the new one will be (incorrectly)
+            # paired with every same-keyed tool_call. None observed in the
+            # CodeScout sources, but surface it loudly if it ever appears
+            # when extracting the full 58.9K dataset.
+            print(
+                f"Warning: duplicate tool_call_id {key!r} at message index {index}",
+                file=sys.stderr,
+            )
         observations[key] = messages[index]
         index += 1
     return observations, index
