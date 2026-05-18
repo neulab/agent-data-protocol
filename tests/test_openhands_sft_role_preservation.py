@@ -28,7 +28,7 @@ def import_openhands_converter(monkeypatch):
     monkeypatch.setitem(sys.modules, "scripts.html_to_axtree", fake_html_module)
 
     fake_system_module = types.ModuleType("agents.openhands.system_prompt.system")
-    fake_system_module.get_system_message = lambda *args, **kwargs: "system prompt"
+    fake_system_module.get_system_message = lambda: "system prompt"
     monkeypatch.setitem(sys.modules, "agents.openhands.system_prompt.system", fake_system_module)
 
     fake_user_module = types.ModuleType("agents.openhands.system_prompt.user")
