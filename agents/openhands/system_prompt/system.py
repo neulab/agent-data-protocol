@@ -55,8 +55,6 @@ def get_tools(
         FinishTool,
     ]
     if codeact_enable_browsing:
-        if BrowserTool is None:
-            raise ModuleNotFoundError("browsergym is required when browsing tools are enabled")
         tools.append(WebReadTool)
         tools.append(BrowserTool)
     if codeact_enable_jupyter:
