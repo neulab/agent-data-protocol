@@ -8,7 +8,6 @@ import traceback
 from agents.openhands.api import (
     browser_default_apis,
     get_api_tool_description,
-    get_api_tool_description_from_available_tools,
     get_language_descriptions,
     openhands_default_tools,
 )
@@ -258,11 +257,14 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     trajectory = Trajectory(**std_data)
     id = trajectory.id
     events = trajectory.content
-    details = trajectory.details
-    if "available_apis" in details:
+    if trajectory.available_apis is not None:
         try:
-            api_tool_description, api_sigs = get_api_tool_description_from_available_tools(
-                details["available_apis"], env=api_env
+            exclude_apis = browser_default_apis if is_web else {}
+            api_tool_description, api_sigs = get_api_tool_description(
+                dataset,
+                exclude_apis,
+                api_env,
+                include_apis=trajectory.available_apis,
             )
         except Exception as e:
             print(e, file=sys.stderr)

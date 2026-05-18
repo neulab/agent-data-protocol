@@ -80,9 +80,16 @@ Example correct format:
 - `TextObservation`: Text-based responses with `source` set to a schema-allowed source (`user`, `agent`, or `environment`). Do not invent values like `system`, `os`, or `assistant`.
 - `WebObservation`: Web page content.
 
+**Versioning:**
+- The canonical ADP standardized schema version lives in `schema/version.py` as `SCHEMA_VERSION`.
+- `Trajectory` includes a root-level `schema_version`; committed `sample_std.json` files must include the current value explicitly.
+- Any schema-impacting Python change under `schema/` must bump `SCHEMA_VERSION`; CI checks this with `scripts/check_schema_version_bump.py`.
+
 ### API and Schema Validity
 - Every `ApiAction.function` used in `sample_std.json` must be implemented in that dataset's `api.py` with a compatible Python signature.
 - Every `ApiAction.kwargs` object must validate by calling the function in `api.py`; include required parameters such as the `message` argument for `finish`.
+- If a trajectory has `available_apis`, it must be a top-level list of function names that is a subset of that dataset's `api.py` functions, and every `ApiAction.function` used in that trajectory must appear in the list.
+- Only populate `available_apis` for datasets that have `api.py` and whose source data explicitly specifies per-instance tool/API availability. Do not fill it with all functions from `api.py`, and do not infer it merely from the APIs used in the trajectory.
 - `schema_raw.py` must faithfully model the raw samples, and `sample_raw.json` must validate against it.
 - Preserve the raw trajectory semantics when converting: do not drop repeated actions, consecutive tool calls, observations, failures, rewards, or terminal states unless the PR explains and justifies the filtering.
 - Prefer shared agent converters in `agents/` when possible. Add a dataset-specific `std_to_sft.py` only when a real dataset-specific transformation is required, and explain why in the PR.
