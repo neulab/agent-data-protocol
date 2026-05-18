@@ -164,6 +164,8 @@ python datasets/$MY_DATASET/extract_raw.py | python scripts/jsonl_to_json.py | j
 1. Create `raw_to_standardized.py` that converts raw data to ADP standardized schemas.
 Essentially, you should map each action / observation in the raw data to an action / observation in [ADP schemas](schema/SCHEMA.md#core-schema-components).
 
+The root `Trajectory` includes a protocol-level `schema_version` field. When converters return `Trajectory(...).model_dump()` or `model_dump_json()`, the current version is included automatically. If a converter emits trajectory dictionaries manually, include `"schema_version": SCHEMA_VERSION` from `schema.version`.
+
 **Brief conversion examples:**
 ```python
 # Raw data examples → Standardized actions
@@ -535,6 +537,8 @@ Before submitting your contribution:
 - [ ] Raw data extraction script works correctly
 - [ ] Standardized format conversion passes validation
 - [ ] SFT format conversion produces valid output
+- [ ] `sample_std.json` files include the current root-level `schema_version`
+- [ ] If schema-impacting files under `schema/` changed, `SCHEMA_VERSION` in `schema/version.py` was bumped
 - [ ] All required files are present
 - [ ] README is comprehensive and accurate
 - [ ] Tests pass
