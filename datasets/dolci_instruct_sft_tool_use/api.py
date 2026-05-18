@@ -79,7 +79,14 @@ def weather_forecast_weather_api(days: Any = None, q: Any = None) -> dict:
     pass
 
 
-def calculate_calorie_intake(weight_kg: Any = None, height_cm: Any = None, age: Any = None, sex: Any = None, activity_level: Any = None, goal: Any = None) -> dict:
+def calculate_calorie_intake(
+    weight_kg: Any = None,
+    height_cm: Any = None,
+    age: Any = None,
+    sex: Any = None,
+    activity_level: Any = None,
+    goal: Any = None,
+) -> dict:
     """Calculates the recommended daily calorie intake and macronutrient distribution based on personal characteristics and goals."""
     pass
 
@@ -110,6 +117,5 @@ def predict_evolution_rate(species: Any = None, years: Any = None, model: Any = 
 
 
 def weather_getweatherforecast() -> dict:
-    """Placeholder stub for the `weather_getweatherforecast` tool advertised in the Dolci sample."""
+    """Stub for the advertised Dolci tool."""
     pass
-
