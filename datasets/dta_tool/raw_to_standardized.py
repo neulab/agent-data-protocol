@@ -67,40 +67,21 @@ def valid_identifier(name: str) -> bool:
     return name.isidentifier() and not keyword.iskeyword(name)
 
 
-def build_available_apis(system_prompt: str) -> str:
-    function_defs = []
+def build_available_apis(system_prompt: str) -> list[str]:
+    """Return the list of API function names advertised in the DTA-Tool system prompt.
+
+    Each name is the identifier of a function declared in the dataset's `api.py`.
+    The returned list is fed into ``Trajectory.available_apis`` so the OpenHands
+    SFT converter can filter the API docstring block per-instance.
+    """
+    names: list[str] = []
     for spec in extract_api_specs(system_prompt):
         name = spec.get("name")
         if not isinstance(name, str) or name == "Finish" or not valid_identifier(name):
             continue
-
-        parameters = spec.get("parameters") or {}
-        properties = parameters.get("properties") or {}
-        required = parameters.get("required") or []
-        optional = parameters.get("optional") or []
-
-        ordered_params = []
-        for param in list(required) + list(optional) + list(properties):
-            if param not in ordered_params:
-                ordered_params.append(param)
-
-        signature_parts = []
-        for param in ordered_params:
-            if not isinstance(param, str) or not valid_identifier(param):
-                continue
-            if param in required:
-                signature_parts.append(param)
-            else:
-                signature_parts.append(f"{param}=None")
-
-        description = spec.get("description") or "DTA-Tool API function."
-        function_defs.append(
-            f"def {name}({', '.join(signature_parts)}):\n"
-            f"    {str(description)!r}\n"
-            f"    return None\n"
-        )
-
-    return "\n".join(function_defs)
+        if name not in names:
+            names.append(name)
+    return names
 
 
 def convert_assistant(message: str):
@@ -136,7 +117,7 @@ def convert_assistant(message: str):
 def process_data(raw_data: dict[str, Any]) -> Trajectory:
     data = SchemaRaw(**raw_data)
     content = []
-    available_apis = ""
+    available_apis: list[str] = []
 
     for step in data.conversations:
         role = step.from_
@@ -153,10 +134,8 @@ def process_data(raw_data: dict[str, Any]) -> Trajectory:
     return Trajectory(
         id=data.id,
         content=content,
-        details={
-            "source": "dongsheng/DTA-Tool",
-            "available_apis": available_apis,
-        },
+        available_apis=available_apis or None,
+        details={"source": "dongsheng/DTA-Tool"},
     )
 
 

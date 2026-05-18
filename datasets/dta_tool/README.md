@@ -16,7 +16,7 @@ The dataset is transformed from ToolBench and each trajectory contains a user qu
 
 ## Schema Mapping
 
-- Raw `system` messages are used to derive per-trajectory API signatures and are stored in standardized `details.available_apis`; they are not emitted as conversation turns.
+- Raw `system` messages advertise the API functions available for that trajectory. Their identifiers are recorded on the top-level `Trajectory.available_apis` field, so the OpenHands SFT converter can filter `api.py` per-trajectory via `include_apis`. The full set of advertised signatures is mirrored as stubs in this dataset's `api.py`.
 - Raw `user` messages become `TextObservation` entries with `source="user"`.
 - Raw `assistant` messages with `Thought:` and `Function Call:` become one or more `ApiAction` entries, preserving parallel tool calls as consecutive actions with the same thought.
 - Raw `assistant` `Finish` calls become `MessageAction` entries containing `<finish> ... </finish>` so the shared OpenHands SFT converter emits the standard `finish` tool call.
