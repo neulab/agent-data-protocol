@@ -1,4 +1,5 @@
 import importlib.util
+import inspect
 import json
 import os
 from pathlib import Path
@@ -35,20 +36,50 @@ def test_sample_standardized_against_schema(sample_path):
 
     # dynamically load api.py in the same directory as sample_std.json
     dataset_api = None
+    api_function_names = None
+
+    def load_dataset_api():
+        nonlocal dataset_api, api_function_names
+        if dataset_api is None:
+            api_path = os.path.join(os.path.dirname(sample_path), "api.py")
+            assert os.path.exists(api_path)
+            spec = importlib.util.spec_from_file_location("dataset_api", api_path)
+            dataset_api = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(dataset_api)
+            api_function_names = {
+                name for name, _ in inspect.getmembers(dataset_api, inspect.isfunction)
+            }
+        return dataset_api, api_function_names
 
     for sample_id, sample in enumerate(samples):
         try:
             traj = Trajectory(**sample)
+            assert "available_apis" not in traj.details, (
+                f"available_apis must be a top-level Trajectory field, not details metadata, "
+                f"in {sample_path} sample {sample_id}"
+            )
+            if traj.available_apis is not None:
+                available_apis = traj.available_apis
+                _, api_function_names = load_dataset_api()
+                missing_available_apis = sorted(set(available_apis) - api_function_names)
+                assert not missing_available_apis, (
+                    f"available_apis contains functions not found in api.py in "
+                    f"{os.path.dirname(sample_path)}: {missing_available_apis}"
+                )
+                used_apis = {
+                    content.function for content in traj.content if isinstance(content, ApiAction)
+                }
+                missing_used_apis = sorted(used_apis - set(available_apis))
+                assert not missing_used_apis, (
+                    f"ApiAction functions are missing from available_apis in {sample_path} "
+                    f"sample {sample_id}: {missing_used_apis}"
+                )
+
             for content_id, content in enumerate(traj.content):
                 print(f"{sample_id=}, {content_id=}, {type(content)=}")
                 if isinstance(content, ApiAction):
                     # Make sure that content.function exists in api.py
-                    if dataset_api is None:
-                        api_path = os.path.join(os.path.dirname(sample_path), "api.py")
-                        assert os.path.exists(api_path)
-                        spec = importlib.util.spec_from_file_location("dataset_api", api_path)
-                        dataset_api = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(dataset_api)
+                    dataset_api, _ = load_dataset_api()
                     assert hasattr(dataset_api, content.function), (
                         f"{content.function} not found in api.py in {os.path.dirname(sample_path)}"
                     )
