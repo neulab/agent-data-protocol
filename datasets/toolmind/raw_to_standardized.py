@@ -58,46 +58,26 @@ def collect_called_arguments(messages: list[Message]) -> dict[str, set[str]]:
     return called_args
 
 
-def build_available_apis(data: SchemaRaw) -> str:
-    called_args = collect_called_arguments(data.conversations)
-    definitions = []
-    seen = set()
+def build_available_apis(data: SchemaRaw) -> list[str]:
+    """Return the identifiers of the tools advertised for this ToolMind trajectory.
 
+    The raw schema provides a `tools` array per row. Each tool's identifier is
+    recorded on the top-level `Trajectory.available_apis` field so the
+    OpenHands SFT converter can filter the dataset's `api.py` per-trajectory
+    via `include_apis`. The full set of advertised tool stubs lives in
+    `datasets/toolmind/api.py`.
+    """
+    names: list[str] = []
+    seen: set[str] = set()
     for tool in data.tools:
         function = tool_function_definition(tool.function)
-        name = function.get("name")
-        safe_name = safe_identifier(name or "")
+        raw_name = function.get("name") or ""
+        safe_name = safe_identifier(raw_name)
         if not safe_name or safe_name in seen:
             continue
         seen.add(safe_name)
-
-        parameters = function.get("parameters") or {}
-        properties = parameters.get("properties") or {}
-        required = set(parameters.get("required") or [])
-        arg_names = list(properties)
-        for arg_name in sorted(called_args.get(name, set())):
-            if arg_name not in arg_names:
-                arg_names.append(arg_name)
-                required.add(arg_name)
-
-        signature_parts = []
-        for arg_name in arg_names:
-            safe_arg = safe_identifier(arg_name)
-            if not safe_arg:
-                continue
-            signature_parts.append(safe_arg if arg_name in required else f"{safe_arg}=None")
-        signature = ", ".join(signature_parts)
-
-        description = function.get("description") or "ToolMind tool function."
-        arg_docs = []
-        for arg_name in arg_names:
-            prop = properties.get(arg_name) or {}
-            arg_description = prop.get("description") or ""
-            arg_docs.append(f"    {arg_name}: {arg_description}".rstrip())
-        docstring = "\n".join([description, "", "Args:", *arg_docs] if arg_docs else [description])
-        definitions.append(f'def {safe_name}({signature}):\n    """{docstring}"""\n    return None')
-
-    return "\n\n".join(definitions)
+        names.append(safe_name)
+    return names
 
 
 def message_to_events(message: Message):
@@ -137,10 +117,12 @@ def process_data(data: SchemaRaw) -> Trajectory:
         "row_index": str(data.row_index),
     }
     available_apis = build_available_apis(data)
-    if available_apis:
-        details["available_apis"] = available_apis
-
-    return Trajectory(id=data.id, content=content, details=details)
+    return Trajectory(
+        id=data.id,
+        content=content,
+        available_apis=available_apis or None,
+        details=details,
+    )
 
 
 if __name__ == "__main__":

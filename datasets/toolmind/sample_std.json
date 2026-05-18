@@ -1,5 +1,6 @@
 [
   {
+    "schema_version": "1.1.0",
     "id": "toolmind_graphsyn_0",
     "content": [
       {
@@ -51,14 +52,18 @@
         "description": "<think>\nOkay, the user first asked for the current time in New York, and I used the get_current_time tool with America/New_York. Now they're asking \"And what about in London?\" so they want the time in London.\n\nI need to check the available tools. The get_current_time function requires a timezone. London's timezone is Europe/London. I should call the same function but with the Europe/London timezone parameter.\n\nMake sure to structure the tool call correctly. The parameters need to be a JSON object with the timezone. So the arguments should be {\"timezone\": \"Europe/London\"}.\n\nDouble-check the timezone name. Yes, it's Europe/London for London, UK. No daylight saving adjustments needed here since the tool probably handles that automatically based on the timezone string.\n\nSo the correct tool call is get_current_time with Europe/London.\n</think>"
       }
     ],
+    "available_apis": [
+      "get_current_time",
+      "search_books"
+    ],
     "details": {
       "source": "Nanbeige/ToolMind",
       "source_file": "graphsyn",
-      "row_index": "0",
-      "available_apis": "def get_current_time(timezone):\n    \"\"\"Get the current time\n\nArgs:\n    timezone: The timezone, e.g. America/New_York\"\"\"\n    return None\n\ndef search_books(keyword):\n    \"\"\"Search for books by title or author\n\nArgs:\n    keyword: The keyword to search for in book titles or authors\"\"\"\n    return None"
+      "row_index": "0"
     }
   },
   {
+    "schema_version": "1.1.0",
     "id": "toolmind_graphsyn_1",
     "content": [
       {
@@ -79,14 +84,18 @@
         "description": "<think>\nOkay, the user is asking for the current time in New York. Let me see which tool I can use here.\n\nLooking at the provided tools, there's one called get_current_time that requires a timezone. The parameters need a timezone string like America/New_York. Since New York is in the America/New_York timezone, I should call that function with that specific timezone.\n\nThe other tool is for searching books, which isn't relevant here. So I'll focus on the get_current_time function.\n\nI need to make sure the timezone parameter is correctly formatted. The example given is America/New_York, so I'll use that. Let me structure the tool call accordingly.\n</think>"
       }
     ],
+    "available_apis": [
+      "get_current_time",
+      "search_books"
+    ],
     "details": {
       "source": "Nanbeige/ToolMind",
       "source_file": "graphsyn",
-      "row_index": "1",
-      "available_apis": "def get_current_time(timezone):\n    \"\"\"Get the current time\n\nArgs:\n    timezone: The timezone, e.g. America/New_York\"\"\"\n    return None\n\ndef search_books(keyword):\n    \"\"\"Search for books by title or author\n\nArgs:\n    keyword: The keyword to search for in book titles or authors\"\"\"\n    return None"
+      "row_index": "1"
     }
   },
   {
+    "schema_version": "1.1.0",
     "id": "toolmind_graphsyn_2",
     "content": [
       {
@@ -107,14 +116,20 @@
         "description": "<think>\nOkay, the user is asking for the current time in New York. Let me check which tool I can use for that.\n\nLooking at the provided tools, there's one called get_date_and_time_by_city. Its description says it gets the current date and time for a specified city. That's exactly what I need here.\n\nThe parameters for that tool probably require the city name. The user mentioned New York, so I should specify \"New York\" as the city. I need to make sure the city name is correctly formatted. Sometimes city names might have specific identifiers, but since the tool's description says \"specified city,\" it's likely expecting the city name as a string.\n\nNo other tools seem relevant here. The other ones are for grid coordinates, hashing text, or Twitter trends. So the right choice is get_date_and_time_by_city with the city parameter set to \"New York\".\n\nI should structure the tool call with the name and arguments. The arguments should be a JSON object with the city key. Let me confirm the parameters from the tool definition. Wait, in the tools list, the parameters field is null, but that might be a placeholder. Wait, no, looking back, the tool definitions have \"parameters\": null, but that's probably an error. Wait, no, actually, in the example provided, the parameters are null, but that might not be correct. Wait, maybe the parameters are specified in the actual tool's requirements. Wait, the user provided the tool specifications as part of the problem.\n\nWait, looking at the tools given:\n\n{\"description\": \"Get the current date and time for a specified city.\", \"name\": \"get_date_and_time_by_city\", \"parameters\": null, \"strict\": false}\n\nHmm, the parameters are listed as null here, but that doesn't make sense. Maybe it's a mistake in the problem setup, but logically, the function would need a city parameter. Since the user is asking about New York, I have to assume that the tool requires a city name as an argument. Even though the parameters field says null, perhaps it's an oversight, and the actual tool expects a city. Otherwise, the tool wouldn't be usable. So I'll proceed to call it with the city parameter set to \"New York\".\n\nSo the tool call should be get_date_and_time_by_city with arguments {\"city\": \"New York\"}.\n</think>"
       }
     ],
+    "available_apis": [
+      "calculate_grid_coordinate_points",
+      "sha_text_hash",
+      "get_date_and_time_by_city",
+      "trend_id"
+    ],
     "details": {
       "source": "Nanbeige/ToolMind",
       "source_file": "graphsyn",
-      "row_index": "2",
-      "available_apis": "def calculate_grid_coordinate_points():\n    \"\"\"Calculate all grid coordinate points based on a center geocoordinate point and distance arguments.\"\"\"\n    return None\n\ndef sha_text_hash():\n    \"\"\"Hashes the input text using a specified SHA algorithm and returns the resulting hash.\"\"\"\n    return None\n\ndef get_date_and_time_by_city(city):\n    \"\"\"Get the current date and time for a specified city.\n\nArgs:\n    city:\"\"\"\n    return None\n\ndef trend_id():\n    \"\"\"Fetches trending topics from Twitter based on a given \"Where On Earth IDentifier\" (WOEID) using the Toolbench RapidAPI service.\"\"\"\n    return None"
+      "row_index": "2"
     }
   },
   {
+    "schema_version": "1.1.0",
     "id": "toolmind_graphsyn_3",
     "content": [
       {
@@ -166,11 +181,14 @@
         "description": "<think>\nOkay, the user previously asked for the time in New York, and I used the get_current_time tool with America/New_York. Now they're asking \"And what about in London?\" so they want the current time in London.\n\nFirst, I need to figure out the correct timezone for London. I know that London is in the UK, and the standard timezone is Europe/London. Sometimes people might refer to it as GMT or BST depending on daylight saving, but the IANA timezone database uses Europe/London.\n\nI should call the get_current_time tool again, this time with timezone set to Europe/London. Let me confirm that the tool's parameters require the timezone string. The tool's description says it's for a specific timezone, and the example used America/New_York, so following the same pattern, Europe/London is the correct identifier.\n\nNo other parameters are needed, just the timezone. So the tool call should be get_current_time with arguments {\"timezone\": \"Europe/London\"}.\n\nI need to make sure there are no typos. Europe/London is the correct format. Alright, that's the right parameter.\n</think>"
       }
     ],
+    "available_apis": [
+      "get_current_time",
+      "get_random_quote"
+    ],
     "details": {
       "source": "Nanbeige/ToolMind",
       "source_file": "graphsyn",
-      "row_index": "3",
-      "available_apis": "def get_current_time(timezone):\n    \"\"\"Get the current time in a specific timezone\n\nArgs:\n    timezone: The timezone to get the time in\"\"\"\n    return None\n\ndef get_random_quote():\n    \"\"\"Get a random inspiring quote\"\"\"\n    return None"
+      "row_index": "3"
     }
   }
 ]
