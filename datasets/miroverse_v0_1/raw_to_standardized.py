@@ -5,7 +5,6 @@ from typing import Any
 
 from extract_raw import (
     extract_available_tools_from_messages,
-    generate_available_apis,
     sanitize_identifier,
     tool_function_name,
 )
@@ -145,15 +144,24 @@ for line in sys.stdin:
     _mark_final_answer(content)
 
     details = {"split": data.split or ""}
-    available_apis = generate_available_apis(available_tools)
-    if available_apis:
-        details["available_apis"] = available_apis
     if system_prompt:
         details["system_prompt"] = system_prompt
+
+    # The per-trajectory list of advertised MCP tools is recorded on the
+    # top-level Trajectory.available_apis field as identifiers; the dataset's
+    # api.py carries matching stubs that the OpenHands SFT converter expands
+    # via include_apis when emitting the per-instance API docstring block.
+    available_apis = [
+        tool_function_name(tool["server_name"], tool["tool_name"]) for tool in available_tools
+    ]
+    # Deduplicate while preserving order.
+    seen: set[str] = set()
+    available_apis = [n for n in available_apis if not (n in seen or seen.add(n))]
 
     trajectory = Trajectory(
         id=data.id or f"{data.split or 'miroverse'}-unknown",
         content=content,
+        available_apis=available_apis or None,
         details=details,
     )
     print(json.dumps(trajectory.model_dump(), ensure_ascii=False))
