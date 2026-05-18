@@ -19,7 +19,11 @@ class ContentBlock(BaseModel):
 
 class Function(BaseModel):
     name: str
-    arguments: str = "{}"
+    # Optional[str] (not just `str`) because some raw rows have
+    # `"arguments": null` rather than an empty/missing field. The downstream
+    # `parse_arguments()` already treats `None` like an empty arguments
+    # object, so this prevents Pydantic from silently aborting those rows.
+    arguments: Optional[str] = None
 
     model_config = ConfigDict(extra="allow")
 
