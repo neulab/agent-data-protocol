@@ -14,6 +14,10 @@ not be installed in the test environment; reloading them through an
 in-process patch is brittle. The subprocess inherits the parent
 interpreter and PYTHONPATH so the test still runs against the actual
 repository code, but it gets a clean import graph each time.
+
+The finder uses the modern PEP 451 `find_spec` / `exec_module`
+protocol so this test stays forward-compatible with Python versions
+that drop the legacy PEP 302 `find_module` / `load_module` interface.
 """
 
 import os
@@ -40,17 +44,23 @@ def _run_block_browsergym_subprocess(script: str) -> subprocess.CompletedProcess
 
 _BLOCK_BROWSERGYM_PREAMBLE = textwrap.dedent(
     """
+    import importlib.machinery
     import sys
 
 
     class _BlockBrowserGym:
-        def find_module(self, name, path=None):
-            if name.startswith("browsergym"):
-                return self
+        def find_spec(self, fullname, path=None, target=None):
+            if fullname.startswith("browsergym"):
+                return importlib.machinery.ModuleSpec(fullname, self)
             return None
 
-        def load_module(self, name):
-            raise ModuleNotFoundError(f"No module named {name!r}", name=name)
+        def create_module(self, spec):
+            return None
+
+        def exec_module(self, module):
+            raise ModuleNotFoundError(
+                f"No module named {module.__name__!r}", name=module.__name__
+            )
 
 
     sys.meta_path.insert(0, _BlockBrowserGym())
@@ -64,6 +74,15 @@ def test_tools_init_handles_missing_browsergym():
         _BLOCK_BROWSERGYM_PREAMBLE
         + textwrap.dedent(
             """
+            # Sanity-check that the meta_path finder actually fires
+            try:
+                import browsergym  # noqa: F401
+                raise AssertionError(
+                    "browsergym should have been blocked by the meta_path finder"
+                )
+            except ModuleNotFoundError:
+                pass
+
             from agents.openhands.system_prompt import tools
 
             assert tools.BrowserTool is None, (
