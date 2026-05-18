@@ -116,17 +116,24 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
                 observations, next_index = tool_observations(messages, index + 1)
                 used_observations = set()
                 for tool_call in message.tool_calls:
+                    is_finish = tool_call.function.name == "localization_finish"
                     content.append(convert_tool_call(tool_call, text))
                     lookup_key = tool_call.id or ""
                     observation = observations.get(lookup_key)
                     if observation is not None:
                         used_observations.add(lookup_key)
-                        content.append(
-                            TextObservation(
-                                content=normalize_content(observation.content),
-                                source="environment",
+                        # The raw rollouts include a tool-response echo after
+                        # `localization_finish` that just repeats the submitted
+                        # locations. Real OpenHands sessions terminate immediately
+                        # on finish, so we drop the echo to match that pattern;
+                        # the locations are already captured in the finish action.
+                        if not is_finish:
+                            content.append(
+                                TextObservation(
+                                    content=normalize_content(observation.content),
+                                    source="environment",
+                                )
                             )
-                        )
                 for tool_id, observation in observations.items():
                     if tool_id not in used_observations:
                         content.append(
