@@ -1,27 +1,7 @@
-import importlib
 import json
 import os
-import sys
-from pathlib import Path
 
-
-def import_hf_load_dataset():
-    repo_root = Path(__file__).resolve().parents[2]
-    original_path = list(sys.path)
-    sys.path = [
-        path
-        for path in sys.path
-        if Path(path or ".").resolve() != repo_root
-        and Path(path or ".").resolve() != repo_root / "datasets"
-    ]
-    sys.modules.pop("datasets", None)
-    try:
-        return importlib.import_module("datasets").load_dataset
-    finally:
-        sys.path = original_path
-
-
-load_dataset = import_hf_load_dataset()
+from datasets import load_dataset
 
 SOURCES = [
     ("OpenHands/CodeScout_Training_Rollouts", "CodeScout_4B", "train"),
