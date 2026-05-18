@@ -3,11 +3,15 @@
 A standardized protocol for collecting, processing, and converting agent training data from diverse sources into unified formats suitable for supervised fine-tuning (SFT).
 
 ## Recent Release
+- Discuss the paper and find linked artifacts on the Hugging Face Paper page: [https://huggingface.co/papers/2510.24702](https://huggingface.co/papers/2510.24702)
+
 - Check out our arXiv preprint: [https://arxiv.org/abs/2510.24702](https://arxiv.org/abs/2510.24702)
 
 - Try a demo of data conversion on our Project Website: [https://www.agentdataprotocol.com/](https://www.agentdataprotocol.com/)
 
-- Download ADP data: [https://huggingface.co/collections/neulab/agent-data-protocol](https://huggingface.co/collections/neulab/agent-data-protocol)
+- Download ADP data from the Hugging Face collection: [https://huggingface.co/collections/neulab/agent-data-protocol](https://huggingface.co/collections/neulab/agent-data-protocol)
+
+- Explore the combined ADP dataset repository on the Hub: [https://huggingface.co/datasets/neulab/agent-data-collection](https://huggingface.co/datasets/neulab/agent-data-collection)
 
 ## Overview
 
@@ -31,9 +35,23 @@ cd agent-data-protocol
 pip install -r requirements.txt
 ```
 
+### Load ADP Data from Hugging Face
+
+The ADP dataset collection is linked from the [Hugging Face Paper page](https://huggingface.co/papers/2510.24702) and is available as a Hub dataset at [`neulab/agent-data-collection`](https://huggingface.co/datasets/neulab/agent-data-collection). You can load individual dataset configurations and splits directly with [`datasets`](https://huggingface.co/docs/datasets):
+
+```python
+from datasets import load_dataset
+
+# Load one ADP dataset configuration and split from the Hub
+dataset = load_dataset("neulab/agent-data-collection", "swe-smith", split="std")
+
+# Load agent-specific SFT data
+sft_dataset = load_dataset("neulab/agent-data-collection", "swe-smith", split="sft_openhands")
+```
+
 ### Basic Usage
 
-To obtain data for a specific dataset and agent, follow this pattern:
+To regenerate data locally for a specific dataset and agent, follow this pattern:
 
 ```bash
 # Set your dataset name
