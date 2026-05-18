@@ -45,7 +45,11 @@ def tool_observations(messages: list[Message], start: int) -> tuple[OrderedDict[
     observations: OrderedDict[str, Message] = OrderedDict()
     index = start
     while index < len(messages) and messages[index].role == "tool":
-        key = messages[index].tool_call_id or f"tool_{index}"
+        # Use "" as the fallback for missing tool_call_id, matching the
+        # `tool_call.id or ""` lookup below so unidentified observations
+        # still pair with their producing tool call when there is a single
+        # such pair (the only case observed in practice).
+        key = messages[index].tool_call_id or ""
         observations[key] = messages[index]
         index += 1
     return observations, index
@@ -113,9 +117,10 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
                 used_observations = set()
                 for tool_call in message.tool_calls:
                     content.append(convert_tool_call(tool_call, text))
-                    observation = observations.get(tool_call.id or "")
+                    lookup_key = tool_call.id or ""
+                    observation = observations.get(lookup_key)
                     if observation is not None:
-                        used_observations.add(tool_call.id)
+                        used_observations.add(lookup_key)
                         content.append(
                             TextObservation(
                                 content=normalize_content(observation.content),
