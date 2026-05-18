@@ -30,6 +30,7 @@ The standardized conversion maps terminal tool calls to ADP `CodeAction` entries
 - Assistant `localization_finish` tool calls are serialized as finish `MessageAction`s containing the submitted locations JSON.
 - Tool observations are paired with their matching tool call IDs so parallel terminal calls become ordered action/observation pairs in ADP.
 - Raw examples without an `instance_id` use deterministic source/split/row identifiers.
+- The upstream `reward_dict.multilevel_localization_f1_reward` is attached to the trajectory's final content item as its `reward` value, since localization is single-step from a reward perspective. The other component rewards (`file_reward`, `module_reward`, `entity_reward`, `multiturn_reward`) and the per-instance tool schema are not propagated because they are not per-trajectory signals the standardized schema needs to carry.
 
 ## Sample Generation
 

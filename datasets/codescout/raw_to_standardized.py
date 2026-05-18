@@ -5,6 +5,7 @@ from typing import Any
 
 from schema_raw import Message, SchemaRaw, ToolCall
 
+from schema.action.action import Action
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
@@ -142,6 +143,20 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
     if not content:
         return None
 
+    # CodeScout's per-trajectory reward signal is the multi-level localization F1
+    # from the upstream `reward_dict`. Attach it to the agent's final action (the
+    # `localization_finish` MessageAction). Some raw rollouts include a trailing
+    # tool-response observation that echoes the locations; the reward belongs on
+    # the agent's action that produced it, not on that echo observation.
+    if (
+        data.reward_dict is not None
+        and data.reward_dict.multilevel_localization_f1_reward is not None
+    ):
+        for item in reversed(content):
+            if isinstance(item, Action):
+                item.reward = data.reward_dict.multilevel_localization_f1_reward
+                break
+
     details = {
         "source_dataset": data.source_dataset,
         "source_config": data.source_config or "default",
@@ -154,10 +169,6 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
         details["step"] = str(data.step)
     if data.rollout_number is not None:
         details["rollout_number"] = str(data.rollout_number)
-    if data.reward_dict:
-        details["reward_dict"] = data.reward_dict.model_dump_json(exclude_none=True)
-    if data.chat_messages and data.chat_messages.tools:
-        details["tools"] = json.dumps(data.chat_messages.tools, ensure_ascii=False)
 
     return Trajectory(id=trajectory_id(data), content=content, details=details)
 
