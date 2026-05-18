@@ -68,7 +68,9 @@ def astronomy_api_for_world_weather_online_api(q, date, format=None):
     return None
 
 
-def calculate_repayment_schedule_for_loan_amortization_calculator(installmentcount, principalamount, annualinterestrate, startdate, repaymentinterval=None):
+def calculate_repayment_schedule_for_loan_amortization_calculator(
+    installmentcount, principalamount, annualinterestrate, startdate, repaymentinterval=None
+):
     """Validate DTA-Tool API arguments."""
     return None
 
@@ -138,7 +140,9 @@ def list_of_available_languages_for_neuro_high_quality_translation():
     return None
 
 
-def local_history_weather_api_for_world_weather_online_api(date, q, enddate=None, tp=None, format=None, lang=None):
+def local_history_weather_api_for_world_weather_online_api(
+    date, q, enddate=None, tp=None, format=None, lang=None
+):
     """Validate DTA-Tool API arguments."""
     return None
 
@@ -196,4 +200,3 @@ def verify_for_sudoku_all_purpose_pro(verify):
 def weather_statistics_for_ai_weather_by_meteosource():
     """Validate DTA-Tool API arguments."""
     return None
-
