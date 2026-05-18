@@ -1,0 +1,65 @@
+name: Schema Release
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - schema/version.py
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract schema version
+        id: schema-version
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          content = Path("schema/version.py").read_text()
+          match = re.search(r'^SCHEMA_VERSION(?::[^=]+)?\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
+          if match is None:
+              raise SystemExit("schema/version.py does not define SCHEMA_VERSION")
+
+          version = match.group(1)
+          if re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version) is None:
+              raise SystemExit(f"SCHEMA_VERSION must be MAJOR.MINOR.PATCH, got {version!r}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"version={version}\n")
+              output.write(f"tag=v{version}\n")
+          PY
+
+      - name: Check whether release already exists
+        id: existing-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.schema-version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release ${TAG} already exists; skipping release creation."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create schema release
+        if: steps.existing-release.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.schema-version.outputs.tag }}
+          VERSION: ${{ steps.schema-version.outputs.version }}
+        run: |
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --notes "Automated release for ADP standardized schema version ${VERSION}."
