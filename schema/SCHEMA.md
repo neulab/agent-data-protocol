@@ -103,6 +103,20 @@ Represents textual information received by the agent.
 
 **Use Case**: User messages, system outputs, file contents, terminal responses, error messages
 
+#### JsonObservation
+
+**File**: [`schema/observation/json.py`](../schema/observation/json.py)
+
+Represents structured JSON information received by the agent.
+
+**Fields**:
+- `class_` (str): Always "json_observation"
+- `content` (dict): JSON-serializable dictionary payload
+- `name` (str, optional): Name of the participant/source
+- `source` (Literal): Origin of the JSON payload - "user", "agent", or "environment"
+
+**Use Case**: Tool results and API responses that are naturally structured as JSON objects and should not be string-encoded.
+
 #### WebObservation
 
 **File**: [`schema/observation/web.py`](../schema/observation/web.py)
@@ -123,7 +137,7 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "id": "example_trajectory_001",
   "content": [
     {

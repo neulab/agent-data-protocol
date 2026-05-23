@@ -9,6 +9,7 @@ from schema_raw import SchemaRaw
 
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
+from schema.observation.json import JsonObservation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
@@ -61,6 +62,17 @@ def extract_api_specs(system_prompt: str) -> list[dict[str, Any]]:
     except (SyntaxError, ValueError):
         return []
     return specs if isinstance(specs, list) else []
+
+
+def convert_function_observation(value: str) -> JsonObservation | TextObservation:
+    for parser in (json.loads, ast.literal_eval):
+        try:
+            parsed = parser(value)
+        except (json.JSONDecodeError, SyntaxError, ValueError):
+            continue
+        if isinstance(parsed, dict):
+            return JsonObservation(content=parsed, source="environment")
+    return TextObservation(content=value, source="environment")
 
 
 def valid_identifier(name: str) -> bool:
@@ -129,7 +141,7 @@ def process_data(raw_data: dict[str, Any]) -> Trajectory:
         elif role == "assistant":
             content.extend(convert_assistant(value))
         elif role == "function":
-            content.append(TextObservation(content=value, source="environment"))
+            content.append(convert_function_observation(value))
 
     return Trajectory(
         id=data.id,

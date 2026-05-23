@@ -16,6 +16,7 @@ from agents.openhands.system_prompt.user import get_web_user_message
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
+from schema.observation.json import JsonObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
@@ -84,7 +85,7 @@ PREV_BID = None
 
 def standardized_event_to_openhands_message(
     id,
-    event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
+    event: ApiAction | CodeAction | MessageAction | TextObservation | JsonObservation | WebObservation,
     previous_web_actions: list,
     is_web: bool,
     api_env: str = None,
@@ -219,19 +220,24 @@ def standardized_event_to_openhands_message(
             return {"from": "function_call", "value": f"{thought}{finish_function_call}"}
         return {"from": "gpt", "value": f"{thought}{event.content}"}
 
-    elif isinstance(event, TextObservation):
+    elif isinstance(event, (TextObservation, JsonObservation)):
         if event.source == "user":
-            event.source = "human"
+            source = "human"
 
         elif event.source == "agent":
-            event.source = "gpt"
+            source = "gpt"
 
         elif event.source == "environment":
-            event.source = "observation"
+            source = "observation"
 
         else:
             raise ValueError(f"Wrong event source: {event.source}")
-        return {"from": event.source, "value": event.content}
+        value = (
+            json.dumps(event.content, ensure_ascii=False)
+            if isinstance(event, JsonObservation)
+            else event.content
+        )
+        return {"from": source, "value": value}
 
     elif hasattr(event, "__class__") and event.__class__.__name__ == "ImageObservation":
         # Handle ImageObservation
@@ -293,7 +299,9 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
                 continue
 
             # Match observations to function_calls
-            if conversations[-1]["from"] == "function_call" and isinstance(event, TextObservation):
+            if conversations[-1]["from"] == "function_call" and isinstance(
+                event, (TextObservation, JsonObservation)
+            ):
                 message["from"] = "observation"
                 function_name = extract_function_call(conversations[-1]["value"])
                 if function_name:

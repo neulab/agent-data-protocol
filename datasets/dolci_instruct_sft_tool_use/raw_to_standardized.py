@@ -7,6 +7,7 @@ from typing import Any
 
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
+from schema.observation.json import JsonObservation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
@@ -114,11 +115,21 @@ def split_function_calls(function_calls: str) -> list[str]:
     return [line.strip() for line in function_calls.splitlines() if line.strip()]
 
 
-def split_environment_content(content: str) -> list[TextObservation]:
+def environment_observation(part: str) -> JsonObservation | TextObservation:
+    try:
+        parsed = json.loads(part)
+    except json.JSONDecodeError:
+        return TextObservation(content=part, source="environment")
+    if isinstance(parsed, dict):
+        return JsonObservation(content=parsed, source="environment")
+    return TextObservation(content=part, source="environment")
+
+
+def split_environment_content(content: str) -> list[JsonObservation | TextObservation]:
     parts = [line for line in content.splitlines() if line.strip()]
     if not parts:
         parts = [content]
-    return [TextObservation(content=part, source="environment") for part in parts]
+    return [environment_observation(part) for part in parts]
 
 
 def interleave_api_actions_and_observations(content: list[Any]) -> list[Any]:
@@ -138,7 +149,7 @@ def interleave_api_actions_and_observations(content: list[Any]) -> list[Any]:
         observation_start = index
         while (
             index < len(content)
-            and isinstance(content[index], TextObservation)
+            and isinstance(content[index], (TextObservation, JsonObservation))
             and content[index].source == "environment"
         ):
             index += 1

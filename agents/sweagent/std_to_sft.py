@@ -8,6 +8,7 @@ from agents.sweagent.system_message import base_template
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
+from schema.observation.json import JsonObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
@@ -70,7 +71,7 @@ def verify_args(required_args, optional_args, input_args):
 
 def standardized_event_to_swe_message(
     id,
-    event: ApiAction | CodeAction | MessageAction | TextObservation | WebObservation,
+    event: ApiAction | CodeAction | MessageAction | TextObservation | JsonObservation | WebObservation,
     api_sigs=None,
 ) -> dict:
     if isinstance(event, ApiAction):
@@ -121,19 +122,24 @@ def standardized_event_to_swe_message(
             return {"from": "function_call", "value": f"{thought.strip()}{submit_function_call}"}
         return {"from": "gpt", "value": f"{thought}{event.content}"}
 
-    elif isinstance(event, TextObservation):
+    elif isinstance(event, (TextObservation, JsonObservation)):
         if event.source == "user":
-            event.source = "human"
+            source = "human"
 
         elif event.source == "agent":
-            event.source = "gpt"
+            source = "gpt"
 
         elif event.source == "environment":
-            event.source = "observation"
+            source = "observation"
 
         else:
             raise ValueError(f"Wrong event source: {event.source}")
-        return {"from": event.source, "value": event.content}
+        value = (
+            json.dumps(event.content, ensure_ascii=False)
+            if isinstance(event, JsonObservation)
+            else event.content
+        )
+        return {"from": source, "value": value}
 
     else:
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")

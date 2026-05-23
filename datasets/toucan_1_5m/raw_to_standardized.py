@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Union
 from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
+from schema.observation.json import JsonObservation
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
@@ -184,6 +185,16 @@ def parse_available_tools(available_tools: Union[str, List[Dict[str, Any]]]) -> 
     return [convert_function_name(tool["function"]["name"]) for tool in tools]
 
 
+def environment_observation(content: str) -> JsonObservation | TextObservation:
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError:
+        return TextObservation(content=content, source="environment")
+    if isinstance(parsed, dict):
+        return JsonObservation(content=parsed, source="environment")
+    return TextObservation(content=content, source="environment")
+
+
 def convert_message(message: dict, message_id: str) -> List[Union[Action, Observation]]:
     """Convert a single message to standardized format."""
     role = message.get("role", "")
@@ -244,15 +255,11 @@ def convert_message(message: dict, message_id: str) -> List[Union[Action, Observ
 
     elif role == "function":
         # Function results are observations from the environment
-        # Convert the function name to Python identifier format
-        raw_name = message.get("name", "function_result")
-        converted_name = convert_function_name(raw_name)
-        result.append(TextObservation(content=content, source="environment"))
+        result.append(environment_observation(content))
 
     elif role == "tool_response":
         # Function results are observations from the environment
-        # Convert the function name to Python identifier format
-        result.append(TextObservation(content=content, source="environment"))
+        result.append(environment_observation(content))
 
     return result
 
@@ -300,7 +307,7 @@ def interleave_api_and_text_observation(
 ) -> List[Union[Action, Observation]]:
     """
     Reorder consecutive blocks of ApiAction followed by
-    TextObservation into interleaved pairs.
+    observations into interleaved pairs.
 
     Example:
     [A1, A2, A3, T1, T2, T3]->[A1, T1, A2, T2, A3, T3]
@@ -317,24 +324,24 @@ def interleave_api_and_text_observation(
                 i += 1
             api_end = i
 
-            # Now check if immediately followed by TextObservation block
-            text_start = i
-            while i < n and isinstance(content[i], TextObservation):
+            # Now check if immediately followed by an observation block
+            observation_start = i
+            while i < n and isinstance(content[i], (TextObservation, JsonObservation)):
                 i += 1
-            text_end = i
+            observation_end = i
 
             api_block = content[api_start:api_end]
-            text_block = content[text_start:text_end]
+            observation_block = content[observation_start:observation_end]
 
             # Only interleave if both blocks exist and lengths match
-            if api_block and text_block and len(api_block) == len(text_block):
-                for api, text in zip(api_block, text_block):
+            if api_block and observation_block and len(api_block) == len(observation_block):
+                for api, observation in zip(api_block, observation_block):
                     new_content.append(api)
-                    new_content.append(text)
+                    new_content.append(observation)
             else:
                 # Fallback: keep original order
                 new_content.extend(api_block)
-                new_content.extend(text_block)
+                new_content.extend(observation_block)
 
         else:
             new_content.append(content[i])

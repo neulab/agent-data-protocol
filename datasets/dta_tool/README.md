@@ -20,7 +20,7 @@ The dataset is transformed from ToolBench and each trajectory contains a user qu
 - Raw `user` messages become `TextObservation` entries with `source="user"`.
 - Raw `assistant` messages with `Thought:` and `Function Call:` become one or more `ApiAction` entries, preserving parallel tool calls as consecutive actions with the same thought.
 - Raw `assistant` `Finish` calls become `MessageAction` entries containing `<finish> ... </finish>` so the shared OpenHands SFT converter emits the standard `finish` tool call.
-- Raw `function` messages become `TextObservation` entries with `source="environment"`.
+- Raw `function` messages that parse as dictionary payloads become `JsonObservation` entries with `source="environment"`; unparseable payloads fall back to `TextObservation`.
 
 ## Citation
 
