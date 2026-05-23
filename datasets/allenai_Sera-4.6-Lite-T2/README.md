@@ -35,6 +35,7 @@ The raw dataset contains these top-level fields:
 - System prompts are omitted from standardized content and preserved in `details`.
 - User messages become `TextObservation(source="user")`.
 - Tool observations become `TextObservation(source="environment")` with a leading `OBSERVATION:` prefix removed when present.
+- Assistant `<think>...</think>` blocks are removed from visible action text and preserved in action `reasoning_content`.
 - `bash` tool calls become `CodeAction(language="bash")`.
 - `submit` tool calls are represented as bash `CodeAction` with content `submit` because the raw environment describes it as the submit command.
 - `str_replace_editor` tool calls become `ApiAction(function="str_replace_editor")`.

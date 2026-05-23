@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 from typing import Any
 
@@ -27,10 +28,20 @@ def content_to_text(content: Any) -> str:
     return str(content)
 
 
+THINK_BLOCK_RE = re.compile(r"<think>(.*?)</think>", re.DOTALL)
+
+
 def strip_observation_prefix(text: str) -> str:
     if text.startswith("OBSERVATION:\n"):
         return text[len("OBSERVATION:\n") :]
     return text
+
+
+def split_think_blocks(text: str) -> tuple[str, str | None]:
+    think_blocks = [match.strip() for match in THINK_BLOCK_RE.findall(text)]
+    visible_text = THINK_BLOCK_RE.sub("", text).strip()
+    reasoning_content = "\n\n".join(block for block in think_blocks if block)
+    return visible_text, reasoning_content or None
 
 
 def parse_messages(data: SchemaRaw) -> list[Message]:
@@ -48,23 +59,31 @@ def tool_arguments(raw_arguments: str) -> dict:
     return parsed if isinstance(parsed, dict) else {"value": parsed}
 
 
-def convert_assistant_tool_call(function_name: str, kwargs: dict, description: str):
+def convert_assistant_tool_call(
+    function_name: str,
+    kwargs: dict,
+    description: str,
+    reasoning_content: str | None,
+):
     if function_name == "bash":
         return CodeAction(
             language="bash",
             content=kwargs.get("command", ""),
             description=description,
+            reasoning_content=reasoning_content,
         )
     if function_name == "submit":
         return CodeAction(
             language="bash",
             content="submit",
             description=description,
+            reasoning_content=reasoning_content,
         )
     return ApiAction(
         function=function_name,
         kwargs=kwargs,
         description=description,
+        reasoning_content=reasoning_content,
     )
 
 
@@ -94,6 +113,7 @@ def process_data(data: SchemaRaw) -> Trajectory:
             print(f"Unknown role: {role}", file=sys.stderr)
             continue
 
+        visible_text, reasoning_content = split_think_blocks(message_text)
         if message.tool_calls:
             for tool_call in message.tool_calls:
                 if tool_call.type != "function":
@@ -103,11 +123,17 @@ def process_data(data: SchemaRaw) -> Trajectory:
                     convert_assistant_tool_call(
                         tool_call.function.name,
                         tool_arguments(tool_call.function.arguments),
-                        message_text,
+                        visible_text,
+                        reasoning_content,
                     )
                 )
-        elif message_text:
-            content.append(MessageAction(content=message_text))
+        elif visible_text or reasoning_content:
+            content.append(
+                MessageAction(
+                    content=visible_text,
+                    reasoning_content=reasoning_content,
+                )
+            )
 
     return Trajectory(
         id=data.instance_id,
