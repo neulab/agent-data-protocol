@@ -87,7 +87,7 @@ The repository currently supports datasets from various domains (we welcome more
 - **Coding**: `code_feedback`, `codeactinstruct`, `nemotron_terminal_corpus`
 - **Software Engineering**: `swe-smith`, `swe-gym_openhands_sampled_trajectories`, `nebius_SWE-agent-trajectories`, `logicstar_swe-star`, `mini-coder`
 - **Web Browsing**: `mind2web`, `nnetnav-live`, `nnetnav-wa`, `go-browse-wa`, `synatra`
-- **Multi-domain**: `agenttuning_*`, `orca_agentinstruct`, `openhands`, `toucan_1_5m`
+- **Multi-domain**: `agenttuning_*`, `CharlieDreemur_OpenManus-RL`, `orca_agentinstruct`, `openhands`, `toucan_1_5m`
 
 ### Supported Agents
 
