@@ -8,29 +8,27 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
+THINK_BLOCK_RE = re.compile(r"<think>\s*(.*?)\s*</think>", re.DOTALL)
 
-def extract_thinking_and_json(content: str) -> tuple[str | None, dict | None]:
-    """Extract thinking block and JSON from assistant response."""
-    thinking = None
+
+def extract_thinking_content_and_json(content: str) -> tuple[str | None, str, dict | None]:
+    """Extract thinking block, visible content, and JSON from assistant response."""
+    thinking_blocks = [match.strip() for match in THINK_BLOCK_RE.findall(content)]
+    thinking = "\n\n".join(block for block in thinking_blocks if block) or None
+    visible_content = THINK_BLOCK_RE.sub("", content).strip()
     json_data = None
 
-    # Extract <think>...</think> block
-    think_match = re.search(r"<think>(.*?)</think>", content, re.DOTALL)
-    if think_match:
-        thinking = think_match.group(1).strip()
-
-    # Extract JSON object from content
-    # Find the first { and last } to extract JSON
-    json_start = content.find("{")
-    json_end = content.rfind("}")
+    # Extract JSON object from visible content.
+    json_start = visible_content.find("{")
+    json_end = visible_content.rfind("}")
     if json_start != -1 and json_end != -1 and json_end > json_start:
-        json_str = content[json_start : json_end + 1]
+        json_str = visible_content[json_start : json_end + 1]
         try:
             json_data = json.loads(json_str)
         except json.JSONDecodeError:
             pass
 
-    return thinking, json_data
+    return thinking, visible_content, json_data
 
 
 def _split_observation_chunks(obs_text: str) -> List[str]:
@@ -74,7 +72,7 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
 
     elif role == "assistant":
         result = []
-        thinking, json_data = extract_thinking_and_json(content)
+        thinking, visible_content, json_data = extract_thinking_content_and_json(content)
 
         if json_data:
             # Extract analysis as brief description
@@ -122,16 +120,15 @@ def convert_step(step: dict, is_first_user: bool = False) -> list:
                     )
                 )
         else:
-            # No JSON found, treat as plain message
-            # Check if there's a think block in the content
+            # No JSON found, treat visible content as a plain message.
             result.append(
-                MessageAction(content=content, reasoning_content=thinking, description=None)
+                MessageAction(content=visible_content, reasoning_content=thinking, description=None)
             )
 
         if not result:
-            # Return a message action if no commands were extracted
+            # Return a message action if no commands were extracted.
             result.append(
-                MessageAction(content=content, reasoning_content=thinking, description=None)
+                MessageAction(content=visible_content, reasoning_content=thinking, description=None)
             )
 
         return result
