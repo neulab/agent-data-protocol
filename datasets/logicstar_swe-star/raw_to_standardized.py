@@ -113,7 +113,9 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
         isinstance(event, MessageAction) and "<finish>" in event.content for event in content
     )
     if data.resolved and not has_finish:
-        content.append(TextObservation(content="Task completed successfully.", source="user"))
+        content.append(
+            TextObservation(content="Task completed successfully.", source="environment")
+        )
         content.append(MessageAction(content="<finish> Task completed successfully. </finish>"))
 
     return Trajectory(

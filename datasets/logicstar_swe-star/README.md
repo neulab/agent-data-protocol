@@ -22,6 +22,7 @@
 - Assistant XML calls to `execute_bash` are converted to `CodeAction(language="bash")`.
 - Assistant XML calls to `str_replace_editor` and `think` are converted to `ApiAction`.
 - Assistant XML calls to `finish` or `submit` are converted to terminal `MessageAction` content using the ADP `<finish> ... </finish>` convention.
+- Some resolved source rows end without an explicit `finish` or `submit` call. For those rows, standardization appends an environment success observation and a terminal finish message so the SFT trajectory has an explicit completion state.
 - Only resolved trajectories are emitted by `extract_raw.py` and `raw_to_standardized.py` for supervised fine-tuning samples.
 
 ## Sample Generation
