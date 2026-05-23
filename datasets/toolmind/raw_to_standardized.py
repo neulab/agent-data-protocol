@@ -4,7 +4,7 @@ import re
 import sys
 from typing import Any
 
-from schema_raw import SchemaRaw
+from schema_raw import Message, SchemaRaw
 
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
