@@ -19,6 +19,7 @@
 - System prompts are skipped from the ADP content and retained implicitly by the OpenHands SFT system prompt.
 - The first user turn is converted to `TextObservation(source="user")`.
 - Subsequent `EXECUTION RESULT` user turns are converted to `TextObservation(source="environment")` with the execution-result prefix removed, allowing the OpenHands SFT converter to reconstruct it from the preceding action.
+- `Submitted:` user turns are omitted from conversation content because the final submitted patch is already retained in `Trajectory.details["generated_patch"]`.
 - Assistant XML calls to `execute_bash` are converted to `CodeAction(language="bash")`.
 - Assistant XML calls to `str_replace_editor` and `think` are converted to `ApiAction`.
 - Assistant XML calls to `finish` or `submit` are converted to terminal `MessageAction` content using the ADP `<finish> ... </finish>` convention.

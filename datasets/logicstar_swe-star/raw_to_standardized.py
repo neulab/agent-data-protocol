@@ -93,6 +93,7 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
                 content.append(TextObservation(content=message_content, source="user"))
                 seen_user_task = True
             elif message_content.startswith("Submitted:"):
+                # The final patch submission is already preserved in details["generated_patch"].
                 continue
             else:
                 content.append(
@@ -113,6 +114,7 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
         isinstance(event, MessageAction) and "<finish>" in event.content for event in content
     )
     if data.resolved and not has_finish:
+        # Resolved rows missing an explicit finish/submit still need a terminal SFT action.
         content.append(
             TextObservation(content="Task completed successfully.", source="environment")
         )
