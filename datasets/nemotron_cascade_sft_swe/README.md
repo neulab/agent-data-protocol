@@ -32,7 +32,7 @@ Each raw record contains a short two-turn conversation: a user prompt and a Deep
 
 - Raw `messages` with `role == "user"` become `TextObservation(source="user")`.
 - Raw `messages` with `role == "assistant"` become `MessageAction` events.
-- Assistant `<think>...</think>` content is preserved in the message text and also copied into `reasoning_content` when present.
+- Assistant `<think>...</think>` blocks are removed from visible message text and stored in `reasoning_content` when present.
 - Dataset metadata (`category`, `source`, `generator`, and `thinking`) is stored in trajectory `details`.
 
 Code blocks in assistant answers are treated as natural language response content rather than `CodeAction` events because the dataset is prompt/response SFT data, not an executed agent trajectory with shell observations.

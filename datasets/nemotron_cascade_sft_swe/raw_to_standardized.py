@@ -11,11 +11,11 @@ from schema.trajectory import Trajectory
 THINK_BLOCK_RE = re.compile(r"<think>\s*(.*?)\s*</think>", re.DOTALL)
 
 
-def extract_reasoning(content: str) -> str | None:
-    match = THINK_BLOCK_RE.search(content)
-    if not match:
-        return None
-    return match.group(1).strip()
+def split_think_blocks(content: str) -> tuple[str, str | None]:
+    think_blocks = [match.strip() for match in THINK_BLOCK_RE.findall(content)]
+    visible_content = THINK_BLOCK_RE.sub("", content).strip()
+    reasoning_content = "\n\n".join(block for block in think_blocks if block)
+    return visible_content, reasoning_content or None
 
 
 def convert_message(role: str, content: str):
@@ -24,7 +24,8 @@ def convert_message(role: str, content: str):
     if role == "user":
         return TextObservation(content=content, source="user")
     if role == "assistant":
-        return MessageAction(content=content, reasoning_content=extract_reasoning(content))
+        visible_content, reasoning_content = split_think_blocks(content)
+        return MessageAction(content=visible_content, reasoning_content=reasoning_content)
     raise ValueError(f"Unsupported message role: {role}")
 
 
