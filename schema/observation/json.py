@@ -8,7 +8,7 @@ from schema.observation.observation import Observation
 
 class JsonObservation(Observation):
     class_: str = Field("json_observation", description="The class of the observation")
-    content: dict[str, Any] = Field(..., description="A JSON-serializable observation")
+    content: dict[str, Any] | list[Any] = Field(..., description="A JSON-serializable observation")
     name: str | None = Field(None, description="An optional name for the participant")
     source: Literal["user", "agent", "environment"] = Field(
         ..., description="The source of the observation."

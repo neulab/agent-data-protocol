@@ -111,11 +111,11 @@ Represents structured JSON information received by the agent.
 
 **Fields**:
 - `class_` (str): Always "json_observation"
-- `content` (dict): JSON-serializable dictionary payload
+- `content` (dict or list): JSON-serializable payload
 - `name` (str, optional): Name of the participant/source
 - `source` (Literal): Origin of the JSON payload - "user", "agent", or "environment"
 
-**Use Case**: Tool results and API responses that are naturally structured as JSON objects and should not be string-encoded.
+**Use Case**: Tool results and API responses that are naturally structured as JSON objects or arrays and should not be string-encoded.
 
 #### WebObservation
 

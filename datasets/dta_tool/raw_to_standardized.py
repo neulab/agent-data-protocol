@@ -64,15 +64,34 @@ def extract_api_specs(system_prompt: str) -> list[dict[str, Any]]:
     return specs if isinstance(specs, list) else []
 
 
-def convert_function_observation(value: str) -> JsonObservation | TextObservation:
+def parse_structured_payload(value: str) -> dict[str, Any] | list[Any] | None:
     for parser in (json.loads, ast.literal_eval):
         try:
             parsed = parser(value)
         except (json.JSONDecodeError, SyntaxError, ValueError):
             continue
-        if isinstance(parsed, dict):
-            return JsonObservation(content=parsed, source="environment")
-    return TextObservation(content=value, source="environment")
+        if isinstance(parsed, (dict, list)):
+            return parsed
+    return None
+
+
+def convert_function_observation(value: str) -> JsonObservation | TextObservation:
+    parsed = parse_structured_payload(value)
+    if not isinstance(parsed, dict):
+        return TextObservation(content=value, source="environment")
+
+    result = parsed.get("result")
+    if isinstance(result, dict) and "response" in result:
+        response = result["response"]
+        if isinstance(response, str):
+            response_payload = parse_structured_payload(response.strip())
+            if response_payload is not None:
+                return JsonObservation(content=response_payload, source="environment")
+            return TextObservation(content=response, source="environment")
+        if isinstance(response, (dict, list)):
+            return JsonObservation(content=response, source="environment")
+
+    return JsonObservation(content=parsed, source="environment")
 
 
 def valid_identifier(name: str) -> bool:
