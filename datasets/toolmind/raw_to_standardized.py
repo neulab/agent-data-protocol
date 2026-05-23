@@ -4,7 +4,7 @@ import re
 import sys
 from typing import Any
 
-from schema_raw import Message, SchemaRaw
+from schema_raw import SchemaRaw
 
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
@@ -46,16 +46,6 @@ def safe_identifier(name: str) -> str | None:
     if not name or not re.fullmatch(r"[A-Za-z_]\w*", name) or keyword.iskeyword(name):
         return None
     return name
-
-
-def collect_called_arguments(messages: list[Message]) -> dict[str, set[str]]:
-    called_args: dict[str, set[str]] = {}
-    for message in messages:
-        for tool_call in message.tool_calls or []:
-            function_name = tool_call.function.name
-            args = normalize_arguments(tool_call.function.arguments)
-            called_args.setdefault(function_name, set()).update(args)
-    return called_args
 
 
 def build_available_apis(data: SchemaRaw) -> list[str]:
