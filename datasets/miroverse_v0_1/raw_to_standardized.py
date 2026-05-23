@@ -113,7 +113,12 @@ def _convert_message(message, previous_was_tool_call: bool, tools_by_name):
 
 
 def _mark_final_answer(content):
-    """Wrap the final assistant message as an ADP finish action."""
+    """Wrap a plain final assistant answer with finish tags.
+
+    MiroVerse stores terminal answers as ordinary assistant messages rather than
+    explicit finish actions, so the converter marks the final message for ADP
+    and OpenHands SFT compatibility.
+    """
     if not content:
         return
     last = content[-1]

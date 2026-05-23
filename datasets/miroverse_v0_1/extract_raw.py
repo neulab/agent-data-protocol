@@ -35,14 +35,6 @@ TOOL_RE = re.compile(
     r"### Tool name:\s*(?P<tool>.*?)\s*\n(?P<body>.*?)(?=\n### Tool name:|\Z)",
     re.DOTALL,
 )
-TYPE_MAP = {
-    "string": "str",
-    "number": "float",
-    "integer": "int",
-    "boolean": "bool",
-    "object": "dict",
-    "array": "list",
-}
 
 
 def _selected_configs():
@@ -206,55 +198,6 @@ def extract_available_tools_from_messages(messages: list[Any]) -> list[dict[str,
         if _message_value(message, "role") == "system"
     )
     return extract_available_tools_from_system_prompt(system_prompt)
-
-
-def _json_type_to_python(schema: dict[str, Any]) -> str:
-    schema_type = schema.get("type")
-    if isinstance(schema_type, list):
-        schema_type = next((item for item in schema_type if item != "null"), "Any")
-    if not schema_type and "anyOf" in schema:
-        candidates = [item.get("type") for item in schema["anyOf"] if isinstance(item, dict)]
-        schema_type = next((item for item in candidates if item != "null"), "Any")
-    if "enum" in schema and schema_type == "string":
-        return "str"
-    return TYPE_MAP.get(schema_type, "Any")
-
-
-def generate_function_wrapper(tool: dict[str, Any]) -> str:
-    input_schema = tool.get("input_schema") or {}
-    properties = input_schema.get("properties", {})
-    required = set(input_schema.get("required", []))
-    argument_map = tool.get("argument_name_map") or _argument_name_map(input_schema)
-
-    arg_defs = []
-    doc_lines = []
-    for raw_name, schema in properties.items():
-        param_name = argument_map.get(raw_name, sanitize_identifier(raw_name))
-        py_type = _json_type_to_python(schema)
-        if raw_name in required:
-            arg_defs.append(f"{param_name}: {py_type}")
-        else:
-            arg_defs.append(f"{param_name}: {py_type} = {schema.get('default')!r}")
-
-        param_desc = schema.get("description") or schema.get("title") or ""
-        if raw_name != param_name:
-            param_desc = f"Original parameter `{raw_name}`. {param_desc}".strip()
-        doc_lines.append(f"        {param_name}: {param_desc}".rstrip())
-
-    description = tool.get("description") or ""
-    doc_parts = [f"[{tool['server_name']}/{tool['tool_name']}] {description}".strip()]
-    if doc_lines:
-        doc_parts.append("Args:\n" + "\n".join(doc_lines))
-    docstring = "\n\n".join(part for part in doc_parts if part).strip()
-    if not docstring:
-        docstring = f"Tool {tool['server_name']}/{tool['tool_name']}."
-
-    signature = ", ".join(arg_defs)
-    return f"def {tool['function_name']}({signature}) -> dict:\n    {docstring!r}\n    return {{}}"
-
-
-def generate_available_apis(tools: list[dict[str, Any]]) -> str:
-    return "\n\n\n".join(generate_function_wrapper(tool) for tool in tools)
 
 
 def iter_config_rows(config_name, path):
