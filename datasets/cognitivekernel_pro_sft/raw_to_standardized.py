@@ -21,6 +21,7 @@ THOUGHT_CODE_RE = re.compile(
 def convert_assistant_message(content: str) -> CodeAction | MessageAction:
     match = THOUGHT_CODE_RE.match(content)
     if not match:
+        # Released samples follow Thought/Code; this preserves unexpected rows.
         return MessageAction(content=content)
 
     return CodeAction(
