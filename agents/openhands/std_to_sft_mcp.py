@@ -116,7 +116,12 @@ PREV_BID = None
 
 def standardized_event_to_openhands_message(
     id,
-    event: ApiAction | CodeAction | MessageAction | TextObservation | JsonObservation | WebObservation,
+    event: ApiAction
+    | CodeAction
+    | MessageAction
+    | TextObservation
+    | JsonObservation
+    | WebObservation,
     previous_web_actions: list,
     is_web: bool,
     chunk: str,

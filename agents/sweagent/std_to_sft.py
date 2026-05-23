@@ -71,7 +71,12 @@ def verify_args(required_args, optional_args, input_args):
 
 def standardized_event_to_swe_message(
     id,
-    event: ApiAction | CodeAction | MessageAction | TextObservation | JsonObservation | WebObservation,
+    event: ApiAction
+    | CodeAction
+    | MessageAction
+    | TextObservation
+    | JsonObservation
+    | WebObservation,
     api_sigs=None,
 ) -> dict:
     if isinstance(event, ApiAction):
