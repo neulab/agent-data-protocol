@@ -199,9 +199,12 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
         key=lambda item: item.turn_number if item.turn_number is not None else float("inf"),
     ):
         events = convert_turn(turn, seen_user_prompt)
-        if events and any(
+        has_user_prompt = any(
             isinstance(event, TextObservation) and event.source == "user" for event in events
-        ):
+        )
+        if not seen_user_prompt and not has_user_prompt:
+            continue
+        if has_user_prompt:
             seen_user_prompt = True
         content.extend(events)
 

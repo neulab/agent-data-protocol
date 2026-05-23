@@ -114,6 +114,13 @@ def test_swe_chat_conversation_and_editor_paths():
                 "content": "leading metadata should not become the first event",
             },
             {
+                "turn_number": 0,
+                "role": "assistant",
+                "turn_type": "assistant_response",
+                "is_conversational": True,
+                "content": "assistant preamble should also be skipped",
+            },
+            {
                 "turn_number": 1,
                 "role": "user",
                 "turn_type": "user_prompt",
