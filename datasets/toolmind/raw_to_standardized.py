@@ -42,10 +42,20 @@ def tool_function_definition(tool_function: dict[str, Any]) -> dict[str, Any]:
     return tool_function
 
 
+THINK_BLOCK_RE = re.compile(r"<think\b[^>]*>(.*?)</think>", re.DOTALL | re.IGNORECASE)
+
+
 def safe_identifier(name: str) -> str | None:
     if not name or not re.fullmatch(r"[A-Za-z_]\w*", name) or keyword.iskeyword(name):
         return None
     return name
+
+
+def split_think_blocks(content: str) -> tuple[str, str | None]:
+    reasoning_parts = [part.strip() for part in THINK_BLOCK_RE.findall(content) if part.strip()]
+    visible_content = THINK_BLOCK_RE.sub("", content).strip()
+    reasoning_content = "\n\n".join(reasoning_parts) or None
+    return visible_content, reasoning_content
 
 
 def build_available_apis(data: SchemaRaw) -> list[str]:
@@ -81,16 +91,18 @@ def message_to_events(message: Message):
     if role == "tool":
         return [TextObservation(content=content, source="environment", name=message.name)]
     if role == "assistant":
+        visible_content, reasoning_content = split_think_blocks(content)
         if message.tool_calls:
             return [
                 ApiAction(
                     function=tool_call.function.name,
                     kwargs=format_kwargs(tool_call.function.arguments),
-                    description=content or None,
+                    description=visible_content or None,
+                    reasoning_content=reasoning_content,
                 )
                 for tool_call in message.tool_calls
             ]
-        return [MessageAction(content=content)]
+        return [MessageAction(content=visible_content, reasoning_content=reasoning_content)]
 
     print(f"Unknown role in {role=}", file=sys.stderr)
     return []

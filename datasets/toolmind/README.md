@@ -14,8 +14,8 @@ Raw ToolMind rows contain a `conversations` array in OpenAI-style chat format pl
 
 - `user` messages become `TextObservation(source="user")`.
 - `system` messages are preserved as user-visible `TextObservation` values prefixed with `System instructions:` because the standardized schema does not define a `system` observation source.
-- Assistant messages without tool calls become `MessageAction`.
-- Assistant `tool_calls` become `ApiAction`; the assistant text is stored as the action description so reasoning traces such as `<think>...</think>` are preserved.
+- Assistant messages without tool calls become `MessageAction`; raw `<think>...</think>` blocks are moved to `reasoning_content` without the tags.
+- Assistant `tool_calls` become `ApiAction`; non-thinking assistant text is stored as the action description, while raw `<think>...</think>` blocks are moved to `reasoning_content` without the tags.
 - `tool` messages become `TextObservation(source="environment")`.
 - Raw tool definitions are advertised on the top-level `Trajectory.available_apis` field as a list of identifiers. The dataset's `api.py` carries the matching stubs, and the OpenHands SFT converter uses `include_apis=trajectory.available_apis` to expose only the row-specific API signatures.
 
