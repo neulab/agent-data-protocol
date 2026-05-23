@@ -1,3 +1,6 @@
+from typing import Any
+
+
 def think(thought: str) -> None:
     """Log reasoning without changing the environment.
 
@@ -12,11 +15,11 @@ def think(thought: str) -> None:
 def str_replace_editor(
     command: str,
     path: str,
-    file_text: str = None,
-    old_str: str = None,
-    new_str: str = None,
-    insert_line: int = None,
-    view_range: list = None,
+    file_text: str | None = None,
+    old_str: str | None = None,
+    new_str: str | None = None,
+    insert_line: int | None = None,
+    view_range: list[int] | None = None,
 ) -> None:
     """View, create, and edit files.
 
@@ -34,7 +37,7 @@ def str_replace_editor(
     pass
 
 
-def task_tracker(command: str, task_list: list) -> None:
+def task_tracker(command: str, task_list: list[dict[str, Any]]) -> None:
     """Track task progress.
 
     Args:

@@ -11,6 +11,9 @@ from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
 FINISH_MESSAGE = "<finish> I have successfully completed the task. </finish>"
+# Resolved rows occasionally omit an explicit finish tool call. In that case,
+# add a terminal environment signal plus finish action so SFT conversion has a
+# deterministic completion state.
 SUCCESS_OBSERVATION = "Task completed successfully."
 
 
@@ -100,7 +103,7 @@ def process_data(data: SchemaRaw):
         and "<finish>" in content[-1].content
         and "</finish>" in content[-1].content
     ):
-        content.append(TextObservation(content=SUCCESS_OBSERVATION, source="user"))
+        content.append(TextObservation(content=SUCCESS_OBSERVATION, source="environment"))
         content.append(MessageAction(content=FINISH_MESSAGE))
 
     return Trajectory(
