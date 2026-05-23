@@ -72,9 +72,7 @@ def function_name(node: ast.AST) -> str | None:
     return None
 
 
-def literal_or_source(
-    node: ast.AST, variables: dict[str, tuple[Any, bool]]
-) -> tuple[Any, bool]:
+def literal_or_source(node: ast.AST, variables: dict[str, tuple[Any, bool]]) -> tuple[Any, bool]:
     if isinstance(node, ast.Name) and node.id in variables:
         return variables[node.id]
     try:
@@ -175,8 +173,7 @@ def process_record(record: SchemaRaw) -> Trajectory:
 
     content = [TextObservation(content="\n\n".join(user_messages), source="user")]
     content.extend(
-        convert_assistant_message(message, record.source_file)
-        for message in assistant_messages
+        convert_assistant_message(message, record.source_file) for message in assistant_messages
     )
 
     return Trajectory(
