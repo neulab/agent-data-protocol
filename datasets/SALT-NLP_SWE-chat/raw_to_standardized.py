@@ -195,7 +195,8 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
     seen_user_prompt = False
 
     for turn in sorted(
-        data.turns, key=lambda item: item.turn_number if item.turn_number is not None else 0
+        data.turns,
+        key=lambda item: item.turn_number if item.turn_number is not None else float("inf"),
     ):
         events = convert_turn(turn, seen_user_prompt)
         if events and any(

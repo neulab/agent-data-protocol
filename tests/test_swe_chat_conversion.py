@@ -4,6 +4,7 @@ from pathlib import Path
 
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
+from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 
 DATASET_DIR = Path(__file__).parent.parent / "datasets" / "SALT-NLP_SWE-chat"
@@ -99,3 +100,78 @@ def test_swe_chat_tool_rows_convert_to_adp_actions():
     assert trajectory.content[5].kwargs["tool_name"] == "WebSearch"
     assert trajectory.content[5].kwargs["tool_input"] == {"query": "pytest assertion introspection"}
     assert "content" not in trajectory.content[5].kwargs
+
+
+def test_swe_chat_conversation_and_editor_paths():
+    converter = load_converter_module()
+    raw = converter.SchemaRaw(
+        session_id="editor-session",
+        turns=[
+            {
+                "turn_number": 0,
+                "role": "metadata",
+                "turn_type": "session_context",
+                "content": "leading metadata should not become the first event",
+            },
+            {
+                "turn_number": 1,
+                "role": "user",
+                "turn_type": "user_prompt",
+                "is_conversational": True,
+                "content": "Update the implementation.",
+            },
+            {
+                "turn_number": 2,
+                "role": "assistant",
+                "turn_type": "assistant_response",
+                "is_conversational": True,
+                "content": "I'll patch the files now.",
+            },
+            {
+                "turn_number": 3,
+                "role": "tool_use",
+                "turn_type": "tool_use",
+                "tool_name": "Write",
+                "tool_input_json": '{"file_path": "/workspace/new.py", "content": "print(1)"}',
+            },
+            {
+                "turn_number": 4,
+                "role": "tool_use",
+                "turn_type": "tool_use",
+                "tool_name": "Edit",
+                "tool_input_json": (
+                    '{"file_path": "/workspace/new.py", '
+                    '"old_string": "print(1)", "new_string": "print(2)"}'
+                ),
+            },
+            {
+                "role": "tool_result",
+                "turn_type": "tool_result",
+                "content": "unnumbered result is placed last",
+            },
+        ],
+    )
+
+    trajectory = converter.process_data(raw)
+
+    assert [type(event) for event in trajectory.content] == [
+        TextObservation,
+        MessageAction,
+        ApiAction,
+        ApiAction,
+        TextObservation,
+    ]
+    assert trajectory.content[0].content == "Update the implementation."
+    assert trajectory.content[1].content == "I'll patch the files now."
+    assert trajectory.content[2].kwargs == {
+        "command": "create",
+        "path": "/workspace/new.py",
+        "file_text": "print(1)",
+    }
+    assert trajectory.content[3].kwargs == {
+        "command": "str_replace",
+        "path": "/workspace/new.py",
+        "old_str": "print(1)",
+        "new_str": "print(2)",
+    }
+    assert trajectory.content[4].content == "unnumbered result is placed last"
