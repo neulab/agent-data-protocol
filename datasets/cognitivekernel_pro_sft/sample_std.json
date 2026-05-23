@@ -13,11 +13,20 @@
       {
         "reasoning_content": null,
         "reward": null,
-        "class_": "code_action",
-        "language": "python",
-        "content": "search_query = \"Jim Molinari total wins as head coach at Northern Illinois\"\nresult = simple_web_search(search_query)\nprint(result)",
+        "class_": "api_action",
+        "function": "simple_web_search",
+        "kwargs": {
+          "query": "\"Jim Molinari total wins as head coach at Northern Illinois\""
+        },
         "description": "Since no previous steps have been taken, I will start by searching for Jim Molinari\u2019s total wins as head coach at Northern Illinois to address the first sub-task."
       }
+    ],
+    "available_apis": [
+      "web_agent",
+      "file_agent",
+      "stop",
+      "ask_llm",
+      "simple_web_search"
     ],
     "details": {
       "source": "CognitiveKernel/CognitiveKernel-Pro-SFT",
@@ -39,11 +48,21 @@
       {
         "reasoning_content": null,
         "reward": null,
-        "class_": "code_action",
-        "language": "python",
-        "content": "print(stop(\n    output=\"600\",\n    log=\"Task completed. The number of training documents (600) was found in Table 2 on page 4 of P19-1598.pdf, which provides explicit statistics for the Linked WikiText-2 Corpus.\"\n))",
+        "class_": "api_action",
+        "function": "stop",
+        "kwargs": {
+          "output": "\"600\"",
+          "log": "\"Task completed. The number of training documents (600) was found in Table 2 on page 4 of P19-1598.pdf, which provides explicit statistics for the Linked WikiText-2 Corpus.\""
+        },
         "description": "The previous step involved analyzing the provided PDF, where Table 2 on page 4 explicitly states that there are 600 documents in the training set of the Linked WikiText-2 Corpus. No new information is needed, and the answer is clear and well-supported by the source. I will finalize the task with this answer."
       }
+    ],
+    "available_apis": [
+      "web_agent",
+      "file_agent",
+      "stop",
+      "ask_llm",
+      "simple_web_search"
     ],
     "details": {
       "source": "CognitiveKernel/CognitiveKernel-Pro-SFT",
@@ -65,11 +84,20 @@
       {
         "reasoning_content": null,
         "reward": null,
-        "class_": "code_action",
-        "language": "python",
-        "content": "result=load_file(\"/root/cognitive_kernel_GAIA/tablebench/csv_files/tablebench_1049.csv\")\nprint(result)",
+        "class_": "api_action",
+        "function": "load_file",
+        "kwargs": {
+          "file_name": "\"/root/cognitive_kernel_GAIA/tablebench/csv_files/tablebench_1049.csv\""
+        },
         "description": "The file /root/cognitive_kernel_GAIA/tablebench/csv_files/tablebench_1049.csv has not been loaded yet. To proceed, I need to load the file before reading its contents to identify the required rows."
       }
+    ],
+    "available_apis": [
+      "load_file",
+      "read_text",
+      "read_screenshot",
+      "search",
+      "stop"
     ],
     "details": {
       "source": "CognitiveKernel/CognitiveKernel-Pro-SFT",
@@ -91,11 +119,21 @@
       {
         "reasoning_content": null,
         "reward": null,
-        "class_": "code_action",
-        "language": "python",
-        "content": "result=stop(answer=\"Final Answer: India\", summary=\"Loaded and read the CSV file, extracted all country and population values, and identified India as having the highest population.\")\nprint(result)",
+        "class_": "api_action",
+        "function": "stop",
+        "kwargs": {
+          "answer": "\"Final Answer: India\"",
+          "summary": "\"Loaded and read the CSV file, extracted all country and population values, and identified India as having the highest population.\""
+        },
         "description": "After reading the entire CSV file, I confirmed that India has the highest population value among the listed countries. I will now output the answer in the required format."
       }
+    ],
+    "available_apis": [
+      "load_file",
+      "read_text",
+      "read_screenshot",
+      "search",
+      "stop"
     ],
     "details": {
       "source": "CognitiveKernel/CognitiveKernel-Pro-SFT",
@@ -117,11 +155,20 @@
       {
         "reasoning_content": null,
         "reward": null,
-        "class_": "code_action",
-        "language": "python",
-        "content": "print(web_agent(task=\"Visit https://2024.aclweb.org/ and find the registration deadline for the print order service, including the exact date and time. Provide the answer in the format: 'Deadline: YYYY-MM-DD HH:MM (timezone)'. If not found, summarize any related information or instructions about print order service deadlines.\"))",
+        "class_": "api_action",
+        "function": "web_agent",
+        "kwargs": {
+          "task": "\"Visit https://2024.aclweb.org/ and find the registration deadline for the print order service, including the exact date and time. Provide the answer in the format: 'Deadline: YYYY-MM-DD HH:MM (timezone)'. If not found, summarize any related information or instructions about print order service deadlines.\""
+        },
         "description": "Since no previous steps have been taken, I will use web_agent to browse https://2024.aclweb.org/ and search for the print order service registration deadline, including the exact date and time, as required by the task."
       }
+    ],
+    "available_apis": [
+      "web_agent",
+      "file_agent",
+      "stop",
+      "ask_llm",
+      "simple_web_search"
     ],
     "details": {
       "source": "CognitiveKernel/CognitiveKernel-Pro-SFT",
