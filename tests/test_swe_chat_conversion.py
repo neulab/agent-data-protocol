@@ -97,3 +97,5 @@ def test_swe_chat_tool_rows_convert_to_adp_actions():
     assert isinstance(trajectory.content[5], ApiAction)
     assert trajectory.content[5].function == "generic_tool"
     assert trajectory.content[5].kwargs["tool_name"] == "WebSearch"
+    assert trajectory.content[5].kwargs["tool_input"] == {"query": "pytest assertion introspection"}
+    assert "content" not in trajectory.content[5].kwargs

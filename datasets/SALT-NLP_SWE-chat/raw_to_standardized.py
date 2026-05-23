@@ -118,9 +118,12 @@ def convert_tool_use(turn: ConversationTurn) -> CodeAction | ApiAction | None:
         editor_action.description = name
         return editor_action
 
+    kwargs: dict[str, Any] = {"tool_name": name, "tool_input": params}
+    if not params:
+        kwargs["content"] = turn.content
     return ApiAction(
         function="generic_tool",
-        kwargs={"tool_name": name, "tool_input": params, "content": turn.content},
+        kwargs=kwargs,
         description=clean_function_name(name),
     )
 
