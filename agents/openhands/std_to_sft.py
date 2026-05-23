@@ -19,11 +19,20 @@ from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
-from scripts.html_to_axtree import HTMLToAXTree
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
-generate_axtree = HTMLToAXTree(dataset)
+generate_axtree = None
+
+
+def get_generate_axtree():
+    global generate_axtree
+    if generate_axtree is None:
+        from scripts.html_to_axtree import HTMLToAXTree
+
+        generate_axtree = HTMLToAXTree(dataset)
+    return generate_axtree
+
 
 action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
@@ -84,12 +93,13 @@ def standardized_event_to_openhands_message(
 ) -> dict:
     global PREV_BID
     if isinstance(event, WebObservation):
+        html_to_axtree = get_generate_axtree()
         if event.axtree is not None:
             axtree = event.axtree
-        elif generate_axtree.last_html != event.html:
-            axtree = generate_axtree.build_axtree(id, event.html, "all")
+        elif html_to_axtree.last_html != event.html:
+            axtree = html_to_axtree.build_axtree(id, event.html, "all")
         else:
-            axtree = generate_axtree.last_xtree
+            axtree = html_to_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, PREV_BID)
         return {"from": "human", "value": prompt}
 
@@ -132,7 +142,7 @@ def standardized_event_to_openhands_message(
         if not browsergym_id:
             event_xpath = event.kwargs.get("xpath", None)
             if event_xpath:
-                browsergym_id = generate_axtree.get_bid(id, event_xpath, "all")
+                browsergym_id = get_generate_axtree().get_bid(id, event_xpath, "all")
         # for tool calls that are not browser based since there is no browsergym_id
         # and tool calls that are specified as non-web
         # these should all be dataset specific apis
@@ -303,7 +313,7 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     return {
         "id": trajectory.id,
         "conversations": conversations,
-        "system": get_system_message(),
+        "system": get_system_message(codeact_enable_browsing=is_web),
     }
 
 
