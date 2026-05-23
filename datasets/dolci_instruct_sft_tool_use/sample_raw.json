@@ -1,0 +1,422 @@
+[
+  {
+    "messages": [
+      {
+        "content": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions.",
+        "function_calls": null,
+        "functions": "[{\"type\": \"function\", \"function\": {\"name\": \"weather.forecast_weather_api\", \"description\": \"Fetches weather forecast and alerts from a weather API.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"q\": {\"description\": \"Query parameter to specify the location. It can be:\", \"type\": \"string\", \"default\": \"London\"}, \"days\": {\"description\": \"Number of days of weather forecast required, with a default of 3 days.\", \"type\": \"integer\", \"default\": \"3\"}, \"dt\": {\"description\": \"Specific date for the forecast in 'yyyy-MM-dd' format. Must be between today and the next 10 days.\", \"type\": \"string\", \"default\": \"\"}, \"lang\": {\"description\": \"Desired language for the 'condition:text' field in the response.\", \"type\": \"string\", \"default\": \"\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"weather.getweatherforecast\", \"description\": \"Fetches the weather forecast for a given location over a specified number of days.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"location\": {\"description\": \"The name of the city or location for which to retrieve the weather forecast.\", \"type\": \"string\", \"default\": \"London\"}, \"days\": {\"description\": \"The number of days of forecast data to retrieve. Defaults to 3. The range of days is from 1 to 16.\", \"type\": \"integer\", \"default\": \"3\"}}}}}]",
+        "role": "system"
+      },
+      {
+        "content": "Can you compare the 5-day weather forecasts for Paris and Madrid, and tell me which city will be warmer overall?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "weather.forecast_weather_api(q=\"Paris\", days=5)\nweather.forecast_weather_api(q=\"Madrid\", days=5)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"forecast\": [{\"date\": \"2024-06-25\", \"day\": {\"maxtemp_c\": 27, \"mintemp_c\": 16}}, {\"date\": \"2024-06-26\", \"day\": {\"maxtemp_c\": 29, \"mintemp_c\": 18}}, {\"date\": \"2024-06-27\", \"day\": {\"maxtemp_c\": 31, \"mintemp_c\": 19}}, {\"date\": \"2024-06-28\", \"day\": {\"maxtemp_c\": 32, \"mintemp_c\": 20}}, {\"date\": \"2024-06-29\", \"day\": {\"maxtemp_c\": 30, \"mintemp_c\": 18}}]}}\n{\"results\": {\"forecast\": [{\"date\": \"2024-06-25\", \"day\": {\"maxtemp_c\": 33, \"mintemp_c\": 22}}, {\"date\": \"2024-06-26\", \"day\": {\"maxtemp_c\": 35, \"mintemp_c\": 24}}, {\"date\": \"2024-06-27\", \"day\": {\"maxtemp_c\": 36, \"mintemp_c\": 25}}, {\"date\": \"2024-06-28\", \"day\": {\"maxtemp_c\": 34, \"mintemp_c\": 23}}, {\"date\": \"2024-06-29\", \"day\": {\"maxtemp_c\": 37, \"mintemp_c\": 26}}]}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "I've compared the 5-day weather forecasts for both Paris and Madrid:\n\n- Paris: Highs range from 27\u00b0C to 32\u00b0C, lows from 16\u00b0C to 20\u00b0C.\n- Madrid: Highs range from 33\u00b0C to 37\u00b0C, lows from 22\u00b0C to 26\u00b0C.\n\nOverall, Madrid will be warmer than Paris over the next 5 days.",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      }
+    ],
+    "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+    "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_179340"
+  },
+  {
+    "messages": [
+      {
+        "content": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions.",
+        "function_calls": null,
+        "functions": "[{\"type\": \"function\", \"function\": {\"name\": \"get_pokemon_move_info\", \"description\": \"Retrieves information about a Pok\\u00e9mon's move using the Pok\\u00e9API.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"pokemon_name\": {\"description\": \"The name of the Pok\\u00e9mon.\", \"type\": \"string\", \"default\": \"run\"}, \"move_name\": {\"description\": \"The name of the move to check. Defaults to \\\"run\\\".\", \"type\": \"string\", \"default\": \"run\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"get_ip_zipcode\", \"description\": \"Retrieves the ZIP code of a given IP address using the ip-api.com API.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"ip\": {\"description\": \"The IP address to locate.\", \"type\": \"string\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"calculate_calorie_intake\", \"description\": \"Calculates the recommended daily calorie intake and macronutrient distribution based on personal characteristics and goals.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"weight_kg\": {\"description\": \"Body weight in kilograms.\", \"type\": \"number\"}, \"height_cm\": {\"description\": \"Height in centimeters.\", \"type\": \"number\"}, \"age\": {\"description\": \"Age in years.\", \"type\": \"integer\"}, \"sex\": {\"description\": \"Biological sex, either 'male' or 'female'.\", \"type\": \"string\"}, \"activity_level\": {\"description\": \"Activity level on a scale of 1 to 5 (1 = sedentary, 5 = extremely active).\", \"type\": \"integer\"}, \"goal\": {\"description\": \"Fitness goal, either 'lose', 'maintain', or 'gain'.\", \"type\": \"string\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"get_city_from_zipcode\", \"description\": \"Retrieves the city name for a given ZIP code using the Ziptastic API.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"zipcode\": {\"description\": \"The ZIP code to look up.\", \"type\": \"string\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"predict_evolution_rate\", \"description\": \"Predict the evolutionary rate for a specific species for a given timeframe.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"species\": {\"description\": \"The species that the evolution rate will be predicted for.\", \"type\": \"string\", \"default\": \"Darwin\"}, \"years\": {\"description\": \"Number of years for the prediction.\", \"type\": \"integer\", \"default\": \"Darwin\"}, \"model\": {\"description\": \"The model used to make the prediction, options: 'Darwin', 'Lamarck', default is 'Darwin'.\", \"type\": \"string\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"reserve_hotel_room\", \"description\": \"Reserves a hotel room with the specified details.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"room_type\": {\"description\": \"The type of room to reserve.\", \"type\": \"string\"}, \"nightly_rate\": {\"description\": \"The nightly rate for the room.\", \"type\": \"number\"}, \"checkin_date\": {\"description\": \"The check-in date in the format 'YYYY-MM-DD'.\", \"type\": \"string\"}, \"checkout_date\": {\"description\": \"The check-out date in the format 'YYYY-MM-DD'.\", \"type\": \"string\"}, \"guest_id\": {\"description\": \"The unique identifier for the guest.\", \"type\": \"string\"}, \"promo_code\": {\"description\": \"A promotional code for a discount. Defaults to None.\", \"type\": \"string\"}}}}}]",
+        "role": "system"
+      },
+      {
+        "content": "I\u2019m planning a trip to New York! I\u2019m staying at the Renaissance Hotel. My guest ID is NYR543, and I want to book a deluxe room at $350 per night from 2024-08-04 to 2024-08-09. Can you also check which city ZIP code 10001 refers to?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "reserve_hotel_room(room_type='deluxe', nightly_rate=350, checkin_date='2024-08-04', checkout_date='2024-08-09', guest_id='NYR543')",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"reservation\": \"success\", \"confirmation\": \"RES123456\"}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": null,
+        "function_calls": "get_city_from_zipcode(zipcode='10001')",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"city\": \"New York\"}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "Your deluxe room at the Renaissance Hotel has been reserved from August 4 to August 9, 2024, for $350 a night (confirmation: RES123456). ZIP code 10001 is for New York City. Enjoy your trip!",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      }
+    ],
+    "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+    "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_351977"
+  },
+  {
+    "messages": [
+      {
+        "content": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions.",
+        "function_calls": null,
+        "functions": "[{\"type\": \"function\", \"function\": {\"name\": \"cell_density\", \"description\": \"Calculates the cell density based on the optical density (OD) and dilution factor.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"od\": {\"description\": \"The optical density of the sample.\", \"type\": \"number\", \"default\": 1000000000.0}, \"dilution\": {\"description\": \"The dilution factor applied to the sample.\", \"type\": \"integer\", \"default\": 1000000000.0}, \"factor\": {\"description\": \"The calibration factor for converting OD to cell density. Defaults to 1e9.\", \"type\": \"number\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"can_attend_all_meetings\", \"description\": \"Determines if a person can attend all meetings given a list of meeting time intervals.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"intervals\": {\"description\": \"A list of meeting time intervals, where each interval is represented as [start_time, end_time].\", \"type\": \"array\", \"items\": {\"type\": \"array\", \"items\": {\"type\": \"integer\"}}}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"is_power_of_two\", \"description\": \"Checks if a number is a power of two.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"num\": {\"description\": \"The number to check.\", \"type\": \"integer\"}}}}}]",
+        "role": "system"
+      },
+      {
+        "content": "1) Check if 16384 and 25000 are both powers of two. 2) Calculate the cell densities for 2 samples: first has OD=0.12 with a dilution of 100, second has OD=0.095 with a dilution of 150. Show me the results for all.",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "is_power_of_two(num=16384)\nis_power_of_two(num=25000)\ncell_density(od=0.12, dilution=100)\ncell_density(od=0.095, dilution=150)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"result\": true}\n{\"result\": false}\n{\"cell_density\": 12000000.0}\n{\"cell_density\": 14250000.0}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "Here are your results:\n\n1. 16384 is a power of two, but 25000 is not.\n2. The cell density for the first sample (OD=0.12, dilution=100) is 12,000,000. The cell density for the second sample (OD=0.095, dilution=150) is 14,250,000.",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      }
+    ],
+    "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+    "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_905382"
+  },
+  {
+    "messages": [
+      {
+        "content": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions.",
+        "function_calls": null,
+        "functions": "[{\"type\": \"function\", \"function\": {\"name\": \"physics.final_velocity\", \"description\": \"Calculates the final velocity of an object given its initial velocity, acceleration, and time.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"initial_velocity\": {\"description\": \"The initial velocity of the object.\", \"type\": \"number\"}, \"acceleration\": {\"description\": \"The acceleration of the object.\", \"type\": \"number\"}, \"time\": {\"description\": \"The time elapsed.\", \"type\": \"number\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"combinatorics.permutation_count\", \"description\": \"Calculates the number of permutations of k elements from a set of n elements.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"n\": {\"description\": \"The total number of elements in the set.\", \"type\": \"integer\"}, \"k\": {\"description\": \"The number of elements to choose for the permutation.\", \"type\": \"integer\"}}}}}]",
+        "role": "system"
+      },
+      {
+        "content": "Can you help with two things at once? 1) Calculate the final velocity of a car that starts at 20 m/s, accelerates at 2 m/s\u00b2 for 15 seconds. 2) Also, find the number of ways 4 books can be arranged out of a set of 10.",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "physics.final_velocity(initial_velocity=20, acceleration=2, time=15)\ncombinatorics.permutation_count(n=10, k=4)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"result\": 50.0}\n{\"result\": 5040}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "Here are your results:\n\n1) The final velocity of the car is 50.0 m/s after accelerating for 15 seconds.\n2) There are 5,040 ways to arrange 4 books out of a set of 10.",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "Now, tell me the final velocity if the car starts at 0 m/s but the other values remain the same. And calculate the arrangements if we want to arrange all 10 books.",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "physics.final_velocity(initial_velocity=0, acceleration=2, time=15)\ncombinatorics.permutation_count(n=10, k=10)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"result\": 30.0}\n{\"result\": 3628800}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "With an initial velocity of 0 m/s, the car's final velocity after 15 seconds at 2 m/s\u00b2 acceleration is 30.0 m/s.\nFor arranging all 10 books, there are 3,628,800 possible permutations.",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "What if we only had 6 books and wanted to arrange 6 of them? Also, what would the final velocity be if time was 5 seconds instead?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "combinatorics.permutation_count(n=6, k=6)\nphysics.final_velocity(initial_velocity=0, acceleration=2, time=5)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"result\": 720}\n{\"result\": 10.0}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "If you arrange all 6 books, there are 720 ways to do so. With an initial velocity of 0 m/s and acceleration of 2 m/s\u00b2 for 5 seconds, the final velocity is 10.0 m/s.",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "How many ways can you arrange 3 of the 6 books? And what is the velocity if you accelerate for 30 seconds from 0 m/s?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "combinatorics.permutation_count(n=6, k=3)\nphysics.final_velocity(initial_velocity=0, acceleration=2, time=30)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"result\": 120}\n{\"result\": 60.0}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "You can arrange 3 of the 6 books in 120 different ways. If you accelerate from 0 m/s for 30 seconds at 2 m/s\u00b2, the final velocity is 60.0 m/s.",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "Try with 6 books, arranging only 1. And with the car scenario, what is the velocity after 1 second from the same initial conditions?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "combinatorics.permutation_count(n=6, k=1)\nphysics.final_velocity(initial_velocity=0, acceleration=2, time=1)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"result\": 6}\n{\"result\": 2.0}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "There are 6 ways to arrange just 1 book out of 6. After accelerating from 0 m/s for 1 second at 2 m/s\u00b2, the car's final velocity is 2.0 m/s.",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      }
+    ],
+    "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+    "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_145768"
+  },
+  {
+    "messages": [
+      {
+        "content": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions.",
+        "function_calls": null,
+        "functions": "[{\"type\": \"function\", \"function\": {\"name\": \"get_all_predictions\", \"description\": \"Fetches all betting tips from the API with configurable parameters for connection, content type, sorting, and API key.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"connection\": {\"description\": \"Specifies the connection type for the API request. Default is 'keep-alive'.\", \"type\": \"string\", \"default\": \"keep-alive\"}, \"content_type\": {\"description\": \"Sets the content type for the API request. Default is 'application/json'.\", \"type\": \"string\", \"default\": \"application/json\"}, \"sort\": {\"description\": \"Criterion for sorting the betting tips. Default is '-id' for descending order.\", \"type\": \"string\", \"default\": \"-id\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"daily_match_list_all\", \"description\": \"Fetches the daily match list including scheduled, live, and finished matches for a given date.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"date\": {\"description\": \"The date of the match in the format {dd/MM/yyyy}.\", \"type\": \"string\", \"default\": \"06/10/2020\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"get_matches_on_a_specific_date\", \"description\": \"Fetches the matches scheduled on a specific date, considering the provided UTC offset.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"date\": {\"description\": \"The date for which to query the matches, in the format 'YYYY-MM-DD'.\", \"type\": \"string\", \"default\": \"2022-11-22\"}, \"utc_offset\": {\"description\": \"The UTC offset to cater to the required timezone. Default is 8. Must be between -12 to 14.\", \"type\": \"integer\", \"default\": \"8\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"select_race_based_on_race_number\", \"description\": \"Fetches the details for a Formula 1 race based on the provided race number.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"race_no\": {\"description\": \"The race number of the Formula 1 race to get details for.\", \"type\": \"string\", \"default\": \"\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"laliga_standings\", \"description\": \"Fetches the standings for LaLiga for a given season.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"season\": {\"description\": \"The season to retrieve the standings for, e.g., '2022'. Defaults to None.\", \"type\": \"string\", \"default\": \"\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"schools\", \"description\": \"Retrieves the number of schools in the tournament for a given year.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"identifier\": {\"description\": \"The identifier for the year of the tournament.\", \"type\": \"string\", \"default\": \"1959\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"match_details_by_id\", \"description\": \"Retrieves match details for a given Match ID using the RapidAPI endpoint. Match IDs can be obtained through the Matches List endpoint, including live matches and those played since 1990.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"match_id\": {\"description\": \"The unique identifier for a specific match.\", \"type\": \"string\", \"default\": \"2022-34-INTROM\"}}}}}, {\"type\": \"function\", \"function\": {\"name\": \"leaguepowerrankingrounds\", \"description\": \"Fetches the power ranking rounds for the specified tournament and season in a football league.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"tournamentid\": {\"description\": \"The unique ID of the tournament for which to retrieve the power ranking rounds.\", \"type\": \"integer\", \"default\": 16}, \"seasonid\": {\"description\": \"The season ID for which to retrieve the power ranking rounds.\", \"type\": \"integer\", \"default\": 41087}}}}}]",
+        "role": "system"
+      },
+      {
+        "content": "I'm in UTC+2; can you list the matches scheduled on 2023-08-12?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "get_matches_on_a_specific_date(date=\"2023-08-12\", utc_offset=2)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"matches\": [{\"match_id\": \"2023-08-12-ARS\u2013NEW\", \"home\": \"Arsenal\", \"away\": \"Newcastle\", \"kickoff\": \"14:00\"}, {\"match_id\": \"2023-08-12-MUNLIV\", \"home\": \"Manchester United\", \"away\": \"Liverpool\", \"kickoff\": \"16:30\"}, {\"match_id\": \"2023-08-12-VALBAR\", \"home\": \"Valencia\", \"away\": \"Barcelona\", \"kickoff\": \"19:00\"}]}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "Here are the matches for 2023-08-12 in your UTC+2 timezone:\n\u2022 Arsenal vs. Newcastle (14:00)\n\u2022 Manchester United vs. Liverpool (16:30) \u2014 Match ID: 2023-08-12-MUNLIV\n\u2022 Valencia vs. Barcelona (19:00)\nLet me know if you need details on any of them!",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "Great, could you give me the details for match 2023-08-12-MUNLIV and also show the current power-ranking rounds for tournament 16 in season 41087?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "match_details_by_id(match_id=\"2023-08-12-MUNLIV\")",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"match_id\": \"2023-08-12-MUNLIV\", \"competition\": \"Premier League\", \"venue\": \"Old Trafford\", \"score\": {\"ht\": \"1-0\", \"ft\": \"2-2\"}, \"goals\": [{\"minute\": 23, \"team\": \"Manchester United\", \"scorer\": \"Rashford\"}, {\"minute\": 54, \"team\": \"Manchester United\", \"scorer\": \"Fernandes\"}, {\"minute\": 67, \"team\": \"Liverpool\", \"scorer\": \"Salah\"}, {\"minute\": 88, \"team\": \"Liverpool\", \"scorer\": \"Jota\"}]}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": null,
+        "function_calls": "leaguepowerrankingrounds(tournamentid=16, seasonid=41087)",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"tournamentid\": 16, \"seasonid\": 41087, \"rounds\": [{\"round\": 1, \"top_team\": \"Manchester City\"}, {\"round\": 2, \"top_team\": \"Arsenal\"}, {\"round\": 3, \"top_team\": \"Liverpool\"}]}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "Here are the details you requested:\nMatch 2023-08-12-MUNLIV (Premier League)\nVenue: Old Trafford\nHalf-time: 1-0 | Full-time: 2-2\nScorers: Rashford 23\u2019, Fernandes 54\u2019 \u2014 Salah 67\u2019, Jota 88\u2019\n\nCurrent Power-Ranking Rounds (Tournament 16, Season 41087):\n\u2022 Round 1 leader: Manchester City\n\u2022 Round 2 leader: Arsenal\n\u2022 Round 3 leader: Liverpool\nAnything else I can help you with?",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "Thanks. Who is at the top of the LaLiga standings for the 2023 season?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "laliga_standings(season=\"2023\")",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"season\": \"2023\", \"standings\": [{\"position\": 1, \"team\": \"Real Madrid\", \"points\": 82}, {\"position\": 2, \"team\": \"Barcelona\", \"points\": 78}, {\"position\": 3, \"team\": \"Atletico Madrid\", \"points\": 74}]}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "After the latest round, Real Madrid are on top of LaLiga 2023 with 82 points, followed by Barcelona (78) and Atl\u00e9tico Madrid (74).",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "By the way, how many schools took part in the 2005 tournament?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "schools(identifier=\"2005\")",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"identifier\": \"2005\", \"num_schools\": 337}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "There were 337 schools participating in the 2005 tournament.",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "Could you fetch all available betting tips, sorted from oldest to newest?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "get_all_predictions(sort=\"id\")",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"predictions\": [{\"id\": 1, \"match\": \"Chelsea vs Spurs\", \"tip\": \"Over 2.5 goals\"}, {\"id\": 2, \"match\": \"PSG vs Lyon\", \"tip\": \"PSG to win\"}, {\"id\": 3, \"match\": \"Bayern vs Dortmund\", \"tip\": \"Both teams to score\"}]}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "Here are the betting tips from oldest to newest:\n1. Chelsea vs Spurs \u2014 Over 2.5 goals\n2. PSG vs Lyon \u2014 PSG to win\n3. Bayern vs Dortmund \u2014 Both teams to score",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "One last thing: what happened in Formula 1 race number 5 this season?",
+        "function_calls": null,
+        "functions": null,
+        "role": "user"
+      },
+      {
+        "content": null,
+        "function_calls": "select_race_based_on_race_number(race_no=\"5\")",
+        "functions": null,
+        "role": "assistant"
+      },
+      {
+        "content": "{\"results\": {\"race_no\": 5, \"grand_prix\": \"Monaco GP\", \"winner\": \"Max Verstappen\", \"team\": \"Red Bull Racing\", \"time\": \"1:42:37.101\", \"podium\": [\"Max Verstappen\", \"Charles Leclerc\", \"Lewis Hamilton\"]}}",
+        "function_calls": null,
+        "functions": null,
+        "role": "environment"
+      },
+      {
+        "content": "Formula 1 Race 5 (Monaco GP):\n\u2022 Winner: Max Verstappen (Red Bull Racing) \u2014 1:42:37.101\n\u2022 Podium: 1) Verstappen  2) Leclerc  3) Hamilton\nHope that covers everything!",
+        "function_calls": null,
+        "functions": null,
+        "role": "assistant"
+      }
+    ],
+    "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+    "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_736263"
+  }
+]
