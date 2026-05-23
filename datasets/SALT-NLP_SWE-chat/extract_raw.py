@@ -92,6 +92,9 @@ def iter_grouped_sessions(
     session_metadata: dict[str, dict[str, Any]],
     max_turns_per_session: int | None = None,
 ) -> Iterable[dict[str, Any]]:
+    # Assumes the HF conversations table is sorted by session_id so all turns
+    # for a session are consecutive. If that ever changes, replace this with
+    # an explicit sort or itertools.groupby step.
     current_session_id = None
     current_turns: list[dict[str, Any]] = []
 

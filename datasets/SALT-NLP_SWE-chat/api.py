@@ -37,7 +37,7 @@ def think(thought: str) -> None:
     pass
 
 
-def generic_tool(tool_name: str, tool_input: dict[str, Any], content: str = None) -> None:
+def generic_tool(tool_name: str, tool_input: dict[str, Any], content: str | None = None) -> None:
     """Represent a source-specific coding-agent tool call.
 
     Args:
