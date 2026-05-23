@@ -42,7 +42,7 @@ def process_data(data: SchemaRaw) -> Trajectory:
     if data.generator is not None:
         details["generator"] = data.generator
     if data.thinking is not None:
-        details["thinking"] = str(data.thinking).lower()
+        details["thinking"] = data.thinking
     if data.patch:
         details["patch"] = data.patch
 
