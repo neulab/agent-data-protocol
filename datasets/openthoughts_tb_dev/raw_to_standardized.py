@@ -21,7 +21,9 @@ def is_placeholder_solution(content: str) -> bool:
 
 def strip_canary_lines(content: str) -> str:
     return "\n".join(
-        line for line in content.splitlines() if not any(marker in line for marker in CANARY_MARKERS)
+        line
+        for line in content.splitlines()
+        if not any(marker in line for marker in CANARY_MARKERS)
     )
 
 
