@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 from typing import Any
 
@@ -7,6 +8,7 @@ from schema_raw import Message, SchemaRaw
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
 
 
@@ -31,6 +33,31 @@ def parse_tool_arguments(text: str) -> dict[str, Any] | None:
     if not isinstance(data, dict):
         return None
     return data
+
+
+def extract_browser_url(text: str) -> str | None:
+    line_match = re.search(r"^L\d+: URL: (\S+)", text, re.MULTILINE)
+    if line_match:
+        return line_match.group(1)
+
+    header_match = re.match(r"\[\d+\].*\(([^()\s]+://[^()\s]+)\)", text)
+    if header_match:
+        return header_match.group(1)
+
+    return None
+
+
+def browser_observation(text: str, name: str | None) -> WebObservation | TextObservation:
+    url = extract_browser_url(text)
+    if not url:
+        return TextObservation(content=text, source="environment", name=name)
+    return WebObservation(
+        html=None,
+        axtree=text,
+        url=url,
+        image_observation=None,
+        viewport_size=None,
+    )
 
 
 def append_pending_message(content: list, pending_description: str | None) -> None:
@@ -69,7 +96,12 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
         if message.role == "tool":
             append_pending_message(content, pending_description)
             pending_description = None
-            content.append(TextObservation(content=text, source="environment", name=message.name))
+            if message.name and message.name.startswith("browser."):
+                content.append(browser_observation(text, message.name))
+            else:
+                content.append(
+                    TextObservation(content=text, source="environment", name=message.name)
+                )
             continue
 
         if message.role != "assistant":
