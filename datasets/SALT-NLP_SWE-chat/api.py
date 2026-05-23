@@ -4,11 +4,11 @@ from typing import Any
 def str_replace_editor(
     command: str,
     path: str,
-    file_text: str = None,
-    old_str: str = None,
-    new_str: str = None,
-    insert_line: int = None,
-    view_range: list = None,
+    file_text: str | None = None,
+    old_str: str | None = None,
+    new_str: str | None = None,
+    insert_line: int | None = None,
+    view_range: list | None = None,
 ) -> None:
     """View, create, and edit files with a custom editing tool.
 
