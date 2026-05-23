@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import re
 import sys
 import urllib.request
 from collections.abc import Iterable
@@ -21,6 +22,33 @@ SAMPLE_SELECTION = {
     "webwalker_subset.sft.jsonl": {0},
 }
 
+TARGET_TASK_RE = re.compile(
+    r"^## Target Task\s*\n(?P<task>.*?)(?=^## |\Z)",
+    re.DOTALL | re.MULTILINE,
+)
+
+
+def extract_task_instruction(content: str) -> str:
+    match = TARGET_TASK_RE.search(content)
+    if match:
+        return match.group("task").strip()
+    return content.strip()
+
+
+def normalize_messages(messages: list[dict]) -> list[dict]:
+    normalized = []
+    for message in messages:
+        role = message.get("role")
+        if role == "system":
+            continue
+        if role == "user":
+            message = {
+                **message,
+                "content": extract_task_instruction(message["content"]),
+            }
+        normalized.append(message)
+    return normalized
+
 
 def iter_source(source_file: str) -> Iterable[dict]:
     url = f"{DATASET_URL}/{source_file}"
@@ -30,9 +58,7 @@ def iter_source(source_file: str) -> Iterable[dict]:
     with urllib.request.urlopen(request) as response:
         for source_index, line in enumerate(response):
             raw = json.loads(line)
-            raw["messages"] = [
-                message for message in raw["messages"] if message.get("role") != "system"
-            ]
+            raw["messages"] = normalize_messages(raw["messages"])
             raw["id"] = f"{source_name}_{source_index}"
             raw["source_file"] = source_file
             raw["source_index"] = source_index

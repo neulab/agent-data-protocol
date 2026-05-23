@@ -2,7 +2,7 @@
 
 ## Description
 
-[CognitiveKernel/CognitiveKernel-Pro-SFT](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) contains supervised fine-tuning data for the paper [Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training](https://huggingface.co/papers/2508.00414). The dataset consists of single-step action-module examples where the task prompt provides the target task plus recent progress state, and the assistant emits a `Thought:` plus a fenced Python `Code:` action. Source system prompts are excluded from the extracted ADP records.
+[CognitiveKernel/CognitiveKernel-Pro-SFT](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) contains supervised fine-tuning data for the paper [Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training](https://huggingface.co/papers/2508.00414). The dataset consists of single-step action-module examples where the assistant emits a `Thought:` plus a fenced Python `Code:` action. Source system prompts and formatting scaffolding are excluded from the extracted ADP records so the user prompt contains only the target task instruction.
 
 The released files cover URLQA (`ck-pro-web.sft.jsonl`), DocBench (`docbench.sft.jsonl`), TableBench (`tablebench.sft.jsonl`), and WebWalkerQA (`webwalker_subset.sft.jsonl`). Other sources mentioned by the authors are not included in the public release because of license restrictions.
 
@@ -16,8 +16,9 @@ The released files cover URLQA (`ck-pro-web.sft.jsonl`), DocBench (`docbench.sft
 ## Schema Mapping
 
 - Extracted raw `messages` contain task `user` prompts and `assistant` responses plus ADP-added `id`, `source_file`, and `source_index` fields.
-- Source `system` messages are filtered out during extraction so ADP samples contain only task prompts.
-- Raw `user` content becomes `TextObservation(source="user")`.
+- Source `system` messages are filtered out during extraction.
+- User prompt scaffolding after the first `## Target Task` section, including recent-step state, repeated task text, and required Thought/Code formatting instructions, is removed during extraction.
+- Raw task instruction content becomes `TextObservation(source="user")`.
 - Raw assistant messages matching the `Thought:` plus fenced Python `Code:` format become `CodeAction(language="python")`, with the thought stored as the action description.
 - If an assistant message does not match the expected Thought/Code format, it falls back to `MessageAction` to preserve the raw content.
 
