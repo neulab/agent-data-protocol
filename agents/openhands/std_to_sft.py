@@ -1,4 +1,5 @@
 import argparse
+import ast
 import json
 import os
 import re
@@ -36,6 +37,31 @@ def get_generate_axtree():
 
 action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
+
+
+def action_text_prefix(event) -> str:
+    parts = []
+    reasoning = getattr(event, "reasoning_content", None)
+    description = getattr(event, "description", None)
+    if reasoning:
+        parts.append(reasoning)
+    if description and description != reasoning:
+        parts.append(description)
+    return "\n\n".join(parts) + ("\n\n" if parts else "")
+
+
+def format_call_argument(value):
+    if isinstance(value, str):
+        try:
+            ast.literal_eval(value)
+            return value
+        except (ValueError, SyntaxError):
+            return repr(value)
+    return repr(value)
+
+
+def format_python_call(function_name: str, arguments: dict) -> str:
+    return f"{function_name}({', '.join([f'{k}={format_call_argument(arguments[k])}' for k in arguments])})"
 
 
 def verify_args(required_args, optional_args, input_args):
@@ -105,7 +131,7 @@ def standardized_event_to_openhands_message(
 
     if isinstance(event, ApiAction):
         PREV_BID = None
-        thought = event.description + "\n\n" if event.description else ""
+        thought = action_text_prefix(event)
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
 
@@ -127,7 +153,7 @@ def standardized_event_to_openhands_message(
             api_args = browser_default_apis[function_name]
             if not verify_args(api_args["required"], api_args["optional"], arguments):
                 raise ValueError(f"Function call with wrong argument: {event}")
-            api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
+            api_action = format_python_call(function_name, arguments)
             previous_web_actions.extend([api_action])
             function_call = format_function("browser", {"code": api_action})
             return {"from": "function_call", "value": f"{thought}{function_call}"}
@@ -154,7 +180,7 @@ def standardized_event_to_openhands_message(
                 api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
             ):
                 raise ValueError(f"Function call with wrong argument: {event}")
-            api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
+            api_action = format_python_call(function_name, arguments)
             function_call = format_function(
                 api_env, {function_args.get(api_env, "code"): api_action}
             )
@@ -173,7 +199,7 @@ def standardized_event_to_openhands_message(
                 api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
             ):
                 raise ValueError(f"Function call with wrong argument: {event}")
-            api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
+            api_action = format_python_call(function_name, arguments)
             function_call = format_function(
                 api_env, {function_args.get(api_env, "code"): api_action}
             )
@@ -191,13 +217,13 @@ def standardized_event_to_openhands_message(
                 PREV_BID = arguments["bid"]
         if not verify_args(api_args["required"], api_args["optional"], arguments):
             raise ValueError(f"Function call with wrong argument: {event}")
-        api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
+        api_action = format_python_call(function_name, arguments)
         previous_web_actions.extend([api_action])
         function_call = format_function(api_env, {function_args.get(api_env, "code"): api_action})
         return {"from": "function_call", "value": f"{thought}{function_call}"}
 
     if isinstance(event, CodeAction):
-        thought = event.description + "\n\n" if event.description else ""
+        thought = action_text_prefix(event)
         function_name = action_function.get(event.language, f"execute_{event.language}")
         code_content = event.content
         if function_name not in openhands_default_tools:
@@ -209,7 +235,7 @@ def standardized_event_to_openhands_message(
         return {"from": "function_call", "value": f"{thought}{code_action}"}
 
     elif isinstance(event, MessageAction):
-        thought = event.description + "\n\n" if event.description else ""
+        thought = action_text_prefix(event)
         if "<finish>" in event.content and "</finish>" in event.content:
             match = re.search(r"<finish>(.*?)</finish>", event.content, re.DOTALL)
             content = match.group(1).strip()
