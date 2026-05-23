@@ -24,9 +24,3 @@ class SchemaRaw(BaseModel):
     id: Optional[str] = None
     available_tools: list[McpToolDefinition] = Field(default_factory=list)
     model_config = ConfigDict(extra="allow")
-
-
-class McpToolCall(BaseModel):
-    server_name: str
-    tool_name: str
-    arguments: dict[str, Any] | str
