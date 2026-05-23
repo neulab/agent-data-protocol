@@ -1,5 +1,6 @@
 import ast
 import json
+import keyword
 import re
 import sys
 from typing import Any
@@ -23,6 +24,49 @@ FUNCTION_STYLE_ACTION_RE = re.compile(r"^([A-Za-z_][\w.]*)\((.*)\)$", re.DOTALL)
 
 def python_literal(value: Any) -> str:
     return repr(value)
+
+
+def to_identifier(name: str, default: str = "tool") -> str:
+    identifier = re.sub(r"\W", "_", name).strip("_") or default
+    if identifier[0].isdigit() or keyword.iskeyword(identifier):
+        identifier = f"{default}_{identifier}"
+    return identifier
+
+
+def unique_identifier(name: str, used: set[str], default: str) -> str:
+    base = to_identifier(name, default=default)
+    candidate = base
+    suffix = 2
+    while candidate in used:
+        candidate = f"{base}_{suffix}"
+        suffix += 1
+    used.add(candidate)
+    return candidate
+
+
+def kwargs_from_parameters(parameters: Any) -> dict[str, str]:
+    if parameters is None or parameters == "":
+        return {}
+
+    if isinstance(parameters, dict):
+        used: set[str] = set()
+        return {
+            unique_identifier(str(name), used, default=f"param_{index}"): python_literal(value)
+            for index, (name, value) in enumerate(parameters.items())
+        }
+
+    if isinstance(parameters, (list, tuple)):
+        return {f"arg_{index}": python_literal(value) for index, value in enumerate(parameters)}
+
+    return {"input": python_literal(parameters)}
+
+
+def make_api_action(tool: Any, parameters: Any, description: str | None) -> ApiAction:
+    return ApiAction(
+        function=to_identifier(str(tool), default="tool"),
+        kwargs=kwargs_from_parameters(parameters),
+        description=description,
+    )
 
 
 def parse_structured_value(text: str) -> Any:
@@ -56,11 +100,7 @@ def parse_json_tool_call(content: str) -> ApiAction | None:
     else:
         return None
 
-    return ApiAction(
-        function="call_api",
-        kwargs={"tool": python_literal(tool), "parameters": python_literal(parameters)},
-        description=description,
-    )
+    return make_api_action(tool, parameters, description)
 
 
 def parse_code_block_tool_call(content: str) -> ApiAction | None:
@@ -73,14 +113,7 @@ def parse_code_block_tool_call(content: str) -> ApiAction | None:
         return None
 
     description = content[: match.start()].strip() or None
-    return ApiAction(
-        function="call_api",
-        kwargs={
-            "tool": python_literal(parsed["name"]),
-            "parameters": python_literal(parsed.get("parameters", {})),
-        },
-        description=description,
-    )
+    return make_api_action(parsed["name"], parsed.get("parameters", {}), description)
 
 
 def extract_thought(content: str) -> str | None:
@@ -115,24 +148,15 @@ def parse_action_line(content: str) -> ApiAction | MessageAction | None:
                 content=f"<finish> {json.dumps(parameters, ensure_ascii=False)} </finish>",
                 description=thought,
             )
-        return ApiAction(
-            function="call_api",
-            kwargs={"tool": python_literal(tool), "parameters": python_literal(parameters)},
-            description=thought,
-        )
+        return make_api_action(tool, parameters, thought)
 
     if action_text.lower().startswith(("finish", "answer", "finalaction")):
         return MessageAction(content=f"<finish> {action_text} </finish>", description=thought)
 
     function_style = FUNCTION_STYLE_ACTION_RE.match(action_text)
     if function_style:
-        return ApiAction(
-            function="call_api",
-            kwargs={
-                "tool": python_literal(function_style.group(1)),
-                "parameters": python_literal({"arguments": function_style.group(2)}),
-            },
-            description=thought,
+        return make_api_action(
+            function_style.group(1), {"arguments": function_style.group(2)}, thought
         )
 
     return ApiAction(

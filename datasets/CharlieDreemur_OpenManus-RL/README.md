@@ -7,7 +7,7 @@ OpenManusRL is a heterogeneous ReAct-style agent trajectory dataset assembled fo
 The converter preserves the raw conversation structure and maps the dataset's major action styles into ADP primitives:
 
 - Text-world and ScienceWorld `Action:` lines become `perform_action` API actions.
-- `Action: <tool> with Action Input: ...`, JSON `Tool`/`Param` responses, and Python-dict tool call snippets become generic `call_api` API actions.
+- `Action: <tool> with Action Input: ...`, JSON `Tool`/`Param` responses, and Python-dict tool call snippets become direct `ApiAction` calls using the parsed tool name and parameters.
 - `finish` and final-action outputs become finish `MessageAction` events.
 - User turns following actions are treated as environment observations.
 
