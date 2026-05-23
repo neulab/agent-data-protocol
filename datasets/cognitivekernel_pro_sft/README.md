@@ -2,7 +2,7 @@
 
 ## Description
 
-[CognitiveKernel/CognitiveKernel-Pro-SFT](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) contains supervised fine-tuning data for the paper [Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training](https://huggingface.co/papers/2508.00414). The dataset consists of single-step action-module examples where a system prompt defines available CognitiveKernel tools, the user message provides the target task plus recent progress state, and the assistant emits a `Thought:` plus a fenced Python `Code:` action.
+[CognitiveKernel/CognitiveKernel-Pro-SFT](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) contains supervised fine-tuning data for the paper [Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training](https://huggingface.co/papers/2508.00414). The dataset consists of single-step action-module examples where the task prompt provides the target task plus recent progress state, and the assistant emits a `Thought:` plus a fenced Python `Code:` action. Source system prompts are excluded from the extracted ADP records.
 
 The released files cover URLQA (`ck-pro-web.sft.jsonl`), DocBench (`docbench.sft.jsonl`), TableBench (`tablebench.sft.jsonl`), and WebWalkerQA (`webwalker_subset.sft.jsonl`). Other sources mentioned by the authors are not included in the public release because of license restrictions.
 
@@ -15,9 +15,9 @@ The released files cover URLQA (`ck-pro-web.sft.jsonl`), DocBench (`docbench.sft
 
 ## Schema Mapping
 
-- Raw `messages` are modeled as role/content chat messages plus ADP-added `id`, `source_file`, and `source_index` fields.
-- Raw `system` content is preserved by prepending it to the first `TextObservation(source="user")`, because it defines the CognitiveKernel action functions needed to understand the Python snippet.
-- Raw `user` content becomes the task/progress portion of the same `TextObservation(source="user")`.
+- Extracted raw `messages` contain task `user` prompts and `assistant` responses plus ADP-added `id`, `source_file`, and `source_index` fields.
+- Source `system` messages are filtered out during extraction so ADP samples contain only task prompts.
+- Raw `user` content becomes `TextObservation(source="user")`.
 - Raw assistant messages matching the `Thought:` plus fenced Python `Code:` format become `CodeAction(language="python")`, with the thought stored as the action description.
 - If an assistant message does not match the expected Thought/Code format, it falls back to `MessageAction` to preserve the raw content.
 
@@ -37,4 +37,4 @@ cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | pyt
 ## Known Limitations
 
 - The source dataset is already SFT-style next-action data rather than full environment rollouts. Each ADP trajectory therefore contains the prompt state and the assistant's next Python code action, not an entire multi-step episode.
-- CognitiveKernel tool functions such as `simple_web_search`, `web_agent`, `load_file`, and `stop` are preserved inside Python `CodeAction` snippets rather than converted to ADP `ApiAction` entries, because the raw assistant action is a Python code block that may combine computation with calls to those predefined functions.
+- CognitiveKernel tool calls such as `simple_web_search`, `web_agent`, `load_file`, and `stop` are preserved inside Python `CodeAction` snippets rather than converted to ADP `ApiAction` entries, because the raw assistant action is a Python code block that may combine computation with calls to those predefined functions. Their source system-prompt definitions are intentionally excluded.

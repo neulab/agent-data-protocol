@@ -31,7 +31,6 @@ def convert_assistant_message(content: str) -> CodeAction | MessageAction:
 
 
 def process_record(record: SchemaRaw) -> Trajectory:
-    system_messages = [message.content for message in record.messages if message.role == "system"]
     user_messages = [message.content for message in record.messages if message.role == "user"]
     assistant_messages = [
         message.content for message in record.messages if message.role == "assistant"
@@ -42,14 +41,7 @@ def process_record(record: SchemaRaw) -> Trajectory:
     if not assistant_messages:
         raise ValueError(f"Record {record.id} has no assistant message")
 
-    prompt_parts = []
-    if system_messages:
-        prompt_parts.append(
-            "## CognitiveKernel System Instructions\n" + "\n\n".join(system_messages)
-        )
-    prompt_parts.append("## CognitiveKernel Task State\n" + "\n\n".join(user_messages))
-
-    content = [TextObservation(content="\n\n".join(prompt_parts), source="user")]
+    content = [TextObservation(content="\n\n".join(user_messages), source="user")]
     content.extend(convert_assistant_message(message) for message in assistant_messages)
 
     return Trajectory(

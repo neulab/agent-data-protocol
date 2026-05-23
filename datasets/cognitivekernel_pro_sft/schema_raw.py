@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class Message(BaseModel):
-    role: Literal["system", "user", "assistant"]
+    role: Literal["user", "assistant"]
     content: str
 
 

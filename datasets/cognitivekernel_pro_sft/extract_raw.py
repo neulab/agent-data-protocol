@@ -30,6 +30,9 @@ def iter_source(source_file: str) -> Iterable[dict]:
     with urllib.request.urlopen(request) as response:
         for source_index, line in enumerate(response):
             raw = json.loads(line)
+            raw["messages"] = [
+                message for message in raw["messages"] if message.get("role") != "system"
+            ]
             raw["id"] = f"{source_name}_{source_index}"
             raw["source_file"] = source_file
             raw["source_index"] = source_index
