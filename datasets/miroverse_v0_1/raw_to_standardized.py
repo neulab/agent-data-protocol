@@ -63,6 +63,7 @@ def _convert_assistant_message(content: str, tools_by_name: dict[tuple[str, str]
     if not content:
         return []
 
+    # MiroVerse constrains one MCP call per assistant turn; .search() is intentional here.
     match = MCP_CALL_RE.search(content)
     if not match:
         return [MessageAction(content=content, description=None)]

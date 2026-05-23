@@ -191,7 +191,7 @@ def tool_python__create_sandbox(timeout: int = 300) -> dict:
 
 
 def tool_python__download_internet_file_to_python_interpreter(
-    url: str, sandbox_id: str = None
+    url: str, sandbox_id: str | None = None
 ) -> dict:
     """[tool-python/download_internet_file_to_python_interpreter] Download a file from the internet to the `/home/user` dir of the remote python interpreter.
 
@@ -238,7 +238,7 @@ def tool_python__run_command(command: str, sandbox_id: str) -> dict:
 
 
 def tool_python__run_python_code(
-    code_block: str, timeout: int = 300, sandbox_id: str = None
+    code_block: str, timeout: int = 300, sandbox_id: str | None = None
 ) -> dict:
     """[tool-python/run_python_code] Run python code in an interperter and return the execution result.
 
@@ -255,7 +255,7 @@ def tool_python__run_python_code(
 
 
 def tool_python__upload_local_file_to_python_interpreter(
-    local_file_path: str, sandbox_id: str = None
+    local_file_path: str, sandbox_id: str | None = None
 ) -> dict:
     """[tool-python/upload_local_file_to_python_interpreter] Upload a local file to the `/home/user` dir of the remote python interpreter.
 
