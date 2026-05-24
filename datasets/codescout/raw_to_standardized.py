@@ -196,9 +196,9 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
     if data.instance_id:
         details["instance_id"] = data.instance_id
     if data.step is not None:
-        details["step"] = str(data.step)
+        details["step"] = data.step
     if data.rollout_number is not None:
-        details["rollout_number"] = str(data.rollout_number)
+        details["rollout_number"] = data.rollout_number
 
     return Trajectory(id=trajectory_id(data), content=content, details=details)
 
