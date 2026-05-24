@@ -45,6 +45,9 @@ def test_clean_terminal_output_removes_control_sequences_and_shell_prompt():
         )
         == ""
     )
+    assert (
+        converter.clean_terminal_output("first\r\nsecond\rthird") == "first\nsecondthird"
+    )
 
 
 def test_agenttuning_os_derived_samples_do_not_include_terminal_control_sequences():
@@ -57,9 +60,11 @@ def test_agenttuning_os_derived_samples_do_not_include_terminal_control_sequence
     for sample_path in sample_paths:
         sample = json.loads(sample_path.read_text())
         noisy_values = [
-            value for value in iter_strings(sample) if "\x1b" in value or "\x07" in value
+            value
+            for value in iter_strings(sample)
+            if "\x1b" in value or "\x07" in value or "\r" in value
         ]
-        assert not noisy_values, f"{sample_path} contains terminal control sequences"
+        assert not noisy_values, f"{sample_path} contains terminal artifacts"
 
 
 def test_agenttuning_os_derived_samples_do_not_include_source_system_prompt():

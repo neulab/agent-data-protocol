@@ -19,6 +19,7 @@ def clean_terminal_output(content: str) -> str:
     content = ANSI_SEQUENCE.sub("", content)
     content = content.replace("\x07", "")
     content = SHELL_PROMPT.sub("", content)
+    content = content.replace("\r\n", "\n").replace("\r", "")
     return content.strip()
 
 
