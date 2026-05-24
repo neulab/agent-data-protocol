@@ -47,9 +47,7 @@ def is_portable_or_external_image_reference(value):
 
     windows_path = PureWindowsPath(value)
     return not (
-        PurePosixPath(value).is_absolute()
-        or windows_path.is_absolute()
-        or bool(windows_path.drive)
+        PurePosixPath(value).is_absolute() or windows_path.is_absolute() or bool(windows_path.drive)
     )
 
 
