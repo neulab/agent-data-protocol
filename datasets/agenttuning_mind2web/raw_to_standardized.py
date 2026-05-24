@@ -59,7 +59,16 @@ for line in sys.stdin:
     standardize_data = Trajectory(
         id=raw_data["id"],
         content=content,
+        details={
+            "source": "THUDM/AgentInstruct",
+            "source_split": "mind2web",
+            "source_id": raw_data["id"],
+        },
     )
 
     # Print the standardized data
-    print(standardize_data.model_dump_json())
+    print(
+        standardize_data.model_dump_json(
+            exclude={"content": {"__all__": {"reasoning_content", "reward"}}}
+        )
+    )

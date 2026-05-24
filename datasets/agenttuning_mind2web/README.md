@@ -6,6 +6,10 @@ AgentInstruct is a lightweight instruction-tuning dataset containing high-qualit
 
 The data includes subsets of alfworld, db, kg, mind2web, os, webshop. This folder includes the subset of mind2web.
 
+During standardization, each trajectory preserves source provenance in
+`details`: the upstream dataset (`source`), subset (`source_split`), and
+original row id (`source_id`).
+
 ## Paper Citation
 
 ```bibtex
