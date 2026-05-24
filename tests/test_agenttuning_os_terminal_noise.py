@@ -45,9 +45,7 @@ def test_clean_terminal_output_removes_control_sequences_and_shell_prompt():
         )
         == ""
     )
-    assert (
-        converter.clean_terminal_output("first\r\nsecond\rthird") == "first\nsecondthird"
-    )
+    assert converter.clean_terminal_output("first\r\nsecond\rthird") == "first\nsecondthird"
 
 
 def test_agenttuning_os_derived_samples_do_not_include_terminal_control_sequences():
