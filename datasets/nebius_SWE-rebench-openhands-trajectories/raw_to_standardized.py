@@ -17,6 +17,10 @@ FINISH_MESSAGE = "<finish> I have successfully completed the task. </finish>"
 SUCCESS_OBSERVATION = "Task completed successfully."
 
 
+def optional_float(value: float | int | None) -> float | None:
+    return None if value is None else float(value)
+
+
 def parse_arguments(arguments: str | dict[str, Any] | None) -> dict[str, Any]:
     if arguments is None:
         return {}
@@ -114,12 +118,8 @@ def process_data(data: SchemaRaw):
             "repo": data.repo,
             "exit_status": data.exit_status or "",
             "resolved": str(data.resolved),
-            "gen_tests_correct": ""
-            if data.gen_tests_correct is None
-            else str(data.gen_tests_correct),
-            "pred_passes_gen_tests": ""
-            if data.pred_passes_gen_tests is None
-            else str(data.pred_passes_gen_tests),
+            "gen_tests_correct": optional_float(data.gen_tests_correct),
+            "pred_passes_gen_tests": optional_float(data.pred_passes_gen_tests),
             "model_patch": data.model_patch or "",
             "tools": json.dumps(data.tools, indent=2),
         },

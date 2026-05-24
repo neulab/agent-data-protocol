@@ -154,7 +154,7 @@ def process_data(data):
         id=id,
         content=content,
         details={
-            "reward": str(data.reward),
+            "reward": data.reward,
         },
     )
 
@@ -165,4 +165,8 @@ if __name__ == "__main__":
         data = SchemaRaw(**raw_data)
         standardized_data = process_data(data)
         if standardized_data:
-            print(standardized_data.model_dump_json())
+            print(
+                standardized_data.model_dump_json(
+                    exclude={"content": {"__all__": {"reward"}}}
+                )
+            )

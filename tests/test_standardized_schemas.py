@@ -11,6 +11,29 @@ from schema.action.api import ApiAction
 from schema.trajectory import Trajectory
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
+NUMERIC_DETAIL_KEYS = {"reward", "score", "step"}
+NUMERIC_DETAIL_KEY_PREFIXES = {"pred_passes_"}
+NUMERIC_DETAIL_KEY_SUFFIXES = {
+    "_correct",
+    "_count",
+    "_index",
+    "_number",
+    "_percentage",
+    "_percent",
+    "_rate",
+    "_reward",
+    "_score",
+    "_success",
+}
+
+
+def is_numeric_detail_key(key):
+    key = key.lower()
+    return (
+        key in NUMERIC_DETAIL_KEYS
+        or any(key.startswith(prefix) for prefix in NUMERIC_DETAIL_KEY_PREFIXES)
+        or any(key.endswith(suffix) for suffix in NUMERIC_DETAIL_KEY_SUFFIXES)
+    )
 
 
 def get_sample_jsons(directory):
@@ -26,6 +49,22 @@ def load_json(file_path):
     """Load JSON file, handling both indented and non-indented formats."""
     with open(file_path, "r") as file:
         return json.load(file)
+
+
+def test_numeric_detail_key_detection():
+    assert is_numeric_detail_key("tool_call_count")
+    assert is_numeric_detail_key("agent_percentage")
+    assert is_numeric_detail_key("session_success")
+    assert is_numeric_detail_key("rollout_number")
+    assert is_numeric_detail_key("source_index")
+    assert is_numeric_detail_key("reward")
+    assert is_numeric_detail_key("gen_tests_correct")
+    assert is_numeric_detail_key("pred_passes_gen_tests")
+
+    assert not is_numeric_detail_key("source_id")
+    assert not is_numeric_detail_key("timestamp")
+    assert not is_numeric_detail_key("version")
+    assert not is_numeric_detail_key("answer")
 
 
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))
@@ -57,6 +96,15 @@ def test_sample_standardized_against_schema(sample_path):
             assert "available_apis" not in traj.details, (
                 f"available_apis must be a top-level Trajectory field, not details metadata, "
                 f"in {sample_path} sample {sample_id}"
+            )
+            stringified_numeric_details = {
+                key: value
+                for key, value in traj.details.items()
+                if is_numeric_detail_key(key) and isinstance(value, str)
+            }
+            assert not stringified_numeric_details, (
+                f"Numeric details must be stored as native JSON numbers in {sample_path} "
+                f"sample {sample_id}: {stringified_numeric_details}"
             )
             if traj.available_apis is not None:
                 available_apis = traj.available_apis
