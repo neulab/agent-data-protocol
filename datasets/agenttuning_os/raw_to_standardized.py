@@ -9,23 +9,35 @@ from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 
+OSC_SEQUENCE = re.compile(r"\x1b\][^\x07]*(?:\x07|\x1b\\)")
+ANSI_SEQUENCE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+SHELL_PROMPT = re.compile(r"(?:\r?\n)?root@[A-Za-z0-9_.-]+:[^\r\n#]*# ?$")
+
+
+def clean_terminal_output(content: str) -> str:
+    content = OSC_SEQUENCE.sub("", content)
+    content = ANSI_SEQUENCE.sub("", content)
+    content = content.replace("\x07", "")
+    content = SHELL_PROMPT.sub("", content)
+    return content.strip()
+
 
 def convert_first_user_message(first_user_message_regex: re.Match[str]) -> list[Observation]:
     """
-    Extracts and formats the essential parts of a system prompt.
+    Extracts the user task and drops the source system prompt.
     """
     assert "You are an assistant" in first_user_message_regex.group(1)
-    # assert re.search(r"\"bash\"", first_user_message_regex.group(1), re.DOTALL)
-    # assert re.search(r"Act: finish", first_user_message_regex.group(1), re.DOTALL)
-    # assert re.search(r"```bash\n(.*?)\n```", first_user_message_regex.group(1), re.DOTALL)
-    # assert re.search(r"answer(.*)", first_user_message_regex.group(1), re.DOTALL)
-
-    system_msg = """If you think you have got the answer to the question, you should print like this:\n\n<solution> Your solution here </solution>"""
+    answer_format = (
+        "If you think you have got the answer to the question, you should print like this:"
+        "\n\n<solution> Your solution here </solution>"
+    )
     return [
         TextObservation(
-            content=first_user_message_regex.group(2).strip().replace("?bash:`", "?")
-            + "\n\n"
-            + system_msg,
+            content=(
+                first_user_message_regex.group(2).strip().replace("?bash:`", "?")
+                + "\n\n"
+                + answer_format
+            ),
             source="user",
         )
     ]
@@ -83,7 +95,10 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
 
     elif code_obs_regex:
         return [
-            TextObservation(content=code_obs_regex.group(1), source="environment"),
+            TextObservation(
+                content=clean_terminal_output(code_obs_regex.group(1)),
+                source="environment",
+            ),
         ]
 
     else:
@@ -98,8 +113,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
 
 
-for line in sys.stdin:
-    raw_data = json.loads(line)
+def process_raw_data(raw_data: dict) -> Trajectory:
     content = []
     for step in raw_data["conversations"]:
         content.extend(convert_step(step))
@@ -108,11 +122,22 @@ for line in sys.stdin:
     if isinstance(content[-1], MessageAction) and "<solution>" in content[-1].content:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
-    # Standardize the data
-    standardize_data = Trajectory(
+    return Trajectory(
         id=raw_data["id"],
         content=content,
     )
 
-    # Print the standardized data
-    print(standardize_data.model_dump_json())
+
+def main() -> None:
+    for line in sys.stdin:
+        raw_data = json.loads(line)
+        standardize_data = process_raw_data(raw_data)
+        print(
+            standardize_data.model_dump_json(
+                exclude={"content": {"__all__": {"reasoning_content", "reward"}}}
+            )
+        )
+
+
+if __name__ == "__main__":
+    main()
