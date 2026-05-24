@@ -115,10 +115,7 @@ def add_finish_if_missing(content):
 
 def process_data(data: SchemaRaw, row_number: int = 0):
     content = []
-    system_prompts = []
     for msg in data.messages:
-        if msg.role == "system" and msg.content:
-            system_prompts.append(msg.content)
         content.extend(message_to_events(msg))
 
     content = add_finish_if_missing(content)
@@ -132,7 +129,6 @@ def process_data(data: SchemaRaw, row_number: int = 0):
             "source": "GAIR/daVinci-Dev",
             "config": "env_native",
             "sample_name": data.sample_name or data.id or "",
-            "system_prompt": system_prompts[0] if system_prompts else "",
         },
     )
 
