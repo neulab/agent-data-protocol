@@ -2,7 +2,27 @@
 """Convert standardized format to SFT format for mini-coder dataset."""
 
 import json
+import re
 import sys
+
+ACTION_FUNCTIONS = {
+    "bash": "execute_bash",
+    "sh": "execute_bash",
+    "shell": "execute_bash",
+    "python": "execute_ipython_cell",
+    "python3": "execute_ipython_cell",
+}
+FUNCTION_ARGS = {
+    "execute_bash": "command",
+    "execute_ipython_cell": "code",
+}
+
+
+def format_function(function_name, parameters):
+    function_call = ""
+    for parameter, value in parameters.items():
+        function_call += f"<parameter={parameter}>\n{value}\n</parameter>\n"
+    return f"<function={function_name}>\n{function_call}</function>"
 
 
 def standardized_to_sft(trajectory):
@@ -32,12 +52,13 @@ def standardized_to_sft(trajectory):
             description = item.get("description", "")
             content = item["content"]
             language = item.get("language", "bash")
+            function_name = ACTION_FUNCTIONS.get(language, "execute_ipython_cell")
+            argument_name = FUNCTION_ARGS.get(function_name, "code")
 
-            # Format similar to other datasets
             value = ""
             if description:
                 value += f"{description}\n\n"
-            value += f"```{language}\n{content}\n```"
+            value += format_function(function_name, {argument_name: content})
 
             conversations.append({"from": "function_call", "value": value})
 
@@ -45,22 +66,24 @@ def standardized_to_sft(trajectory):
             # Format API action as a function call
             description = item.get("description", "")
             function = item["function"]
-            args = item.get("args", {})
+            args = item.get("kwargs", item.get("args", {}))
 
             value = ""
             if description:
                 value += f"{description}\n\n"
-            value += f"<function={function}>"
-            if args:
-                for key, val in args.items():
-                    value += f"\n<parameter={key}>{val}</parameter>"
-            value += "\n</function>"
+            value += format_function(function, args)
 
             conversations.append({"from": "function_call", "value": value})
 
         elif class_name == "message_action":
-            # Format message action as a function call
-            conversations.append({"from": "function_call", "value": item["content"]})
+            content = item["content"]
+            if "<finish>" in content and "</finish>" in content:
+                match = re.search(r"<finish>(.*?)</finish>", content, re.DOTALL)
+                message = match.group(1).strip() if match else content
+                value = format_function("finish", {"message": message, "task_completed": "true"})
+                conversations.append({"from": "function_call", "value": value})
+            else:
+                conversations.append({"from": "gpt", "value": content})
 
     return {"id": trajectory["id"], "system": system_prompt, "conversations": conversations}
 

@@ -87,3 +87,105 @@ def test_openhands_converter_preserves_tool_roles(monkeypatch):
     ]
     assert "<function=execute_bash>" in conversations[1]["value"]
     assert conversations[2]["value"].startswith("EXECUTION RESULT of [execute_bash]:")
+
+
+def test_openhands_converter_escapes_function_examples_in_non_tool_messages(monkeypatch):
+    converter = import_openhands_converter(monkeypatch)
+    line = json.dumps(
+        {
+            "id": "function-example",
+            "content": [
+                {
+                    "class_": "text_observation",
+                    "content": "Example syntax: <function=execute_bash></function>",
+                    "source": "user",
+                },
+            ],
+        }
+    )
+
+    result = converter.process_row(
+        line,
+        is_web=False,
+        api_env=None,
+        api_tool_description="",
+        api_sigs={},
+    )
+
+    assert result["conversations"][0]["from"] == "human"
+    assert "<function=" not in result["conversations"][0]["value"]
+    assert "&lt;function=execute_bash>" in result["conversations"][0]["value"]
+
+
+def test_openhands_converter_preserves_embedded_function_call_role(monkeypatch):
+    converter = import_openhands_converter(monkeypatch)
+    line = json.dumps(
+        {
+            "id": "embedded-function-call",
+            "content": [
+                {
+                    "class_": "text_observation",
+                    "content": "Finish the task.",
+                    "source": "user",
+                },
+                {
+                    "class_": "message_action",
+                    "content": (
+                        "<function=finish>\n"
+                        "<parameter=message>done</parameter>\n"
+                        "<parameter=task_completed>true</parameter>\n"
+                        "</function>"
+                    ),
+                    "description": None,
+                },
+            ],
+        }
+    )
+
+    result = converter.process_row(
+        line,
+        is_web=False,
+        api_env=None,
+        api_tool_description="",
+        api_sigs={},
+    )
+
+    assert result["conversations"][1]["from"] == "function_call"
+    assert "<function=finish>" in result["conversations"][1]["value"]
+
+
+def test_openhands_converter_does_not_duplicate_execution_result_prefix(monkeypatch):
+    converter = import_openhands_converter(monkeypatch)
+    line = json.dumps(
+        {
+            "id": "prefixed-observation",
+            "content": [
+                {
+                    "class_": "text_observation",
+                    "content": "Run pwd.",
+                    "source": "user",
+                },
+                {
+                    "class_": "code_action",
+                    "language": "bash",
+                    "content": "pwd",
+                    "description": None,
+                },
+                {
+                    "class_": "text_observation",
+                    "content": "EXECUTION RESULT of [execute_bash]:\n/workspace",
+                    "source": "environment",
+                },
+            ],
+        }
+    )
+
+    result = converter.process_row(
+        line,
+        is_web=False,
+        api_env=None,
+        api_tool_description="",
+        api_sigs={},
+    )
+
+    assert result["conversations"][2]["value"].count("EXECUTION RESULT of") == 1
