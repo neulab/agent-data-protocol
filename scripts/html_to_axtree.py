@@ -63,9 +63,8 @@ class HTMLToAXTree:
                     "raw_html": self.last_html,
                 }
             )
-            with open(
-                f"./datasets/{self.dataset}/{self.dataset}_{chunk}_bid_errors.json", "w"
-            ) as f:
+            os.makedirs("temp", exist_ok=True)
+            with open(f"./temp/{self.dataset}_{chunk}_bid_errors.json", "w") as f:
                 json.dump(self.errors, f, indent=4)
             return None
 

@@ -87,3 +87,45 @@ def test_openhands_converter_preserves_tool_roles(monkeypatch):
     ]
     assert "<function=execute_bash>" in conversations[1]["value"]
     assert conversations[2]["value"].startswith("EXECUTION RESULT of [execute_bash]:")
+
+
+def test_openhands_converter_preserves_unresolved_xpath_for_web_api(monkeypatch):
+    converter = import_openhands_converter(monkeypatch)
+    line = json.dumps(
+        {
+            "id": "xpath-preservation",
+            "content": [
+                {
+                    "class_": "text_observation",
+                    "content": "Book a flight.",
+                    "source": "user",
+                },
+                {
+                    "class_": "web_observation",
+                    "html": "<html><input id='departure'></html>",
+                    "axtree": None,
+                    "url": "https://example.com/flights",
+                    "image_observation": None,
+                    "viewport_size": None,
+                },
+                {
+                    "class_": "api_action",
+                    "function": "type",
+                    "kwargs": {"xpath": "//input[@id='departure']", "value": "New York"},
+                },
+            ],
+        }
+    )
+
+    result = converter.process_row(
+        line,
+        is_web=True,
+        api_env="browser",
+        api_tool_description="",
+        api_sigs={"type": {"required": ["bid", "value"], "optional": []}},
+    )
+
+    browser_call = result["conversations"][1]["value"]
+    assert "<function=browser>" in browser_call
+    assert "type(" in browser_call
+    assert "bid=\"//input[@id='departure']\"" in browser_call
