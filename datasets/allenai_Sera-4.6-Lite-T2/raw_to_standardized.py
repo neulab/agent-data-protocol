@@ -89,14 +89,12 @@ def convert_assistant_tool_call(
 
 def process_data(data: SchemaRaw) -> Trajectory:
     content = []
-    system_prompt = ""
 
     for message in parse_messages(data):
         role = message.role
         message_text = content_to_text(message.content)
 
         if role == "system":
-            system_prompt = message_text
             continue
         if role == "user":
             content.append(TextObservation(content=message_text, source="user"))
@@ -138,7 +136,6 @@ def process_data(data: SchemaRaw) -> Trajectory:
     return Trajectory(
         id=data.instance_id,
         content=content,
-        system_prompt=system_prompt or None,
         details={
             "source": "allenai/Sera-4.6-Lite-T2",
             "func_name": data.func_name,

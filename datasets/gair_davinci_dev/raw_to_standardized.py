@@ -115,10 +115,7 @@ def add_finish_if_missing(content):
 
 def process_data(data: SchemaRaw, row_number: int = 0):
     content = []
-    system_prompts = []
     for msg in data.messages:
-        if msg.role == "system" and msg.content:
-            system_prompts.append(msg.content)
         content.extend(message_to_events(msg))
 
     content = add_finish_if_missing(content)
@@ -128,7 +125,6 @@ def process_data(data: SchemaRaw, row_number: int = 0):
     return Trajectory(
         id=data.sample_name or data.id or f"gair_davinci_dev_{row_number}",
         content=content,
-        system_prompt=system_prompts[0] if system_prompts else None,
         details={
             "source": "GAIR/daVinci-Dev",
             "config": "env_native",

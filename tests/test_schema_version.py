@@ -34,12 +34,6 @@ def test_trajectory_defaults_to_current_schema_version():
     assert trajectory.model_dump()["schema_version"] == SCHEMA_VERSION
 
 
-def test_trajectory_accepts_top_level_system_prompt():
-    trajectory = Trajectory(id="example", content=[], system_prompt="You are helpful.")
-    assert trajectory.system_prompt == "You are helpful."
-    assert trajectory.model_dump()["system_prompt"] == "You are helpful."
-
-
 def test_trajectory_rejects_unsupported_schema_version():
     with pytest.raises(ValidationError, match="Unsupported schema_version"):
         Trajectory(schema_version="0.0.0", id="example", content=[])

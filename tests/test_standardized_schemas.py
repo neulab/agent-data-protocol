@@ -98,8 +98,8 @@ def test_sample_standardized_against_schema(sample_path):
                 f"in {sample_path} sample {sample_id}"
             )
             assert "system_prompt" not in traj.details, (
-                f"system_prompt must be a top-level Trajectory field, not details metadata, "
-                f"in {sample_path} sample {sample_id}"
+                f"system_prompt should not be stored in details metadata in "
+                f"{sample_path} sample {sample_id}"
             )
             stringified_numeric_details = {
                 key: value

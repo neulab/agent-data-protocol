@@ -138,10 +138,6 @@ for line in sys.stdin:
     tools_by_name = _tool_index(available_tools)
     content = []
     previous_was_tool_call = False
-    system_prompt = "\n\n".join(
-        message.content for message in data.messages if message.role == "system"
-    )
-
     for message in data.messages:
         converted = _convert_message(message, previous_was_tool_call, tools_by_name)
         content.extend(converted)
@@ -166,7 +162,6 @@ for line in sys.stdin:
         id=data.id or f"{data.split or 'miroverse'}-unknown",
         content=content,
         available_apis=available_apis or None,
-        system_prompt=system_prompt or None,
         details=details,
     )
     print(json.dumps(trajectory.model_dump(), ensure_ascii=False))

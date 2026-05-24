@@ -37,14 +37,6 @@ class Trajectory(BaseModel):
         ),
         exclude_if=lambda value: value is None,
     )
-    system_prompt: str | None = Field(
-        default=None,
-        description=(
-            "System-level instructions that apply to the trajectory. Use this for "
-            "source system messages instead of storing them in details."
-        ),
-        exclude_if=lambda value: value is None,
-    )
 
     details: dict[str, Any] = Field(
         default_factory=dict,

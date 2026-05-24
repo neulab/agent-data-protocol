@@ -23,8 +23,7 @@ The root container for all agent interaction data.
 - `id` (str): Unique identifier for the trajectory
 - `content` (list): Sequence of actions and observations that make up the trajectory
 - `available_apis` (list, optional): API function names available for this trajectory. Only populate this for datasets that have `api.py` and whose source data explicitly specifies per-instance tool/API availability; do not populate it by copying all functions from `api.py` or inferring it from APIs used in the trajectory. When present, it must be a subset of the dataset's `api.py` functions and cover every `ApiAction.function` in the trajectory.
-- `system_prompt` (str, optional): System-level instructions that apply to the trajectory. Use this for source system messages instead of storing them in `details`.
-- `details` (dict): Additional dataset-specific metadata. Common ADP concepts with first-class fields, such as `available_apis` and `system_prompt`, should not be duplicated here.
+- `details` (dict): Additional dataset-specific metadata.
 
 **Purpose**: Represents a complete sequence of agent interactions, containing both actions taken by the agent and observations received from the environment / user.
 
@@ -124,9 +123,8 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.1.0",
   "id": "example_trajectory_001",
-  "system_prompt": "You are a helpful assistant.",
   "content": [
     {
       "class_": "MessageAction",
