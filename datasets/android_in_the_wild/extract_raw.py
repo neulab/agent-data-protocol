@@ -33,7 +33,8 @@ dataset_directories = {
 
 # get the path that the script is in
 script_dir = os.path.dirname(os.path.abspath(__file__))
-image_dir = os.path.join(script_dir, "screenshots")
+image_dir_name = "images"
+image_dir = os.path.join(script_dir, image_dir_name)
 os.makedirs(image_dir, exist_ok=True)
 
 
@@ -115,9 +116,8 @@ for dataset_name, directory in dataset_directories.items():
         json_dict["image/width"] = json_dict["image/width"][0]
         json_dict["image/channels"] = json_dict["image/channels"][0]
 
-        image_file_name: str = "{}/{:}-{:d}".format(
-            image_dir, json_dict["episode_id"], json_dict["step_id"]
-        )
+        image_stem = f"{json_dict['episode_id']}-{json_dict['step_id']}"
+        image_file_name: str = os.path.join(image_dir, image_stem)
         raw_screenshot: Image.Image = parse_image_data(
             json_dict["image/encoded"][0],
             json_dict["image/height"],
@@ -148,6 +148,6 @@ for dataset_name, directory in dataset_directories.items():
             drawer.text(text_position, lbl, anchor="lb", fill="white")
         raw_screenshot.save(image_file_name + "-annotated.png")
 
-        json_dict["image/encoded"] = image_file_name
+        json_dict["image/encoded"] = os.path.join(image_dir_name, image_stem)
 
         print(json.dumps(json_dict))

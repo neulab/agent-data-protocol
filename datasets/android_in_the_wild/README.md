@@ -9,6 +9,11 @@ Before running `extract_raw.py`, you need to set up your Google Cloud
 credentials. Please run `gcloud auth application-default login` to set up your
 credentials.
 
+`extract_raw.py` writes extracted screenshots to `datasets/android_in_the_wild/images/`
+and records dataset-relative `images/<episode_id>-<step_id>` references in the raw
+sample output. The generated screenshot files are extraction artifacts and are not
+committed to this repository.
+
 ## Data Location & Statistics
 
 |     Name    |  # Episodes |   # Examples  | # Unique Prompts |                                                                  Data location                                                                 |
