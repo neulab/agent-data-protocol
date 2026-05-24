@@ -28,6 +28,44 @@ def load_json(file_path):
         return json.load(file)
 
 
+@pytest.mark.parametrize(
+    "sample",
+    [
+        {
+            "id": "extra-root",
+            "content": [],
+            "unexpected_root_field": True,
+        },
+        {
+            "id": "extra-action",
+            "content": [
+                {
+                    "class_": "message_action",
+                    "content": "hello",
+                    "unexpected_action_field": True,
+                }
+            ],
+        },
+        {
+            "id": "extra-observation",
+            "content": [
+                {
+                    "class_": "text_observation",
+                    "content": "hello",
+                    "source": "environment",
+                    "unexpected_observation_field": True,
+                }
+            ],
+        },
+    ],
+)
+def test_standardized_schema_rejects_extra_fields(sample):
+    with pytest.raises(ValidationError) as exc_info:
+        Trajectory(**sample)
+
+    assert any(error["type"] == "extra_forbidden" for error in exc_info.value.errors())
+
+
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))
 def test_sample_standardized_against_schema(sample_path):
     samples = load_json(sample_path)

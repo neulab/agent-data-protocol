@@ -1,6 +1,6 @@
 from typing import Any, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
@@ -12,6 +12,8 @@ from schema.version import SCHEMA_VERSION, SUPPORTED_SCHEMA_VERSIONS
 
 
 class Trajectory(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     schema_version: str = Field(
         default=SCHEMA_VERSION,
         description="ADP standardized schema version used by this trajectory.",
