@@ -128,11 +128,11 @@ def process_data(data: SchemaRaw, row_number: int = 0):
     return Trajectory(
         id=data.sample_name or data.id or f"gair_davinci_dev_{row_number}",
         content=content,
+        system_prompt=system_prompts[0] if system_prompts else None,
         details={
             "source": "GAIR/daVinci-Dev",
             "config": "env_native",
             "sample_name": data.sample_name or data.id or "",
-            "system_prompt": system_prompts[0] if system_prompts else "",
         },
     )
 

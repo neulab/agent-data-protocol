@@ -138,6 +138,7 @@ def process_data(data: SchemaRaw) -> Trajectory:
     return Trajectory(
         id=data.instance_id,
         content=content,
+        system_prompt=system_prompt or None,
         details={
             "source": "allenai/Sera-4.6-Lite-T2",
             "func_name": data.func_name,
@@ -146,7 +147,6 @@ def process_data(data: SchemaRaw) -> Trajectory:
             "problem_statement": data.problem_statement,
             "rollout_patch": data.rollout_patch,
             "target_patch": data.target_patch,
-            "system_prompt": system_prompt,
         },
     )
 

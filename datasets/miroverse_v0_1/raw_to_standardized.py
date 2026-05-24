@@ -150,8 +150,6 @@ for line in sys.stdin:
     _mark_final_answer(content)
 
     details = {"split": data.split or ""}
-    if system_prompt:
-        details["system_prompt"] = system_prompt
 
     # The per-trajectory list of advertised MCP tools is recorded on the
     # top-level Trajectory.available_apis field as identifiers; the dataset's
@@ -168,6 +166,7 @@ for line in sys.stdin:
         id=data.id or f"{data.split or 'miroverse'}-unknown",
         content=content,
         available_apis=available_apis or None,
+        system_prompt=system_prompt or None,
         details=details,
     )
     print(json.dumps(trajectory.model_dump(), ensure_ascii=False))
