@@ -89,6 +89,7 @@ def test_agenttuning_os_samples_keep_solution_format_instruction():
         DATASET_DIR / "sample_std.json",
         DATASET_DIR / "sample_sft.json",
         DATASET_DIR / "sample_sft" / "sample_sft_openhands.json",
+        DATASET_DIR / "sample_sft" / "sample_sft_sweagent.json",
     ]
     required_fragment = "<solution> Your solution here </solution>"
 
