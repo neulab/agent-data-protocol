@@ -47,7 +47,7 @@ def contains_function_call_pattern(content: str) -> bool:
 def escape_function_call_patterns(content: str) -> str:
     return (
         content.replace("<function=", "&lt;function=")
-        .replace("<function_calls>", "&lt;function_calls&gt;")
+        .replace("<function_calls>", "&lt;function_calls>")
         .replace("<invoke name=", "&lt;invoke name=")
     )
 

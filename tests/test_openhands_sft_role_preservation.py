@@ -97,7 +97,10 @@ def test_openhands_converter_escapes_function_examples_in_non_tool_messages(monk
             "content": [
                 {
                     "class_": "text_observation",
-                    "content": "Example syntax: <function=execute_bash></function>",
+                    "content": (
+                        "Example syntax: <function=execute_bash></function> "
+                        "<function_calls> <invoke name=finish>"
+                    ),
                     "source": "user",
                 },
             ],
@@ -112,9 +115,14 @@ def test_openhands_converter_escapes_function_examples_in_non_tool_messages(monk
         api_sigs={},
     )
 
+    value = result["conversations"][0]["value"]
     assert result["conversations"][0]["from"] == "human"
-    assert "<function=" not in result["conversations"][0]["value"]
-    assert "&lt;function=execute_bash>" in result["conversations"][0]["value"]
+    assert "<function=" not in value
+    assert "<function_calls>" not in value
+    assert "<invoke name=" not in value
+    assert "&lt;function=execute_bash>" in value
+    assert "&lt;function_calls>" in value
+    assert "&lt;invoke name=finish>" in value
 
 
 def test_openhands_converter_preserves_embedded_function_call_role(monkeypatch):
