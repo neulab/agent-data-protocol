@@ -20,6 +20,12 @@ def test_dataset_structure(subdir):
     """Test that each dataset has the required files."""
     subdir_path = os.path.join(DATASET_PATH, subdir)
 
+    dataset_sft_converter_path = os.path.join(subdir_path, "std_to_sft.py")
+    assert not os.path.exists(dataset_sft_converter_path), (
+        f"Dataset-local std_to_sft.py is not allowed in {subdir_path}; "
+        "use a shared converter under agents/ instead"
+    )
+
     # All datasets should have sample_raw.json
     sample_raw_path = os.path.join(subdir_path, "sample_raw.json")
     assert os.path.exists(sample_raw_path), f"sample_raw.json not found in {subdir_path}"
