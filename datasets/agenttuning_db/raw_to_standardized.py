@@ -7,7 +7,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def convert_system(system_regex: re.Match[str]) -> list[Observation]:
@@ -105,7 +105,7 @@ for line in sys.stdin:
         continue
 
     # Standardize the data
-    standardize_data = Trajectory(
+    standardize_data = create_trajectory_with_tool_call_links(
         id=raw_data["id"],
         content=content,
     )

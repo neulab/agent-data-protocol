@@ -6,6 +6,7 @@ from schema_raw import SchemaRaw
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 PLACEHOLDER_MARKER = "no solution written"
@@ -60,7 +61,7 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
             content="<finish> Completed the terminal task with the provided reference solution. </finish>"
         ),
     ]
-    return Trajectory(id=data.id, content=content, details=make_details(data))
+    return create_trajectory_with_tool_call_links(id=data.id, content=content, details=make_details(data))
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def convert_step(step) -> list:
@@ -170,7 +170,7 @@ def process_data(data):
         ]
     )
     content.extend(assistant_end_message)
-    return Trajectory(id=data.id, content=content)
+    return create_trajectory_with_tool_call_links(id=data.id, content=content)
 
 
 if __name__ == "__main__":

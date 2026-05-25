@@ -8,6 +8,7 @@ from typing import Any
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 TYPE_MAP = {
@@ -189,7 +190,7 @@ def convert_trajectory(raw_data: dict[str, Any]) -> Trajectory:
 
     available_apis = parse_available_apis(messages)
     details = {"dataset_source": raw_data.get("dataset_source", "")}
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=raw_data["id"],
         content=content,
         available_apis=available_apis or None,

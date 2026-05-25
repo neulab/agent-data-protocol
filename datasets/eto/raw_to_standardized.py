@@ -3,7 +3,7 @@ import sys
 
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 # Process each line of input individually
 for line in sys.stdin:
@@ -22,7 +22,7 @@ for line in sys.stdin:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
     # Create trajectory
-    traj = Trajectory(id=raw_data["id"], content=content)
+    traj = create_trajectory_with_tool_call_links(id=raw_data["id"], content=content)
 
     # Print the standardized data as JSON
     print(json.dumps(traj.model_dump()))

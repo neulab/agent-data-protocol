@@ -10,6 +10,8 @@ from pydantic import ValidationError
 
 from schema.action.api import ApiAction
 from schema.observation.image import ImageObservation
+from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 TOOL_ACTION_CLASSES = {"api_action", "code_action"}
@@ -201,26 +203,45 @@ def test_standardized_schema_accepts_matched_tool_call_result():
     assert observation.tool_call_id == "call_000001"
 
 
-def test_standardized_schema_backfills_adjacent_tool_call_result():
-    trajectory = Trajectory(
+@pytest.mark.parametrize(
+    ("action", "observation", "expected_tool_call_id"),
+    [
+        (
+            ApiAction(function="search", kwargs={"query": "agent data protocol"}),
+            TextObservation(content="Search result text", source="user"),
+            "call_000001",
+        ),
+        (
+            ApiAction(
+                tool_call_id="call_from_action",
+                function="search",
+                kwargs={"query": "agent data protocol"},
+            ),
+            TextObservation(content="Search result text", source="environment"),
+            "call_from_action",
+        ),
+        (
+            ApiAction(function="search", kwargs={"query": "agent data protocol"}),
+            TextObservation(
+                tool_call_id="call_from_observation",
+                content="Search result text",
+                source="environment",
+            ),
+            "call_from_observation",
+        ),
+    ],
+)
+def test_raw_converter_helper_backfills_adjacent_tool_call_result(
+    action, observation, expected_tool_call_id
+):
+    trajectory = create_trajectory_with_tool_call_links(
         id="backfilled-tool-result",
-        content=[
-            {
-                "class_": "api_action",
-                "function": "search",
-                "kwargs": {"query": "agent data protocol"},
-            },
-            {
-                "class_": "text_observation",
-                "content": "Search result text",
-                "source": "user",
-            },
-        ],
+        content=[action, observation],
     )
 
     action, observation = trajectory.content
-    assert action.tool_call_id == "call_000001"
-    assert observation.tool_call_id == "call_000001"
+    assert action.tool_call_id == expected_tool_call_id
+    assert observation.tool_call_id == expected_tool_call_id
     assert observation.source == "environment"
 
 

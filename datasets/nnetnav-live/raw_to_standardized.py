@@ -7,7 +7,7 @@ from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def parse_observation(content: str) -> Dict[str, Any]:
@@ -155,7 +155,7 @@ def main():
                 if not isinstance(traj_content[-1], MessageAction):
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
                 traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
-                traj = Trajectory(
+                traj = create_trajectory_with_tool_call_links(
                     id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"}
                 )
                 print(json.dumps(traj.model_dump()))
@@ -185,7 +185,7 @@ def main():
 
     traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
 
-    traj = Trajectory(id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"})
+    traj = create_trajectory_with_tool_call_links(id=str(traj_id), content=traj_content, details={"source": "nnetnav-live"})
     print(json.dumps(traj.model_dump()))
 
 

@@ -8,7 +8,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 FINISH_MESSAGE = "<finish> I have successfully completed the task. </finish>"
 # Resolved rows occasionally omit an explicit finish tool call. In that case,
@@ -110,7 +110,7 @@ def process_data(data: SchemaRaw):
         content.append(TextObservation(content=SUCCESS_OBSERVATION, source="environment"))
         content.append(MessageAction(content=FINISH_MESSAGE))
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=data.trajectory_id,
         content=content,
         details={
