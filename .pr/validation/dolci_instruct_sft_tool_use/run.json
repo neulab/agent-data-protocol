@@ -2,6 +2,9 @@
   "dataset": "dolci_instruct_sft_tool_use",
   "record_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_351977",
   "model": "openhands/minimax-m2.7",
+  "selected_message_indices": [
+    1
+  ],
   "selected_user_index": 1,
   "selected_user_text": "I\u2019m planning a trip to New York! I\u2019m staying at the Renaissance Hotel. My guest ID is NYR543, and I want to book a deluxe room at $350 per night from 2024-08-04 to 2024-08-09. Can you also check which city ZIP code 10001 refers to?",
   "validation_mode": "OpenHands SDK Agent/Conversation with replayed mock tool executors for non-finish/non-think tools",
@@ -10,11 +13,19 @@
     "get_city_from_zipcode"
   ],
   "expected_tool_calls_in_record": 3,
+  "expected_environment_tool_calls_in_record": 2,
+  "expects_environment_tool_calls": true,
   "max_iterations": 12,
   "final_status": "ConversationExecutionStatus.FINISHED",
+  "completed_as_expected": true,
   "completed_with_tool_execution": true,
+  "completed_with_any_tool_call": true,
   "performed_tool_call": true,
+  "performed_environment_tool_call": true,
   "reached_finish": true,
+  "called_finish_tool": true,
+  "validation_status": "completed",
+  "failure_reason": null,
   "action_names": [
     "reserve_hotel_room",
     "get_city_from_zipcode",
@@ -22,9 +33,9 @@
   ],
   "actions": [
     {
-      "id": "cbed1dd2-2008-4f11-91f1-51466c3badad",
+      "id": "7eb47abb-8d6e-4640-a662-9acdab52cb52",
       "tool_name": "reserve_hotel_room",
-      "tool_call_id": "call_function_t969fkx579ni_1",
+      "tool_call_id": "call_function_ec5y6s9oj6qa_1",
       "action": {
         "security_risk": null,
         "summary": "Book deluxe room at Renaissance Hotel",
@@ -37,31 +48,31 @@
       }
     },
     {
-      "id": "eedbb014-053f-4e0a-8ebc-1f436df9f3a2",
+      "id": "df082326-9fe8-4cb8-801c-63ac25909a93",
       "tool_name": "get_city_from_zipcode",
-      "tool_call_id": "call_function_t969fkx579ni_2",
+      "tool_call_id": "call_function_ec5y6s9oj6qa_2",
       "action": {
         "security_risk": null,
-        "summary": "Get city for ZIP code 10001",
+        "summary": "Get city name for ZIP code 10001",
         "zipcode": "10001",
         "kind": "GetCityFromZipcodeAction"
       }
     },
     {
-      "id": "b038704b-76ca-417f-85bc-e2bf412bc77c",
+      "id": "77c2b6cc-2fc9-4d73-b2c7-993d5bcfce7d",
       "tool_name": "finish",
-      "tool_call_id": "call_function_d775n3lx9u7d_1",
+      "tool_call_id": "call_function_kca7p1e4mx4b_1",
       "action": {
-        "message": "Here's your trip information:\n\n**Hotel Reservation:**\n- \u2705 Reservation confirmed! Confirmation number: **RES123456**\n- Hotel: Renaissance Hotel\n- Room Type: Deluxe\n- Nightly Rate: $350\n- Check-in: August 4, 2024\n- Check-out: August 9, 2024\n- Guest ID: NYR543\n\n**ZIP Code Lookup:**\n- ZIP code 10001 corresponds to **New York, NY** - so you're already in the right city for your trip!\n\nHave a wonderful trip to New York! Is there anything else I can help you with?",
+        "message": "Your hotel reservation has been confirmed! Here are the details:\n\n**Reservation Confirmation: RES123456**\n- **Hotel:** Renaissance Hotel\n- **Room Type:** Deluxe\n- **Check-in:** August 4, 2024\n- **Check-out:** August 9, 2024\n- **Nightly Rate:** $350\n- **Total Cost:** $1,750 (5 nights)\n- **Guest ID:** NYR543\n\n**ZIP Code Lookup:**\n- ZIP code 10001 corresponds to **New York City** (specifically the Manhattan neighborhood of Chelsea/Greenwich Village area).\n\nEnjoy your trip to New York!",
         "kind": "FinishAction"
       }
     }
   ],
   "observations": [
     {
-      "action_id": "cbed1dd2-2008-4f11-91f1-51466c3badad",
+      "action_id": "7eb47abb-8d6e-4640-a662-9acdab52cb52",
       "tool_name": "reserve_hotel_room",
-      "tool_call_id": "call_function_t969fkx579ni_1",
+      "tool_call_id": "call_function_ec5y6s9oj6qa_1",
       "observation": {
         "content": [
           {
@@ -75,9 +86,9 @@
       }
     },
     {
-      "action_id": "eedbb014-053f-4e0a-8ebc-1f436df9f3a2",
+      "action_id": "df082326-9fe8-4cb8-801c-63ac25909a93",
       "tool_name": "get_city_from_zipcode",
-      "tool_call_id": "call_function_t969fkx579ni_2",
+      "tool_call_id": "call_function_ec5y6s9oj6qa_2",
       "observation": {
         "content": [
           {
@@ -91,15 +102,15 @@
       }
     },
     {
-      "action_id": "b038704b-76ca-417f-85bc-e2bf412bc77c",
+      "action_id": "77c2b6cc-2fc9-4d73-b2c7-993d5bcfce7d",
       "tool_name": "finish",
-      "tool_call_id": "call_function_d775n3lx9u7d_1",
+      "tool_call_id": "call_function_kca7p1e4mx4b_1",
       "observation": {
         "content": [
           {
             "cache_prompt": false,
             "type": "text",
-            "text": "Here's your trip information:\n\n**Hotel Reservation:**\n- \u2705 Reservation confirmed! Confirmation number: **RES123456**\n- Hotel: Renaissance Hotel\n- Room Type: Deluxe\n- Nightly Rate: $350\n- Check-in: August 4, 2024\n- Check-out: August 9, 2024\n- Guest ID: NYR543\n\n**ZIP Code Lookup:**\n- ZIP code 10001 corresponds to **New York, NY** - so you're already in the right city for your trip!\n\nHave a wonderful trip to New York! Is there anything else I can help you with?"
+            "text": "Your hotel reservation has been confirmed! Here are the details:\n\n**Reservation Confirmation: RES123456**\n- **Hotel:** Renaissance Hotel\n- **Room Type:** Deluxe\n- **Check-in:** August 4, 2024\n- **Check-out:** August 9, 2024\n- **Nightly Rate:** $350\n- **Total Cost:** $1,750 (5 nights)\n- **Guest ID:** NYR543\n\n**ZIP Code Lookup:**\n- ZIP code 10001 corresponds to **New York City** (specifically the Manhattan neighborhood of Chelsea/Greenwich Village area).\n\nEnjoy your trip to New York!"
           }
         ],
         "is_error": false,
@@ -108,10 +119,5 @@
     }
   ],
   "completion_written": true,
-  "error": null,
-  "called_finish_tool": true,
-  "validation_status": "completed",
-  "failure_reason": null,
-  "performed_environment_tool_call": true,
-  "completed_with_any_tool_call": true
+  "error": null
 }

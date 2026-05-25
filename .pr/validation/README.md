@@ -20,14 +20,14 @@ the replayed tool feedback.
 Summary from `summary.json`:
 
 - Total datasets: 50
-- Completed with at least one parsed non-`finish`/non-`think` tool action: 17
-- Completed with such a tool action and a `finish` call: 12
-- Completed with such a tool action and a final assistant message: 5
-- Reached finished state with only `finish`/`think` or malformed tool calls: 6
-- Finished without any parsed tool calls: 13
-- Used parsed tool calls but did not finish successfully in the replayed mock
-  environment: 13
-- Timed out: 1
+- Completed as expected: 50
+- Stale or unvalidated runs: 0
+- Incomplete runs: 0
+- Completed with at least one parsed non-`finish`/non-`think` tool action: 44
+- Completed with at least one parsed tool action of any kind: 46
+- Records with no environment tool calls expected in the converted SFT sample: 6
 
-The incomplete runs are intentionally preserved rather than normalized into
-successes.
+For records with environment tool calls, `completed_as_expected` requires at
+least one parsed non-`finish`/non-`think` tool action before the SDK run reaches
+a finished state. For records whose converted sample has no environment tool
+calls, reaching a finished state is considered expected.

@@ -15,6 +15,10 @@
         {
           "type": "text",
           "text": "I have access to a python code repository in the directory /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 . Consider the following issue description:\n\n<issue_description>\nCache directory creation fails when directory already exists\n\n#### Description\n\nWhen using parso's caching functionality, the cache directory creation logic is inverted, causing `FileNotFoundError` when the cache directory already exists.\n\n#### Steps/Code to Reproduce\n\n```python\nimport parso\nfrom pathlib import Path\nimport tempfile\nimport os\n\n# Create a temporary directory for testing\nwith tempfile.TemporaryDirectory() as tmpdir:\n    cache_dir = Path(tmpdir) / \"parso_cache\"\n    \n    # First, create the cache directory manually\n    cache_dir.mkdir(parents=True, exist_ok=True)\n    \n    # Now try to parse something with caching enabled\n    # This should work but will fail\n    parso.parse('x = 1', cache=True)\n```\n\nThe error occurs because the cache directory creation logic tries to create directories that already exist, instead of creating them when they don't exist.\n\n#### Expected Behavior\n\nThe cache should work regardless of whether the cache directory already exists or not. If the directory exists, it should be used. If it doesn't exist, it should be created.\n\n#### Actual Behavior\n\nWhen the cache directory already exists, a `FileNotFoundError` is raised because `os.makedirs()` is called on an existing directory without the `exist_ok=True` parameter.\n</issue_description>\n\nAct as a code search agent and localize the specific files, classes or functions of code that need modification to resolve the issue in <issue_description>.\n\nNOTE: You do not need to solve the issue, all you need to do is localize relevant code from the repository. Your output will be used to guide another agent to solve the issue.\n\nIMPORTANT: Your output MUST follow the below rules:\n1. The final output must be a tool call to the \"localization_finish\" tool containing relevant code locations.\n2. The locations of the file path must be RELATIVE to the /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 directory WITHOUT any leading \"./\" in the output.\n3. Only include those locations in your output that need modification to resolve the issue in <issue_description>. Do NOT include any locations that do not need modification."
+        },
+        {
+          "type": "text",
+          "text": "\n\nUse the available tools to interact with the environment and make progress on the task. Call finish only after the task is complete."
         }
       ],
       "role": "user"
@@ -23,11 +27,11 @@
       "role": "assistant",
       "tool_calls": [
         {
-          "id": "call_function_ziuntpoo5evo_1",
+          "id": "call_function_xqvk71vcjci6_1",
           "type": "function",
           "function": {
             "name": "terminal",
-            "arguments": "{\"summary\": \"List Python files in the repository\", \"command\": \"find /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 -type f -name \\\"*.py\\\" | head -50\", \"security_risk\": \"LOW\"}"
+            "arguments": "{\"command\": \"find /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 -type f -name \\\"*.py\\\" | head -50\", \"security_risk\": \"LOW\"}"
           }
         }
       ]
@@ -40,18 +44,18 @@
         }
       ],
       "role": "tool",
-      "tool_call_id": "call_function_ziuntpoo5evo_1",
+      "tool_call_id": "call_function_xqvk71vcjci6_1",
       "name": "terminal"
     },
     {
       "role": "assistant",
       "tool_calls": [
         {
-          "id": "call_function_9iyyfs55lfsk_1",
+          "id": "call_function_zaulh7co8h3v_1",
           "type": "function",
           "function": {
             "name": "terminal",
-            "arguments": "{\"command\": \"cat /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py\", \"security_risk\": \"LOW\", \"summary\": \"View the cache.py file content\"}"
+            "arguments": "{\"command\": \"cat /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py\", \"security_risk\": \"LOW\"}"
           }
         }
       ]
@@ -64,224 +68,8 @@
         }
       ],
       "role": "tool",
-      "tool_call_id": "call_function_9iyyfs55lfsk_1",
+      "tool_call_id": "call_function_zaulh7co8h3v_1",
       "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_3mo0zcdxjmkn_1",
-          "type": "function",
-          "function": {
-            "name": "terminal",
-            "arguments": "{\"summary\": \"Find the line with directory.exists() bug\", \"command\": \"grep -n \\\"directory.exists()\\\" /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py\", \"security_risk\": \"LOW\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "def clear_cache(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    shutil.rmtree(cache_path)\n    parser_cache.clear()\n\n\ndef clear_inactive_cache(\n    cache_path=None,\n    inactivity_threshold=_CACHED_FILE_MAXIMUM_SURVIVAL,\n):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    if not cache_path.exists():\n        return False\n    for dirname in os.listdir(cache_path):\n        version_path = cache_path.joinpath(dirname)\n        if not version_path.is_dir():\n            continue\n        for file in os.scandir(version_path):\n            if file.stat().st_atime + _CACHED_FILE_MAXIMUM_SURVIVAL <= time.time():\n                try:\n                    os.remove(file.path)\n                except OSError:  # silently ignore all failures\n                    continue\n    else:\n        return True\n\n\ndef _touch(path):\n    try:\n        os.utime(path, None)\n    except FileNotFoundError:\n        try:\n            file = open(path, 'a')\n            file.close()\n        except (OSError, IOError):  # TODO Maybe log this?\n            return False\n    return True\n\n\ndef _remove_cache_and_update_lock(cache_path=None):\n    lock_path = _get_cache_clear_lock_path(cache_path=cache_path)\n    try:\n        clear_lock_time = os.path.getmtime(lock_path)\n    except FileNotFoundError:\n        clear_lock_time = None\n    if (\n        clear_lock_time is None  # first time\n        or clear_lock_time + _CACHE_CLEAR_THRESHOLD <= time.time()\n    ):\n        if not _touch(lock_path):\n            # First make sure that as few as possible other cleanup jobs also\n            # get started. There is still a race condition but it's probably\n            # not a big problem.\n            return False\n\n        clear_inactive_cache(cache_path=cache_path)\n\n\ndef _get_hashed_path(hashed_grammar, path, cache_path=None):\n    directory = _get_cache_directory_path(cache_path=cache_path)\n\n    file_hash = hashlib.sha256(str(path).encode(\"utf-8\")).hexdigest()\n    return os.path.join(directory, '%s-%s.pkl' % (hashed_grammar, file_hash))\n\n\ndef _get_cache_directory_path(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    directory = cache_path.joinpath(_VERSION_TAG)\n    if directory.exists():\n        os.makedirs(directory)\n    return directory\n[The command completed with exit code 0.]\n[Current working directory: /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6]\n[Python interpreter: /home/adityabs/miniconda3/bin/python]\n[Command finished with exit code 0]"
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_3mo0zcdxjmkn_1",
-      "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_zy6qd0h8jsw4_1",
-          "type": "function",
-          "function": {
-            "name": "terminal",
-            "arguments": "{\"command\": \"grep -n \\\"_get_cache_directory_path\\\" /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py\", \"security_risk\": \"LOW\", \"summary\": \"Get line numbers for the function\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_zy6qd0h8jsw4_1",
-      "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_ju7nb7th3fa4_1",
-          "type": "function",
-          "function": {
-            "name": "terminal",
-            "arguments": "{\"security_risk\": \"LOW\", \"summary\": \"Get line numbers for the function\", \"command\": \"grep -n \\\"_get_cache_directory_path\\\" /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_ju7nb7th3fa4_1",
-      "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_0grafl7ay3ov_1",
-          "type": "function",
-          "function": {
-            "name": "terminal",
-            "arguments": "{\"command\": \"grep -n \\\"_get_cache_directory_path\\\\|_get_hashed_path\\\" /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py\", \"security_risk\": \"LOW\", \"summary\": \"Find function definitions in cache.py\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_0grafl7ay3ov_1",
-      "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_os94v0aubd4w_1",
-          "type": "function",
-          "function": {
-            "name": "terminal",
-            "arguments": "{\"command\": \"awk '/^def _get_cache_directory_path/,/^def [a-z]/' /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py | tail -20\", \"security_risk\": \"LOW\", \"summary\": \"View the _get_cache_directory_path function\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_os94v0aubd4w_1",
-      "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_4ki2mismssd0_1",
-          "type": "function",
-          "function": {
-            "name": "terminal",
-            "arguments": "{\"command\": \"cat -n /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py | tail -30\", \"security_risk\": \"LOW\", \"summary\": \"View end of cache.py with line numbers\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_4ki2mismssd0_1",
-      "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_qktpzm2z4oc0_1",
-          "type": "function",
-          "function": {
-            "name": "terminal",
-            "arguments": "{\"summary\": \"View end of cache.py\", \"command\": \"cat /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py | tail -15\", \"security_risk\": \"LOW\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_qktpzm2z4oc0_1",
-      "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_8ey9v4v5x6q7_1",
-          "type": "function",
-          "function": {
-            "name": "terminal",
-            "arguments": "{\"command\": \"wc -l /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py\", \"security_risk\": \"LOW\", \"summary\": \"Count lines in cache.py\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_8ey9v4v5x6q7_1",
-      "name": "terminal"
-    },
-    {
-      "role": "assistant",
-      "tool_calls": [
-        {
-          "id": "call_function_t2sfpmhocu45_1",
-          "type": "function",
-          "function": {
-            "name": "think",
-            "arguments": "{\"summary\": \"Identify the bug location\", \"thought\": \"I've found the issue. Looking at the cache.py file that was displayed earlier, I can see the bug at the end of the file in the `_get_cache_directory_path` function:\\n\\n```python\\ndef _get_cache_directory_path(cache_path=None):\\n    if cache_path is None:\\n        cache_path = _default_cache_path\\n    directory = cache_path.joinpath(_VERSION_TAG)\\n    if directory.exists():\\n        os.makedirs(directory)\\n    return directory\\n```\\n\\nThe bug is on the condition `if directory.exists()` - this should be `if not directory.exists()` (i.e., the condition should create the directory when it does NOT exist, not when it already exists).\\n\\nThe logic is:\\n1. Get the cache directory path\\n2. If the directory already exists, try to create it (which causes FileNotFoundError when it exists)\\n3. Return the directory\\n\\nThe correct logic should be:\\n1. Get the cache directory path  \\n2. If the directory does NOT exist, create it\\n3. Return the directory\\n\\nThe fix is to change line 277 from:\\n```python\\n    if directory.exists():\\n```\\nto:\\n```python\\n    if not directory.exists():\\n```\\n\\nOr alternatively use `os.makedirs(directory, exist_ok=True)` instead of the condition.\\n\\nThe relevant file is: parso/cache.py\\nThe function is: `_get_cache_directory_path`\\nThe specific lines are around 269-277 (approximately lines 269-277)\"}"
-          }
-        }
-      ]
-    },
-    {
-      "content": [
-        {
-          "type": "text",
-          "text": "Your thought has been logged."
-        }
-      ],
-      "role": "tool",
-      "tool_call_id": "call_function_t2sfpmhocu45_1",
-      "name": "think"
     }
   ],
   "tools": [
@@ -326,33 +114,23 @@
       "HTTP-Referer": "https://docs.all-hands.dev/",
       "X-Title": "OpenHands"
     },
-    "prompt_cache_key": "249683e5-770c-439c-84a2-c8453427b792"
+    "prompt_cache_key": "8344a390-4daf-4046-b8dd-130fbbf24609"
   },
   "response": {
-    "id": "066388825f3aaa9c9d00ea67c5bf2db5",
-    "created": 1779717512,
+    "id": "06639f97486d56b0a4c0235153425512",
+    "created": 1779723428,
     "model": "litellm_proxy/minimax-m2.7",
     "object": "chat.completion",
     "choices": [
       {
-        "finish_reason": "tool_calls",
+        "finish_reason": "length",
         "index": 0,
         "message": {
-          "content": "\n\n",
+          "content": "\n\nI found the bug. Let me look at the specific function with the issue:\n<minimax:tool_call>\n<invoke name=\"terminal\">\n<parameter name=\"command\">grep -n \"os.makedirs\" /tmp/testbed/59d4d6f5/swesmith_david",
           "role": "assistant",
-          "tool_calls": [
-            {
-              "function": {
-                "arguments": "{\"command\":\"cd /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 && python -c \\\"\\n# Quick test to confirm the bug exists\\nfrom parso import cache\\nfrom pathlib import Path\\nimport tempfile\\nimport os\\n\\n# Create a temporary directory for testing\\nwith tempfile.TemporaryDirectory() as tmpdir:\\n    cache_dir = Path(tmpdir) / 'parso_cache'\\n    \\n    # First, create the cache directory manually\\n    cache_dir.mkdir(parents=True, exist_ok=True)\\n    print('Created cache dir at:', cache_dir)\\n    print('Directory exists:', cache_dir.exists())\\n    \\n    # Try to call the function - this should fail\\n    try:\\n        result = cache._get_cache_directory_path(cache_path=cache_dir)\\n        print('Result:', result)\\n    except Exception as e:\\n        print('ERROR:', type(e).__name__, e)\\n\\\"\",\"security_risk\":\"LOW\",\"summary\":\"Verify the bug exists in the code\"}",
-                "name": "terminal"
-              },
-              "id": "call_function_y7yr85g8pj6b_1",
-              "type": "function"
-            }
-          ],
-          "reasoning_content": "I need to provide the final output with the localization information. Let me summarize what I found:\n\nThe bug is in `parso/cache.py` in the function `_get_cache_directory_path`. The condition `if directory.exists()` is inverted - it should be `if not directory.exists()` to create the directory when it doesn't exist, rather than trying to create it when it already exists.\n\nThe fix should change:\n```python\nif directory.exists():\n    os.makedirs(directory)\n```\nto:\n```python\nif not directory.exists():\n    os.makedirs(directory)\n```\n\nOr use `os.makedirs(directory, exist_ok=True)` without the condition.\n\nLet me provide the final answer with the localization.\n",
+          "reasoning_content": "I found the issue! Looking at the `_get_cache_directory_path` function at the end of the file:\n\n```python\ndef _get_cache_directory_path(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    directory = cache_path.joinpath(_VERSION_TAG)\n    if directory.exists():\n        os.makedirs(directory)\n    return directory\n```\n\nThe condition is wrong - it says `if directory.exists():` but then tries to create the directory with `os.makedirs(directory)`. This is backwards! The logic should be `if not directory.exists():` (to create the directory only if it doesn't exist).\n\nThe issue is:\n1. When `directory.exists()` is True (the directory already exists), it tries to run `os.makedirs(directory)` which will fail with `FileExistsError` because the directory already exists\n2. When `directory.exists()` is False (the directory doesn't exist), it doesn't create the directory at all\n\nThe fix should be:\n```python\nif not directory.exists():\n    os.makedirs(directory)\n```\n\nThis way:\n1. If the directory doesn't exist, it will be created\n2. If the directory already exists, it won't try to create it again\n\nLet me verify this is the only place that needs modification by looking at the issue description more carefully.\n\nYes, the issue description says:\n\"When the cache directory already exists, a `FileNotFoundError` is raised because `os.makedirs()` is called on an existing directory without the `exist_ok=True` parameter.\"\n\nWait, looking more carefully at the issue - it says \"FileNotFoundError\" but actually the current code would raise \"FileExistsError\" (or similar) when the directory exists. Let me re-read the code:\n\n```python\nif directory.exists():\n    os.makedirs(directory)\n```\n\nWhen the directory exists, `os.makedirs()` will raise `FileExistsError` (or similar) because it tries to create a directory that already exists. This is the bug.\n\n\nThe condition is inverted - the function should only call `os.makedirs()` when the directory doesn't exist. Changing `if directory.exists():` to `if not directory.exists():` would prevent attempting to create already-existing directories while ensuring new directories are created when needed.\n",
           "provider_specific_fields": {
-            "reasoning_content": "I need to provide the final output with the localization information. Let me summarize what I found:\n\nThe bug is in `parso/cache.py` in the function `_get_cache_directory_path`. The condition `if directory.exists()` is inverted - it should be `if not directory.exists()` to create the directory when it doesn't exist, rather than trying to create it when it already exists.\n\nThe fix should change:\n```python\nif directory.exists():\n    os.makedirs(directory)\n```\nto:\n```python\nif not directory.exists():\n    os.makedirs(directory)\n```\n\nOr use `os.makedirs(directory, exist_ok=True)` without the condition.\n\nLet me provide the final answer with the localization.\n",
+            "reasoning_content": "I found the issue! Looking at the `_get_cache_directory_path` function at the end of the file:\n\n```python\ndef _get_cache_directory_path(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    directory = cache_path.joinpath(_VERSION_TAG)\n    if directory.exists():\n        os.makedirs(directory)\n    return directory\n```\n\nThe condition is wrong - it says `if directory.exists():` but then tries to create the directory with `os.makedirs(directory)`. This is backwards! The logic should be `if not directory.exists():` (to create the directory only if it doesn't exist).\n\nThe issue is:\n1. When `directory.exists()` is True (the directory already exists), it tries to run `os.makedirs(directory)` which will fail with `FileExistsError` because the directory already exists\n2. When `directory.exists()` is False (the directory doesn't exist), it doesn't create the directory at all\n\nThe fix should be:\n```python\nif not directory.exists():\n    os.makedirs(directory)\n```\n\nThis way:\n1. If the directory doesn't exist, it will be created\n2. If the directory already exists, it won't try to create it again\n\nLet me verify this is the only place that needs modification by looking at the issue description more carefully.\n\nYes, the issue description says:\n\"When the cache directory already exists, a `FileNotFoundError` is raised because `os.makedirs()` is called on an existing directory without the `exist_ok=True` parameter.\"\n\nWait, looking more carefully at the issue - it says \"FileNotFoundError\" but actually the current code would raise \"FileExistsError\" (or similar) when the directory exists. Let me re-read the code:\n\n```python\nif directory.exists():\n    os.makedirs(directory)\n```\n\nWhen the directory exists, `os.makedirs()` will raise `FileExistsError` (or similar) because it tries to create a directory that already exists. This is the bug.\n\n\nThe condition is inverted - the function should only call `os.makedirs()` when the directory doesn't exist. Changing `if directory.exists():` to `if not directory.exists():` would prevent attempting to create already-existing directories while ensuring new directories are created when needed.\n",
             "refusal": null
           }
         },
@@ -360,11 +138,11 @@
       }
     ],
     "usage": {
-      "completion_tokens": 399,
-      "prompt_tokens": 11435,
-      "total_tokens": 11834,
+      "completion_tokens": 512,
+      "prompt_tokens": 9361,
+      "total_tokens": 9873,
       "prompt_tokens_details": {
-        "cached_tokens": 11085
+        "cached_tokens": 7162
       },
       "total_characters": 0
     },
@@ -379,12 +157,12 @@
     }
   },
   "cost": 0.0,
-  "timestamp": 1779717512.908283,
-  "latency_sec": 6.933495759963989,
+  "timestamp": 1779723428.2818704,
+  "latency_sec": 13.205317258834839,
   "usage_summary": {
-    "prompt_tokens": 11435,
-    "completion_tokens": 399,
+    "prompt_tokens": 9361,
+    "completion_tokens": 512,
     "reasoning_tokens": 0,
-    "cache_read_tokens": 11085
+    "cache_read_tokens": 7162
   }
 }
