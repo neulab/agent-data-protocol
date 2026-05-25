@@ -1,11 +1,13 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from schema.observation.observation import Observation
 
 
 class BoundingBox(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     x: float = Field(..., description="The x position of the bounding box")
     y: float = Field(..., description="The y position of the bounding box")
     width: float = Field(..., description="The width of the bounding box")
@@ -13,6 +15,8 @@ class BoundingBox(BaseModel):
 
 
 class ImageAnnotation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     text: str = Field(..., description="The text annotation")
     element_type: str = Field(..., description="The type of element")
     bounding_box: BoundingBox = Field(..., description="The boxes of the annotation")
