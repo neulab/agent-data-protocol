@@ -33,6 +33,36 @@ def get_subdirectories(directory):
 
 
 @pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
+def test_sample_std_and_root_sft_records_align(subdir):
+    """Root SFT samples should preserve standardized sample records and ids."""
+    subdir_path = os.path.join(DATASET_PATH, subdir)
+    sample_std_path = os.path.join(subdir_path, "sample_std.json")
+    sample_sft_path = os.path.join(subdir_path, "sample_sft.json")
+
+    if not os.path.exists(sample_std_path):
+        pytest.skip(f"sample_std.json not found in {subdir_path}")
+
+    assert os.path.exists(sample_sft_path), f"sample_sft.json not found in {subdir_path}"
+
+    with open(sample_std_path, "r") as f:
+        std_data = json.load(f)
+
+    with open(sample_sft_path, "r") as f:
+        sft_data = json.load(f)
+
+    assert len(std_data) == len(sft_data), (
+        f"Number of samples in std ({len(std_data)}) and root sft ({len(sft_data)}) "
+        f"don't match in {subdir}"
+    )
+
+    std_ids = [sample["id"] for sample in std_data]
+    sft_ids = [sample["id"] for sample in sft_data]
+    # This test verifies stage alignment only. Some datasets intentionally remain
+    # in the broader #218 follow-up for duplicate source IDs within a stage.
+    assert std_ids == sft_ids, f"Sample ids don't match in {subdir}: {std_ids} vs {sft_ids}"
+
+
+@pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
 def test_std_to_sft_conversion(subdir):
     """
     Test that sample_sft.json is correctly generated from sample_std.json.

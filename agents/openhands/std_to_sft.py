@@ -188,6 +188,8 @@ def standardized_event_to_openhands_message(
             event_xpath = event.kwargs.get("xpath", None)
             if event_xpath:
                 browsergym_id = get_generate_axtree().get_bid(id, event_xpath, "all")
+                if not browsergym_id:
+                    browsergym_id = json.dumps(event_xpath)
         # for tool calls that are not browser based since there is no browsergym_id
         # and tool calls that are specified as non-web
         # these should all be dataset specific apis

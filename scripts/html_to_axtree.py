@@ -1,6 +1,6 @@
 import json
-import os
 import sys
+from pathlib import Path
 
 import gymnasium as gym
 from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str
@@ -24,17 +24,16 @@ class HTMLToAXTree:
 
     def build_axtree(self, id, html_content: str, chunk) -> str:
         self.last_html = html_content
-        temp_dir = os.path.abspath("./temp/")
-        if not os.path.exists(temp_dir):
-            os.mkdir(temp_dir)
-        temp_file = os.path.abspath(f"{temp_dir}temp_{self.dataset}_{id}.html")
+        temp_dir = Path(__file__).resolve().parent.parent / "temp"
+        temp_dir.mkdir(exist_ok=True)
+        temp_file = temp_dir / f"temp_{self.dataset}_{id}.html"
 
         with open(temp_file, "w") as f:
             f.write(html_content)
 
         obs, info = self.env.reset()
         obs, reward, terminated, truncated, info = self.env.step(f"page.goto('file://{temp_file}')")
-        os.remove(temp_file)
+        temp_file.unlink()
 
         self.last_obs = obs
         self.last_xtree = flatten_axtree_to_str(obs["axtree_object"])
@@ -63,9 +62,9 @@ class HTMLToAXTree:
                     "raw_html": self.last_html,
                 }
             )
-            with open(
-                f"./datasets/{self.dataset}/{self.dataset}_{chunk}_bid_errors.json", "w"
-            ) as f:
+            temp_dir = Path(__file__).resolve().parent.parent / "temp"
+            temp_dir.mkdir(exist_ok=True)
+            with open(temp_dir / f"{self.dataset}_{chunk}_bid_errors.json", "w") as f:
                 json.dump(self.errors, f, indent=4)
             return None
 
