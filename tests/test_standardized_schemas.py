@@ -2,12 +2,13 @@ import importlib.util
 import inspect
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 from pydantic import ValidationError
 
 from schema.action.api import ApiAction
+from schema.observation.image import ImageObservation
 from schema.trajectory import Trajectory
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
@@ -33,6 +34,20 @@ def is_numeric_detail_key(key):
         key in NUMERIC_DETAIL_KEYS
         or any(key.startswith(prefix) for prefix in NUMERIC_DETAIL_KEY_PREFIXES)
         or any(key.endswith(suffix) for suffix in NUMERIC_DETAIL_KEY_SUFFIXES)
+    )
+
+
+def is_portable_or_external_image_reference(value):
+    if value.startswith("data:"):
+        return True
+    if value.startswith("file://"):
+        return False
+    if "://" in value:
+        return True
+
+    windows_path = PureWindowsPath(value)
+    return not (
+        PurePosixPath(value).is_absolute() or windows_path.is_absolute() or bool(windows_path.drive)
     )
 
 
@@ -65,6 +80,16 @@ def test_numeric_detail_key_detection():
     assert not is_numeric_detail_key("timestamp")
     assert not is_numeric_detail_key("version")
     assert not is_numeric_detail_key("answer")
+
+
+def test_image_reference_portability_detection():
+    assert is_portable_or_external_image_reference("images/screenshot.png")
+    assert is_portable_or_external_image_reference("s3://bucket/screenshot.png")
+    assert is_portable_or_external_image_reference("data:image/png;base64,abc")
+
+    assert not is_portable_or_external_image_reference("/Users/alice/screenshot.png")
+    assert not is_portable_or_external_image_reference("C:\\Users\\alice\\screenshot.png")
+    assert not is_portable_or_external_image_reference("file:///Users/alice/screenshot.png")
 
 
 @pytest.mark.parametrize(
@@ -170,6 +195,12 @@ def test_sample_standardized_against_schema(sample_path):
 
             for content_id, content in enumerate(traj.content):
                 print(f"{sample_id=}, {content_id=}, {type(content)=}")
+                if isinstance(content, ImageObservation):
+                    assert is_portable_or_external_image_reference(content.content), (
+                        f"ImageObservation.content must be a portable relative path or "
+                        f"external reference in {sample_path} sample {sample_id} "
+                        f"content {content_id}: {content.content}"
+                    )
                 if isinstance(content, ApiAction):
                     # Make sure that content.function exists in api.py
                     dataset_api, _ = load_dataset_api()
