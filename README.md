@@ -80,6 +80,10 @@ cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py 
 # For SWE-agent
 export MY_AGENT=sweagent
 cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
+
+# For OpenHands Software Agent SDK V1
+export MY_AGENT=openhands_sdk
+cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
 ```
 
 ### Available Datasets
@@ -94,6 +98,7 @@ The repository currently supports datasets from various domains (we welcome more
 ### Supported Agents
 
 - **[OpenHands v0](https://github.com/OpenHands/OpenHands)**: General-purpose coding and web browsing agent
+- **[OpenHands Software Agent SDK](https://github.com/OpenHands/software-agent-sdk)**: V1 SDK chat-completions format with native tool calls
 - **[SWE-agent](https://github.com/SWE-agent/SWE-agent)**: Software engineering focused agent
 - **[AgentLab](https://github.com/ServiceNow/AgentLab)**: Web automation and GUI interaction agent
 
@@ -149,6 +154,7 @@ agent-data-protocol/
 │   └── ...
 ├── agents/            # Agent implementations
 │   ├── openhands_v0/  # OpenHands v0 agent
+│   ├── openhands_sdk/ # OpenHands Software Agent SDK V1
 │   ├── sweagent/      # SWE-agent
 │   ├── agentlab/      # AgentLab
 │   └── ...
