@@ -174,6 +174,11 @@ def test_standardized_schema_accepts_matched_tool_call_result():
             "call_000001",
         ),
         (
+            ApiAction(function="screenshot", kwargs={}),
+            ImageObservation(content="screen.png", source="user", annotations=None),
+            "call_000001",
+        ),
+        (
             ApiAction(
                 tool_call_id="call_from_action",
                 function="search",
