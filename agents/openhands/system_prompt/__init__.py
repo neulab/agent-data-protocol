@@ -1,1 +1,0 @@
-# OpenHands system prompt utilities

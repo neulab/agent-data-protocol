@@ -33,16 +33,18 @@ def get_subdirectories(directory):
 
 
 @pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
-def test_sample_std_and_root_sft_records_align(subdir):
-    """Root SFT samples should preserve standardized sample records and ids."""
+def test_sample_std_and_openhands_v0_sft_records_align(subdir):
+    """OpenHands v0 SFT samples should preserve standardized sample records and ids."""
     subdir_path = os.path.join(DATASET_PATH, subdir)
     sample_std_path = os.path.join(subdir_path, "sample_std.json")
-    sample_sft_path = os.path.join(subdir_path, "sample_sft.json")
+    sample_sft_path = os.path.join(subdir_path, "sample_sft", "openhands_v0.json")
 
     if not os.path.exists(sample_std_path):
         pytest.skip(f"sample_std.json not found in {subdir_path}")
 
-    assert os.path.exists(sample_sft_path), f"sample_sft.json not found in {subdir_path}"
+    assert os.path.exists(sample_sft_path), (
+        f"sample_sft/openhands_v0.json not found in {subdir_path}"
+    )
 
     with open(sample_std_path, "r") as f:
         std_data = json.load(f)
@@ -65,7 +67,7 @@ def test_sample_std_and_root_sft_records_align(subdir):
 @pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
 def test_std_to_sft_conversion(subdir):
     """
-    Test that sample_sft.json is correctly generated from sample_std.json.
+    Test that sample_sft/openhands_v0.json is correctly generated from sample_std.json.
 
     Checks:
     1. Both files exist
@@ -81,12 +83,14 @@ def test_std_to_sft_conversion(subdir):
 
     # Check if both files exist
     sample_std_path = os.path.join(subdir_path, "sample_std.json")
-    sample_sft_path = os.path.join(subdir_path, "sample_sft.json")
+    sample_sft_path = os.path.join(subdir_path, "sample_sft", "openhands_v0.json")
 
     if not os.path.exists(sample_std_path):
         pytest.skip(f"sample_std.json not found in {subdir_path}")
 
-    assert os.path.exists(sample_sft_path), f"sample_sft.json not found in {subdir_path}"
+    assert os.path.exists(sample_sft_path), (
+        f"sample_sft/openhands_v0.json not found in {subdir_path}"
+    )
 
     # Load the files
     with open(sample_std_path, "r") as f:

@@ -4,7 +4,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from agents.openhands.sft_quality_control import (
+from agents.openhands_v0.sft_quality_control import (
     analyze_dataset,
     create_function_names_chart,
     create_function_thought_chart,
@@ -52,7 +52,9 @@ def test_analyze_dataset(sample_data, tmp_path):
     # Create a temporary dataset file
     dataset_dir = tmp_path / "test_dataset"
     dataset_dir.mkdir()
-    dataset_file = dataset_dir / "sample_sft.json"
+    sft_dir = dataset_dir / "sample_sft"
+    sft_dir.mkdir()
+    dataset_file = sft_dir / "openhands_v0.json"
 
     with open(dataset_file, "w") as f:
         json.dump(sample_data, f)
@@ -112,7 +114,7 @@ def test_chart_creation(chart_function, tmp_path, monkeypatch):
 
 def test_function_pattern_matching():
     """Test the regular expression patterns for function calls."""
-    from agents.openhands.sft_quality_control import FUNCTION_PATTERN, THOUGHT_PATTERN
+    from agents.openhands_v0.sft_quality_control import FUNCTION_PATTERN, THOUGHT_PATTERN
 
     # Test function pattern with content
     content = "<function=search>query=test</function>"
@@ -166,7 +168,9 @@ def test_analyze_dataset_with_gpt_role_functions(tmp_path):
     # Create a temporary dataset file
     dataset_dir = tmp_path / "test_gpt_role"
     dataset_dir.mkdir()
-    dataset_file = dataset_dir / "sample_sft.json"
+    sft_dir = dataset_dir / "sample_sft"
+    sft_dir.mkdir()
+    dataset_file = sft_dir / "openhands_v0.json"
 
     with open(dataset_file, "w") as f:
         json.dump(sample_data, f)

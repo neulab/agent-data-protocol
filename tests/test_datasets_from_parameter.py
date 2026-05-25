@@ -7,18 +7,18 @@ import pytest
 FUNCTION_CALL_PATTERNS = ("<function=", "<function_calls>", "<invoke name=")
 
 
-def test_all_datasets_function_call_from_parameter():
-    """Test that all datasets use 'from': 'function_call' for function calls."""
-    # Get all sample_sft.json files in the datasets directory
+def test_all_openhands_v0_datasets_function_call_from_parameter():
+    """Test that OpenHands v0 SFT samples use 'from': 'function_call' for function calls."""
+    # Get all OpenHands v0 SFT sample files in the datasets directory.
     datasets_dir = os.path.join(os.path.dirname(__file__), "../datasets")
-    sample_sft_files = glob.glob(f"{datasets_dir}/**/sample_sft.json", recursive=True)
+    sample_sft_files = glob.glob(f"{datasets_dir}/**/sample_sft/openhands_v0.json", recursive=True)
 
-    assert len(sample_sft_files) > 0, "No sample_sft.json files found"
+    assert len(sample_sft_files) > 0, "No sample_sft/openhands_v0.json files found"
 
     # Track datasets that need to be fixed
     datasets_to_fix = set()
 
-    # Check each sample_sft.json file
+    # Check each OpenHands v0 SFT sample file.
     for file_path in sample_sft_files:
         with open(file_path, "r") as f:
             try:
@@ -63,9 +63,9 @@ def test_all_datasets_function_call_from_parameter():
 def test_all_datasets_function_call_role_contains_function_call():
     """Test that 'from': 'function_call' is reserved for function-call messages."""
     datasets_dir = os.path.join(os.path.dirname(__file__), "../datasets")
-    sample_sft_files = glob.glob(f"{datasets_dir}/**/sample_sft.json", recursive=True)
+    sample_sft_files = glob.glob(f"{datasets_dir}/**/sample_sft/openhands_v0.json", recursive=True)
 
-    assert len(sample_sft_files) > 0, "No sample_sft.json files found"
+    assert len(sample_sft_files) > 0, "No sample_sft/openhands_v0.json files found"
 
     datasets_to_fix = set()
 
@@ -99,5 +99,5 @@ def test_all_datasets_function_call_role_contains_function_call():
 
         pytest.fail(
             f"{error_message}\nFound {len(datasets_to_fix)} datasets that need to be fixed. "
-            "Please update the dataset converters and regenerate sample_sft.json."
+            "Please update the dataset converters and regenerate sample_sft/openhands_v0.json."
         )

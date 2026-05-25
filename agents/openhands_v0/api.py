@@ -2,28 +2,51 @@ import importlib.util
 import inspect
 import os
 
-sweagent_default_tools = {
-    "bash": {"required": ["command"], "optional": []},
-    "submit": {"required": [], "optional": []},
+openhands_v0_default_tools = {
+    "execute_bash": {"required": ["command"], "optional": ["is_input"]},
+    "think": {"required": ["thought"], "optional": []},
+    "finish": {"required": ["message", "task_completed"], "optional": []},
+    "web_read": {"required": ["url"], "optional": []},
+    "browser": {"required": ["code"], "optional": []},
+    "execute_ipython_cell": {"code": ["command"], "optional": []},
     "str_replace_editor": {
         "required": ["command", "path"],
         "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"],
     },
+    "edit_file": {"required": ["path", "content"], "optional": ["start", "end"]},
+}
+
+browser_default_apis = {
+    "goto": {"required": ["url"], "optional": []},
+    "go_back": {"required": [], "optional": []},
+    "go_forward": {"required": [], "optional": []},
+    "noop": {"required": [], "optional": ["wait_ms"]},
+    "scroll": {"required": ["delta_x", "delta_y"], "optional": []},
+    "fill": {"required": ["bid", "value"], "optional": []},
+    "select_option": {"required": ["bid", "options"], "optional": []},
+    "click": {"required": ["bid"], "optional": ["button", "modifiers"]},
+    "dblclick": {"required": ["bid"], "optional": ["button", "modifiers"]},
+    "hover": {"required": ["bid"], "optional": []},
+    "press": {"required": ["bid", "key_comb"], "optional": []},
+    "focus": {"required": ["bid"], "optional": []},
+    "clear": {"required": ["bid"], "optional": []},
+    "drag_and_drop": {"required": ["from_bid", "to_bid"], "optional": []},
+    "upload_file": {"required": ["bid", "file"], "optional": []},
 }
 
 
-def check_exclude_sweagent_default_tools(name, sig, required, optional):
+def check_exclude_openhands_v0_default_tools(name, sig, required, optional):
     if not all(
-        api in sweagent_default_tools[name]["required"] + sweagent_default_tools[name]["optional"]
+        api in openhands_v0_default_tools[name]["required"] + openhands_v0_default_tools[name]["optional"]
         for api in required
     ):
-        # print(f"mismatch required arguments: {name}, {sig}")
+        # print(f"mismatch required arguments: {name}, {sig}", file=sys.stderr)
         return False
-    if not all(api in sweagent_default_tools[name]["optional"] for api in optional):
-        # print(f"mismatch optional arguments: {name}, {sig}")
+    if not all(api in openhands_v0_default_tools[name]["optional"] for api in optional):
+        # print(f"mismatch optional arguments: {name}, {sig}", file=sys.stderr)
         return False
-    if not all(api in required for api in sweagent_default_tools[name]["required"]):
-        # print(f"mismatch required arguments: {name}, {sig}")
+    if not all(api in required for api in openhands_v0_default_tools[name]["required"]):
+        # print(f"mismatch required arguments: {name}, {sig}", file=sys.stderr)
         return False
     return True
 
@@ -41,18 +64,20 @@ def check_exclude_tools(name: str, required: list, optional: list, exclude_apis:
         required.remove("element_id")
         required.append("bid")
     if not all(api in exclude_api_required + exclude_api_optional for api in required):
-        # print(f"{name} is included")
+        # print(f"{name} is included", file=sys.stderr)
         return False
     if not all(api in exclude_api_optional for api in optional):
-        # print(f"{name} is included")
+        # print(f"{name} is included", file=sys.stderr)
         return False
     if not all(api in required for api in exclude_api_required):
-        # print(f"{name} is included")
+        # print(f"{name} is included", file=sys.stderr)
         return False
     return True
 
 
-def get_api_tool_description(dataset, exclude_apis=None, env="bash", include_apis=None):
+def get_api_tool_description(
+    dataset, exclude_apis=None, env="execute_ipython_cell", include_apis=None
+):
     if exclude_apis is None:
         exclude_apis = {}
     if include_apis is not None:
@@ -89,17 +114,19 @@ def get_api_tool_description(dataset, exclude_apis=None, env="bash", include_api
             optional = []
             for arg_name, param in sig.parameters.items():
                 if param.default is inspect.Parameter.empty:
+                    if arg_name == "xpath" or arg_name == "element_id":
+                        arg_name = "bid"
                     if arg_name not in required:
                         required.append(arg_name)
                 else:
                     optional.append(arg_name)
-            if name in sweagent_default_tools and check_exclude_sweagent_default_tools(
+            if name in openhands_v0_default_tools and check_exclude_openhands_v0_default_tools(
                 name, sig, required, optional
             ):
-                # print(f"excluded {name}")
+                # print(f"excluded {name}", file=sys.stderr)
                 continue
             if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
-                # print(f"excluded {name}")
+                # print(f"excluded {name}", file=sys.stderr)
                 continue
             docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
             API_TOOL_DESCRIPTION += docstring
@@ -127,3 +154,15 @@ def get_api_tool_description(dataset, exclude_apis=None, env="bash", include_api
         return API_TOOL_DESCRIPTION, sigs
     else:
         return "", {}
+
+
+def get_language_descriptions(languages):
+    language_description = ""
+    for lan in languages:
+        language_description += (
+            f"In the execute_ipython_cell code environment, you can execute {lan} code by wrapping it in the following format: "
+            f"{lan}('YOUR {lan.upper()} CODE')\n"
+            f"The {lan} code must be provided as a quoted string inside the {lan}(...) function. "
+            f"Ensure 'YOUR {lan.upper()} CODE' is valid {lan} code.\n\n"
+        )
+    return language_description.strip()

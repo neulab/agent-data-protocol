@@ -20,7 +20,7 @@ The Agent Data Protocol provides a systematic approach to handle agent training 
 ### Key Features
 
 - **Standardized Schema**: Unified representation for agent actions and observations across different domains
-- **Multi-Agent Support**: Convert data for different agent architectures (OpenHands, SWE-agent, AgentLab, etc.)
+- **Multi-Agent Support**: Convert data for different agent architectures (OpenHands v0, SWE-agent, AgentLab, etc.)
 - **Type Safety**: Pydantic-based validation ensures data integrity throughout the pipeline
 - **Extensible**: Easy to add new datasets and agent implementations
 - **Quality Control**: Built-in validation and testing framework
@@ -46,7 +46,7 @@ from datasets import load_dataset
 dataset = load_dataset("neulab/agent-data-collection", "swe-smith", split="std")
 
 # Load agent-specific SFT data
-sft_dataset = load_dataset("neulab/agent-data-collection", "swe-smith", split="sft_openhands")
+sft_dataset = load_dataset("neulab/agent-data-collection", "swe-smith", split="sft_openhands_v0")
 ```
 
 ### Basic Usage
@@ -71,8 +71,8 @@ cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_sta
 echo "Converting to SFT format..."
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
-# For OpenHands, there are dataset specific arguments to pass in
-export MY_AGENT=openhands
+# For OpenHands v0, there are dataset specific arguments to pass in
+export MY_AGENT=openhands_v0
 cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py --is_web=no --api_env=execute_bash > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
 
 # For SWE-agent
@@ -91,7 +91,7 @@ The repository currently supports datasets from various domains (we welcome more
 
 ### Supported Agents
 
-- **[OpenHands](https://github.com/OpenHands/OpenHands)**: General-purpose coding and web browsing agent
+- **[OpenHands v0](https://github.com/OpenHands/OpenHands)**: General-purpose coding and web browsing agent
 - **[SWE-agent](https://github.com/SWE-agent/SWE-agent)**: Software engineering focused agent
 - **[AgentLab](https://github.com/ServiceNow/AgentLab)**: Web automation and GUI interaction agent
 
@@ -102,7 +102,7 @@ The ADP follows a three-stage pipeline:
 ```
 Raw Dataset      →  Standardized Format  →  Agent Specific SFT Format
       ↓                   ↓                       ↓
-sample_raw.json  →  sample_std.json      →  sample_sft.json
+sample_raw.json  →  sample_std.json      →  sample_sft/<agent_name>.json
 ```
 
 ### 1. Raw Data
@@ -139,14 +139,14 @@ agent-data-protocol/
 │   │   ├── sample_raw.json
 │   │   ├── sample_std.json
 │   │   ├── sample_sft/   # Sample SFT format
-│   │   │   ├── sample_sft_openhands.json
-│   │   │   ├── sample_sft_sweagent.json
+│   │   │   ├── openhands_v0.json
+│   │   │   ├── sweagent.json
 │   │   │   └── ...
 │   │   ├── README.md
 │   │   └── LICENSE
 │   └── ...
 ├── agents/            # Agent implementations
-│   ├── openhands/     # OpenHands agent
+│   ├── openhands_v0/  # OpenHands v0 agent
 │   ├── sweagent/      # SWE-agent
 │   ├── agentlab/      # AgentLab
 │   └── ...
@@ -164,15 +164,15 @@ agent-data-protocol/
 ### Converting a Single Dataset
 
 ```bash
-# Example: Convert swe-smith dataset -> ADP -> OpenHands SFT
+# Example: Convert swe-smith dataset -> ADP -> OpenHands v0 SFT
 export MY_DATASET=swe-smith
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
 # Extract and convert
 python datasets/$MY_DATASET/extract_raw.py | \
 python datasets/$MY_DATASET/raw_to_standardized.py | \
-python agents/openhands/std_to_sft.py --is_web=no --api_env=execute_bash \
-> swe_smith_openhands.jsonl
+python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash \
+> swe_smith_openhands_v0.jsonl
 ```
 
 ### Web-based Dataset Example
@@ -184,8 +184,8 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 
 python datasets/$MY_DATASET/extract_raw.py | \
 python datasets/$MY_DATASET/raw_to_standardized.py | \
-python agents/openhands/std_to_sft.py --is_web=yes --api_env=browser \
-> mind2web_openhands.jsonl
+python agents/openhands_v0/std_to_sft.py --is_web=yes --api_env=browser \
+> mind2web_openhands_v0.jsonl
 ```
 
 ## Testing and Validation

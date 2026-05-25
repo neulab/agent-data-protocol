@@ -51,7 +51,6 @@ def test_clean_terminal_output_removes_control_sequences_and_shell_prompt():
 def test_agenttuning_os_derived_samples_do_not_include_terminal_control_sequences():
     sample_paths = [
         DATASET_DIR / "sample_std.json",
-        DATASET_DIR / "sample_sft.json",
         *sorted((DATASET_DIR / "sample_sft").glob("*.json")),
     ]
 
@@ -68,7 +67,6 @@ def test_agenttuning_os_derived_samples_do_not_include_terminal_control_sequence
 def test_agenttuning_os_derived_samples_do_not_include_source_system_prompt():
     sample_paths = [
         DATASET_DIR / "sample_std.json",
-        DATASET_DIR / "sample_sft.json",
         *sorted((DATASET_DIR / "sample_sft").glob("*.json")),
     ]
     source_prompt_fragments = [
@@ -90,9 +88,8 @@ def test_agenttuning_os_derived_samples_do_not_include_source_system_prompt():
 def test_agenttuning_os_samples_keep_solution_format_instruction():
     sample_paths = [
         DATASET_DIR / "sample_std.json",
-        DATASET_DIR / "sample_sft.json",
-        DATASET_DIR / "sample_sft" / "sample_sft_openhands.json",
-        DATASET_DIR / "sample_sft" / "sample_sft_sweagent.json",
+        DATASET_DIR / "sample_sft" / "openhands_v0.json",
+        DATASET_DIR / "sample_sft" / "sweagent.json",
     ]
     required_fragment = "<solution> Your solution here </solution>"
 

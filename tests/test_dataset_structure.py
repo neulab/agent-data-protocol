@@ -39,18 +39,21 @@ def test_dataset_structure(subdir):
             f"raw_to_standardized.py exists but sample_std.json not found in {subdir_path}"
         )
 
-    # If sample_std.json exists, then sample_sft.json should exist
+    # If sample_std.json exists, then an OpenHands v0 SFT sample should exist.
     if os.path.exists(sample_std_path):
-        sample_sft_path = os.path.join(subdir_path, "sample_sft.json")
-        assert os.path.exists(sample_sft_path), (
-            f"sample_std.json exists but sample_sft.json not found in {subdir_path}"
+        sample_sft_dir = os.path.join(subdir_path, "sample_sft")
+        openhands_v0_sft_path = os.path.join(sample_sft_dir, "openhands_v0.json")
+        assert os.path.isdir(sample_sft_dir), (
+            f"sample_std.json exists but sample_sft directory not found in {subdir_path}"
+        )
+        assert os.path.exists(openhands_v0_sft_path), (
+            f"sample_std.json exists but sample_sft/openhands_v0.json not found in {subdir_path}"
         )
 
     # Check for other JSON files that shouldn't be there
     allowed_jsons = [
         "sample_raw.json",
         "sample_std.json",
-        "sample_sft.json",
         "generated_thoughts.json",
     ]
     for file in os.listdir(subdir_path):
@@ -61,3 +64,12 @@ def test_dataset_structure(subdir):
             ):
                 continue
             pytest.fail(f"Unexpected JSON file found: {file} in {subdir_path}")
+
+    sample_sft_dir = os.path.join(subdir_path, "sample_sft")
+    if os.path.isdir(sample_sft_dir):
+        for file in os.listdir(sample_sft_dir):
+            if file.endswith(".json") and file.startswith("sample_sft_"):
+                pytest.fail(
+                    f"Legacy SFT sample filename found: {file} in {sample_sft_dir}. "
+                    "Use sample_sft/{agent_name}.json instead."
+                )
