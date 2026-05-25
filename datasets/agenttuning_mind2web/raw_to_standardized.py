@@ -69,6 +69,7 @@ for line in sys.stdin:
     # Print the standardized data
     print(
         standardize_data.model_dump_json(
+            # Suppress optional schema fields unused by this dataset.
             exclude={"content": {"__all__": {"reasoning_content", "reward"}}}
         )
     )
