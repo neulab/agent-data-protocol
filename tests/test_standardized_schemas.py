@@ -260,19 +260,35 @@ def test_standardized_schema_rejects_unmatched_tool_result():
         )
 
 
-def test_standardized_schema_rejects_unmatched_tool_call():
+@pytest.mark.parametrize(
+    "content",
+    [
+        [
+            {
+                "class_": "api_action",
+                "tool_call_id": "call_without_result",
+                "function": "search",
+                "kwargs": {"query": "agent data protocol"},
+            }
+        ],
+        [
+            {
+                "class_": "api_action",
+                "tool_call_id": "call_without_result",
+                "function": "search",
+                "kwargs": {"query": "agent data protocol"},
+            },
+            {
+                "class_": "text_observation",
+                "content": "Search result text",
+                "source": "environment",
+            },
+        ],
+    ],
+)
+def test_standardized_schema_rejects_unmatched_tool_call(content):
     with pytest.raises(ValidationError, match="does not have a matching Observation"):
-        Trajectory(
-            id="unmatched-tool-call",
-            content=[
-                {
-                    "class_": "api_action",
-                    "tool_call_id": "call_without_result",
-                    "function": "search",
-                    "kwargs": {"query": "agent data protocol"},
-                }
-            ],
-        )
+        Trajectory(id="unmatched-tool-call", content=content)
 
 
 def test_standardized_schema_rejects_duplicate_tool_call_ids():
