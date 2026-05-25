@@ -10,22 +10,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sdk_validation import run_dataset_validation
 
 
-DATASET_NAME = 'kwai-klear_swe-smith-mini_swe_agent_plus-trajectories-66k'
+DATASET_NAME = "kwai-klear_swe-smith-mini_swe_agent_plus-trajectories-66k"
 RECORD_INDEX = 3
-RECORD_ID = 'oauthlib__oauthlib.1fd52536.combine_file__aq6tx8j7'
+RECORD_ID = "oauthlib__oauthlib.1fd52536.combine_file__aq6tx8j7"
 
 
 def load_record() -> dict:
     root = Path(__file__).resolve().parents[3]
     records = json.loads(
-        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json")
-        .read_text()
+        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json").read_text()
     )
     record = records[RECORD_INDEX]
     if record.get("id") != RECORD_ID:
-        raise RuntimeError(
-            f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}"
-        )
+        raise RuntimeError(f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}")
     return record
 
 

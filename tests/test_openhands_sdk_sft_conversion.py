@@ -144,8 +144,7 @@ def test_openhands_sdk_converter_maps_followup_observation_to_tool_result():
     go_call_message = next(
         message
         for message in record["messages"]
-        if message.get("tool_calls")
-        and message["tool_calls"][0]["function"]["name"] == "go"
+        if message.get("tool_calls") and message["tool_calls"][0]["function"]["name"] == "go"
     )
     go_call_id = go_call_message["tool_calls"][0]["id"]
     go_result_index = next(
@@ -207,9 +206,7 @@ def test_openhands_sdk_converter_preserves_explicit_tool_call_ids():
         for tool_call in message.get("tool_calls", [])
     ]
     tool_result_ids = [
-        message["tool_call_id"]
-        for message in record["messages"]
-        if message["role"] == "tool"
+        message["tool_call_id"] for message in record["messages"] if message["role"] == "tool"
     ]
     assert tool_call_ids == ["source_call_search", "source_call_shell"]
     assert tool_result_ids == ["source_call_shell", "source_call_search"]

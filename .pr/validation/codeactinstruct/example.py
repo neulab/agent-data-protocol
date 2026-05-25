@@ -10,22 +10,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sdk_validation import run_dataset_validation
 
 
-DATASET_NAME = 'codeactinstruct'
+DATASET_NAME = "codeactinstruct"
 RECORD_INDEX = 3
-RECORD_ID = 'oct28_full6728/reasoning/prealgebra/1426/gpt-3.5-turbo-0613/max5_p2+tool+cd'
+RECORD_ID = "oct28_full6728/reasoning/prealgebra/1426/gpt-3.5-turbo-0613/max5_p2+tool+cd"
 
 
 def load_record() -> dict:
     root = Path(__file__).resolve().parents[3]
     records = json.loads(
-        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json")
-        .read_text()
+        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json").read_text()
     )
     record = records[RECORD_INDEX]
     if record.get("id") != RECORD_ID:
-        raise RuntimeError(
-            f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}"
-        )
+        raise RuntimeError(f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}")
     return record
 
 

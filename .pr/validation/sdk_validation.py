@@ -178,11 +178,7 @@ def context_message(record: dict[str, Any]) -> tuple[list[int], Message]:
             if role == "user" and sdk_content(message.get("content")):
                 seen_user = True
                 context_messages.append((index, message))
-            elif (
-                role == "assistant"
-                and not seen_user
-                and sdk_content(message.get("content"))
-            ):
+            elif role == "assistant" and not seen_user and sdk_content(message.get("content")):
                 context_messages.append((index, message))
     if not context_messages:
         context_messages = [
@@ -241,9 +237,7 @@ def context_message(record: dict[str, Any]) -> tuple[list[int], Message]:
         return indices, Message(role="user", content=content)
     for index, message in enumerate(messages):
         if message.get("role") == "user":
-            return [index], Message(
-                role="user", content=sdk_content(message.get("content"))
-            )
+            return [index], Message(role="user", content=sdk_content(message.get("content")))
     raise RuntimeError("Selected record does not contain a user message")
 
 
@@ -289,9 +283,7 @@ def observations_by_tool(record: dict[str, Any]) -> dict[str, list[str]]:
             tool_name = pending.pop(tool_call_id, "") if tool_call_id else ""
             if not tool_name:
                 continue
-            observations.setdefault(tool_name, []).append(
-                text_from_content(message.get("content"))
-            )
+            observations.setdefault(tool_name, []).append(text_from_content(message.get("content")))
     return observations
 
 
@@ -320,8 +312,7 @@ def make_replay_tool(
     ) -> list[Self]:
         return [
             cls(
-                description=_function.get("description")
-                or f"Mocked validation tool {_name}.",
+                description=_function.get("description") or f"Mocked validation tool {_name}.",
                 action_type=_action_type,
                 observation_type=ReplayObservation,
                 executor=ReplayExecutor(_name, _replay_state),
@@ -451,25 +442,17 @@ def run_dataset_validation(dataset_name: str, record: dict[str, Any]) -> None:
     finally:
         latest = latest_log(log_dir)
         if latest is not None:
-            completion_path.write_text(
-                json.dumps(json.loads(latest.read_text()), indent=2) + "\n"
-            )
+            completion_path.write_text(json.dumps(json.loads(latest.read_text()), indent=2) + "\n")
             completion_written = True
 
     actions, observations = event_summary(events)
     action_names = [action["tool_name"] for action in actions]
     valid_actions = [action for action in actions if action["action"] is not None]
     environment_actions = [
-        action
-        for action in valid_actions
-        if action["tool_name"] not in NON_ENVIRONMENT_TOOL_NAMES
+        action for action in valid_actions if action["tool_name"] not in NON_ENVIRONMENT_TOOL_NAMES
     ]
-    called_finish_tool = any(
-        action["tool_name"] == "finish" for action in valid_actions
-    )
-    reached_finish = (
-        final_status == ConversationExecutionStatus.FINISHED or called_finish_tool
-    )
+    called_finish_tool = any(action["tool_name"] == "finish" for action in valid_actions)
+    reached_finish = final_status == ConversationExecutionStatus.FINISHED or called_finish_tool
     performed_tool_call = bool(valid_actions)
     performed_environment_tool_call = bool(environment_actions)
     completed_with_tool_execution = reached_finish and performed_environment_tool_call
@@ -504,8 +487,7 @@ def run_dataset_validation(dataset_name: str, record: dict[str, Any]) -> None:
             )
         else:
             failure_reason = (
-                "The SDK agent did not perform a parsed tool call before the run "
-                "ended."
+                "The SDK agent did not perform a parsed tool call before the run ended."
             )
     selected_user_text = "\n\n---\n\n".join(
         text_from_content(record["messages"][index].get("content"))
@@ -526,9 +508,7 @@ def run_dataset_validation(dataset_name: str, record: dict[str, Any]) -> None:
                 ),
                 "mocked_tools": mocked_tools,
                 "expected_tool_calls_in_record": expected_tool_calls,
-                "expected_environment_tool_calls_in_record": (
-                    expected_environment_tool_calls
-                ),
+                "expected_environment_tool_calls_in_record": (expected_environment_tool_calls),
                 "expects_environment_tool_calls": expects_environment_tool_calls,
                 "max_iterations": max_iterations,
                 "final_status": str(final_status),

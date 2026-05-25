@@ -218,11 +218,7 @@ BUILTIN_TOOLS: dict[str, dict[str, Any]] = {
     "browser_get_state": _openai_tool(
         "browser_get_state",
         "Get current browser page state and interactive elements.",
-        {
-            "include_screenshot": _json_schema(
-                "boolean", "Whether to include a screenshot."
-            )
-        },
+        {"include_screenshot": _json_schema("boolean", "Whether to include a screenshot.")},
         [],
     ),
     "browser_get_content": _openai_tool(
@@ -274,12 +270,8 @@ def extract_legacy_tool_call(content: str) -> tuple[str, dict[str, Any], str] | 
     if not match:
         return None
     close_match = re.search(r"</function>", content[match.end() :])
-    block_end = (
-        match.end() + close_match.start() if close_match is not None else len(content)
-    )
-    trailing_start = (
-        match.end() + close_match.end() if close_match is not None else len(content)
-    )
+    block_end = match.end() + close_match.start() if close_match is not None else len(content)
+    trailing_start = match.end() + close_match.end() if close_match is not None else len(content)
     block = content[match.end() : block_end]
 
     args = {
@@ -569,9 +561,7 @@ class ConversionState:
     ) -> None:
         self.add_tool(tool_name, args)
         self.call_index += 1
-        summary_source = "\n\n".join(
-            part for part in [content, reasoning_content] if part
-        )
+        summary_source = "\n\n".join(part for part in [content, reasoning_content] if part)
         tool_call = make_tool_call(
             self.call_index,
             tool_name,
@@ -592,9 +582,7 @@ class ConversionState:
         ):
             if content:
                 existing_content = self.message_text(self.messages[-1])
-                merged = (
-                    f"{existing_content}\n\n{content}" if existing_content else content
-                )
+                merged = f"{existing_content}\n\n{content}" if existing_content else content
                 self.messages[-1]["content"] = text_content(merged)
             if reasoning_content:
                 existing_reasoning = self.messages[-1].get("reasoning_content") or ""
@@ -745,12 +733,8 @@ def convert_event(state: ConversionState, event: Any) -> None:
             )
         elif legacy_tool_call := extract_legacy_tool_call(event.content):
             function_name, kwargs, thought = legacy_tool_call
-            tool_name, args = map_api_action(
-                ApiAction(function=function_name, kwargs=kwargs)
-            )
-            content = "\n\n".join(
-                part for part in [action_content(event), thought] if part
-            )
+            tool_name, args = map_api_action(ApiAction(function=function_name, kwargs=kwargs))
+            content = "\n\n".join(part for part in [action_content(event), thought] if part)
             state.add_tool_call(
                 tool_name,
                 args,
@@ -761,9 +745,7 @@ def convert_event(state: ConversionState, event: Any) -> None:
         else:
             state.close_pending_tools()
             state.add_assistant_message(
-                "\n\n".join(
-                    part for part in [action_content(event), event.content] if part
-                ),
+                "\n\n".join(part for part in [action_content(event), event.content] if part),
                 event_reasoning_content(event),
             )
         return

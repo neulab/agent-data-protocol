@@ -10,22 +10,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sdk_validation import run_dataset_validation
 
 
-DATASET_NAME = 'allenai_Sera-4.6-Lite-T2'
+DATASET_NAME = "allenai_Sera-4.6-Lite-T2"
 RECORD_INDEX = 0
-RECORD_ID = 'tinydb_10309'
+RECORD_ID = "tinydb_10309"
 
 
 def load_record() -> dict:
     root = Path(__file__).resolve().parents[3]
     records = json.loads(
-        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json")
-        .read_text()
+        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json").read_text()
     )
     record = records[RECORD_INDEX]
     if record.get("id") != RECORD_ID:
-        raise RuntimeError(
-            f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}"
-        )
+        raise RuntimeError(f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}")
     return record
 
 

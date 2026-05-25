@@ -10,22 +10,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sdk_validation import run_dataset_validation
 
 
-DATASET_NAME = 'openthoughts_tb_dev'
+DATASET_NAME = "openthoughts_tb_dev"
 RECORD_INDEX = 4
-RECORD_ID = '67d895a6-8f50-4f8d-a4ff-1a31bdc2'
+RECORD_ID = "67d895a6-8f50-4f8d-a4ff-1a31bdc2"
 
 
 def load_record() -> dict:
     root = Path(__file__).resolve().parents[3]
     records = json.loads(
-        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json")
-        .read_text()
+        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json").read_text()
     )
     record = records[RECORD_INDEX]
     if record.get("id") != RECORD_ID:
-        raise RuntimeError(
-            f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}"
-        )
+        raise RuntimeError(f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}")
     return record
 
 

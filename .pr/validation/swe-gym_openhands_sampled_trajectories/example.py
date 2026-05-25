@@ -10,22 +10,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sdk_validation import run_dataset_validation
 
 
-DATASET_NAME = 'swe-gym_openhands_sampled_trajectories'
+DATASET_NAME = "swe-gym_openhands_sampled_trajectories"
 RECORD_INDEX = 1
-RECORD_ID = 'Project-MONAI__MONAI-5686_4'
+RECORD_ID = "Project-MONAI__MONAI-5686_4"
 
 
 def load_record() -> dict:
     root = Path(__file__).resolve().parents[3]
     records = json.loads(
-        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json")
-        .read_text()
+        (root / "datasets" / DATASET_NAME / "sample_sft" / "openhands_sdk.json").read_text()
     )
     record = records[RECORD_INDEX]
     if record.get("id") != RECORD_ID:
-        raise RuntimeError(
-            f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}"
-        )
+        raise RuntimeError(f"Expected {RECORD_ID} at index {RECORD_INDEX}, got {record.get('id')}")
     return record
 
 
