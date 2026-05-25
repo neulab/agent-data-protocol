@@ -6,22 +6,80 @@ import re
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Self
+from typing import Any, Sequence, Self
 
-from openhands.sdk import LLM, Message, TextContent
-from openhands.sdk.tool import ToolDefinition
-from openhands.sdk.tool.schema import Action
+from pydantic import SecretStr
+
+from openhands.sdk import ImageContent, LLM, Message, Observation, TextContent, ToolDefinition
+from openhands.sdk.llm import MessageToolCall
+from openhands.sdk.tool import Action, ToolAnnotations, ToolExecutor
+from openhands.sdk.tool.builtins.finish import FinishTool
+from openhands.sdk.tool.builtins.think import ThinkTool
+from openhands.tools.browser_use.definition import (
+    BROWSER_CLICK_DESCRIPTION,
+    BROWSER_GET_CONTENT_DESCRIPTION,
+    BROWSER_GET_STATE_DESCRIPTION,
+    BROWSER_GO_BACK_DESCRIPTION,
+    BROWSER_NAVIGATE_DESCRIPTION,
+    BROWSER_SCROLL_DESCRIPTION,
+    BROWSER_TYPE_DESCRIPTION,
+    BrowserClickAction,
+    BrowserClickTool,
+    BrowserGetContentAction,
+    BrowserGetContentTool,
+    BrowserGetStateAction,
+    BrowserGetStateTool,
+    BrowserGoBackAction,
+    BrowserGoBackTool,
+    BrowserNavigateAction,
+    BrowserNavigateTool,
+    BrowserObservation,
+    BrowserScrollAction,
+    BrowserScrollTool,
+    BrowserTypeAction,
+    BrowserTypeTool,
+)
+from openhands.tools.file_editor.definition import (
+    TOOL_DESCRIPTION as FILE_EDITOR_DESCRIPTION,
+    FileEditorAction,
+    FileEditorObservation,
+    FileEditorTool,
+)
+from openhands.tools.task_tracker.definition import (
+    TASK_TRACKER_DESCRIPTION,
+    TaskTrackerAction,
+    TaskTrackerObservation,
+    TaskTrackerTool,
+)
+from openhands.tools.terminal.definition import TerminalAction, TerminalObservation, TerminalTool
+from openhands.tools.terminal.descriptions import UNIX_TOOL_DESCRIPTION
 
 
 DATASET_NAME = 'logicstar_swe-star'
 MODEL = os.getenv("LLM_MODEL", "openhands/minimax-m2.7")
-TARGET_TOOL = 'think'
-TARGET_ARGUMENTS = '{\n  "summary": "I\'ll help you implement the necessary changes to fix the `pretty_print_diff` function and the `pretty()` method that are",\n  "thought": "Let me analyze the issue description:\\n\\n1. The problem is that `pretty_print_diff` function and `DeepDiff.pretty()` method return empty strings instead of formatted difference text\\n2. This affects all types of differences: value changes, ..."\n}'
-USED_TOOL_NAMES = '[\n  "file_editor",\n  "finish",\n  "terminal",\n  "think"\n]'
-TOOL_SPECS_JSON = '[{"function": {"description": "View, create, and edit files in plain-text format.", "name": "file_editor", "parameters": {"properties": {"command": {"enum": ["view", "create", "str_replace", "insert", "undo_edit"], "type": "string"}, "file_text": {"description": "Content for create operations.", "type": "string"}, "insert_line": {"description": "Line before which to insert.", "type": "integer"}, "new_str": {"description": "Replacement text.", "type": "string"}, "old_str": {"description": "Text to replace.", "type": "string"}, "path": {"description": "Absolute file path.", "type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "view_range": {"description": "Optional inclusive line range for view.", "items": {"type": "integer"}, "type": "array"}}, "required": ["command", "path"], "type": "object"}}, "type": "function"}, {"function": {"description": "Signals completion of the current task or conversation.", "name": "finish", "parameters": {"properties": {"message": {"description": "Final message to send to the user.", "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": ["message"], "type": "object"}}, "type": "function"}, {"function": {"description": "Execute a shell command in the terminal within a persistent shell session.", "name": "terminal", "parameters": {"properties": {"command": {"description": "The shell command or terminal input.", "type": "string"}, "is_input": {"description": "Whether command should be sent as input to a running process.", "type": "boolean"}, "reset": {"description": "Whether to reset the terminal session.", "type": "boolean"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "timeout": {"description": "Optional timeout in seconds.", "type": "number"}}, "required": ["command"], "type": "object"}}, "type": "function"}, {"function": {"description": "Log a thought without obtaining new information or changing the environment.", "name": "think", "parameters": {"properties": {"summary": {"description": "Concise summary of what this action does.", "type": "string"}, "thought": {"description": "The thought to log.", "type": "string"}}, "required": ["thought"], "type": "object"}}, "type": "function"}]'
+RECORD_ID = 'seperman__deepdiff.ed252022.func_pm_ctrl_shuffle__a7zmgq4e'
+ASSISTANT_INDEX = 2
+PREFIX_MESSAGES_JSON = '[{"content": [{"text": "You are OpenHands agent, a helpful AI assistant that can interact with a computer to solve tasks.\\n\\n<ROLE>\\n* Your primary role is to assist users by executing commands, modifying code, and solving technical problems effectively. You should be thorough, methodical, and prioritize quality over speed.\\n* If the user asks a question, like \\"why is X happening\\", don\'t try to fix the problem. Just give an answer to the question.\\n</ROLE>\\n\\n<MEMORY>\\n* Use `AGENTS.md` under the repository root as your persistent memory for repository-specific knowledge and context.\\n* Add important insights, patterns, and learnings to this file to improve future task performance.\\n* This repository skill is automatically loaded for every conversation and helps maintain context across sessions.\\n</MEMORY>\\n\\n<EFFICIENCY>\\n* Each action you take is somewhat expensive. Wherever possible, combine multiple actions into a single action, e.g. combine multiple bash commands into one, using sed and grep to edit/view multiple files at once.\\n* When exploring the codebase, use efficient tools like find, grep, and git commands with appropriate filters to minimize unnecessary operations.\\n</EFFICIENCY>\\n\\n<FILE_SYSTEM_GUIDELINES>\\n* When a user provides a file path, do NOT assume it\'s relative to the current working directory. First explore the file system to locate the file before working on it.\\n* If asked to edit a file, edit the file directly, rather than creating a new file with a different filename.\\n* For global search-and-replace operations, consider using `sed` instead of opening file editors multiple times.\\n* NEVER create multiple versions of the same file with different suffixes. Modify the original file directly when making changes.\\n</FILE_SYSTEM_GUIDELINES>\\n\\n<CODE_QUALITY>\\n* Write clean, efficient code with minimal comments.\\n* Before implementing changes, first thoroughly understand the codebase through exploration.\\n* Place imports at the top of the file unless doing so would cause circular imports or other real issues.\\n</CODE_QUALITY>\\n\\n<VERSION_CONTROL>\\n* Exercise caution with git operations. Do NOT make potentially dangerous changes unless explicitly asked to do so.\\n* When committing changes, use `git status` to see all modified files, and stage all files necessary for the commit.\\n* Do NOT commit files that typically should not go into version control unless explicitly instructed by the user.\\n</VERSION_CONTROL>\\n\\n<PROBLEM_SOLVING_WORKFLOW>\\n1. EXPLORATION: Thoroughly explore relevant files and understand the context before proposing solutions.\\n2. ANALYSIS: Consider multiple approaches and select the most promising one.\\n3. TESTING: For bug fixes, create tests to verify issues before implementing fixes when appropriate.\\n4. IMPLEMENTATION: Make focused, minimal changes to address the problem.\\n5. VERIFICATION: Test your implementation thoroughly, including edge cases.\\n</PROBLEM_SOLVING_WORKFLOW>\\n\\n<SECURITY_RISK_ASSESSMENT>\\nWhen using tools that support the security_risk parameter, assess the safety risk of your actions:\\n* LOW: Safe, read-only actions.\\n* MEDIUM: Project-scoped edits or execution.\\n* HIGH: System-level or untrusted operations, privilege changes, or sensitive-data movement.\\n</SECURITY_RISK_ASSESSMENT>\\n\\n<EXTERNAL_SERVICES>\\n* When interacting with external services like GitHub, GitLab, or Bitbucket, use their respective APIs instead of browser-based interactions whenever possible.\\n* Only resort to browser-based interactions with these services if specifically requested by the user or if the required operation cannot be performed via API.\\n</EXTERNAL_SERVICES>\\n\\n<ENVIRONMENT_SETUP>\\n* When user asks you to run an application, do not stop if the application is not installed. Instead, install the application and run the command again when possible.\\n* If you encounter missing dependencies, first look around in the repository for existing dependency files and use them to install dependencies.\\n</ENVIRONMENT_SETUP>\\n", "type": "text"}], "role": "system"}, {"content": [{"text": "<uploaded_files>\\n/testbed\\n</uploaded_files>\\n\\nI\'ve uploaded a python code repository in the directory /testbed. Consider the following issue description:\\n\\n<issue_description>\\npretty_print_diff function returns empty string instead of formatted text\\n\\n**What happened**:\\nWhen using the pretty_print_diff function or the pretty() method on DeepDiff objects, the output is an empty string instead of the expected formatted difference text.\\n\\n**What you expected to happen**:\\nThe pretty_print_diff function should return properly formatted text describing the differences between objects, such as \\"Value of root[2] changed from 2 to 3.\\" or \\"Item root[5] added to dictionary.\\"\\n\\n**Minimal Complete Verifiable Example**:\\n```python\\n>>> from deepdiff import DeepDiff\\n>>> from deepdiff.serialization import pretty_print_diff\\n>>> t1 = {2: 2, 4: 4}\\n>>> t2 = {2: 3, 4: 4}\\n>>> ddiff = DeepDiff(t1, t2, view=\'tree\')\\n>>> result = pretty_print_diff(ddiff.tree[\'values_changed\'][0])\\n>>> print(repr(result))  # Expected: \'Value of root[2] changed from 2 to 3.\'\\n\'\'\\n>>> # Also affects the pretty() method\\n>>> ddiff2 = DeepDiff(t1, t2)\\n>>> print(repr(ddiff2.pretty()))  # Expected formatted output\\n\'\'\\n```\\n\\n**Additional examples**:\\n```python\\n>>> # Dictionary item changes\\n>>> t1 = {2: 2, 3: 3, 4: 4}\\n>>> t2 = {2: \'b\', 4: 5, 5: 5}\\n>>> ddiff = DeepDiff(t1, t2, verbose_level=2)\\n>>> print(ddiff.pretty())  # Should show detailed changes with values\\n>>> # Returns empty string instead\\n\\n>>> # Attribute changes\\n>>> class TestClass:\\n...     def __init__(self):\\n...         self.one = 1\\n>>> t1 = TestClass()\\n>>> t2 = TestClass()\\n>>> t2.two = 2\\n>>> ddiff = DeepDiff(t1, t2, view=\'tree\', verbose_level=2)\\n>>> result = pretty_print_diff(ddiff.tree[\'attribute_added\'][0])\\n>>> print(repr(result))  # Expected: \'Attribute root.two (2) added.\'\\n\'\'\\n```\\n\\nThis affects all types of differences including type changes, dictionary/iterable item additions/removals, attribute changes, set changes, and repetition changes.\\n</issue_description>\\n\\nCan you help me implement the necessary changes to the repository so that the requirements specified in the <issue_description> are met?\\nI\'ve already taken care of all changes to any of the test files described in the <issue_description>. This means you DON\'T have to modify the testing logic or any of the tests in any way!\\nAlso the development Python environment is already set up for you (i.e., all dependencies already installed), so you don\'t need to install other packages.\\nYour task is to make th [... TRUNCATED ...] erate the steps to reproduce the problem.\\n   1.5 Hightlight any best practices to take into account when testing and fixing the issue\\n\\nPhase 2. RUNNING: install and run the tests on the repository\\n   2.1 Follow the readme\\n   2.2 Install the environment and anything needed\\n   2.2 Iterate and figure out how to run the tests\\n\\nPhase 3. EXPLORATION: find the files that are related to the problem and possible solutions\\n   3.1 Use `grep` to search for relevant methods, classes, keywords and error messages.\\n   3.2 Identify all files related to the problem statement.\\n   3.3 Propose the methods and files to fix the issue and explain why.\\n   3.4 From the possible file locations, select the most likely location to fix the issue.\\n\\nPhase 4. TEST CREATION: before implementing any fix, create a script to reproduce and verify the issue.\\n   4.1 Look at existing test files in the repository to understand the test format/structure.\\n   4.2 Create a minimal reproduction script that reproduces the located issue.\\n   4.3 Run the reproduction script to confirm you are reproducing the issue.\\n   4.4 Adjust the reproduction script as necessary.\\n\\nPhase 5. FIX ANALYSIS: state clearly the problem and how to fix it\\n   5.1 State clearly what the problem is.\\n   5.2 State clearly where the problem is located.\\n   5.3 State clearly how the test reproduces the issue.\\n   5.4 State clearly the best practices to take into account in the fix.\\n   5.5 State clearly how to fix the problem.\\n\\nPhase 6. FIX IMPLEMENTATION: Edit the source code to implement your chosen solution.\\n   6.1 Make minimal, focused changes to fix the issue.\\n\\nPhase 7. VERIFICATION: Test your implementation thoroughly.\\n   7.1 Run your reproduction script to verify the fix works.\\n   7.2 Add edge cases to your test script to ensure comprehensive coverage.\\n   7.3 Run existing tests related to the modified code to ensure you haven\'t broken anything.\\n\\n8. FINAL REVIEW: Carefully re-read the problem description and compare your changes with the base commit 5a68f024987e6d16c2626a31bf653a2edddea579.\\n   8.1 Ensure you\'ve fully addressed all requirements.\\n   8.2 Run any tests in the repository related to:\\n     8.2.1 The issue you are fixing\\n     8.2.2 The files you modified\\n     8.2.3 The functions you changed\\n   8.3 If any tests fail, revise your implementation until all tests pass\\n\\nBe thorough in your exploration, testing, and reasoning. It\'s fine if your thinking process is lengthy - quality and completeness are more important than brevity.\\n[The output was truncated in the middle as it was too long, retry with shorter output]", "type": "text"}], "role": "user"}]'
+EXPECTED_ASSISTANT_JSON = '{"content": [{"text": "I\'ll help you implement the necessary changes to fix the `pretty_print_diff` function and the `pretty()` method that are returning empty strings instead of formatted text. Let me start by following the systematic approach you outlined.\\n\\n## Phase 1: Understanding the Problem", "type": "text"}], "role": "assistant", "tool_calls": [{"function": {"arguments": "{\\"thought\\": \\"Let me analyze the issue description:\\\\n\\\\n1. The problem is that `pretty_print_diff` function and `DeepDiff.pretty()` method return empty strings instead of formatted difference text\\\\n2. This affects all types of differences: value changes, item additions/removals, attribute changes, etc.\\\\n3. The expected behavior is to return properly formatted text like \\\\\\"Value of root[2] changed from 2 to 3.\\\\\\"\\\\n\\\\nKey observations:\\\\n- The issue affects both the standalone `pretty_print_diff` function and the `pretty()` method on DeepDiff objects\\\\n- It works with different types of differences (values_changed, attribute_added, etc.)\\\\n- The verbose_level parameter doesn\'t seem to affect the output\\\\n- The view=\'tree\' parameter is used in some examples\\\\n\\\\nThis suggests the problem is likely in the serialization/formatting logic rather than the diff detection logic itself.\\", \\"summary\\": \\"I\'ll help you implement the necessary changes to fix the `pretty_print_diff` function and the `pretty()` method that are\\"}", "name": "think"}, "id": "call_000001_think", "type": "function"}]}'
+TOOL_SPECS_JSON = '[{"function": {"description": "View, create, and edit files in plain-text format.", "name": "file_editor", "parameters": {"properties": {"command": {"enum": ["view", "create", "str_replace", "insert", "undo_edit"], "type": "string"}, "file_text": {"description": "Content for create operations.", "type": "string"}, "insert_line": {"description": "Line before which to insert.", "type": "integer"}, "new_str": {"description": "Replacement text.", "type": "string"}, "old_str": {"description": "Text to replace.", "type": "string"}, "path": {"description": "Absolute file path.", "type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "view_range": {"description": "Optional inclusive line range for view.", "items": {"type": "integer"}, "type": "array"}}, "required": ["command", "path"], "type": "object"}}, "type": "function"}, {"function": {"description": "Signals completion of the current task or conversation.", "name": "finish", "parameters": {"properties": {"message": {"description": "Final message to send to the user.", "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": ["message"], "type": "object"}}, "type": "function"}, {"function": {"description": "Create, update, and inspect the task list for the current conversation.", "name": "task_tracker", "parameters": {"properties": {"command": {"enum": ["plan", "update", "view"], "type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "task_list": {"description": "Markdown task list content.", "type": "string"}}, "required": [], "type": "object"}}, "type": "function"}, {"function": {"description": "Execute a shell command in the terminal within a persistent shell session.", "name": "terminal", "parameters": {"properties": {"command": {"description": "The shell command or terminal input.", "type": "string"}, "is_input": {"description": "Whether command should be sent as input to a running process.", "type": "boolean"}, "reset": {"description": "Whether to reset the terminal session.", "type": "boolean"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "timeout": {"description": "Optional timeout in seconds.", "type": "number"}}, "required": ["command"], "type": "object"}}, "type": "function"}, {"function": {"description": "Log a thought without obtaining new information or changing the environment.", "name": "think", "parameters": {"properties": {"summary": {"description": "Concise summary of what this action does.", "type": "string"}, "thought": {"description": "The thought to log.", "type": "string"}}, "required": ["thought"], "type": "object"}}, "type": "function"}]'
 
 
-class ValidationTool(ToolDefinition):
+class DatasetToolObservation(Observation):
+    @property
+    def to_llm_content(self) -> Sequence[TextContent | ImageContent]:
+        if self.content:
+            return self.content
+        return [TextContent(text="Dataset validation tool result.")]
+
+
+class DatasetToolExecutor(ToolExecutor):
+    def __call__(self, action: Action, conversation=None) -> DatasetToolObservation:  # noqa: ARG002
+        return DatasetToolObservation.from_text(
+            f"Executed {action.__class__.__name__} for {DATASET_NAME}."
+        )
+
+
+class DatasetTool(ToolDefinition):
     @classmethod
     def create(cls, *args, **kwargs) -> list[Self]:
         return []
@@ -50,17 +108,141 @@ def class_name(name: str) -> str:
     return text
 
 
-def make_tool(spec: dict) -> ToolDefinition:
+def sdk_content(content: Any) -> list[TextContent | ImageContent]:
+    if content is None:
+        return []
+    if isinstance(content, str):
+        return [TextContent(text=content)]
+    blocks: list[TextContent | ImageContent] = []
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") == "text":
+            blocks.append(TextContent(text=item.get("text", "")))
+        elif item.get("type") in {"image", "image_url"}:
+            url = item.get("image_url", {}).get("url") if isinstance(item.get("image_url"), dict) else None
+            if url:
+                blocks.append(ImageContent(image_urls=[url]))
+    return blocks
+
+
+def sdk_message(raw: dict) -> Message:
+    tool_calls = None
+    if raw.get("tool_calls"):
+        tool_calls = [
+            MessageToolCall(
+                id=tool_call["id"],
+                name=tool_call["function"]["name"],
+                arguments=tool_call["function"].get("arguments") or "{}",
+                origin="completion",
+            )
+            for tool_call in raw["tool_calls"]
+        ]
+    return Message(
+        role=raw["role"],
+        content=sdk_content(raw.get("content")),
+        tool_calls=tool_calls,
+        tool_call_id=raw.get("tool_call_id"),
+        name=raw.get("name"),
+        reasoning_content=raw.get("reasoning_content"),
+    )
+
+
+def native_tool(name: str) -> ToolDefinition | None:
+    if name == "finish":
+        return FinishTool.create()[0]
+    if name == "think":
+        return ThinkTool.create()[0]
+    if name == "terminal":
+        return TerminalTool(
+            description=UNIX_TOOL_DESCRIPTION,
+            action_type=TerminalAction,
+            observation_type=TerminalObservation,
+            annotations=ToolAnnotations(
+                title="terminal",
+                readOnlyHint=False,
+                destructiveHint=True,
+                idempotentHint=False,
+                openWorldHint=True,
+            ),
+        )
+    if name == "file_editor":
+        return FileEditorTool(
+            description=FILE_EDITOR_DESCRIPTION,
+            action_type=FileEditorAction,
+            observation_type=FileEditorObservation,
+            annotations=ToolAnnotations(
+                title="file_editor",
+                readOnlyHint=False,
+                destructiveHint=True,
+                idempotentHint=False,
+                openWorldHint=False,
+            ),
+        )
+    if name == "task_tracker":
+        return TaskTrackerTool(
+            description=TASK_TRACKER_DESCRIPTION,
+            action_type=TaskTrackerAction,
+            observation_type=TaskTrackerObservation,
+            annotations=ToolAnnotations(
+                title="task_tracker",
+                readOnlyHint=False,
+                destructiveHint=False,
+                idempotentHint=True,
+                openWorldHint=False,
+            ),
+        )
+    browser_tools: dict[str, tuple[type[ToolDefinition], type[Action], str, bool]] = {
+        "browser_navigate": (BrowserNavigateTool, BrowserNavigateAction, BROWSER_NAVIGATE_DESCRIPTION, False),
+        "browser_click": (BrowserClickTool, BrowserClickAction, BROWSER_CLICK_DESCRIPTION, False),
+        "browser_type": (BrowserTypeTool, BrowserTypeAction, BROWSER_TYPE_DESCRIPTION, False),
+        "browser_get_state": (BrowserGetStateTool, BrowserGetStateAction, BROWSER_GET_STATE_DESCRIPTION, True),
+        "browser_get_content": (BrowserGetContentTool, BrowserGetContentAction, BROWSER_GET_CONTENT_DESCRIPTION, True),
+        "browser_scroll": (BrowserScrollTool, BrowserScrollAction, BROWSER_SCROLL_DESCRIPTION, False),
+        "browser_go_back": (BrowserGoBackTool, BrowserGoBackAction, BROWSER_GO_BACK_DESCRIPTION, False),
+    }
+    if name in browser_tools:
+        tool_cls, action_type, description, read_only = browser_tools[name]
+        return tool_cls(
+            description=description,
+            action_type=action_type,
+            observation_type=BrowserObservation,
+            annotations=ToolAnnotations(
+                title=name,
+                readOnlyHint=read_only,
+                destructiveHint=False,
+                idempotentHint=read_only,
+                openWorldHint=True,
+            ),
+        )
+    return None
+
+
+def custom_tool(spec: dict) -> ToolDefinition:
     function = spec["function"]
     name = function["name"]
     parameters = function.get("parameters") or {"type": "object", "properties": {}}
     action_type = Action.from_mcp_schema(f"{class_name(name)}Action", parameters)
-    tool_cls = type(f"{class_name(name)}Tool", (ValidationTool,), {"name": name})
+    tool_cls = type(f"{class_name(name)}Tool", (DatasetTool,), {"name": name})
     return tool_cls(
-        description=function.get("description") or f"Validation tool {name}.",
+        description=function.get("description") or f"Dataset-specific tool {name}.",
         action_type=action_type,
-        observation_type=None,
+        observation_type=DatasetToolObservation,
+        executor=DatasetToolExecutor(),
     )
+
+
+def validation_tools() -> list[ToolDefinition]:
+    tools: list[ToolDefinition] = []
+    seen: set[str] = set()
+    for spec in json.loads(TOOL_SPECS_JSON):
+        function = spec.get("function") or {}
+        name = function.get("name")
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        tools.append(native_tool(name) or custom_tool(spec))
+    return tools
 
 
 def latest_log(log_dir: Path) -> Path:
@@ -70,60 +252,31 @@ def latest_log(log_dir: Path) -> Path:
     return logs[-1]
 
 
-def has_tool_call(log_path: Path) -> bool:
-    data = json.loads(log_path.read_text())
-    for choice in data.get("response", {}).get("choices", []):
-        message = choice.get("message") or {}
-        if message.get("tool_calls"):
-            return True
-    return False
-
-
 def main() -> None:
     root = repo_root()
     load_env_file(root / ".env")
     load_env_file(Path.home() / "work" / "agent-data-protocol" / ".env")
-    if not os.getenv("LLM_API_KEY"):
+    api_key = os.getenv("LLM_API_KEY")
+    if not api_key:
         raise RuntimeError("LLM_API_KEY is required")
 
-    system_prompt = (root / "agents" / "openhands_sdk" / "system_prompt.txt").read_text()
-    tools = [make_tool(spec) for spec in json.loads(TOOL_SPECS_JSON)]
+    prefix_messages = [sdk_message(message) for message in json.loads(PREFIX_MESSAGES_JSON)]
     log_dir = Path(tempfile.mkdtemp(prefix=f"{DATASET_NAME}-completion-"))
     llm = LLM(
         model=MODEL,
-        api_key=os.getenv("LLM_API_KEY"),
+        api_key=SecretStr(api_key),
         base_url=os.getenv("LLM_BASE_URL"),
         log_completions=True,
         log_completions_folder=str(log_dir),
-        max_output_tokens=160,
+        max_output_tokens=512,
     )
-    prompt = (
-        f"This is an OpenHands SDK logging validation for the ADP dataset "
-        f"{DATASET_NAME}. The available tools are: {', '.join(USED_TOOL_NAMES) or TARGET_TOOL}. "
-        f"Call exactly one tool now: `{TARGET_TOOL}`. Use arguments similar to this JSON: "
-        f"{TARGET_ARGUMENTS}. Do not answer in plain text only."
+    llm.completion(
+        messages=prefix_messages,
+        tools=validation_tools(),
+        add_security_risk_prediction=True,
+        temperature=0,
     )
-    last_log = None
-    for _ in range(2):
-        llm.completion(
-            messages=[
-                Message(role="system", content=[TextContent(text=system_prompt)]),
-                Message(role="user", content=[TextContent(text=prompt)]),
-            ],
-            tools=tools,
-            add_security_risk_prediction=True,
-            temperature=0,
-            tool_choice={"type": "function", "function": {"name": TARGET_TOOL}},
-        )
-        last_log = latest_log(log_dir)
-        if has_tool_call(last_log):
-            break
-        prompt = (
-            f"You must call the `{TARGET_TOOL}` tool exactly once for validation. "
-            f"Use arguments like: {TARGET_ARGUMENTS}."
-        )
-    assert last_log is not None
-    shutil.copyfile(last_log, Path(__file__).with_name("completion.json"))
+    shutil.copyfile(latest_log(log_dir), Path(__file__).with_name("completion.json"))
 
 
 if __name__ == "__main__":

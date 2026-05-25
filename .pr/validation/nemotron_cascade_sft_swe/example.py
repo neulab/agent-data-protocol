@@ -6,22 +6,80 @@ import re
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Self
+from typing import Any, Sequence, Self
 
-from openhands.sdk import LLM, Message, TextContent
-from openhands.sdk.tool import ToolDefinition
-from openhands.sdk.tool.schema import Action
+from pydantic import SecretStr
+
+from openhands.sdk import ImageContent, LLM, Message, Observation, TextContent, ToolDefinition
+from openhands.sdk.llm import MessageToolCall
+from openhands.sdk.tool import Action, ToolAnnotations, ToolExecutor
+from openhands.sdk.tool.builtins.finish import FinishTool
+from openhands.sdk.tool.builtins.think import ThinkTool
+from openhands.tools.browser_use.definition import (
+    BROWSER_CLICK_DESCRIPTION,
+    BROWSER_GET_CONTENT_DESCRIPTION,
+    BROWSER_GET_STATE_DESCRIPTION,
+    BROWSER_GO_BACK_DESCRIPTION,
+    BROWSER_NAVIGATE_DESCRIPTION,
+    BROWSER_SCROLL_DESCRIPTION,
+    BROWSER_TYPE_DESCRIPTION,
+    BrowserClickAction,
+    BrowserClickTool,
+    BrowserGetContentAction,
+    BrowserGetContentTool,
+    BrowserGetStateAction,
+    BrowserGetStateTool,
+    BrowserGoBackAction,
+    BrowserGoBackTool,
+    BrowserNavigateAction,
+    BrowserNavigateTool,
+    BrowserObservation,
+    BrowserScrollAction,
+    BrowserScrollTool,
+    BrowserTypeAction,
+    BrowserTypeTool,
+)
+from openhands.tools.file_editor.definition import (
+    TOOL_DESCRIPTION as FILE_EDITOR_DESCRIPTION,
+    FileEditorAction,
+    FileEditorObservation,
+    FileEditorTool,
+)
+from openhands.tools.task_tracker.definition import (
+    TASK_TRACKER_DESCRIPTION,
+    TaskTrackerAction,
+    TaskTrackerObservation,
+    TaskTrackerTool,
+)
+from openhands.tools.terminal.definition import TerminalAction, TerminalObservation, TerminalTool
+from openhands.tools.terminal.descriptions import UNIX_TOOL_DESCRIPTION
 
 
 DATASET_NAME = 'nemotron_cascade_sft_swe'
 MODEL = os.getenv("LLM_MODEL", "openhands/minimax-m2.7")
-TARGET_TOOL = 'finish'
-TARGET_ARGUMENTS = '{\n  "message": "Validation complete for nemotron_cascade_sft_swe."\n}'
-USED_TOOL_NAMES = '[]'
-TOOL_SPECS_JSON = '[{"function": {"description": "Signals completion of the current task or conversation.", "name": "finish", "parameters": {"properties": {"message": {"description": "Final message to send to the user.", "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": ["message"], "type": "object"}}, "type": "function"}]'
+RECORD_ID = 'swe_localization_0'
+ASSISTANT_INDEX = 2
+PREFIX_MESSAGES_JSON = '[{"content": [{"text": "You are OpenHands agent, a helpful AI assistant that can interact with a computer to solve tasks.\\n\\n<ROLE>\\n* Your primary role is to assist users by executing commands, modifying code, and solving technical problems effectively. You should be thorough, methodical, and prioritize quality over speed.\\n* If the user asks a question, like \\"why is X happening\\", don\'t try to fix the problem. Just give an answer to the question.\\n</ROLE>\\n\\n<MEMORY>\\n* Use `AGENTS.md` under the repository root as your persistent memory for repository-specific knowledge and context.\\n* Add important insights, patterns, and learnings to this file to improve future task performance.\\n* This repository skill is automatically loaded for every conversation and helps maintain context across sessions.\\n</MEMORY>\\n\\n<EFFICIENCY>\\n* Each action you take is somewhat expensive. Wherever possible, combine multiple actions into a single action, e.g. combine multiple bash commands into one, using sed and grep to edit/view multiple files at once.\\n* When exploring the codebase, use efficient tools like find, grep, and git commands with appropriate filters to minimize unnecessary operations.\\n</EFFICIENCY>\\n\\n<FILE_SYSTEM_GUIDELINES>\\n* When a user provides a file path, do NOT assume it\'s relative to the current working directory. First explore the file system to locate the file before working on it.\\n* If asked to edit a file, edit the file directly, rather than creating a new file with a different filename.\\n* For global search-and-replace operations, consider using `sed` instead of opening file editors multiple times.\\n* NEVER create multiple versions of the same file with different suffixes. Modify the original file directly when making changes.\\n</FILE_SYSTEM_GUIDELINES>\\n\\n<CODE_QUALITY>\\n* Write clean, efficient code with minimal comments.\\n* Before implementing changes, first thoroughly understand the codebase through exploration.\\n* Place imports at the top of the file unless doing so would cause circular imports or other real issues.\\n</CODE_QUALITY>\\n\\n<VERSION_CONTROL>\\n* Exercise caution with git operations. Do NOT make potentially dangerous changes unless explicitly asked to do so.\\n* When committing changes, use `git status` to see all modified files, and stage all files necessary for the commit.\\n* Do NOT commit files that typically should not go into version control unless explicitly instructed by the user.\\n</VERSION_CONTROL>\\n\\n<PROBLEM_SOLVING_WORKFLOW>\\n1. EXPLORATION: Thoroughly explore relevant files and understand the context before proposing solutions.\\n2. ANALYSIS: Consider multiple approaches and select the most promising one.\\n3. TESTING: For bug fixes, create tests to verify issues before implementing fixes when appropriate.\\n4. IMPLEMENTATION: Make focused, minimal changes to address the problem.\\n5. VERIFICATION: Test your implementation thoroughly, including edge cases.\\n</PROBLEM_SOLVING_WORKFLOW>\\n\\n<SECURITY_RISK_ASSESSMENT>\\nWhen using tools that support the security_risk parameter, assess the safety risk of your actions:\\n* LOW: Safe, read-only actions.\\n* MEDIUM: Project-scoped edits or execution.\\n* HIGH: System-level or untrusted operations, privilege changes, or sensitive-data movement.\\n</SECURITY_RISK_ASSESSMENT>\\n\\n<EXTERNAL_SERVICES>\\n* When interacting with external services like GitHub, GitLab, or Bitbucket, use their respective APIs instead of browser-based interactions whenever possible.\\n* Only resort to browser-based interactions with these services if specifically requested by the user or if the required operation cannot be performed via API.\\n</EXTERNAL_SERVICES>\\n\\n<ENVIRONMENT_SETUP>\\n* When user asks you to run an application, do not stop if the application is not installed. Instead, install the application and run the command again when possible.\\n* If you encounter missing dependencies, first look around in the repository for existing dependency files and use them to install dependencies.\\n</ENVIRONMENT_SETUP>\\n", "type": "text"}], "role": "system"}, {"content": [{"text": "Please look through a given GitHub issue and repository structure and provide a list of files that one would need to edit or look at to solve the issue.\\n\\n### GitHub Problem Description ###\\nside-tag order on new update are ordered randomly?\\nCreating a new update shows all available side tags, but they show up ordered randomly?\\r\\n\\r\\n![image](https://github.com/fedora-infra/bodhi/assets/773148/7bda4940-0470-484f-b5fc-50a29d45aa48)\\r\\n\\r\\nI would expect list to show up ordered by sidetag name or by ID.\\n\\n\\n###\\n\\n### Repository Structure ###\\nbodhi-messages\\n    bodhi\\n        messages\\n            __init__.py\\n            utils.py\\n            schemas\\n                __init__.py\\n                update.py\\n                compose.py\\n                errata.py\\n                buildroot_override.py\\n                base.py\\ndevel\\n    register-with-ipsilon.py\\n    docker\\n        settings\\n            greenwave-settings.py\\n            waiverdb-settings.py\\n    ci\\n        bodhi_ci\\n            __init__.py\\n            reporter.py\\n            job_registry.py\\n            rpm.py\\n            job.py\\n            unit.py\\n            constants.py\\n            integration.py\\n            linting.py\\n            docs.py\\n            runner.py\\n            cli.py\\n        integration\\n            bodhi\\n                wait-for-file.py\\n                celeryconfig.py\\n            resultsdb\\n                settings.py\\n            greenwave\\n                fedmsg.py\\n                settings.py\\n            rabbitmq\\n                fm_dumper.py\\n            waiverdb\\n                fedmsg.py\\n                settings.py\\n            ipsilon\\n                setup-bodhi.py\\n                api.py\\n    ansible\\n        roles\\n            bodhi\\n                templates\\n                    create-freeipa-users-grps.py\\nbodhi-client\\n    bodhi\\n        client\\n            __init__.py\\n            bindings.py\\n            oidcclient.py\\n            constants.py\\n            cli.py\\n    docs\\n        conf.py\\nbodhi-server\\n    celeryconfig.py\\n    bodhi\\n        server\\n            config.py\\n            __init__.py\\n            ffmarkdown.py\\n            logging.py\\n            bugs.py\\n            util.py\\n            metadata.py\\n            validators.py\\n            renderers.py\\n            notifications.py\\n            models.py\\n            webapp.py\\n            mail.py\\n            push.py\\n            exceptions.py\\n            buildsys.py\\n            security.py\\n            schemas.py\\n            services\\n                markdown.py\\n                __init__.py\\n                releases.py\\n                errors.py\\n                updates.py\\n                composes.py\\n                metrics_tween.py\\n                packages.py\\n                comments.py\\n                builds.py\\n                overrides.py\\n                csrf.py\\n                user.py\\n                schemas.py\\n            static\\n                __init__.py\\n            scripts\\n                __init__.py\\n                bshell.py\\n                compat.py\\n                untag_branched.py\\n                initializedb.py\\n                sar.py\\n            views\\n                __init__.py\\n                generic.py\\n            tasks\\n                __init__.py\\n                composer.py\\n                check_signed_builds.py\\n                tag_update_builds.py\\n                work_on_bugs.py\\n                expire_overrides.py\\n                check_policies.py\\n                clean_old_composes.py\\n                handle_side_and_related_tags.py\\n                approve_testing.py\\n                fetch_test_cases.py\\n            consumers\\n                __init__.py\\n                automatic_updates.py\\n                util.py\\n                signed.py\\n                resultsdb.py\\n                waiverdb.py\\n                ci.py\\n            auth\\n                __init__.py\\n                oauth_1.py\\n                views.py\\n                oauth.py\\n                oauth_015.py\\n                constants.py\\n                fedora.py\\n                utils.py\\n            migrations\\n                __init__.py\\n                env.py\\n                versions\\n                    5703ddfe855d_add_package_manager_and_testing_.py\\n                    __init__.py\\n                    325954bac9f7_link_testcases_to_builds.py\\n                    2fc96aa44a74_drop_the_user_show_popup_column.py\\n                    3a2e248d1757_add_the_unspecified_enum_to_updatetype.py\\n                    8e9dc57e082d_obsolete_updates_for_archived_release.py\\n                    bdf0e37ab793_disallow_null_values_in_stable_karma_.py\\n                    c60d95eef4f1_add_frozen_release_state.py\\n                    d399493275b6_add_the_eol_column.py\\n                    5c86a3f9dc03_drop_support_for_cve_tracking.py\\n                    9c0a34961768_remove_the_greenwave_unsatisfied_.py\\n                    1c97477e38ee_convert_br_override_notes_to_unicodetext.py\\n                    e3988e00b338_drop_date_pushed.py\\n                    eec610d7ab3a_index_the_builds_update_id_column.py\\n                    7ba286412ad4_drop_the_relationship_between_packages_.py\\n                    6b3eb9ae2b87_remove_unused_updatestatus_processing.py\\n                    a3580bdf5129_remove_the_ci_url_field_from_builds.py\\n                    e8a059156d38_add_the_create_automatic_updates_bool_.py\\n                    8c4d6aad9b78_add_the_greenwave_failed_enum_to_.py\\n                    f50dc199039c_make_comments_user_id_not_nullable.py\\n                    f393d006559b_add_critpath_groups_to_update.py\\n                    f8a44498c806_remove_legacy_old_updateid.py\\n                    b1fd856efcf6_add_autopush_boolean_and_stable_days_to_update.py\\n                    f660455231d4_add_released_on_to_release.py\\n                    ff834fa4f23e_increase_the_update_alias_size.py\\n                    19e28e9851a2_index_comment_update_id.py\\n                    aae0d29d49b7_remove_the_private_field_on_the_bug_.py\\n                    9991cf10ec50_mark_the_bugs_private_field_as_nullable.py\\n                    e5b3ddb35df3_remove_the_greenwave_summary_string_.py\\n                    d3f8bd499ecd_add_from_tag_column_to_updates.py\\n                    58b7919b942c_remove_the_updates_title_column.py\\n                    499ac8bbe09a_remove_unused_update_sidetag_statuses.py\\n                    a418acf470f8_drop_the_stacks_table.py\\n                    c98beb4940b5_remove_the_comments_anonymous_column.py\\n                    559acf7e2c16_make_comments_update_not_nullable.py\\n                    d986618207bc_add_composed_by_bodhi_flag_to_releases_.py\\n                    190ba571c7d2_remove_the_batching_request_state.py\\n    docs\\n        conf.py\\ndocs\\n    conf.py\\nnews\\n    get-authors.py\\n\\n\\n###\\n\\nOnly provide the full path and return at most 5 files. The returned files should be separated by new lines ordered by most to least important and wrapped with ```. For example:\\n\\n```\\nmost/important/file1.xx\\nless/important/file2.yy\\nleast/important/file3.zz\\n```", "type": "text"}], "role": "user"}]'
+EXPECTED_ASSISTANT_JSON = '{"content": [{"text": "Based on the issue description and repository structure, the following files are most relevant for addressing the side-tag ordering problem when creating new updates. The files are ordered by importance:\\n\\n```\\nbodhi-server/bodhi/server/services/updates.py\\nbodhi-server/bodhi/server/models.py\\nbodhi-server/bodhi/server/views/generic.py\\nbodhi-server/bodhi/server/services/releases.py\\nbodhi-server/bodhi/server/schemas.py\\n```\\n\\n### Reasoning:\\n1. **updates.py**: Likely contains the logic for fetching and displaying available side-tags during update creation. The ordering fix would be implemented here.\\n2. **models.py**: Defines the database schema for tags/releases. Side-tag relationships and query ordering logic may reside here.\\n3. **generic.py**: Handles web views, potentially including the new-update form where side-tags are displayed.\\n4. **releases.py**: Manages release-related data, which might include side-tag associations.\\n5. **schemas.py**: Defines API response structures, possibly controlling how side-tag data is serialized/ordered in API outputs.", "type": "text"}], "reasoning_content": "We are given an issue: side-tag order on new update are ordered randomly.\\n The user expects the list of side tags to be ordered by name or ID, but currently they appear randomly.\\n\\n Steps to solve:\\n 1. We need to find where in the code the list of available side tags is fetched and displayed when creating a new update.\\n 2. The issue is about the web interface, so we should look in the server-side code that handles the creation of an update form.\\n\\n Given the repository structure, we note that the server code is in `bodhi-server/bodhi/server`.\\n\\n We are likely interested in:\\n  - The view that handles the new update form (probably in `views/` or `services/`).\\n  - The model that represents side tags (if any) and the query that fetches them.\\n\\n Since the issue mentions the order of side tags, we should look for a query that fetches the available side tags and then order it appropriately.\\n\\n Looking at the structure, we have:\\n   `bodhi-server/bodhi/server/services/updates.py` - likely handles the update-related API endpoints.\\n\\n However, note that the issue is about the web form. The web form might be served by a view. We have a `views/` directory.\\n\\n In `views/` we have:\\n   `generic.py` - might contain generic views, but also might have the update form.\\n\\n Alternatively, the form might be part of the frontend and the data might come from an API. The issue says \\"Creating a new update shows all available side tags\\", so we are in the creation form.\\n\\n Since the issue is about the order of the tags, and the tags are likely coming from a database query, we should look for the code that fetches the list of side tags.\\n\\n We note that there is a model for updates? Actually, side tags are probably a type of tag in the system. We might look in `models.py` for a Tag model.\\n\\n However, the issue says \\"side tags\\", which are special tags. There might be a specific way to get them.\\n\\n Let me look at the provided migration files (in `migrations/versions`). There is one named:\\n   `d3f8bd499ecd_add_from_tag_column_to_updates.py`\\n\\n This migration adds a `from_tag` column to updates, which might be related to side tags.\\n\\n Also, note that there is a task named `handle_side_and_related_tags.py` in the tasks directory.\\n\\n But the issue is about the order in the form. So we are looking for the code that generates the form.\\n\\n Considering the structure, the form for creating an update might be in:\\n   `bodhi-server/bodhi/server/views/generic.py` or in the services.\\n\\n Since the project uses Pyramid, the web form might be served by a view that uses a template. However, the provided structure does not include a `templates` directory? So perhaps the form is generated by the frontend (JavaScript) and the data comes from an API.\\n\\n How about the API endpoint that returns the available side tags? The issue says the tags are shown when creating a new update, so the endpoint might be the one that returns the form data or the one that returns the list of side tags.\\n\\n We have a service for updates: `services/updates.py`. It might have a `new_update` method or similar.\\n\\n Alternatively, the form might be in the client-side code? But the repository structure doesn\'t show a `bodhi-client` having anything about the web form? The `bodhi-client` is probably a command-line client.\\n\\n Therefore, we focus on the server.\\n\\n Let me look at the `services/updates.py`:\\n\\n We might have an endpoint for getting the form for a new update? Or the form is generated by the server-side template? But we don\'t have templates in the structure.\\n\\n Actually, the project might be a single-page application? Or the form is built with JavaScript that fetches the side tags via an API.\\n\\n Since the issue is about the order of the tags, we should look for an API endpoint that returns the list of side tags.\\n\\n In `services/updates.py`, we might have a `GET` method for creating a new update? Or the form is pre-populated by the server.\\n\\n Alternatively, the list of side tags might come from the `releases` resource? Because each release might have a set of side tags.\\n\\n We have a `services/releases.py`. Maybe the new update form requires choosing a release and then the side tags for that release? But the issue doesn\'t specify.\\n\\n Given the complexity, let me think of the most relevant files:\\n\\n 1. `bodhi-server/bodhi/server/services/updates.py`: This is where the update creation might be handled. We might find a method that returns the form data or handles the GET for the new update form.\\n\\n 2. `bodhi-server/bodhi/server/models.py`: The model for the Tag (if exists) or Release might have the side tags. We might need to order the query by name.\\n\\n 3. `bodhi-server/bodhi/server/views/generic.py`: If the form is server-rendered, it might be here.\\n\\n 4. `bodhi-server/bodhi/server/services/releases.py`: If the side tags are per release, we might have to look here.\\n\\n 5. Alternatively, the side tags might be stored as a property of the Release model? Then we would look in `models.py` for the Release class.\\n\\n Since the issue is about the order, we are likely to fix it by changing the query to order by name or ID.\\n\\n However, the issue says the list is currently random. So we are missing an order_by.\\n\\n How many files should we return? At most 5.\\n\\n We must order by most to least important.\\n\\n I think the most important is the file that fetches the list of side tags. Since the issue is about the update form, the most likely place is the update service.\\n\\n Let me look at the services:\\n\\n We have a `services/updates.py` and in that we might have a method for `new_update` or `get_form`? Or the form might be handled by the client.\\n\\n Alternatively, the form might be built in JavaScript and the data comes from an endpoint that returns all available side tags. We might have to look for an endpoint that returns tags.\\n\\n Since the issue is about the update form, and the form is for creating an update, we might look at the `services/updates.py::create_update` method? But that\'s for POST. The GET for the form might be in the view.\\n\\n Given the structure, I notice there is a `views/generic.py`. This might contain the view for the update form.\\n\\n Therefore, I propose:\\n\\n 1. `bodhi-server/bodhi/server/views/generic.py` - because the form might be rendered here and the context might include the list of side tags.\\n 2. `bodhi-server/bodhi/server/services/updates.py` - because the service might provide the data for the form via an API that the frontend uses.\\n 3. `bodhi-server/bodhi/server/models.py` - to see how the Tag model is defined and if there is a relationship to side tags.\\n\\n But note: the issue says \\"side tags\\", so we might have a specific way to get them. There might be a function in the models that returns side tags.\\n\\n 4. `bodhi-server/bodhi/server/services/releases.py` - because the side tags might be associated with releases.\\n\\n 5. `bodhi-server/bodhi/server/tasks/handle_side_and_related_tags.py` - but this is a task, less likely to be involved in the form.\\n\\n However, we are limited to 5. And the task is probably about background tasks, not the form.\\n\\n Since the issue is about the order in the form, I think the first two are the most important.\\n\\n But wait: the provided structure does not have a `templates` directory? So the form might be in the frontend code which is not provided? Then the data must come from an API.\\n\\n Therefore, we should look for an API endpoint that returns the list of side tags.\\n\\n The issue says: \\"Creating a new update shows all available side tags\\". So when you go to the page to create an update, the side tags are displayed.\\n\\n The endpoint for the form might be something like `/updates/new` and it might be served by a view. The view might be in `views/generic.py`.\\n\\n Alternatively, the form might be built with React and the data is fetched from an API endpoint like `/api/side-tags` or included in the release data.\\n\\n How about the release data? The update form requires a release. Then the side tags for that release might be fetched when the release is selected.\\n\\n We don\'t have enough context, but let me look at the provided files.\\n\\n We are only allowed to return 5 files. I will list:\\n\\n 1. `bodhi-server/bodhi/server/views/generic.py` - because it might be the view that serves the form and it might pass the list of side tags to the template (or to the frontend as props).\\n 2. `bodhi-server/bodhi/server/services/updates.py` - because it might have an endpoint that returns the data for the form, including the list of side tags.\\n 3. `bodhi-server/bodhi/server/services/releases.py` - because the side tags might be part of the release data.\\n 4. `bodhi-server/bodhi/server/models.py` - to see the definition of the Tag and Release models and how side tags are stored and queried.\\n 5. `bodhi-server/bodhi/server/schemas.py` - might define the schema for the update form and might specify the ordering of the side tags? (less likely)\\n\\n However, note that the issue says the tags are ordered randomly. So we are missing an `order_by` in the query.\\n\\n We are most likely to fix it by adding an `order_by` to the query that fetches the side tags.\\n\\n Therefore, we need to find that query.\\n\\n Since the project uses SQLAlchemy, we might look for a query like `Tag.query` or `Release.side_tags`.\\n\\n Given the above, I think the most important file is the one that actually fetches the side tags. That could be in the view, in the service, or in the model.\\n\\n I will prioritize:\\n\\n 1. `bodhi-server/bodhi/server/views/generic.py` - because it might have the view for the new update page and it might fetch the side tags.\\n 2. `bodhi-server/bodhi/server/services/updates.py` - because the update service might have an endpoint that returns the side tags (or the form data) and the frontend uses that.\\n 3. `bodhi-server/bodhi/server/models.py` - because we might find a method that returns side tags without ordering.\\n\\n But note: the issue says the tags are available when creating a new update. So the form for a new update must include the side tags.\\n\\n In the `views/generic.py`, there might be a view for `NewUpdateView` or similar.\\n\\n Alternatively, the form might be served by the same view as the updates list? We don\'t know.\\n\\n Since we don\'t have the exact code, we have to make an educated guess.\\n\\n Another possibility: the side tags are fetched from the `Release` model. In the form, we might have a dropdown for the release and then a dropdown for the side tag. The side tags would be the ones associated with the selected release.\\n\\n Therefore, we might look in the `services/releases.py` for an endpoint that returns a release by name and includes the side tags? Or in the `models.py` in the Release class, there might be a property for side tags.\\n\\n I think the most critical file is the one that directly fetches the list of side tags for the form.\\n\\n Given the structure, I will list:\\n\\n```\\nbodhi-server/bodhi/server/views/generic.py\\nbodhi-server/bodhi/server/services/updates.py\\nbodhi-server/bodhi/server/models.py\\nbodhi-server/bodhi/server/services/releases.py\\nbodhi-server/bodhi/server/schemas.py\\n```\\n\\n But note: the issue says \\"at most 5\\", so we can list 5.\\n\\n However, we are not sure. The problem might be in the model\'s relationship definition? Or in the query.\\n\\n Since the issue is about the order, we should look for any place that queries the side tags and doesn\'t order them.\\n\\n But without the code, we can\'t be sure.\\n\\n Let me look at the provided migration: `d3f8bd499ecd_add_from_tag_column_to_updates.py` adds a `from_tag` to updates. This `from_tag` is a string? Or a foreign key? We don\'t know.\\n\\n I think the best we can do is to provide the top 5 files that are most likely to contain the code that fetches the side tags.\\n\\n Therefore, I will go with:\\n\\n```\\nbodhi-server/bodhi/server/views/generic.py\\nbodhi-server/bodhi/server/services/updates.py\\nbodhi-server/bodhi/server/models.py\\nbodhi-server/bodhi/server/services/releases.py\\nbodhi-server/bodhi/server/tasks/handle_side_and_related_tags.py\\n```\\n\\n But note: the task is for background tasks, so it\'s less likely. Let me replace it with `schemas.py`? Or with `util.py`? I think `schemas.py` is more relevant.\\n\\n However, the issue is about the order in the form, and the form might use a schema to validate and represent the update. The schema might define the choices for the side tag field? And the choices might be unordered? So we might need to order them in the schema.\\n\\n Therefore, I will put `schemas.py` as the fifth.\\n\\n But wait: we have a `schemas.py` in the server directory and also in the services? Actually, in the server directory we have:\\n   `bodhi-server/bodhi/server/schemas.py`\\n\\n And in the services we have:\\n   `bodhi-server/bodhi/server/services/schemas.py`\\n\\n The one in the services is more likely to be for the API.\\n\\n So I should change the fifth to `bodhi-server/bodhi/server/services/schemas.py`? But we are limited to 5.\\n\\n Actually, the top 4 are the most important. The fifth is a guess.\\n\\n Given the above, I will list:\\n\\n```\\nbodhi-server/bodhi/server/views/generic.py\\nbodhi-server/bodhi/server/services/updates.py\\nbodhi-server/bodhi/server/models.py\\nbodhi-server/bodhi/server/services/releases.py\\nbodhi-server/bodhi/server/services/schemas.py\\n```\\n\\n But note: the structure shows `bodhi-server/bodhi/server/schemas.py` (without the services). And also `bodhi-server/bodhi/server/services/schemas.py`.\\n\\n The issue is about the API? Or the server-rendered form? We don\'t know.\\n\\n Since the form might be built with React and uses the API, the schema for the update creation might be in `services/schemas.py` (for the API).\\n\\n Therefore, I will include `services/schemas.py` as the fifth.\\n\\n But the structure shows two `schemas.py`? We have:\\n\\n   `bodhi-server/bodhi/server/schemas.py`\\n   `bodhi-server/bodhi/server/services/schemas.py`\\n\\n The one in `services/schemas.py` is more likely for the API services.\\n\\n I think the fifth should be `bodhi-server/bodhi/server/services/schemas.py`.\\n\\n However, we are not sure. We are limited to 5, so we have to choose.\\n\\n Alternatively, we might not need the fifth. But the problem says \\"at most 5\\", so we can list fewer? But 5 is the maximum.\\n\\n I will go with:\\n\\n```\\nbodhi-server/bodhi/server/views/generic.py\\nbodhi-server/bodhi/server/services/updates.py\\nbodhi-server/bodhi/server/models.py\\nbodhi-server/bodhi/server/services/releases.py\\nbodhi-server/bodhi/server/services/schemas.py\\n```\\n\\n But note: the issue is about the order of the side tags in the form. The form might be defined in the frontend, but the data comes from the server. The server must return the list of side tags in a particular order? Or the frontend sorts? The issue suggests that the server returns them randomly.\\n\\n So the fix is on the server. We need to sort the list of side tags by name or ID.\\n\\n Therefore, we must look for the server code that returns the list.\\n\\n Given the above, I think the top 5 files are:\\n\\n 1. `bodhi-server/bodhi/server/views/generic.py` - because it might be the view that serves the form and it might have the list of side tags.\\n 2. `bodhi-server/bodhi/server/services/updates.py` - because it might have an endpoint that returns the form data, including the side tags.\\n 3. `bodhi-server/bodhi/server/models.py` - because it might define a method that returns the side tags without ordering.\\n 4. `bodhi-server/bodhi/server/services/releases.py` - because it might return the side tags for a release.\\n 5. `bodhi-server/bodhi/server/schemas.py` - because it might define the Update schema and the side tags field might be defined without ordering.\\n\\n However, the fifth is a bit of a stretch. But we have to provide 5.\\n\\n Alternatively, we can include `util.py`? But I think `schemas.py` is more relevant.\\n\\n I will stick to the above.\\n\\n Let me write the answer accordingly.", "role": "assistant"}'
+TOOL_SPECS_JSON = '[{"function": {"description": "View, create, and edit files in plain-text format.", "name": "file_editor", "parameters": {"properties": {"command": {"enum": ["view", "create", "str_replace", "insert", "undo_edit"], "type": "string"}, "file_text": {"description": "Content for create operations.", "type": "string"}, "insert_line": {"description": "Line before which to insert.", "type": "integer"}, "new_str": {"description": "Replacement text.", "type": "string"}, "old_str": {"description": "Text to replace.", "type": "string"}, "path": {"description": "Absolute file path.", "type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "view_range": {"description": "Optional inclusive line range for view.", "items": {"type": "integer"}, "type": "array"}}, "required": ["command", "path"], "type": "object"}}, "type": "function"}, {"function": {"description": "Signals completion of the current task or conversation.", "name": "finish", "parameters": {"properties": {"message": {"description": "Final message to send to the user.", "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": ["message"], "type": "object"}}, "type": "function"}, {"function": {"description": "Create, update, and inspect the task list for the current conversation.", "name": "task_tracker", "parameters": {"properties": {"command": {"enum": ["plan", "update", "view"], "type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "task_list": {"description": "Markdown task list content.", "type": "string"}}, "required": [], "type": "object"}}, "type": "function"}, {"function": {"description": "Execute a shell command in the terminal within a persistent shell session.", "name": "terminal", "parameters": {"properties": {"command": {"description": "The shell command or terminal input.", "type": "string"}, "is_input": {"description": "Whether command should be sent as input to a running process.", "type": "boolean"}, "reset": {"description": "Whether to reset the terminal session.", "type": "boolean"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "timeout": {"description": "Optional timeout in seconds.", "type": "number"}}, "required": ["command"], "type": "object"}}, "type": "function"}, {"function": {"description": "Log a thought without obtaining new information or changing the environment.", "name": "think", "parameters": {"properties": {"summary": {"description": "Concise summary of what this action does.", "type": "string"}, "thought": {"description": "The thought to log.", "type": "string"}}, "required": ["thought"], "type": "object"}}, "type": "function"}]'
 
 
-class ValidationTool(ToolDefinition):
+class DatasetToolObservation(Observation):
+    @property
+    def to_llm_content(self) -> Sequence[TextContent | ImageContent]:
+        if self.content:
+            return self.content
+        return [TextContent(text="Dataset validation tool result.")]
+
+
+class DatasetToolExecutor(ToolExecutor):
+    def __call__(self, action: Action, conversation=None) -> DatasetToolObservation:  # noqa: ARG002
+        return DatasetToolObservation.from_text(
+            f"Executed {action.__class__.__name__} for {DATASET_NAME}."
+        )
+
+
+class DatasetTool(ToolDefinition):
     @classmethod
     def create(cls, *args, **kwargs) -> list[Self]:
         return []
@@ -50,17 +108,141 @@ def class_name(name: str) -> str:
     return text
 
 
-def make_tool(spec: dict) -> ToolDefinition:
+def sdk_content(content: Any) -> list[TextContent | ImageContent]:
+    if content is None:
+        return []
+    if isinstance(content, str):
+        return [TextContent(text=content)]
+    blocks: list[TextContent | ImageContent] = []
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") == "text":
+            blocks.append(TextContent(text=item.get("text", "")))
+        elif item.get("type") in {"image", "image_url"}:
+            url = item.get("image_url", {}).get("url") if isinstance(item.get("image_url"), dict) else None
+            if url:
+                blocks.append(ImageContent(image_urls=[url]))
+    return blocks
+
+
+def sdk_message(raw: dict) -> Message:
+    tool_calls = None
+    if raw.get("tool_calls"):
+        tool_calls = [
+            MessageToolCall(
+                id=tool_call["id"],
+                name=tool_call["function"]["name"],
+                arguments=tool_call["function"].get("arguments") or "{}",
+                origin="completion",
+            )
+            for tool_call in raw["tool_calls"]
+        ]
+    return Message(
+        role=raw["role"],
+        content=sdk_content(raw.get("content")),
+        tool_calls=tool_calls,
+        tool_call_id=raw.get("tool_call_id"),
+        name=raw.get("name"),
+        reasoning_content=raw.get("reasoning_content"),
+    )
+
+
+def native_tool(name: str) -> ToolDefinition | None:
+    if name == "finish":
+        return FinishTool.create()[0]
+    if name == "think":
+        return ThinkTool.create()[0]
+    if name == "terminal":
+        return TerminalTool(
+            description=UNIX_TOOL_DESCRIPTION,
+            action_type=TerminalAction,
+            observation_type=TerminalObservation,
+            annotations=ToolAnnotations(
+                title="terminal",
+                readOnlyHint=False,
+                destructiveHint=True,
+                idempotentHint=False,
+                openWorldHint=True,
+            ),
+        )
+    if name == "file_editor":
+        return FileEditorTool(
+            description=FILE_EDITOR_DESCRIPTION,
+            action_type=FileEditorAction,
+            observation_type=FileEditorObservation,
+            annotations=ToolAnnotations(
+                title="file_editor",
+                readOnlyHint=False,
+                destructiveHint=True,
+                idempotentHint=False,
+                openWorldHint=False,
+            ),
+        )
+    if name == "task_tracker":
+        return TaskTrackerTool(
+            description=TASK_TRACKER_DESCRIPTION,
+            action_type=TaskTrackerAction,
+            observation_type=TaskTrackerObservation,
+            annotations=ToolAnnotations(
+                title="task_tracker",
+                readOnlyHint=False,
+                destructiveHint=False,
+                idempotentHint=True,
+                openWorldHint=False,
+            ),
+        )
+    browser_tools: dict[str, tuple[type[ToolDefinition], type[Action], str, bool]] = {
+        "browser_navigate": (BrowserNavigateTool, BrowserNavigateAction, BROWSER_NAVIGATE_DESCRIPTION, False),
+        "browser_click": (BrowserClickTool, BrowserClickAction, BROWSER_CLICK_DESCRIPTION, False),
+        "browser_type": (BrowserTypeTool, BrowserTypeAction, BROWSER_TYPE_DESCRIPTION, False),
+        "browser_get_state": (BrowserGetStateTool, BrowserGetStateAction, BROWSER_GET_STATE_DESCRIPTION, True),
+        "browser_get_content": (BrowserGetContentTool, BrowserGetContentAction, BROWSER_GET_CONTENT_DESCRIPTION, True),
+        "browser_scroll": (BrowserScrollTool, BrowserScrollAction, BROWSER_SCROLL_DESCRIPTION, False),
+        "browser_go_back": (BrowserGoBackTool, BrowserGoBackAction, BROWSER_GO_BACK_DESCRIPTION, False),
+    }
+    if name in browser_tools:
+        tool_cls, action_type, description, read_only = browser_tools[name]
+        return tool_cls(
+            description=description,
+            action_type=action_type,
+            observation_type=BrowserObservation,
+            annotations=ToolAnnotations(
+                title=name,
+                readOnlyHint=read_only,
+                destructiveHint=False,
+                idempotentHint=read_only,
+                openWorldHint=True,
+            ),
+        )
+    return None
+
+
+def custom_tool(spec: dict) -> ToolDefinition:
     function = spec["function"]
     name = function["name"]
     parameters = function.get("parameters") or {"type": "object", "properties": {}}
     action_type = Action.from_mcp_schema(f"{class_name(name)}Action", parameters)
-    tool_cls = type(f"{class_name(name)}Tool", (ValidationTool,), {"name": name})
+    tool_cls = type(f"{class_name(name)}Tool", (DatasetTool,), {"name": name})
     return tool_cls(
-        description=function.get("description") or f"Validation tool {name}.",
+        description=function.get("description") or f"Dataset-specific tool {name}.",
         action_type=action_type,
-        observation_type=None,
+        observation_type=DatasetToolObservation,
+        executor=DatasetToolExecutor(),
     )
+
+
+def validation_tools() -> list[ToolDefinition]:
+    tools: list[ToolDefinition] = []
+    seen: set[str] = set()
+    for spec in json.loads(TOOL_SPECS_JSON):
+        function = spec.get("function") or {}
+        name = function.get("name")
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        tools.append(native_tool(name) or custom_tool(spec))
+    return tools
 
 
 def latest_log(log_dir: Path) -> Path:
@@ -70,60 +252,31 @@ def latest_log(log_dir: Path) -> Path:
     return logs[-1]
 
 
-def has_tool_call(log_path: Path) -> bool:
-    data = json.loads(log_path.read_text())
-    for choice in data.get("response", {}).get("choices", []):
-        message = choice.get("message") or {}
-        if message.get("tool_calls"):
-            return True
-    return False
-
-
 def main() -> None:
     root = repo_root()
     load_env_file(root / ".env")
     load_env_file(Path.home() / "work" / "agent-data-protocol" / ".env")
-    if not os.getenv("LLM_API_KEY"):
+    api_key = os.getenv("LLM_API_KEY")
+    if not api_key:
         raise RuntimeError("LLM_API_KEY is required")
 
-    system_prompt = (root / "agents" / "openhands_sdk" / "system_prompt.txt").read_text()
-    tools = [make_tool(spec) for spec in json.loads(TOOL_SPECS_JSON)]
+    prefix_messages = [sdk_message(message) for message in json.loads(PREFIX_MESSAGES_JSON)]
     log_dir = Path(tempfile.mkdtemp(prefix=f"{DATASET_NAME}-completion-"))
     llm = LLM(
         model=MODEL,
-        api_key=os.getenv("LLM_API_KEY"),
+        api_key=SecretStr(api_key),
         base_url=os.getenv("LLM_BASE_URL"),
         log_completions=True,
         log_completions_folder=str(log_dir),
-        max_output_tokens=160,
+        max_output_tokens=512,
     )
-    prompt = (
-        f"This is an OpenHands SDK logging validation for the ADP dataset "
-        f"{DATASET_NAME}. The available tools are: {', '.join(USED_TOOL_NAMES) or TARGET_TOOL}. "
-        f"Call exactly one tool now: `{TARGET_TOOL}`. Use arguments similar to this JSON: "
-        f"{TARGET_ARGUMENTS}. Do not answer in plain text only."
+    llm.completion(
+        messages=prefix_messages,
+        tools=validation_tools(),
+        add_security_risk_prediction=True,
+        temperature=0,
     )
-    last_log = None
-    for _ in range(2):
-        llm.completion(
-            messages=[
-                Message(role="system", content=[TextContent(text=system_prompt)]),
-                Message(role="user", content=[TextContent(text=prompt)]),
-            ],
-            tools=tools,
-            add_security_risk_prediction=True,
-            temperature=0,
-            tool_choice={"type": "function", "function": {"name": TARGET_TOOL}},
-        )
-        last_log = latest_log(log_dir)
-        if has_tool_call(last_log):
-            break
-        prompt = (
-            f"You must call the `{TARGET_TOOL}` tool exactly once for validation. "
-            f"Use arguments like: {TARGET_ARGUMENTS}."
-        )
-    assert last_log is not None
-    shutil.copyfile(last_log, Path(__file__).with_name("completion.json"))
+    shutil.copyfile(latest_log(log_dir), Path(__file__).with_name("completion.json"))
 
 
 if __name__ == "__main__":
