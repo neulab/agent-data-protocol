@@ -46,8 +46,10 @@ from datasets import load_dataset
 dataset = load_dataset("neulab/agent-data-collection", "swe-smith", split="std")
 
 # Load agent-specific SFT data
-sft_dataset = load_dataset("neulab/agent-data-collection", "swe-smith", split="sft_openhands_v0")
+sft_dataset = load_dataset("neulab/agent-data-collection", "swe-smith", split="sft_openhands")
 ```
+
+The repository-local fixture and converter name for this agent format is `openhands_v0`, but the published Hugging Face split remains `sft_openhands` unless a coordinated dataset migration says otherwise.
 
 ### Basic Usage
 
