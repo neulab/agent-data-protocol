@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from schema.observation.observation import Observation
 
@@ -37,3 +37,12 @@ class ImageObservation(Observation):
         if v != "image_observation":
             raise ValueError(f"class_ must be 'image_observation', got '{v}'")
         return v
+
+    @model_validator(mode="after")
+    def validate_tool_result_source(self):
+        if self.tool_call_id is not None and self.source == "user":
+            raise ValueError(
+                "ImageObservation with tool_call_id represents a tool result and "
+                "must not use source='user'"
+            )
+        return self

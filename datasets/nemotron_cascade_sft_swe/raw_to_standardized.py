@@ -6,6 +6,7 @@ from schema_raw import SchemaRaw
 
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 THINK_BLOCK_RE = re.compile(r"<think>\s*(.*?)\s*</think>", re.DOTALL)
@@ -47,7 +48,7 @@ def process_data(data: SchemaRaw) -> Trajectory:
     if data.patch:
         details["patch"] = data.patch
 
-    return Trajectory(id=data.id, content=content, details=details)
+    return create_trajectory_with_tool_call_links(id=data.id, content=content, details=details)
 
 
 if __name__ == "__main__":

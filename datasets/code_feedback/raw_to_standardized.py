@@ -8,7 +8,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def convert_step(step: dict[str, str]) -> list[Action | Observation]:
@@ -127,7 +127,9 @@ for line in sys.stdin:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
     # Standardize the data
-    standardize_data = Trajectory(id=str(raw_data["id"]), content=content)
+    standardize_data = create_trajectory_with_tool_call_links(
+        id=str(raw_data["id"]), content=content
+    )
 
     # Print the standardized data as a JSON object (one per line)
     print(json.dumps(standardize_data.model_dump()))

@@ -6,6 +6,7 @@ from schema_raw import Message, SchemaRaw
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 JUPYTER_TOOL = "add_and_execute_jupyter_code_cell"
@@ -92,7 +93,7 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
         "packages_used": json.dumps(data.packages_used or []),
     }
 
-    return Trajectory(id=data.id, content=content, details=details)
+    return create_trajectory_with_tool_call_links(id=data.id, content=content, details=details)
 
 
 if __name__ == "__main__":

@@ -35,6 +35,9 @@ Base Class Implementation: [`schema/action/action.py`](../schema/action/action.p
 
 All action types inherit from the base `Action` class which provides common fields:
 
+- `tool_call_id` (str, optional): Stable identifier for this tool/action call.
+  When populated, exactly one later observation must use the same `tool_call_id`
+  so converters can emit matched tool-call/result pairs.
 - `reasoning_content` (str, optional): Extended chain-of-thought reasoning or internal thinking from the agent. This captures deliberate reasoning processes (e.g., `<think>` blocks) that are separate from the action's brief description. This field aligns with Harbor ATIF's `reasoning_content` field and Agent Client Protocol's `agent_thought_chunk` concept.
 - `reward` (float, optional): Per-step reward signal associated with this action. Used for capturing rewards earned during reinforcement learning training and evaluation.
 
@@ -87,6 +90,9 @@ Base Observation Implementation: [`schema/observation/observation.py`](../schema
 
 All observation types inherit from the base `Observation` class which provides a common field:
 
+- `tool_call_id` (str, optional): Stable identifier for the action/tool call
+  that produced this observation. When populated, it must match a preceding
+  `Action.tool_call_id`.
 - `reward` (float, optional): Per-step reward signal associated with this observation. Used for reinforcement learning training data.
 
 #### TextObservation
@@ -123,18 +129,30 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.3.0",
   "id": "example_trajectory_001",
   "content": [
     {
-      "class_": "MessageAction",
-      "message": "Please help me solve this problem",
-      "thoughts": "I need to understand what the user is asking for"
+      "class_": "text_observation",
+      "content": "Please list the files in this project.",
+      "source": "user"
     },
     {
-      "class_": "TextObservation",
-      "text": "I'll help you solve this problem. What specific issue are you facing?",
-      "source": "agent"
+      "class_": "code_action",
+      "tool_call_id": "call_000001",
+      "language": "bash",
+      "content": "ls",
+      "description": "I'll inspect the current directory."
+    },
+    {
+      "class_": "text_observation",
+      "tool_call_id": "call_000001",
+      "content": "README.md\nschema\ndatasets",
+      "source": "environment"
+    },
+    {
+      "class_": "message_action",
+      "content": "The project contains README.md, schema, and datasets."
     }
   ],
   "details": {
@@ -143,6 +161,30 @@ Represents web page state and structure.
   }
 }
 ```
+
+### Matched Tool Calls And Tool Results
+
+ADP represents a tool call as an `Action` and the corresponding tool result as
+an `Observation`. When the source data can identify this relationship, populate
+the same `tool_call_id` on both records:
+
+- `Action.tool_call_id` identifies the call made by the agent.
+- `Observation.tool_call_id` identifies the action that produced the result.
+- A populated observation `tool_call_id` must match a preceding action
+  `tool_call_id`.
+- A populated action `tool_call_id` must have exactly one matched observation
+  result.
+- In schema version 1.3.0 and later, a tool action (`ApiAction` or `CodeAction`)
+  that is immediately followed by an observation result must include a
+  `tool_call_id`, and the observation must use the same ID. Existing 1.2.0 data
+  with adjacent tool-call/result pairs but no IDs should be migrated by running
+  the dataset converter through `create_trajectory_with_tool_call_links`.
+
+This distinction matters because some datasets encode environment or tool
+feedback as text that otherwise looks like a user message. `source="user"`
+should be reserved for actual user instructions, corrections, or interruptions.
+Tool/environment feedback after an action should use `source="environment"` and
+the matching `tool_call_id` when available.
 
 ## Schema Versioning
 

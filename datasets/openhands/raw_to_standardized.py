@@ -17,7 +17,7 @@ from schema.observation.image import ImageObservation
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 # click('48', 'example with "quotes" and, a comma', 10, button='middle', modifiers=['Shift', 'Alt'])
@@ -79,7 +79,6 @@ def process_data(data, keep_all=False):
                     _html = markdown.markdown(item.content)
                 content.append(
                     WebObservation(
-                        source=map_source(item.source),
                         url=item.extras.url,
                         html=_html,
                         axtree=None
@@ -501,7 +500,7 @@ def process_data(data, keep_all=False):
             ),
         )
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=data.id,
         content=content,
         details={
