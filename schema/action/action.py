@@ -7,9 +7,9 @@ class Action(BaseModel):
     tool_call_id: str | None = Field(
         None,
         description=(
-            "Stable identifier for this tool/action call. If the action produces an "
-            "observation, that observation should use the same tool_call_id so "
-            "converters can emit matched tool-call/result pairs."
+            "Stable identifier for this tool/action call. When populated, exactly "
+            "one later observation must use the same tool_call_id so converters can "
+            "emit matched tool-call/result pairs."
         ),
         exclude_if=lambda value: value is None,
     )

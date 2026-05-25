@@ -172,6 +172,21 @@ def test_standardized_schema_rejects_unmatched_tool_result():
         )
 
 
+def test_standardized_schema_rejects_unmatched_tool_call():
+    with pytest.raises(ValidationError, match="does not have a matching Observation"):
+        Trajectory(
+            id="unmatched-tool-call",
+            content=[
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_without_result",
+                    "function": "search",
+                    "kwargs": {"query": "agent data protocol"},
+                }
+            ],
+        )
+
+
 def test_standardized_schema_rejects_duplicate_tool_call_ids():
     with pytest.raises(ValidationError, match="Duplicate Action.tool_call_id"):
         Trajectory(

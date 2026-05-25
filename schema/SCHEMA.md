@@ -36,8 +36,8 @@ Base Class Implementation: [`schema/action/action.py`](../schema/action/action.p
 All action types inherit from the base `Action` class which provides common fields:
 
 - `tool_call_id` (str, optional): Stable identifier for this tool/action call.
-  If the action produces an observation, that observation should use the same
-  `tool_call_id` so converters can emit matched tool-call/result pairs.
+  When populated, exactly one later observation must use the same `tool_call_id`
+  so converters can emit matched tool-call/result pairs.
 - `reasoning_content` (str, optional): Extended chain-of-thought reasoning or internal thinking from the agent. This captures deliberate reasoning processes (e.g., `<think>` blocks) that are separate from the action's brief description. This field aligns with Harbor ATIF's `reasoning_content` field and Agent Client Protocol's `agent_thought_chunk` concept.
 - `reward` (float, optional): Per-step reward signal associated with this action. Used for capturing rewards earned during reinforcement learning training and evaluation.
 
@@ -172,7 +172,8 @@ the same `tool_call_id` on both records:
 - `Observation.tool_call_id` identifies the action that produced the result.
 - A populated observation `tool_call_id` must match a preceding action
   `tool_call_id`.
-- A given `tool_call_id` may have at most one matched observation result.
+- A populated action `tool_call_id` must have exactly one matched observation
+  result.
 
 This distinction matters because some datasets encode environment or tool
 feedback as text that otherwise looks like a user message. `source="user"`

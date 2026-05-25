@@ -98,4 +98,11 @@ class Trajectory(BaseModel):
                     )
                 matched_observation_indices[tool_call_id] = index
 
+        for tool_call_id, action_index in action_indices.items():
+            if tool_call_id not in matched_observation_indices:
+                raise ValueError(
+                    f"Action.tool_call_id {tool_call_id!r} at content index "
+                    f"{action_index} does not have a matching Observation.tool_call_id"
+                )
+
         return self
