@@ -148,6 +148,6 @@ for dataset_name, directory in dataset_directories.items():
             drawer.text(text_position, lbl, anchor="lb", fill="white")
         raw_screenshot.save(image_file_name + "-annotated.png")
 
-        json_dict["image/encoded"] = os.path.join(image_dir_name, image_stem)
+        json_dict["image/encoded"] = f"{image_dir_name}/{image_stem}"
 
         print(json.dumps(json_dict))

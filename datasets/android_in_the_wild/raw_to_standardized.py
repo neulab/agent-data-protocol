@@ -13,7 +13,7 @@ from schema.trajectory import Trajectory
 
 def image_observation_path(image_reference: str) -> str:
     filename = PureWindowsPath(image_reference).name
-    if not PureWindowsPath(filename).suffix:
+    if not filename.endswith(".png"):
         filename = f"{filename}.png"
     return f"images/{filename}"
 
