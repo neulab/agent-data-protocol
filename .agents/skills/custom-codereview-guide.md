@@ -45,6 +45,8 @@ Request additional evidence only when the relevant behavior cannot be verified f
 
 When extra evidence is needed, ask for the smallest useful artifact: for example, the exact regeneration command and a short output summary showing record counts, IDs, or a representative transformed field. Do not require full command transcripts when a focused snippet or the committed sample diff is sufficient.
 
+For non-dataset behavioral changes, evidence can be code-level coverage, targeted tests, passing CI, or a concise manual validation note. Request more evidence only when the PR makes a behavior claim that is not supported by the diff, tests, or CI.
+
 ## Required Validation Tests
 
 Verify that the standard dataset validation tests pass (run them or confirm CI ran them):
