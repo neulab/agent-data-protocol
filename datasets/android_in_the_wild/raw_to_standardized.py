@@ -1,5 +1,6 @@
 import json
 import sys
+from pathlib import PureWindowsPath
 from typing import Dict, List
 
 from schema.action.action import Action
@@ -8,6 +9,13 @@ from schema.action.message import MessageAction
 from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.observation import Observation
 from schema.trajectory import Trajectory
+
+
+def image_observation_path(image_reference: str) -> str:
+    filename = PureWindowsPath(image_reference).name
+    if not filename.endswith(".png"):
+        filename = f"{filename}.png"
+    return f"images/{filename}"
 
 
 def process_episode(episode_data: List[Dict]) -> Dict:
@@ -55,7 +63,7 @@ def process_episode(episode_data: List[Dict]) -> Dict:
         ]
         content.append(
             ImageObservation(
-                content=f"{data['image/encoded']}.png",
+                content=image_observation_path(data["image/encoded"]),
                 annotations=annotations,
                 source="environment",
             )
