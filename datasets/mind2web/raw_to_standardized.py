@@ -326,7 +326,8 @@ if __name__ == "__main__":
             content.extend(convert_step(action, info_mapping, data.annotation_id))
 
         if isinstance(content[-1], ApiAction):
-            user_end_message = random.choice(
+            terminal_message_rng = random.Random(str(data.annotation_id))
+            user_end_message = terminal_message_rng.choice(
                 [
                     [
                         TextObservation(
@@ -356,7 +357,7 @@ if __name__ == "__main__":
                 ]
             )
             content.extend(user_end_message)
-            assistant_end_message = random.choice(
+            assistant_end_message = terminal_message_rng.choice(
                 [
                     [
                         MessageAction(

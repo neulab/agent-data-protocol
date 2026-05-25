@@ -453,7 +453,8 @@ def process_data(data, keep_all=False):
     if not isinstance(content[0], Observation):
         return None
     # Handle Finish Message
-    user_end_message = random.choice(
+    terminal_message_rng = random.Random(str(data.id))
+    user_end_message = terminal_message_rng.choice(
         [
             "Congratulations! You have successfully solved the task.",
             "Your solution has been verified as correct. ",
@@ -462,7 +463,7 @@ def process_data(data, keep_all=False):
             "Task completed successfully.",
         ]
     )
-    assistant_end_message = random.choice(
+    assistant_end_message = terminal_message_rng.choice(
         [
             "<finish> I have successfully completed the task. </finish>",
             "<finish> I did it! The task is now complete. </finish>",
