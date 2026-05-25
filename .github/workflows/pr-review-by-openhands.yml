@@ -54,7 +54,10 @@ jobs:
           llm-model: ${{ secrets.LLM_MODEL || vars.LLM_MODEL || 'litellm_proxy/claude-sonnet-4-5-20250929' }}
           llm-base-url: ${{ secrets.LLM_BASE_URL || vars.LLM_BASE_URL || 'https://llm-proxy.app.all-hands.dev' }}
           use-sub-agents: 'false'
-          require-evidence: 'true'
+          # Dataset PR evidence is defined in .agents/skills/custom-codereview-guide.md.
+          # Use the repo-specific guide instead of the generic evidence gate, which
+          # can over-require screenshots or terminal transcripts for data artifacts.
+          require-evidence: 'false'
           llm-api-key: ${{ secrets.LLM_API_KEY }}
           github-token: ${{ github.token }}
           lmnr-api-key: ${{ secrets.LMNR_PROJECT_API_KEY }}
