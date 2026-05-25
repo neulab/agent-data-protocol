@@ -144,7 +144,9 @@ for line in sys.stdin:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
     # Standardize the data
-    standardize_data = create_trajectory_with_tool_call_links(id=str(raw_data["id"]), content=content)
+    standardize_data = create_trajectory_with_tool_call_links(
+        id=str(raw_data["id"]), content=content
+    )
 
     # Print the standardized data as JSON
     print(json.dumps(standardize_data.model_dump()))

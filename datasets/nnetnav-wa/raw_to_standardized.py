@@ -185,7 +185,9 @@ def main():
 
     traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
 
-    traj = create_trajectory_with_tool_call_links(id=str(traj_id), content=traj_content, details={"source": "nnetnav-wa"})
+    traj = create_trajectory_with_tool_call_links(
+        id=str(traj_id), content=traj_content, details={"source": "nnetnav-wa"}
+    )
     print(json.dumps(traj.model_dump()))
 
 

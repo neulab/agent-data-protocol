@@ -395,7 +395,9 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
                 MessageAction(content="<finish> Task completed. </finish>", description=None)
             )
 
-    return create_trajectory_with_tool_call_links(id=trajectory_id, content=content, available_apis=available_apis)
+    return create_trajectory_with_tool_call_links(
+        id=trajectory_id, content=content, available_apis=available_apis
+    )
 
 
 # Process each line of input individually

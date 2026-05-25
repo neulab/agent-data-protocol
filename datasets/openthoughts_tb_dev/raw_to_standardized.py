@@ -61,7 +61,9 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
             content="<finish> Completed the terminal task with the provided reference solution. </finish>"
         ),
     ]
-    return create_trajectory_with_tool_call_links(id=data.id, content=content, details=make_details(data))
+    return create_trajectory_with_tool_call_links(
+        id=data.id, content=content, details=make_details(data)
+    )
 
 
 if __name__ == "__main__":

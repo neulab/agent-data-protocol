@@ -201,7 +201,9 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
     if data.rollout_number is not None:
         details["rollout_number"] = data.rollout_number
 
-    return create_trajectory_with_tool_call_links(id=trajectory_id(data), content=content, details=details)
+    return create_trajectory_with_tool_call_links(
+        id=trajectory_id(data), content=content, details=details
+    )
 
 
 if __name__ == "__main__":

@@ -66,7 +66,9 @@ for line in sys.stdin:
         content.extend(convert_step(step, metadata))
 
     # Standardize the data
-    standardize_data = create_trajectory_with_tool_call_links(id=str(raw_data["unique_id"]), content=content)
+    standardize_data = create_trajectory_with_tool_call_links(
+        id=str(raw_data["unique_id"]), content=content
+    )
 
     # Print the standardized data as JSON
     print(json.dumps(standardize_data.model_dump()))

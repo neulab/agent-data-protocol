@@ -231,7 +231,9 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
     if not content or not seen_user_prompt:
         return None
 
-    return create_trajectory_with_tool_call_links(id=data.session_id, content=content, details=details_from_raw(data))
+    return create_trajectory_with_tool_call_links(
+        id=data.session_id, content=content, details=details_from_raw(data)
+    )
 
 
 if __name__ == "__main__":
