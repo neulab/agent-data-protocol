@@ -2,7 +2,6 @@
 name: PR Artifacts
 
 on:
-  workflow_dispatch: # Manual trigger for testing
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main]
@@ -23,12 +22,15 @@ jobs:
     steps:
       - name: Check if fork PR
         id: check-fork
+        env:
+          BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
-          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.event.pull_request.base.repo.full_name }}" ]; then
-            echo "is_fork=true" >> $GITHUB_OUTPUT
+          if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "is_fork=true" >> "$GITHUB_OUTPUT"
             echo "::notice::Fork PR detected - skipping auto-cleanup (manual removal required)"
           else
-            echo "is_fork=false" >> $GITHUB_OUTPUT
+            echo "is_fork=false" >> "$GITHUB_OUTPUT"
           fi
 
       # Prefer the same bot PAT used by OpenHands/software-agent-sdk so the
@@ -53,10 +55,10 @@ jobs:
               echo "::error::Failed to push cleanup commit. Check branch protection rules."
               exit 1
             }
-            echo "removed=true" >> $GITHUB_OUTPUT
+            echo "removed=true" >> "$GITHUB_OUTPUT"
             echo "::notice::Removed .pr/ directory"
           else
-            echo "removed=false" >> $GITHUB_OUTPUT
+            echo "removed=false" >> "$GITHUB_OUTPUT"
             echo "::notice::No .pr/ directory to remove"
           fi
 
@@ -84,6 +86,13 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: existing.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
                 body: body,
               });
             }
