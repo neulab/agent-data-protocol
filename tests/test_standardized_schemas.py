@@ -201,6 +201,20 @@ def test_raw_converter_helper_backfills_adjacent_tool_call_result(
     assert observation.source == "environment"
 
 
+def test_standardized_schema_rejects_tool_call_id_on_message_action():
+    with pytest.raises(ValidationError, match="MessageAction.tool_call_id"):
+        Trajectory(
+            id="message-action-tool-call-id",
+            content=[
+                {
+                    "class_": "message_action",
+                    "tool_call_id": "call_message",
+                    "content": "Done.",
+                }
+            ],
+        )
+
+
 def test_standardized_schema_rejects_missing_tool_call_id_for_tool_result():
     with pytest.raises(ValidationError, match="does not include tool_call_id"):
         Trajectory(

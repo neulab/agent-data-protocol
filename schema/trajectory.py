@@ -2,7 +2,6 @@ from typing import Any, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
@@ -85,7 +84,13 @@ class Trajectory(BaseModel):
             if tool_call_id is None:
                 continue
 
-            if isinstance(item, Action):
+            if isinstance(item, MessageAction):
+                raise ValueError(
+                    f"MessageAction.tool_call_id {tool_call_id!r} at content index "
+                    f"{index} is not allowed because MessageAction is not a tool call"
+                )
+
+            if isinstance(item, (ApiAction, CodeAction)):
                 if tool_call_id in action_indices:
                     raise ValueError(
                         f"Duplicate Action.tool_call_id {tool_call_id!r} at content "
