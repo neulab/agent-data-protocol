@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any, Union, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -40,6 +40,16 @@ class Trajectory(BaseModel):
         ),
         exclude_if=lambda value: value is None,
     )
+    available_code_languages: list[str] | None = Field(
+        default=None,
+        description=(
+            "Code action languages available to this trajectory. Populate this when "
+            "the trajectory contains CodeAction entries so converters can expose only "
+            "the code/executor tools that are used by the trajectory. When provided, "
+            "this must exactly match the CodeAction languages used by the trajectory."
+        ),
+        exclude_if=lambda value: value is None,
+    )
 
     details: dict[str, Any] = Field(
         default_factory=dict,
@@ -63,6 +73,19 @@ class Trajectory(BaseModel):
                     f"All content items must have a 'class_' field. Found item: {item}"
                 )
         return content
+
+    @field_validator("available_code_languages")
+    def validate_available_code_languages(cls, value):
+        if value is None:
+            return value
+        valid_languages = set(get_args(CodeAction.model_fields["language"].annotation))
+        invalid_languages = sorted(set(value) - valid_languages)
+        if invalid_languages:
+            raise ValueError(
+                "available_code_languages contains unsupported CodeAction languages: "
+                f"{invalid_languages}"
+            )
+        return value
 
     @model_validator(mode="after")
     def validate_tool_call_links(self):
@@ -120,4 +143,26 @@ class Trajectory(BaseModel):
                     f"{action_index} does not have a matching Observation.tool_call_id"
                 )
 
+        return self
+
+    @model_validator(mode="after")
+    def validate_available_code_languages_cover_used_actions(self):
+        if self.available_code_languages is None:
+            return self
+        available_code_languages = set(self.available_code_languages)
+        used_code_languages = {
+            item.language for item in self.content if isinstance(item, CodeAction)
+        }
+        missing_languages = sorted(used_code_languages - available_code_languages)
+        if missing_languages:
+            raise ValueError(
+                "CodeAction languages are missing from available_code_languages: "
+                f"{missing_languages}"
+            )
+        unused_languages = sorted(available_code_languages - used_code_languages)
+        if unused_languages:
+            raise ValueError(
+                "available_code_languages contains languages not used by CodeAction "
+                f"entries: {unused_languages}"
+            )
         return self

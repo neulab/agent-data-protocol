@@ -4,8 +4,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+from agents.openhands_sdk.std_to_sft import BUILTIN_TOOLS
+
 ROOT = Path(__file__).parent.parent
 DATASET_PATH = ROOT / "datasets"
+BUILTIN_TOOL_NAMES = set(BUILTIN_TOOLS)
 
 
 def run_converter(dataset: str, sample_name: str = "sample_std.json"):
@@ -90,6 +93,29 @@ def assert_openai_chat_record(record):
             pending_tool_call_ids.remove(message["tool_call_id"])
 
     assert not pending_tool_call_ids
+
+
+def tool_call_names(record):
+    return {
+        tool_call["function"]["name"]
+        for message in record["messages"]
+        if message.get("role") == "assistant"
+        for tool_call in message.get("tool_calls", [])
+    }
+
+
+def test_openhands_sdk_declares_custom_tools_iff_used():
+    for dataset in get_dataset_dirs():
+        sample_sft_path = DATASET_PATH / dataset / "sample_sft" / "openhands_sdk.json"
+        if not sample_sft_path.exists():
+            continue
+        records = json.loads(sample_sft_path.read_text())
+        for record in records:
+            provided_tool_names = {tool["function"]["name"] for tool in record["tools"]}
+            used_tool_names = tool_call_names(record)
+            assert provided_tool_names - BUILTIN_TOOL_NAMES == (
+                used_tool_names - BUILTIN_TOOL_NAMES
+            )
 
 
 def test_openhands_sdk_converter_uses_native_tool_calls():

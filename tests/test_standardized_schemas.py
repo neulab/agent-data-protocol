@@ -238,6 +238,58 @@ def test_raw_converter_helper_backfills_adjacent_tool_call_result(
         assert observation.source == "environment"
 
 
+def test_raw_converter_helper_infers_available_code_languages():
+    trajectory = create_trajectory_with_tool_call_links(
+        id="code-languages",
+        content=[
+            CodeAction(language="bash", content="pwd", description=None),
+            TextObservation(content="/workspace/project", source="environment"),
+            CodeAction(language="python", content="print('ok')", description=None),
+            TextObservation(content="ok", source="environment"),
+        ],
+    )
+
+    assert trajectory.available_code_languages == ["bash", "python"]
+
+
+def test_standardized_schema_rejects_missing_available_code_language():
+    with pytest.raises(
+        ValidationError,
+        match="CodeAction languages are missing from available_code_languages",
+    ):
+        Trajectory(
+            id="missing-code-language",
+            available_code_languages=["python"],
+            content=[
+                {
+                    "class_": "code_action",
+                    "language": "bash",
+                    "content": "pwd",
+                    "description": None,
+                }
+            ],
+        )
+
+
+def test_standardized_schema_rejects_unused_available_code_language():
+    with pytest.raises(
+        ValidationError,
+        match="available_code_languages contains languages not used by CodeAction",
+    ):
+        Trajectory(
+            id="unused-code-language",
+            available_code_languages=["bash", "python"],
+            content=[
+                {
+                    "class_": "code_action",
+                    "language": "bash",
+                    "content": "pwd",
+                    "description": None,
+                }
+            ],
+        )
+
+
 def test_standardized_schema_rejects_tool_call_id_on_message_action():
     with pytest.raises(ValidationError, match="MessageAction.tool_call_id"):
         Trajectory(
@@ -416,6 +468,10 @@ def test_sample_standardized_against_schema(sample_path):
                 f"available_apis must be a top-level Trajectory field, not details metadata, "
                 f"in {sample_path} sample {sample_id}"
             )
+            assert "available_code_languages" not in traj.details, (
+                f"available_code_languages must be a top-level Trajectory field, "
+                f"not details metadata, in {sample_path} sample {sample_id}"
+            )
             assert "system_prompt" not in traj.details, (
                 f"system_prompt should not be stored in details metadata in "
                 f"{sample_path} sample {sample_id}"
@@ -444,6 +500,21 @@ def test_sample_standardized_against_schema(sample_path):
                 assert not missing_used_apis, (
                     f"ApiAction functions are missing from available_apis in {sample_path} "
                     f"sample {sample_id}: {missing_used_apis}"
+                )
+
+            used_code_languages = {
+                content.language for content in traj.content if isinstance(content, CodeAction)
+            }
+            if used_code_languages:
+                assert set(traj.available_code_languages or []) == used_code_languages, (
+                    f"available_code_languages must exactly match CodeAction languages in "
+                    f"{sample_path} sample {sample_id}: expected "
+                    f"{sorted(used_code_languages)}, got {traj.available_code_languages}"
+                )
+            else:
+                assert traj.available_code_languages is None, (
+                    f"available_code_languages should be omitted when there are no "
+                    f"CodeAction entries in {sample_path} sample {sample_id}"
                 )
 
             for content_id, content in enumerate(traj.content):

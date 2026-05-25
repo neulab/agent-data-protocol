@@ -166,6 +166,8 @@ Essentially, you should map each action / observation in the raw data to an acti
 
 The root `Trajectory` includes a protocol-level `schema_version` field. When converters return `Trajectory(...).model_dump()` or `model_dump_json()`, the current version is included automatically. If a converter emits trajectory dictionaries manually, include `"schema_version": SCHEMA_VERSION` from `schema.version`.
 
+When a trajectory contains `CodeAction` entries, include top-level `available_code_languages` with exactly the languages used by those code actions. Dataset converters that return `create_trajectory_with_tool_call_links(...)` get this field populated automatically.
+
 **Brief conversion examples:**
 ```python
 # Raw data examples → Standardized actions
@@ -538,6 +540,7 @@ Before submitting your contribution:
 - [ ] Standardized format conversion passes validation
 - [ ] SFT format conversion produces valid output
 - [ ] `sample_std.json` files include the current root-level `schema_version`
+- [ ] `sample_std.json` files with `CodeAction` entries include matching top-level `available_code_languages`
 - [ ] If schema-impacting files under `schema/` changed, `SCHEMA_VERSION` in `schema/version.py` was bumped
 - [ ] All required files are present
 - [ ] README is comprehensive and accurate

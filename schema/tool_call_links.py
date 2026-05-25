@@ -56,8 +56,17 @@ def backfill_adjacent_tool_call_links(content: list[Any]) -> list[Any]:
     return content
 
 
+def infer_available_code_languages(content: list[Any]) -> list[str] | None:
+    languages = sorted({str(item.language) for item in content if isinstance(item, CodeAction)})
+    return languages or None
+
+
 def create_trajectory_with_tool_call_links(**kwargs):
     from schema.trajectory import Trajectory
 
     kwargs["content"] = backfill_adjacent_tool_call_links(kwargs["content"])
+    if kwargs.get("available_code_languages") is None:
+        inferred_code_languages = infer_available_code_languages(kwargs["content"])
+        if inferred_code_languages is not None:
+            kwargs["available_code_languages"] = inferred_code_languages
     return Trajectory(**kwargs)

@@ -23,6 +23,7 @@ The root container for all agent interaction data.
 - `id` (str): Unique identifier for the trajectory
 - `content` (list): Sequence of actions and observations that make up the trajectory
 - `available_apis` (list, optional): API function names available for this trajectory. Only populate this for datasets that have `api.py` and whose source data explicitly specifies per-instance tool/API availability; do not populate it by copying all functions from `api.py` or inferring it from APIs used in the trajectory. When present, it must be a subset of the dataset's `api.py` functions and cover every `ApiAction.function` in the trajectory.
+- `available_code_languages` (list, optional): Code action languages available for this trajectory. Populate this when the trajectory contains `CodeAction` entries so converters can expose only the code/executor tools used by the trajectory. When present, it must exactly match the `CodeAction.language` values used in the trajectory.
 - `details` (dict): Additional dataset-specific metadata.
 
 **Purpose**: Represents a complete sequence of agent interactions, containing both actions taken by the agent and observations received from the environment / user.
@@ -129,8 +130,9 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.3.0",
+  "schema_version": "1.4.0",
   "id": "example_trajectory_001",
+  "available_code_languages": ["bash"],
   "content": [
     {
       "class_": "text_observation",
@@ -179,6 +181,9 @@ the same `tool_call_id` on both records:
   `tool_call_id`, and the observation must use the same ID. Existing 1.2.0 data
   with adjacent tool-call/result pairs but no IDs should be migrated by running
   the dataset converter through `create_trajectory_with_tool_call_links`.
+- In schema version 1.4.0 and later, trajectories with code actions should
+  populate `available_code_languages` with the exact `CodeAction.language`
+  values used by the trajectory.
 
 This distinction matters because some datasets encode environment or tool
 feedback as text that otherwise looks like a user message. `source="user"`
