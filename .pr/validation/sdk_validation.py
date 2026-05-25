@@ -27,6 +27,7 @@ from pydantic import SecretStr
 
 MODEL = os.getenv("LLM_MODEL", "openhands/minimax-m2.7")
 DEFAULT_MAX_ITERATIONS = int(os.getenv("MAX_VALIDATION_ITERATIONS", "30"))
+MAX_VALIDATION_ITERATIONS_CAP = int(os.getenv("MAX_VALIDATION_ITERATIONS_CAP", "80"))
 BUILTIN_TOOL_NAMES = {"finish", "think"}
 NON_ENVIRONMENT_TOOL_NAMES = {"finish", "think"}
 
@@ -51,16 +52,11 @@ class ReplayState:
         observations = self.observations_by_tool.get(tool_name, [])
         index = self.indices.get(tool_name, 0)
         self.indices[tool_name] = index + 1
-        done_note = (
-            "\n\nValidation note: the mocked validation environment reports that "
-            "this tool action completed the task goal. This is the authoritative "
-            "environment state and overrides any earlier instruction to keep "
-            "exploring, editing, or testing. Your next action must be the finish "
-            "tool; do not call any other tool."
-        )
         if index < len(observations):
             result = observations[index]
-            return result + done_note
+            if self.all_recorded_observations_consumed():
+                return result + self.done_note()
+            return result + self.continue_note()
         self.extra_calls += 1
         return (
             f"The mocked {tool_name} action completed successfully. The mocked "
@@ -72,6 +68,24 @@ class ReplayState:
         return all(
             self.indices.get(name, 0) >= len(observations)
             for name, observations in self.observations_by_tool.items()
+        )
+
+    @staticmethod
+    def continue_note() -> str:
+        return (
+            "\n\nValidation note: this is a recorded intermediate observation from "
+            "the dataset trajectory. Continue solving the task with the available "
+            "tools; do not call finish until the task goal is satisfied."
+        )
+
+    @staticmethod
+    def done_note() -> str:
+        return (
+            "\n\nValidation note: the mocked validation environment reports that "
+            "this tool action completed the task goal. This is the authoritative "
+            "environment state and overrides any earlier instruction to keep "
+            "exploring, editing, or testing. Your next action must be the finish "
+            "tool; do not call any other tool."
         )
 
 
@@ -203,7 +217,10 @@ def context_message(record: dict[str, Any]) -> tuple[list[int], Message]:
                     "the task goal is satisfied, stop immediately and call finish "
                     "as the next action. Do not answer only in plain text, and do "
                     "not continue using tools after a mocked result says the task "
-                    "is satisfied.\n---\n"
+                    "is satisfied. Use only the declared SDK tools for this run; "
+                    "do not emit legacy XML tool syntax or call undeclared tools "
+                    "such as bash, grep, or shell unless those names appear in the "
+                    "available SDK tool list.\n---\n"
                 )
             )
         )
@@ -230,7 +247,9 @@ def context_message(record: dict[str, Any]) -> tuple[list[int], Message]:
                         "make at least one environment tool call before finishing; "
                         "do not answer only in plain text. When the mocked tool "
                         "result reports that the task goal is satisfied, call "
-                        "finish immediately as the next action."
+                        "finish immediately as the next action. Use only declared "
+                        "SDK tools; do not emit legacy XML tool syntax or call "
+                        "undeclared shell tools."
                     )
                 )
             )
@@ -402,7 +421,10 @@ def run_dataset_validation(dataset_name: str, record: dict[str, Any]) -> None:
     tools, mocked_tools = register_replay_tools(record)
     expected_tool_calls = tool_call_count(record)
     expected_environment_tool_calls = environment_tool_call_count(record)
-    max_iterations = DEFAULT_MAX_ITERATIONS
+    max_iterations = min(
+        MAX_VALIDATION_ITERATIONS_CAP,
+        max(DEFAULT_MAX_ITERATIONS, expected_tool_calls + 5),
+    )
 
     llm = LLM(
         model=MODEL,

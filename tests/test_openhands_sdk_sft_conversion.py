@@ -157,6 +157,41 @@ def test_openhands_sdk_converter_maps_followup_observation_to_tool_result():
     assert record["messages"][go_result_index + 1]["role"] == "assistant"
 
 
+def test_openhands_sdk_converter_preserves_eto_webshop_tool_calls():
+    records = run_converter("eto")
+    record = records[0]
+
+    tool_names = [
+        tool_call["function"]["name"]
+        for message in record["messages"]
+        if message.get("role") == "assistant"
+        for tool_call in message.get("tool_calls", [])
+    ]
+
+    assert tool_names == ["search", "browser_click", "browser_click", "finish"]
+
+
+def test_openhands_sdk_converter_preserves_agenttuning_mind2web_tool_calls():
+    records = run_converter("agenttuning_mind2web")
+    tool_names = [
+        [
+            tool_call["function"]["name"]
+            for message in record["messages"]
+            if message.get("role") == "assistant"
+            for tool_call in message.get("tool_calls", [])
+        ]
+        for record in records
+    ]
+
+    assert tool_names == [
+        ["browser_click", "finish"],
+        ["browser_type", "finish"],
+        ["browser_type", "finish"],
+        ["browser_click", "finish"],
+        ["browser_type", "finish"],
+    ]
+
+
 def test_openhands_sdk_converter_preserves_explicit_tool_call_ids():
     records = run_converter_rows(
         [

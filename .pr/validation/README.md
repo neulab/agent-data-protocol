@@ -23,9 +23,20 @@ Summary from `summary.json`:
 - Completed as expected: 50
 - Stale or unvalidated runs: 0
 - Incomplete runs: 0
-- Completed with at least one parsed non-`finish`/non-`think` tool action: 44
-- Completed with at least one parsed tool action of any kind: 46
-- Records with no environment tool calls expected in the converted SFT sample: 6
+- Completed with at least one parsed non-`finish`/non-`think` tool action: 46
+- Completed with at least one parsed tool action of any kind: 50
+- Records with no environment tool calls expected in the converted SFT sample: 4
+
+Strict trajectory buckets compare converted environment tool-call names to live
+SDK action event tool names, excluding `finish` and `think`:
+
+- Exact action sequence: 15
+- Close prefix or small difference: 15
+- High overlap: 2
+- Moderate overlap: 8
+- Low overlap: 6
+- Unknown live tools: 0
+- No environment tool calls expected: 4
 
 For records with environment tool calls, `completed_as_expected` requires at
 least one parsed non-`finish`/non-`think` tool action before the SDK run reaches
