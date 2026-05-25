@@ -100,6 +100,9 @@ jobs:
 
   # Warn if .pr/ directory exists. It will be auto-removed on approval.
   check-pr-artifacts:
+    concurrency:
+      group: check-pr-artifacts-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
