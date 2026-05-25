@@ -102,6 +102,36 @@ def test_swe_chat_tool_rows_convert_to_adp_actions():
     assert "content" not in trajectory.content[5].kwargs
 
 
+def test_swe_chat_metadata_preserves_native_numeric_types():
+    converter = load_converter_module()
+    raw = converter.SchemaRaw(
+        session_id="metadata-session",
+        repo_id="owner/repo",
+        tool_call_count=4,
+        turn_count=7,
+        prompt_count=2,
+        agent_percentage=87.5,
+        session_success="100",
+        turns=[
+            {
+                "turn_number": 0,
+                "role": "user",
+                "turn_type": "user_prompt",
+                "is_conversational": True,
+                "content": "Fix the failing tests.",
+            }
+        ],
+    )
+
+    trajectory = converter.process_data(raw)
+
+    assert trajectory.details["tool_call_count"] == 4
+    assert trajectory.details["turn_count"] == 7
+    assert trajectory.details["prompt_count"] == 2
+    assert trajectory.details["agent_percentage"] == 87.5
+    assert trajectory.details["session_success"] == 100
+
+
 def test_swe_chat_conversation_and_editor_paths():
     converter = load_converter_module()
     raw = converter.SchemaRaw(

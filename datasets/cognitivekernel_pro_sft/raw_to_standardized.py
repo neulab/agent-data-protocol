@@ -183,7 +183,7 @@ def process_record(record: SchemaRaw) -> Trajectory:
         details={
             "source": "CognitiveKernel/CognitiveKernel-Pro-SFT",
             "source_file": record.source_file,
-            "source_index": str(record.source_index),
+            "source_index": record.source_index,
         },
     )
 

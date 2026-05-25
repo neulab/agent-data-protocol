@@ -4,6 +4,8 @@ import os
 
 import pytest
 
+FUNCTION_CALL_PATTERNS = ("<function=", "<function_calls>", "<invoke name=")
+
 
 def test_all_datasets_function_call_from_parameter():
     """Test that all datasets use 'from': 'function_call' for function calls."""
@@ -35,13 +37,7 @@ def test_all_datasets_function_call_from_parameter():
                     continue
 
                 value = message["value"]
-                is_function_call = any(
-                    [
-                        "<function=" in value,
-                        "<function_calls>" in value,
-                        "<invoke name=" in value,
-                    ]
-                )
+                is_function_call = any(pattern in value for pattern in FUNCTION_CALL_PATTERNS)
 
                 if is_function_call and message["from"] != "function_call":
                     # Add this dataset to the list of datasets that need to be fixed
@@ -61,4 +57,47 @@ def test_all_datasets_function_call_from_parameter():
         pytest.fail(
             f"{error_message}\nFound {len(datasets_to_fix)} datasets that need to be fixed. "
             f"Please update the datasets or modify std_to_sft.py to ensure consistent use of 'from': 'function_call'."
+        )
+
+
+def test_all_datasets_function_call_role_contains_function_call():
+    """Test that 'from': 'function_call' is reserved for function-call messages."""
+    datasets_dir = os.path.join(os.path.dirname(__file__), "../datasets")
+    sample_sft_files = glob.glob(f"{datasets_dir}/**/sample_sft.json", recursive=True)
+
+    assert len(sample_sft_files) > 0, "No sample_sft.json files found"
+
+    datasets_to_fix = set()
+
+    for file_path in sample_sft_files:
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                pytest.fail(f"Failed to parse JSON in {file_path}")
+
+        for item in data:
+            if "conversations" not in item:
+                continue
+
+            for message in item["conversations"]:
+                value = message.get("value", "")
+                has_function_call = any(pattern in value for pattern in FUNCTION_CALL_PATTERNS)
+
+                if message.get("from") == "function_call" and not has_function_call:
+                    relative_path = os.path.relpath(file_path, datasets_dir)
+                    dataset_name = relative_path.split("/")[0]
+                    datasets_to_fix.add(dataset_name)
+
+    if datasets_to_fix:
+        error_message = "\nDatasets that need to be fixed:\n"
+        for dataset_name in sorted(datasets_to_fix):
+            error_message += (
+                f"  - {dataset_name}: 'from': 'function_call' messages must contain "
+                "function-call syntax\n"
+            )
+
+        pytest.fail(
+            f"{error_message}\nFound {len(datasets_to_fix)} datasets that need to be fixed. "
+            "Please update the dataset converters and regenerate sample_sft.json."
         )

@@ -6,6 +6,12 @@ AgentInstruct is a lightweight instruction-tuning dataset containing high-qualit
 
 The data includes subsets of alfworld, db, kg, mind2web, os, webshop. This folder includes the subset of os.
 
+During standardization, terminal observations are cleaned to remove shell control
+sequences and prompts, such as ANSI color codes and OSC title updates, while
+preserving the command output itself.
+The source system prompt is dropped, leaving only the user task in the
+standardized trajectory.
+
 ## Paper Citation
 
 ```bibtex

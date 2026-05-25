@@ -37,6 +37,25 @@ def get_generate_axtree():
 
 action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
+function_call_patterns = ("<function=", "<function_calls>", "<invoke name=")
+
+
+def contains_function_call_pattern(content: str) -> bool:
+    return any(pattern in content for pattern in function_call_patterns)
+
+
+def escape_function_call_patterns(content: str) -> str:
+    return (
+        content.replace("<function=", "&lt;function=")
+        .replace("<function_calls>", "&lt;function_calls>")
+        .replace("<invoke name=", "&lt;invoke name=")
+    )
+
+
+def ensure_execution_result_prefix(content: str, function_name: str) -> str:
+    if content.startswith("EXECUTION RESULT of ["):
+        return content
+    return f"EXECUTION RESULT of [{function_name}]:\n{content}"
 
 
 def action_text_prefix(event) -> str:
@@ -127,7 +146,7 @@ def standardized_event_to_openhands_message(
         else:
             axtree = html_to_axtree.last_xtree
         prompt = get_web_user_message("", event.url, axtree, PREV_BID)
-        return {"from": "human", "value": prompt}
+        return {"from": "human", "value": escape_function_call_patterns(prompt)}
 
     if isinstance(event, ApiAction):
         PREV_BID = None
@@ -238,6 +257,8 @@ def standardized_event_to_openhands_message(
 
     elif isinstance(event, MessageAction):
         thought = action_text_prefix(event)
+        if contains_function_call_pattern(event.content):
+            return {"from": "function_call", "value": f"{thought}{event.content}"}
         if "<finish>" in event.content and "</finish>" in event.content:
             match = re.search(r"<finish>(.*?)</finish>", event.content, re.DOTALL)
             content = match.group(1).strip()
@@ -245,7 +266,7 @@ def standardized_event_to_openhands_message(
                 "finish", {"message": content, "task_completed": "true"}
             )
             return {"from": "function_call", "value": f"{thought}{finish_function_call}"}
-        return {"from": "gpt", "value": f"{thought}{event.content}"}
+        return {"from": "gpt", "value": escape_function_call_patterns(f"{thought}{event.content}")}
 
     elif isinstance(event, TextObservation):
         if event.source == "user":
@@ -259,7 +280,7 @@ def standardized_event_to_openhands_message(
 
         else:
             raise ValueError(f"Wrong event source: {event.source}")
-        return {"from": event.source, "value": event.content}
+        return {"from": event.source, "value": escape_function_call_patterns(event.content)}
 
     elif hasattr(event, "__class__") and event.__class__.__name__ == "ImageObservation":
         # Handle ImageObservation
@@ -273,7 +294,10 @@ def standardized_event_to_openhands_message(
                 annotations_text = "Elements detected: " + ", ".join(annotations)
 
         image_path = getattr(event, "content", "unknown_image_path")
-        return {"from": "observation", "value": f"[Image: {image_path}]\n{annotations_text}"}
+        return {
+            "from": "observation",
+            "value": escape_function_call_patterns(f"[Image: {image_path}]\n{annotations_text}"),
+        }
 
     else:
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
@@ -325,8 +349,8 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
                 message["from"] = "observation"
                 function_name = extract_function_call(conversations[-1]["value"])
                 if function_name:
-                    message["value"] = (
-                        f"EXECUTION RESULT of [{function_name}]:\n" + message["value"]
+                    message["value"] = ensure_execution_result_prefix(
+                        message["value"], function_name
                     )
 
             conversations.extend([message])
