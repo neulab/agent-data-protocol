@@ -19,9 +19,11 @@ class Action(BaseModel):
         "This captures deliberate reasoning processes (e.g., <think> blocks) that are separate "
         "from the action's brief description. Aligns with Harbor ATIF's reasoning_content field "
         "and Agent Client Protocol's agent_thought_chunk concept.",
+        exclude_if=lambda value: value is None,
     )
     reward: float | None = Field(
         None,
         description="Per-step reward signal associated with this action. "
         "Used for reinforcement learning training data.",
+        exclude_if=lambda value: value is None,
     )

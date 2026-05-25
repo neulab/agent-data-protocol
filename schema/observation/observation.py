@@ -16,4 +16,5 @@ class Observation(BaseModel):
         None,
         description="Per-step reward signal associated with this observation. "
         "Used for reinforcement learning training data.",
+        exclude_if=lambda value: value is None,
     )
