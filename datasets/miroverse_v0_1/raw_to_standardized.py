@@ -138,10 +138,6 @@ for line in sys.stdin:
     tools_by_name = _tool_index(available_tools)
     content = []
     previous_was_tool_call = False
-    system_prompt = "\n\n".join(
-        message.content for message in data.messages if message.role == "system"
-    )
-
     for message in data.messages:
         converted = _convert_message(message, previous_was_tool_call, tools_by_name)
         content.extend(converted)
@@ -150,8 +146,6 @@ for line in sys.stdin:
     _mark_final_answer(content)
 
     details = {"split": data.split or ""}
-    if system_prompt:
-        details["system_prompt"] = system_prompt
 
     # The per-trajectory list of advertised MCP tools is recorded on the
     # top-level Trajectory.available_apis field as identifiers; the dataset's
