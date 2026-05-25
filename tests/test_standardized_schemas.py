@@ -11,6 +11,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
+from schema.observation.web import WebObservation
 from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
@@ -179,6 +180,30 @@ def test_standardized_schema_accepts_matched_tool_call_result():
             "call_000001",
         ),
         (
+            ApiAction(function="observe", kwargs={}),
+            WebObservation(
+                html="<html></html>",
+                axtree=None,
+                url="https://example.com",
+                image_observation=None,
+                viewport_size=None,
+            ),
+            "call_000001",
+        ),
+        (
+            ApiAction(
+                tool_call_id="call_from_both",
+                function="search",
+                kwargs={"query": "agent data protocol"},
+            ),
+            TextObservation.model_construct(
+                tool_call_id="call_from_both",
+                content="Search result text",
+                source="user",
+            ),
+            "call_from_both",
+        ),
+        (
             ApiAction(
                 tool_call_id="call_from_action",
                 function="search",
@@ -209,7 +234,8 @@ def test_raw_converter_helper_backfills_adjacent_tool_call_result(
     action, observation = trajectory.content
     assert action.tool_call_id == expected_tool_call_id
     assert observation.tool_call_id == expected_tool_call_id
-    assert observation.source == "environment"
+    if isinstance(observation, (TextObservation, ImageObservation)):
+        assert observation.source == "environment"
 
 
 def test_standardized_schema_rejects_tool_call_id_on_message_action():

@@ -16,6 +16,11 @@ def _next_generated_tool_call_id(existing_ids: set[str], ordinal: int) -> str:
         ordinal += 1
 
 
+def _normalize_linked_tool_result_source(item: Observation) -> None:
+    if isinstance(item, (TextObservation, ImageObservation)) and item.source == "user":
+        item.source = "environment"
+
+
 def backfill_adjacent_tool_call_links(content: list[Any]) -> list[Any]:
     """Add IDs to adjacent tool-action/result pairs in converter output."""
     existing_ids = {
@@ -35,6 +40,7 @@ def backfill_adjacent_tool_call_links(content: list[Any]) -> list[Any]:
 
         action_tool_call_id = item.tool_call_id
         observation_tool_call_id = next_item.tool_call_id
+        _normalize_linked_tool_result_source(next_item)
         if action_tool_call_id is not None and observation_tool_call_id is not None:
             continue
 
@@ -46,11 +52,6 @@ def backfill_adjacent_tool_call_links(content: list[Any]) -> list[Any]:
 
         item.tool_call_id = action_tool_call_id
         next_item.tool_call_id = action_tool_call_id
-        if (
-            isinstance(next_item, (TextObservation, ImageObservation))
-            and next_item.source == "user"
-        ):
-            next_item.source = "environment"
 
     return content
 
