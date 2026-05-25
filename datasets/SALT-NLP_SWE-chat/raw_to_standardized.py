@@ -166,8 +166,27 @@ def convert_turn(turn: ConversationTurn, seen_user_prompt: bool) -> list[Any]:
     return []
 
 
-def details_from_raw(data: SchemaRaw) -> dict[str, str]:
+def numeric_detail(value: Any) -> int | float | Any:
+    if not isinstance(value, str):
+        return value
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            return value
+
+
+def details_from_raw(data: SchemaRaw) -> dict[str, Any]:
     details = {"source": "SALT-NLP/SWE-chat", "source_config": "conversations"}
+    numeric_keys = {
+        "tool_call_count",
+        "turn_count",
+        "prompt_count",
+        "agent_percentage",
+        "session_success",
+    }
     for key in (
         "repo_id",
         "checkpoint_pk",
@@ -186,7 +205,7 @@ def details_from_raw(data: SchemaRaw) -> dict[str, str]:
     ):
         value = getattr(data, key)
         if value is not None:
-            details[key] = str(value)
+            details[key] = numeric_detail(value) if key in numeric_keys else str(value)
     return details
 
 

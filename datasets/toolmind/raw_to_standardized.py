@@ -116,7 +116,7 @@ def process_data(data: SchemaRaw) -> Trajectory:
     details = {
         "source": "Nanbeige/ToolMind",
         "source_file": data.source_file,
-        "row_index": str(data.row_index),
+        "row_index": data.row_index,
     }
     available_apis = build_available_apis(data)
     return Trajectory(
