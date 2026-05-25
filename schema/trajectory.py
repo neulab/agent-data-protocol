@@ -65,8 +65,57 @@ class Trajectory(BaseModel):
                 )
         return content
 
+    def _next_generated_tool_call_id(self, existing_ids: set[str], ordinal: int) -> str:
+        while True:
+            tool_call_id = f"call_{ordinal:06d}"
+            if tool_call_id not in existing_ids:
+                existing_ids.add(tool_call_id)
+                return tool_call_id
+            ordinal += 1
+
+    def _backfill_adjacent_tool_call_links(self):
+        existing_ids = {
+            tool_call_id
+            for item in self.content
+            if (tool_call_id := getattr(item, "tool_call_id", None)) is not None
+        }
+        generated_ordinal = 1
+
+        for index, item in enumerate(self.content[:-1]):
+            if not isinstance(item, (ApiAction, CodeAction)):
+                continue
+
+            next_item = self.content[index + 1]
+            if not isinstance(next_item, Observation):
+                continue
+
+            action_tool_call_id = item.tool_call_id
+            observation_tool_call_id = next_item.tool_call_id
+            if action_tool_call_id is not None and observation_tool_call_id is not None:
+                continue
+
+            if action_tool_call_id is None and observation_tool_call_id is None:
+                action_tool_call_id = self._next_generated_tool_call_id(
+                    existing_ids, generated_ordinal
+                )
+                generated_ordinal += 1
+            elif action_tool_call_id is None:
+                action_tool_call_id = observation_tool_call_id
+            else:
+                existing_ids.add(action_tool_call_id)
+
+            item.tool_call_id = action_tool_call_id
+            next_item.tool_call_id = action_tool_call_id
+            if (
+                isinstance(next_item, (TextObservation, ImageObservation))
+                and next_item.source == "user"
+            ):
+                next_item.source = "environment"
+
     @model_validator(mode="after")
     def validate_tool_call_links(self):
+        self._backfill_adjacent_tool_call_links()
+
         action_indices: dict[str, int] = {}
         matched_observation_indices: dict[str, int] = {}
 
