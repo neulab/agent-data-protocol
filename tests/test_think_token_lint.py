@@ -13,8 +13,8 @@ def get_sample_std_paths():
     return sorted(DATASET_PATH.glob("*/sample_std.json"))
 
 
-def get_root_sample_sft_paths():
-    return sorted(DATASET_PATH.glob("*/sample_sft.json"))
+def get_openhands_v0_sample_sft_paths():
+    return sorted(DATASET_PATH.glob("*/sample_sft/openhands_v0.json"))
 
 
 def load_json(path: Path):
@@ -44,8 +44,8 @@ def test_standardized_message_actions_do_not_include_think_tokens(sample_path):
             )
 
 
-@pytest.mark.parametrize("sample_path", get_root_sample_sft_paths())
-def test_root_sft_assistant_messages_do_not_include_think_tokens(sample_path):
+@pytest.mark.parametrize("sample_path", get_openhands_v0_sample_sft_paths())
+def test_openhands_v0_sft_assistant_messages_do_not_include_think_tokens(sample_path):
     samples = load_json(sample_path)
     for sample_index, sample in enumerate(samples):
         for message_index, message in enumerate(sample.get("conversations", [])):

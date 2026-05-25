@@ -24,7 +24,7 @@ This repository contains:
 ```
 Raw Dataset      →  Standardized Format  →  Agent Specific SFT Format
       ↓                   ↓                       ↓
-sample_raw.json  →  sample_std.json      →  sample_sft.json
+sample_raw.json  →  sample_std.json      →  sample_sft/<agent_name>.json
 ```
 
 ### Standardized Schema Components
@@ -86,9 +86,9 @@ datasets/$YOUR_DATASET_NAME/
 ├── sample_raw.json             # 5 raw samples
 ├── sample_std.json             # 5 standardized samples
 └── sample_sft                  # SFT format samples
-  ├── sample_sft_$AGENT1.json   # 5 SFT format samples (if applicable)
-  ├── sample_sft_$AGENT2.json   # 5 SFT format samples (if applicable)
-  └── sample_sft_$AGENT3.json   # 5 SFT format samples (if applicable)
+  ├── openhands_v0.json         # 5 OpenHands v0 SFT samples (if applicable)
+  ├── sweagent.json             # 5 SWE-agent SFT samples (if applicable)
+  └── agentlab.json             # 5 AgentLab SFT samples (if applicable)
 ```
 
 ### Step-by-Step Guide
@@ -481,14 +481,14 @@ if __name__ == "__main__":
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
-cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/YOUR_AGENT_NAME/std_to_sft.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/sample_sft_YOUR_AGENT_NAME.json
+cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/YOUR_AGENT_NAME/std_to_sft.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/YOUR_AGENT_NAME.json
 ```
 
-For example, for OpenHands:
+For example, for OpenHands v0:
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
-cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands/std_to_sft.py --is_web=yes --api_env=browser | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/sample_sft_openhands.json
+cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands_v0/std_to_sft.py --is_web=yes --api_env=browser | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
 ```
 
 #### Step 6: Create Agent README

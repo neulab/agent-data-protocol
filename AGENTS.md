@@ -15,9 +15,9 @@ agent-data-protocol/
 │       ├── api.py (required if ApiAction is used)
 │       ├── sample_raw.json
 │       ├── sample_std.json
-│       ├── sample_sft.json
-│       └── sample_sft/ (optional agent-specific copies)
-│           └── sample_sft_$AGENT.json
+│       └── sample_sft/
+│           ├── openhands_v0.json
+│           └── $AGENT_NAME.json
 ├── agents/             # Agent-specific SFT converters
 ├── schema/             # ADP standardized format definitions
 ├── scripts/            # Utility scripts
@@ -29,27 +29,26 @@ agent-data-protocol/
 ```
 Raw Dataset      →  Standardized Format  →  Agent Specific SFT Format
      ↓                   ↓                       ↓
-sample_raw.json  →  sample_std.json      →  sample_sft.json
+sample_raw.json  →  sample_std.json      →  sample_sft/<agent_name>.json
 ```
 
 ## Key Requirements
 
 ### Dataset File Naming and Structure
-- Every dataset directory must include `README.md`, `extract_raw.py`, `raw_to_standardized.py`, `schema_raw.py`, `sample_raw.json`, `sample_std.json`, and `sample_sft.json` unless there is a documented reason that the dataset is intentionally incomplete.
-- If `sample_std.json` exists, root-level `sample_sft.json` is required. Optional agent-specific files may additionally live under `sample_sft/`, but they do not replace root-level `sample_sft.json`.
+- Every dataset directory must include `README.md`, `extract_raw.py`, `raw_to_standardized.py`, `schema_raw.py`, `sample_raw.json`, `sample_std.json`, and `sample_sft/openhands_v0.json` unless there is a documented reason that the dataset is intentionally incomplete.
+- If `sample_std.json` exists, `sample_sft/openhands_v0.json` is required. Additional agent-specific files may live under `sample_sft/` using the exact agent identifier as the filename, such as `sample_sft/sweagent.json`.
 - Only these top-level JSON files are allowed in dataset directories:
   - `sample_raw.json`
   - `sample_std.json`
-  - `sample_sft.json`
   - `generated_thoughts.json`
 - Do not commit `full_raw.json`, `full_std.json`, `full_sft.json`, temporary chunks, downloaded corpora, scratch JSON, or alternate sample files such as `sample_fixed.json`.
 - All JSON files MUST be valid JSON and MUST have a trailing newline.
 
 ### Generated Samples Must Come From the Pipeline
-- Treat `sample_raw.json`, `sample_std.json`, and `sample_sft.json` as generated artifacts from the dataset scripts, not hand-edited fixtures.
+- Treat `sample_raw.json`, `sample_std.json`, and files under `sample_sft/` as generated artifacts from the dataset scripts, not hand-edited fixtures.
 - If a sample fails validation, fix `extract_raw.py`, `raw_to_standardized.py`, `schema_raw.py`, `api.py`, or the relevant agent converter, then regenerate the sample files.
 - Do not directly patch sample JSON just to satisfy a failing test unless the same logic is also encoded in the generator that produced it.
-- Keep the same records and order across `sample_raw.json`, `sample_std.json`, and `sample_sft.json`; the samples should represent the same tasks at each stage, with matching IDs between standardized and SFT files.
+- Keep the same records and order across `sample_raw.json`, `sample_std.json`, and each `sample_sft/<agent_name>.json`; the samples should represent the same tasks at each stage, with matching IDs between standardized and SFT files.
 - Use small representative samples, normally 3-5 trajectories, that include important edge cases such as tool calls, command output, final answers, and any dataset-specific action types.
 
 ### SFT Format Requirements
@@ -139,12 +138,9 @@ python datasets/$MY_DATASET/extract_raw.py | head -5 | python scripts/jsonl_to_j
 # Convert the exact raw samples to standardized format
 cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
 
-# Convert the exact standardized samples to the required root OpenHands SFT sample
-cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft.json
-
-# Optional: also save an agent-specific copy when maintaining sample_sft/ outputs
+# Convert the exact standardized samples to the required OpenHands v0 SFT sample
 mkdir -p datasets/$MY_DATASET/sample_sft
-cp datasets/$MY_DATASET/sample_sft.json datasets/$MY_DATASET/sample_sft/sample_sft_openhands.json
+cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
 ```
 
 ### Run tests
@@ -168,9 +164,9 @@ python -m pytest tests/test_datasets_from_parameter.py -v
 1. **Missing trailing newline**: All JSON and Python files must end with `\n`.
 2. **Wrong `from` field**: SFT messages containing function-call syntax must use `"from": "function_call"`.
 3. **Extra JSON files**: Remove temporary or alternate `.json` files before committing.
-4. **Missing root `sample_sft.json`**: Required whenever `sample_std.json` exists.
+4. **Missing `sample_sft/openhands_v0.json`**: Required whenever `sample_std.json` exists.
 5. **Hand-patched samples**: If a JSON fix is not reproducible by the scripts, reviewers should reject it.
-6. **Mismatched sample stages**: `sample_raw`, `sample_std`, and `sample_sft` must correspond to the same records.
+6. **Mismatched sample stages**: `sample_raw`, `sample_std`, and `sample_sft/<agent_name>` must correspond to the same records.
 7. **Invalid observation sources**: Use schema-supported sources only: `user`, `agent`, and `environment`.
 8. **Missing API parameters**: `ApiAction.kwargs` must satisfy the corresponding `api.py` function signature.
 9. **Unneeded dataset-local converters**: Delete dataset-specific `std_to_sft.py` files unless they are required and justified.
@@ -178,7 +174,7 @@ python -m pytest tests/test_datasets_from_parameter.py -v
 
 ## Fix the Converter, Then Regenerate
 
-If SFT conversion produces the wrong role for function calls, fix the conversion logic and regenerate `sample_sft.json`. The corrective logic belongs in the converter, not as a one-off edit to generated JSON:
+If SFT conversion produces the wrong role for function calls, fix the conversion logic and regenerate the affected `sample_sft/<agent_name>.json`. The corrective logic belongs in the converter, not as a one-off edit to generated JSON:
 
 ```python
 function_patterns = ["<function=", "<function_calls>", "<invoke name="]

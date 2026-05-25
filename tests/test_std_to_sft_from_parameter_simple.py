@@ -6,7 +6,7 @@ def test_finish_function_from_parameter_in_code():
     """Test that the 'finish' function uses 'from': 'function_call' in the code."""
     # Read the std_to_sft.py file
     with open(
-        os.path.join(os.path.dirname(__file__), "../agents/openhands/std_to_sft.py"), "r"
+        os.path.join(os.path.dirname(__file__), "../agents/openhands_v0/std_to_sft.py"), "r"
     ) as f:
         code = f.read()
 

@@ -3,7 +3,7 @@ import os
 import re
 import sys
 
-from agents.openhands.std_to_sft import main_with_args as main_openhands
+from agents.openhands_v0.std_to_sft import main_with_args as main_openhands_v0
 from schema.trajectory import Trajectory
 
 dataset = os.getenv("MY_DATASET")
@@ -21,7 +21,7 @@ def process_row(line):
     std_data = std_dataset[0]
     trajectory = Trajectory(**std_data)
     events = trajectory.content
-    output_line = json.loads(main_openhands(line, is_web=True, api_env="browser"))
+    output_line = json.loads(main_openhands_v0(line, is_web=True, api_env="browser"))
     goal = "# Goal\n" + events[0].content + "\n\n"
     past_actions = []
     observation = ""
