@@ -123,7 +123,7 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "id": "example_trajectory_001",
   "content": [
     {
@@ -171,6 +171,7 @@ The repository uses **Pydantic validation** to ensure data integrity and type sa
 Key validation features:
 - Required `class_` fields match expected values (e.g., "api_action", "text_observation")
 - Type constraints are enforced (e.g., Literal types for `source` and `language` fields)
+- Extra fields are rejected on standardized trajectory, action, and observation models
 - Data integrity is maintained across conversions
 - Validation errors provide clear feedback for debugging
 

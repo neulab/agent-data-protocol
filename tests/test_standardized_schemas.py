@@ -92,6 +92,47 @@ def test_image_reference_portability_detection():
     assert not is_portable_or_external_image_reference("file:///Users/alice/screenshot.png")
 
 
+@pytest.mark.parametrize(
+    "sample",
+    [
+        {
+            "id": "extra-root",
+            "content": [],
+            "unexpected_root_field": True,
+        },
+        {
+            "id": "extra-action",
+            "content": [
+                {
+                    "class_": "message_action",
+                    "content": "hello",
+                    "unexpected_action_field": True,
+                }
+            ],
+        },
+        {
+            "id": "extra-observation",
+            "content": [
+                {
+                    "class_": "text_observation",
+                    "content": "hello",
+                    "source": "environment",
+                    "unexpected_observation_field": True,
+                }
+            ],
+        },
+    ],
+)
+def test_standardized_schema_rejects_extra_fields(sample):
+    with pytest.raises(ValidationError) as exc_info:
+        Trajectory(**sample)
+
+    # Pydantic v2 inlines branch errors from union fields into the top-level
+    # error list, so extra_forbidden errors on nested Action/Observation models
+    # surface here even though they originate inside the `content` union.
+    assert any(error["type"] == "extra_forbidden" for error in exc_info.value.errors())
+
+
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))
 def test_sample_standardized_against_schema(sample_path):
     samples = load_json(sample_path)

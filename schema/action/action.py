@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Action(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     reasoning_content: str | None = Field(
         None,
         description="Extended chain-of-thought reasoning or internal thinking from the agent. "

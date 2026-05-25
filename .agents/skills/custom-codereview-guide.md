@@ -30,6 +30,21 @@ For every dataset addition or dataset-format change, verify that the PR follows 
 - Large corpora, full generated files (`full_raw.json`, `full_std.json`, `full_sft.json`), temporary chunks, caches, screenshots, and scratch JSON are not committed.
 - Pre-commit hygiene is maintained: formatting, imports, trailing whitespace, and EOF newlines. **Every JSON file must be valid JSON and end with a trailing `\n`** (this is one of the most common PR issues — check it explicitly).
 
+## Evidence for Dataset PRs
+
+For dataset-only changes, evidence primarily means reproducible artifacts and validation signals, not screenshots, agent conversation links, or pasted terminal transcripts. Treat the committed `sample_raw.json`, `sample_std.json`, and `sample_sft.json` diffs as the primary observable output of the pipeline when the corresponding generator/converter code is present and the relevant validation checks pass.
+
+Do **not** request a separate `Evidence` section solely to prove a generated dataset sample when the PR already includes:
+
+- the generated sample artifacts,
+- the script or converter changes that produce them,
+- a clear validation list in the PR description, and
+- passing equivalent CI checks or pasted local test results.
+
+Request additional evidence only when the relevant behavior cannot be verified from committed artifacts, tests, and CI. Examples include failing or missing CI, an uncommitted external artifact, a nondeterministic extraction step whose sample provenance is unclear, or a behavioral claim that is not reflected in `sample_*.json`, tests, or code.
+
+When extra evidence is needed, ask for the smallest useful artifact: for example, the exact regeneration command and a short output summary showing record counts, IDs, or a representative transformed field. Do not require full command transcripts when a focused snippet or the committed sample diff is sufficient.
+
 ## Required Validation Tests
 
 Verify that the standard dataset validation tests pass (run them or confirm CI ran them):
@@ -42,7 +57,7 @@ python -m pytest tests/test_std_to_sft_conversion.py -v -k "<dataset_name>"
 python -m pytest tests/test_datasets_from_parameter.py -v
 ```
 
-If the PR does not show test output (or a passing CI run), request that the contributor paste the results before merge.
+If neither the PR description nor CI shows that relevant validation ran, request results before merge. Passing CI for equivalent checks is acceptable; do not require pasted local stdout in addition to passing CI unless the PR makes a claim that CI and committed artifacts cannot verify.
 
 ## PR Description Requirements
 
@@ -53,7 +68,7 @@ Dataset PR descriptions must include **all** of the following. If any is missing
 - **Size and split** used (e.g. number of trajectories, which split(s)).
 - **Files added or changed** in this PR.
 - **Schema mapping summary** — how raw roles/actions/observations map to ADP types (`MessageAction`, `CodeAction`, `ApiAction`, `TextObservation`, `WebObservation`).
-- **Tests run** — which validation tests were executed and their results.
+- **Tests run** — which validation tests were executed and their results, or which equivalent CI checks passed.
 - **Known limitations** of the dataset or conversion.
 - **Design-decision catalog** for unclear implementation choices (see below).
 
