@@ -174,6 +174,11 @@ the same `tool_call_id` on both records:
   `tool_call_id`.
 - A populated action `tool_call_id` must have exactly one matched observation
   result.
+- In schema version 1.3.0 and later, a tool action (`ApiAction` or `CodeAction`)
+  that is immediately followed by an observation result must include a
+  `tool_call_id`, and the observation must use the same ID. Existing 1.2.0 data
+  with adjacent tool-call/result pairs but no IDs should be migrated by running
+  the dataset converter through `create_trajectory_with_tool_call_links`.
 
 This distinction matters because some datasets encode environment or tool
 feedback as text that otherwise looks like a user message. `source="user"`

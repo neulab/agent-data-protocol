@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from schema.action.api import ApiAction
+from schema.action.code import CodeAction
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.tool_call_links import create_trajectory_with_tool_call_links
@@ -165,6 +166,11 @@ def test_standardized_schema_accepts_matched_tool_call_result():
         (
             ApiAction(function="search", kwargs={"query": "agent data protocol"}),
             TextObservation(content="Search result text", source="user"),
+            "call_000001",
+        ),
+        (
+            CodeAction(language="bash", content="pwd", description=None),
+            TextObservation(content="/workspace/project", source="environment"),
             "call_000001",
         ),
         (
