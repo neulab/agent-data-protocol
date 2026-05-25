@@ -102,6 +102,9 @@ def test_standardized_schema_rejects_extra_fields(sample):
     with pytest.raises(ValidationError) as exc_info:
         Trajectory(**sample)
 
+    # Pydantic v2 inlines branch errors from union fields into the top-level
+    # error list, so extra_forbidden errors on nested Action/Observation models
+    # surface here even though they originate inside the `content` union.
     assert any(error["type"] == "extra_forbidden" for error in exc_info.value.errors())
 
 
