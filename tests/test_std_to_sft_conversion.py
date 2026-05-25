@@ -57,6 +57,8 @@ def test_sample_std_and_root_sft_records_align(subdir):
 
     std_ids = [sample["id"] for sample in std_data]
     sft_ids = [sample["id"] for sample in sft_data]
+    # This test verifies stage alignment only. Some datasets intentionally remain
+    # in the broader #218 follow-up for duplicate source IDs within a stage.
     assert std_ids == sft_ids, f"Sample ids don't match in {subdir}: {std_ids} vs {sft_ids}"
 
 
