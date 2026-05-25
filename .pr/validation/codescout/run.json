@@ -1,0 +1,397 @@
+{
+  "dataset": "codescout",
+  "record_id": "codescout_default_train_0",
+  "model": "openhands/minimax-m2.7",
+  "selected_user_index": 1,
+  "selected_user_text": "I have access to a python code repository in the directory /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 . Consider the following issue description:\n\n<issue_description>\nCache directory creation fails when directory already exists\n\n#### Description\n\nWhen using parso's caching functionality, the cache directory creation logic is inverted, causing `FileNotFoundError` when the cache directory already exists.\n\n#### Steps/Code to Reproduce\n\n```python\nimport parso\nfrom pathlib import Path\nimport tempfile\nimport os\n\n# Create a temporary directory for testing\nwith tempfile.TemporaryDirectory() as tmpdir:\n    cache_dir = Path(tmpdir) / \"parso_cache\"\n    \n    # First, create the cache directory manually\n    cache_dir.mkdir(parents=True, exist_ok=True)\n    \n    # Now try to parse something with caching enabled\n    # This should work but will fail\n    parso.parse('x = 1', cache=True)\n```\n\nThe error occurs because the cache directory creation logic tries to create directories that already exist, instead of creating them when they don't exist.\n\n#### Expected Behavior\n\nThe cache should work regardless of whether the cache directory already exists or not. If the directory exists, it should be used. If it doesn't exist, it should be created.\n\n#### Actual Behavior\n\nWhen the cache directory already exists, a `FileNotFoundError` is raised because `os.makedirs()` is called on an existing directory without the `exist_ok=True` parameter.\n</issue_description>\n\nAct as a code search agent and localize the specific files, classes or functions of code that need modification to resolve the issue in <issue_description>.\n\nNOTE: You do not need to solve the issue, all you need to do is localize relevant code from the repository. Your output will be used to guide another agent to solve the issue.\n\nIMPORTANT: Your output MUST follow the below rules:\n1. The final output must be a tool call to the \"localization_finish\" tool containing relevant code locations.\n2. The locations of the file path must be RELATIVE to the /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 directory WITHOUT any leading \"./\" in the output.\n3. Only include those locations in your output that need modification to resolve the issue in <issue_description>. Do NOT include any locations that do not need modification.",
+  "validation_mode": "OpenHands SDK Agent/Conversation with replayed mock tool executors for non-finish/non-think tools",
+  "mocked_tools": [
+    "terminal"
+  ],
+  "expected_tool_calls_in_record": 4,
+  "max_iterations": 12,
+  "final_status": "ConversationExecutionStatus.ERROR",
+  "completed_with_tool_execution": false,
+  "performed_tool_call": true,
+  "reached_finish": false,
+  "action_names": [
+    "terminal",
+    "terminal",
+    "terminal",
+    "terminal",
+    "terminal",
+    "terminal",
+    "terminal",
+    "terminal",
+    "terminal",
+    "terminal",
+    "think",
+    "terminal"
+  ],
+  "actions": [
+    {
+      "id": "c43ebcc3-dddc-49f9-826f-271c28f27ff1",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_ziuntpoo5evo_1",
+      "action": {
+        "security_risk": null,
+        "summary": "List Python files in the repository",
+        "command": "find /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 -type f -name \"*.py\" | head -50",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "8e8bf3c2-3616-41b5-9520-df92855631b3",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_9iyyfs55lfsk_1",
+      "action": {
+        "security_risk": null,
+        "summary": "View the cache.py file content",
+        "command": "cat /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "61ef2182-a60d-4ab7-a7ff-d8d08ceb0f34",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_3mo0zcdxjmkn_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Find the line with directory.exists() bug",
+        "command": "grep -n \"directory.exists()\" /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "fef4c527-c9c7-4f36-b60f-81bcb4df4a58",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_zy6qd0h8jsw4_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Get line numbers for the function",
+        "command": "grep -n \"_get_cache_directory_path\" /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "4bf137e2-1505-4cb4-9e1d-729f78874cf7",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_ju7nb7th3fa4_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Get line numbers for the function",
+        "command": "grep -n \"_get_cache_directory_path\" /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "656d97f5-04eb-4639-9037-17fefffffb55",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_0grafl7ay3ov_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Find function definitions in cache.py",
+        "command": "grep -n \"_get_cache_directory_path\\|_get_hashed_path\" /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "1fda9eaf-ac70-4c9f-bf29-0dff55bf2ddb",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_os94v0aubd4w_1",
+      "action": {
+        "security_risk": null,
+        "summary": "View the _get_cache_directory_path function",
+        "command": "awk '/^def _get_cache_directory_path/,/^def [a-z]/' /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py | tail -20",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "173e7b80-f1cc-4907-9dec-35038992b8c8",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_4ki2mismssd0_1",
+      "action": {
+        "security_risk": null,
+        "summary": "View end of cache.py with line numbers",
+        "command": "cat -n /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py | tail -30",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "759c6c85-3658-461e-a6d4-b83cdd09b3a8",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_qktpzm2z4oc0_1",
+      "action": {
+        "security_risk": null,
+        "summary": "View end of cache.py",
+        "command": "cat /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py | tail -15",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "7c35a872-53fd-4fc9-b869-134ef4915b19",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_8ey9v4v5x6q7_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Count lines in cache.py",
+        "command": "wc -l /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6/parso/cache.py",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "e91f9115-e71b-4df1-9083-8d3de2eb0f4e",
+      "tool_name": "think",
+      "tool_call_id": "call_function_t2sfpmhocu45_1",
+      "action": {
+        "thought": "I've found the issue. Looking at the cache.py file that was displayed earlier, I can see the bug at the end of the file in the `_get_cache_directory_path` function:\n\n```python\ndef _get_cache_directory_path(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    directory = cache_path.joinpath(_VERSION_TAG)\n    if directory.exists():\n        os.makedirs(directory)\n    return directory\n```\n\nThe bug is on the condition `if directory.exists()` - this should be `if not directory.exists()` (i.e., the condition should create the directory when it does NOT exist, not when it already exists).\n\nThe logic is:\n1. Get the cache directory path\n2. If the directory already exists, try to create it (which causes FileNotFoundError when it exists)\n3. Return the directory\n\nThe correct logic should be:\n1. Get the cache directory path  \n2. If the directory does NOT exist, create it\n3. Return the directory\n\nThe fix is to change line 277 from:\n```python\n    if directory.exists():\n```\nto:\n```python\n    if not directory.exists():\n```\n\nOr alternatively use `os.makedirs(directory, exist_ok=True)` instead of the condition.\n\nThe relevant file is: parso/cache.py\nThe function is: `_get_cache_directory_path`\nThe specific lines are around 269-277 (approximately lines 269-277)",
+        "kind": "ThinkAction"
+      }
+    },
+    {
+      "id": "51028515-1648-45c7-b88a-d557c107650e",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_y7yr85g8pj6b_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Verify the bug exists in the code",
+        "command": "cd /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6 && python -c \"\n# Quick test to confirm the bug exists\nfrom parso import cache\nfrom pathlib import Path\nimport tempfile\nimport os\n\n# Create a temporary directory for testing\nwith tempfile.TemporaryDirectory() as tmpdir:\n    cache_dir = Path(tmpdir) / 'parso_cache'\n    \n    # First, create the cache directory manually\n    cache_dir.mkdir(parents=True, exist_ok=True)\n    print('Created cache dir at:', cache_dir)\n    print('Directory exists:', cache_dir.exists())\n    \n    # Try to call the function - this should fail\n    try:\n        result = cache._get_cache_directory_path(cache_path=cache_dir)\n        print('Result:', result)\n    except Exception as e:\n        print('ERROR:', type(e).__name__, e)\n\"",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    }
+  ],
+  "observations": [
+    {
+      "action_id": "c43ebcc3-dddc-49f9-826f-271c28f27ff1",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_ziuntpoo5evo_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "test/test_diff_parser.py\n8:from parso import cache\n21:    module_a = grammar.parse('a', diff_cache=True)\n22:    assert grammar.parse('b', diff_cache=True) == module_a\n47:            del cache.parser_cache[self.grammar._hashed][None]\n52:        self.module = parse(code, diff_cache=True, cache=True)\n\ntest/test_cache.py\n2:Test all things related to the ``jedi.cache`` module.\n10:from parso.cache import (_CACHED_FILE_MAXIMUM_SURVIVAL, _VERSION_TAG,\n11:                         _get_cache_clear_lock_path, _get_hashed_path,\n13:                         _remove_cache_and_update_lock, _save_to_file_system,\n14:                         load_module, parser_cache, try_to_save_module)\n17:from parso import cache\n29:def isolated_parso_cache(monkeypatch, tmpdir):\n30:    \"\"\"Set `parso.cache._default_cache_path` to a temporary directory\n32:    cache_path = Path(str(tmpdir), \"__parso_cache\")\n33:    monkeypatch.setattr(cache, '_default_cache_path', cache_path)\n34:    return cache_path\n37:def test_modulepickling_change_cache_dir(tmpdir):\n39:    ParserPickling should not save old cache when cache_directory is changed.\n52:    _save_to_file_system(hashed_grammar, path_1, item_1, cache_path=dir_1)\n53:    parser_cache.clear()\n54:    cached = load_stored_item(hashed_grammar, path_1, item_1, cache_path=dir_1)\n55:    assert cached == item_1.node\n57:    _save_to_file_system(hashed_grammar, path_2, item_2, cache_path=dir_2)\n58:    cached = load_stored_item(hashed_grammar, path_1, item_1, cache_path=dir_2)\n59:    assert cached is None\n62:def load_stored_item(hashed_grammar, path, item, cache_path):\n63:    \"\"\"Load `item` stored at `path` in `cache`.\"\"\"\n64:    item = _load_from_file_system(hashed_grammar, path, item.change_time - 1, cache_path)\n68:@pytest.mark.usefixtures(\"isolated_parso_cache\")\n69:def test_modulepickling_simulate_deleted_cache(tmpdir):\n71:    Tests loading from a cache file after it is deleted.\n78:    It is possible that other supported platforms treat cache files the same\n96:    parser_cache.clear()\n98:    cached2 = load_module(grammar._hashed, io)\n99:    assert cached2 is None\n102:def test_cache_limit():\n103:    def cache_size():\n104:        return sum(len(v) for v in parser_cache.values())\n107:        parser_cache.clear()\n108:        future_node_cache_item = _NodeCacheItem('bla', [], change_time=time.time() + 10e6)\n109:        old_node_cache_item = _NodeCacheItem('bla', [], change_time=time.time() - 10e4)\n110:        parser_cache['some_hash_old'] = {\n111:            '/path/%s' % i: old_node_cache_item for i in range(300)\n113:        parser_cache['some_hash_new'] = {\n114:            '/path/%s' % i: future_node_cache_item for i in range(300)\n116:        assert cache_size() == 600\n117:        parse('somecode', cache=True, path='/path/somepath')\n118:        assert cache_size() == 301\n120:        parser_cache.clear()\n132:@pytest.mark.parametrize('diff_cache', [False, True])\n134:def test_cache_last_used_update(diff_cache, use_file_io):\n136:    parser_cache.clear()  # Clear, because then it's easier to find stuff.\n137:    parse('somecode', cache=True, path=p)\n138:    node_cache_item = next(iter(parser_cache.values()))[p]\n140:    assert node_cache_item.last_used <= now\n143:        f = _FixedTimeFileIO(p, 'code', node_cache_item.last_used - 10)\n144:        parse(file_io=f, cache=True, diff_cache=diff_cache)\n146:        parse('somecode2', cache=True, path=p, diff_cache=diff_cache)\n148:    node_cache_item = next(iter(parser_cache.values()))[p]\n149:    assert now <= node_cache_item.last_used <= time.time()\n153:def test_inactive_cache(tmpdir, isolated_parso_cache):\n154:    parser_cache.clear()\n157:        parse('somecode', cache=True, path=os.path.join(str(tmpdir), path))\n158:    raw_cache_path = isolated_parso_cache.joinpath(_VERSION_TAG)\n159:    assert raw_cache_path.exists()\n160:    dir_names = os.listdir(raw_cache_path)\n164:        os.utime(raw_cache_path.joinpath(dir_name), (a_while_ago, a_while_ago))\n167:    assert _get_cache_clear_lock_path().exists()\n168:    _remove_cache_and_update_lock()  # it shouldn't clear anything\n169:    assert len(os.listdir(raw_cache_path)) == len(test_subjects)\n170:    assert old_paths.issubset(os.listdir(raw_cache_path))\n172:    os.utime(_get_cache_clear_lock_path(), (a_while_ago, a_while_ago))\n173:    _remove_cache_and_update_lock()\n174:    assert len(os.listdir(raw_cache_path)) == len(test_subjects) // 2\n175:    assert not old_paths.intersection(os.listdir(raw_cache_path))\n187:    monkeypatch.setattr(cache, '_save_to_file_system', save)\n190:            parse(path=__file__, cache=True, diff_cache=True)\n193:        parser_cache.clear()\n\ntest/fuzz_diff_parser.py\n198:            m = grammar.parse(code, diff_cache=True)\n201:        grammar.parse(modified_code, diff_cache=True)\n205:            m = grammar.parse(code, diff_cache=True)\n\nparso/cache.py\n23:Maximum time for a cached file to survive if it is not\n29:This setting limits the amount of cached files. It's basically a way to start\n41:Version number (integer) for file system cache.\n61:It's a bit similar to `sys.implementation.cache_tag`.\n66:def _get_default_cache_path():\n72:        dir_ = Path(os.getenv('XDG_CACHE_HOME') or '~/.cache', 'parso')\n76:_default_cache_path = _get_default_cache_path()\n78:The path where the cache is stored.\n80:On Linux, this defaults to ``~/.cache/parso/``, on OS X to\n89:def _get_cache_clear_lock_path(cache_path=None):\n91:    The path where the cache lock is stored.\n93:    Cache lock will prevent continous cache clearing and only allow garbage\n96:    cache_path = cache_path or _default_cache_path\n97:    return cache_path.joinpath(\"PARSO-CACHE-LOCK\")\n100:parser_cache: Dict[str, Any] = {}\n113:def load_module(hashed_grammar, file_io, cache_path=None):\n122:        module_cache_item = parser_cache[hashed_grammar][file_io.path]\n123:        if p_time <= module_cache_item.change_time:\n124:            module_cache_item.last_used = time.time()\n125:            return module_cache_item.node\n131:            cache_path=cache_path\n135:def _load_from_file_system(hashed_grammar, path, p_time, cache_path=None):\n136:    cache_path = _get_hashed_path(hashed_grammar, path, cache_path=cache_path)\n138:        if p_time > os.path.getmtime(cache_path):\n142:        with open(cache_path, 'rb') as f:\n145:                module_cache_item = pickle.load(f)\n151:        _set_cache_item(hashed_grammar, path, module_cache_item)\n153:        return module_cache_item.node\n156:def _set_cache_item(hashed_grammar, path, module_cache_item):\n157:    if sum(len(v) for v in parser_cache.values()) >= _CACHED_SIZE_TRIGGER:\n158:        # Garbage collection of old cache files.\n162:        for key, path_to_item_map in parser_cache.items():\n163:            parser_cache[key] = {\n169:    parser_cache.setdefault(hashed_grammar, {})[path] = module_cache_item\n172:def try_to_save_module(hashed_grammar, file_io, module, lines, pickling=True, cache_path=None):\n181:    _set_cache_item(hashed_grammar, path, item)\n184:            _save_to_file_system(hashed_grammar, path, item, cache_path=cache_path)\n186:            # It's not really a big issue if the cache cannot be saved to the\n194:            _remove_cache_and_update_lock(cache_path=cache_path)\n197:def _save_to_file_system(hashed_grammar, path, item, cache_path=None):\n198:    with open(_get_hashed_path(hashed_grammar, path, cache_path=cache_path), 'wb') as f:\n202:def clear_cache(cache_path=None):\n203:    if cache_path is None:\n204:        cache_path = _default_cache_path\n205:    shutil.rmtree(cache_path)\n206:    parser_cache.clear()\n209:def clear_inactive_cache(\n210:    cache_path=None,\n213:    if cache_path is None:\n214:        cache_path = _default_cache_path\n215:    if not cache_path.exists():\n217:    for dirname in os.listdir(cache_path):\n218:        version_path = cache_path.joinpath(dirname)\n243:def _remove_cache_and_update_lock(cache_path=None):\n244:    lock_path = _get_cache_clear_lock_path(cache_path=cache_path)\n259:        clear_inactive_cache(cache_path=cache_path)\n262:def _get_hashed_path(hashed_grammar, path, cache_path=None):\n263:    directory = _get_cache_directory_path(cache_path=cache_path)\n269:def _get_cache_directory_path(cache_path=None):\n270:    if cache_path is None:\n271:        cache_path = _default_cache_path\n272:    directory = cache_path.joinpath(_VERSION_TAG)\n\nparso/grammar.py\n13:from parso.cache import parser_cache, load_module, try_to_save_module\n55:              cache=False,\n56:              diff_cache=False,\n57:              cache_path: Union[os.PathLike, str] = None,\n75:        :param bool cache: Keeps a copy of the parser tree in RAM and on disk\n76:            if a path is given. Returns the cached trees if the corresponding\n78:            on your file system (e.g. for Linux in ``~/.cache/parso/``).\n79:        :param bool diff_cache: Diffs the cached python module against the new\n81:            the same (changed) module that is found in cache. Using this option\n82:            requires you to not do anything anymore with the cached modules\n86:        :param bool cache_path: If given saves the parso cache in this\n87:            directory. If not given, defaults to the default cache places on\n98:        if isinstance(cache_path, str):\n99:            cache_path = Path(cache_path)\n113:        if cache and file_io.path is not None:\n114:            module_node = load_module(self._hashed, file_io, cache_path=cache_path)\n123:        if diff_cache:\n128:                module_cache_item = parser_cache[self._hashed][file_io.path]\n132:                module_node = module_cache_item.node\n133:                old_lines = module_cache_item.lines\n145:                                   pickling=cache and not is_pypy,\n146:                                   cache_path=cache_path)\n158:        if cache or diff_cache:\n161:                               pickling=cache and not is_pypy,\n162:                               cache_path=cache_path)\n\nconftest.py\n11:from parso import cache\n20:def clean_parso_cache():\n22:    Set the default cache directory to a temporary directory during tests.\n30:    old = cache._default_cache_path\n32:    cache._default_cache_path = Path(tmp)\n34:    cache._default_cache_path = old\n\nparso/python/tokenize.py\n55:_token_collection_cache: Dict[PythonVersionInfo, TokenCollection] = {}\n107:        return _token_collection_cache[tuple(version_info)]\n109:        _token_collection_cache[tuple(version_info)] = result = \\\n\nparso/python/diff.py\n283:        # Reset the used names cache so they get regenerated.\n[The command completed with exit code 0.]\n[Current working directory: /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6]\n[Python interpreter: /home/adityabs/miniconda3/bin/python]\n[Command finished with exit code 0]"
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "8e8bf3c2-3616-41b5-9520-df92855631b3",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_9iyyfs55lfsk_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "import time\nimport os\nimport sys\nimport hashlib\nimport gc\nimport shutil\nimport platform\nimport logging\nimport warnings\nimport pickle\nfrom pathlib import Path\nfrom typing import Dict, Any\n\nLOG = logging.getLogger(__name__)\n\n_CACHED_FILE_MINIMUM_SURVIVAL = 60 * 10  # 10 minutes\n\"\"\"\nCached files should survive at least a few minutes.\n\"\"\"\n\n_CACHED_FILE_MAXIMUM_SURVIVAL = 60 * 60 * 24 * 30\n\"\"\"\nMaximum time for a cached file to survive if it is not\naccessed within.\n\"\"\"\n\n_CACHED_SIZE_TRIGGER = 600\n\"\"\"\nThis setting limits the amount of cached files. It's basically a way to start\ngarbage collection.\n\nThe reasoning for this limit being as big as it is, is the following:\n\nNumpy, Pandas, Matplotlib and Tensorflow together use about 500 files. This\nmakes Jedi use ~500mb of memory. Since we might want a bit more than those few\nlibraries, we just increase it a bit.\n\"\"\"\n\n_PICKLE_VERSION = 33\n\"\"\"\nVersion number (integer) for file system cache.\n\nIncrement this number when there are any incompatible changes in\nthe parser tree classes.  For example, the following changes\nare regarded as incompatible.\n\n- A class name is changed.\n- A class is moved to another module.\n- A __slot__ of a class is changed.\n\"\"\"\n\n_VERSION_TAG = '%s-%s%s-%s' % (\n    platform.python_implementation(),\n    sys.version_info[0],\n    sys.version_info[1],\n    _PICKLE_VERSION\n)\n\"\"\"\nShort name for distinguish Python implementations and versions.\n\nIt's a bit similar to `sys.implementation.cache_tag`.\nSee: http://docs.python.org/3/library/sys.html#sys.implementation\n\"\"\"\n\n\ndef _get_default_cache_path():\n    if platform.system().lower() == 'windows':\n        dir_ = Path(os.getenv('LOCALAPPDATA') or '~', 'Parso', 'Parso')\n    elif platform.system().lower() == 'darwin':\n        dir_ = Path('~', 'Library', 'Caches', 'Parso')\n    else:\n        dir_ = Path(os.getenv('XDG_CACHE_HOME') or '~/.cache', 'parso')\n    return dir_.expanduser()\n\n\n_default_cache_path = _get_default_cache_path()\n\"\"\"\nThe path where the cache is stored.\n\nOn Linux, this defaults to ``~/.cache/parso/``, on OS X to\n``~/Library/Caches/Parso/`` and on Windows to ``%LOCALAPPDATA%\\\\Parso\\\\Parso\\\\``.\nOn Linux, if environment variable ``$XDG_CACHE_HOME`` is set,\n``$XDG_CACHE_HOME/parso`` is used instead of the default one.\n\"\"\"\n\n_CACHE_CLEAR_THRESHOLD = 60 * 60 * 24\n\n\ndef _get_cache_clear_lock_path(cache_path=None):\n    \"\"\"\n    The path where the cache lock is stored.\n\n    Cache lock will prevent continous cache clearing and only allow garbage\n    collection once a day (can be configured in _CACHE_CLEAR_THRESHOLD).\n    \"\"\"\n    cache_path = cache_path or _default_cache_path\n    return cache_path.joinpath(\"PARSO-CACHE-LOCK\")\n\n\nparser_cache: Dict[str, Any] = {}\n\n\nclass _NodeCacheItem:\n    def __init__(self, node, lines, change_time=None):\n        self.node = node\n        self.lines = lines\n        if change_time is None:\n            change_time = time.time()\n        self.change_time = change_time\n        self.last_used = change_time\n\n\ndef load_module(hashed_grammar, file_io, cache_path=None):\n    \"\"\"\n    Returns a module or None, if it fails.\n    \"\"\"\n    p_time = file_io.get_last_modified()\n    if p_time is None:\n        return None\n\n    try:\n        module_cache_item = parser_cache[hashed_grammar][file_io.path]\n        if p_time <= module_cache_item.change_time:\n            module_cache_item.last_used = time.time()\n            return module_cache_item.node\n    except KeyError:\n        return _load_from_file_system(\n            hashed_grammar,\n            file_io.path,\n            p_time,\n            cache_path=cache_path\n        )\n\n\ndef _load_from_file_system(hashed_grammar, path, p_time, cache_path=None):\n    cache_path = _get_hashed_path(hashed_grammar, path, cache_path=cache_path)\n    try:\n        if p_time > os.path.getmtime(cache_path):\n            # Cache is outdated\n            return None\n\n        with open(cache_path, 'rb') as f:\n            gc.disable()\n            try:\n                module_cache_item = pickle.load(f)\n            finally:\n                gc.enable()\n    except FileNotFoundError:\n        return None\n    else:\n        _set_cache_item(hashed_grammar, path, module_cache_item)\n        LOG.debug('pickle loaded: %s', path)\n        return module_cache_item.node\n\n\ndef _set_cache_item(hashed_grammar, path, module_cache_item):\n    if sum(len(v) for v in parser_cache.values()) >= _CACHED_SIZE_TRIGGER:\n        # Garbage collection of old cache files.\n        # We are basically throwing everything away that hasn't been accessed\n        # in 10 minutes.\n        cutoff_time = time.time() - _CACHED_FILE_MINIMUM_SURVIVAL\n        for key, path_to_item_map in parser_cache.items():\n            parser_cache[key] = {\n                path: node_item\n                for path, node_item in path_to_item_map.items()\n                if node_item.last_used > cutoff_time\n            }\n\n    parser_cache.setdefault(hashed_grammar, {})[path] = module_cache_item\n\n\ndef try_to_save_module(hashed_grammar, file_io, module, lines, pickling=True, cache_path=None):\n    path = file_io.path\n    try:\n        p_time = None if path is None else file_io.get_last_modified()\n    except OSError:\n        p_time = None\n        pickling = False\n\n    item = _NodeCacheItem(module, lines, p_time)\n    _set_cache_item(hashed_grammar, path, item)\n    if pickling and path is not None:\n        try:\n            _save_to_file_system(hashed_grammar, path, item, cache_path=cache_path)\n        except PermissionError:\n            # It's not really a big issue if the cache cannot be saved to the\n            # file system. It's still in RAM in that case. However we should\n            # still warn the user that this is happening.\n            warnings.warn(\n                'Tried to save a file to %s, but got permission denied.' % path,\n                Warning\n            )\n        else:\n            _remove_cache_and_update_lock(cache_path=cache_path)\n\n\ndef _save_to_file_system(hashed_grammar, path, item, cache_path=None):\n    with open(_get_hashed_path(hashed_grammar, path, cache_path=cache_path), 'wb') as f:\n        pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)\n\n\ndef clear_cache(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    shutil.rmtree(cache_path)\n    parser_cache.clear()\n\n\ndef clear_inactive_cache(\n    cache_path=None,\n    inactivity_threshold=_CACHED_FILE_MAXIMUM_SURVIVAL,\n):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    if not cache_path.exists():\n        return False\n    for dirname in os.listdir(cache_path):\n        version_path = cache_path.joinpath(dirname)\n        if not version_path.is_dir():\n            continue\n        for file in os.scandir(version_path):\n            if file.stat().st_atime + _CACHED_FILE_MAXIMUM_SURVIVAL <= time.time():\n                try:\n                    os.remove(file.path)\n                except OSError:  # silently ignore all failures\n                    continue\n    else:\n        return True\n\n\ndef _touch(path):\n    try:\n        os.utime(path, None)\n    except FileNotFoundError:\n        try:\n            file = open(path, 'a')\n            file.close()\n        except (OSError, IOError):  # TODO Maybe log this?\n            return False\n    return True\n\n\ndef _remove_cache_and_update_lock(cache_path=None):\n    lock_path = _get_cache_clear_lock_path(cache_path=cache_path)\n    try:\n        clear_lock_time = os.path.getmtime(lock_path)\n    except FileNotFoundError:\n        clear_lock_time = None\n    if (\n        clear_lock_time is None  # first time\n        or clear_lock_time + _CACHE_CLEAR_THRESHOLD <= time.time()\n    ):\n        if not _touch(lock_path):\n            # First make sure that as few as possible other cleanup jobs also\n            # get started. There is still a race condition but it's probably\n            # not a big problem.\n            return False\n\n        clear_inactive_cache(cache_path=cache_path)\n\n\ndef _get_hashed_path(hashed_grammar, path, cache_path=None):\n    directory = _get_cache_directory_path(cache_path=cache_path)\n\n    file_hash = hashlib.sha256(str(path).encode(\"utf-8\")).hexdigest()\n    return os.path.join(directory, '%s-%s.pkl' % (hashed_grammar, file_hash))\n\n\ndef _get_cache_directory_path(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    directory = cache_path.joinpath(_VERSION_TAG)\n    if directory.exists():\n        os.makedirs(directory)\n    return directory\n[The command completed with exit code 0.]\n[Current working directory: /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6]\n[Python interpreter: /home/adityabs/miniconda3/bin/python]\n[Command finished with exit code 0]"
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "61ef2182-a60d-4ab7-a7ff-d8d08ceb0f34",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_3mo0zcdxjmkn_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "def clear_cache(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    shutil.rmtree(cache_path)\n    parser_cache.clear()\n\n\ndef clear_inactive_cache(\n    cache_path=None,\n    inactivity_threshold=_CACHED_FILE_MAXIMUM_SURVIVAL,\n):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    if not cache_path.exists():\n        return False\n    for dirname in os.listdir(cache_path):\n        version_path = cache_path.joinpath(dirname)\n        if not version_path.is_dir():\n            continue\n        for file in os.scandir(version_path):\n            if file.stat().st_atime + _CACHED_FILE_MAXIMUM_SURVIVAL <= time.time():\n                try:\n                    os.remove(file.path)\n                except OSError:  # silently ignore all failures\n                    continue\n    else:\n        return True\n\n\ndef _touch(path):\n    try:\n        os.utime(path, None)\n    except FileNotFoundError:\n        try:\n            file = open(path, 'a')\n            file.close()\n        except (OSError, IOError):  # TODO Maybe log this?\n            return False\n    return True\n\n\ndef _remove_cache_and_update_lock(cache_path=None):\n    lock_path = _get_cache_clear_lock_path(cache_path=cache_path)\n    try:\n        clear_lock_time = os.path.getmtime(lock_path)\n    except FileNotFoundError:\n        clear_lock_time = None\n    if (\n        clear_lock_time is None  # first time\n        or clear_lock_time + _CACHE_CLEAR_THRESHOLD <= time.time()\n    ):\n        if not _touch(lock_path):\n            # First make sure that as few as possible other cleanup jobs also\n            # get started. There is still a race condition but it's probably\n            # not a big problem.\n            return False\n\n        clear_inactive_cache(cache_path=cache_path)\n\n\ndef _get_hashed_path(hashed_grammar, path, cache_path=None):\n    directory = _get_cache_directory_path(cache_path=cache_path)\n\n    file_hash = hashlib.sha256(str(path).encode(\"utf-8\")).hexdigest()\n    return os.path.join(directory, '%s-%s.pkl' % (hashed_grammar, file_hash))\n\n\ndef _get_cache_directory_path(cache_path=None):\n    if cache_path is None:\n        cache_path = _default_cache_path\n    directory = cache_path.joinpath(_VERSION_TAG)\n    if directory.exists():\n        os.makedirs(directory)\n    return directory\n[The command completed with exit code 0.]\n[Current working directory: /tmp/testbed/59d4d6f5/swesmith_davidhalter__parso.338a5760_davidhalter__parso.338a5760.func_basic__3iwakld6]\n[Python interpreter: /home/adityabs/miniconda3/bin/python]\n[Command finished with exit code 0]"
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "fef4c527-c9c7-4f36-b60f-81bcb4df4a58",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_zy6qd0h8jsw4_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "4bf137e2-1505-4cb4-9e1d-729f78874cf7",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_ju7nb7th3fa4_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "656d97f5-04eb-4639-9037-17fefffffb55",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_0grafl7ay3ov_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "1fda9eaf-ac70-4c9f-bf29-0dff55bf2ddb",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_os94v0aubd4w_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "173e7b80-f1cc-4907-9dec-35038992b8c8",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_4ki2mismssd0_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "759c6c85-3658-461e-a6d4-b83cdd09b3a8",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_qktpzm2z4oc0_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "7c35a872-53fd-4fc9-b869-134ef4915b19",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_8ey9v4v5x6q7_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "e91f9115-e71b-4df1-9083-8d3de2eb0f4e",
+      "tool_name": "think",
+      "tool_call_id": "call_function_t2sfpmhocu45_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "Your thought has been logged."
+          }
+        ],
+        "is_error": false,
+        "kind": "ThinkObservation"
+      }
+    },
+    {
+      "action_id": "51028515-1648-45c7-b88a-d557c107650e",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_y7yr85g8pj6b_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "The mocked terminal action completed successfully. If the task goal is satisfied, call finish now."
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    }
+  ],
+  "completion_written": true,
+  "error": null,
+  "called_finish_tool": false,
+  "validation_status": "incomplete",
+  "failure_reason": "The SDK agent performed parsed tool calls but did not reach a successful finished state within the replayed mock environment.",
+  "performed_environment_tool_call": true,
+  "completed_with_any_tool_call": false
+}

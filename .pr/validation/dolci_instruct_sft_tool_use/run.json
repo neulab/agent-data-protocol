@@ -1,0 +1,117 @@
+{
+  "dataset": "dolci_instruct_sft_tool_use",
+  "record_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_351977",
+  "model": "openhands/minimax-m2.7",
+  "selected_user_index": 1,
+  "selected_user_text": "I\u2019m planning a trip to New York! I\u2019m staying at the Renaissance Hotel. My guest ID is NYR543, and I want to book a deluxe room at $350 per night from 2024-08-04 to 2024-08-09. Can you also check which city ZIP code 10001 refers to?",
+  "validation_mode": "OpenHands SDK Agent/Conversation with replayed mock tool executors for non-finish/non-think tools",
+  "mocked_tools": [
+    "reserve_hotel_room",
+    "get_city_from_zipcode"
+  ],
+  "expected_tool_calls_in_record": 3,
+  "max_iterations": 12,
+  "final_status": "ConversationExecutionStatus.FINISHED",
+  "completed_with_tool_execution": true,
+  "performed_tool_call": true,
+  "reached_finish": true,
+  "action_names": [
+    "reserve_hotel_room",
+    "get_city_from_zipcode",
+    "finish"
+  ],
+  "actions": [
+    {
+      "id": "cbed1dd2-2008-4f11-91f1-51466c3badad",
+      "tool_name": "reserve_hotel_room",
+      "tool_call_id": "call_function_t969fkx579ni_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Book deluxe room at Renaissance Hotel",
+        "checkin_date": "2024-08-04",
+        "checkout_date": "2024-08-09",
+        "guest_id": "NYR543",
+        "nightly_rate": "$350",
+        "room_type": "deluxe",
+        "kind": "ReserveHotelRoomAction"
+      }
+    },
+    {
+      "id": "eedbb014-053f-4e0a-8ebc-1f436df9f3a2",
+      "tool_name": "get_city_from_zipcode",
+      "tool_call_id": "call_function_t969fkx579ni_2",
+      "action": {
+        "security_risk": null,
+        "summary": "Get city for ZIP code 10001",
+        "zipcode": "10001",
+        "kind": "GetCityFromZipcodeAction"
+      }
+    },
+    {
+      "id": "b038704b-76ca-417f-85bc-e2bf412bc77c",
+      "tool_name": "finish",
+      "tool_call_id": "call_function_d775n3lx9u7d_1",
+      "action": {
+        "message": "Here's your trip information:\n\n**Hotel Reservation:**\n- \u2705 Reservation confirmed! Confirmation number: **RES123456**\n- Hotel: Renaissance Hotel\n- Room Type: Deluxe\n- Nightly Rate: $350\n- Check-in: August 4, 2024\n- Check-out: August 9, 2024\n- Guest ID: NYR543\n\n**ZIP Code Lookup:**\n- ZIP code 10001 corresponds to **New York, NY** - so you're already in the right city for your trip!\n\nHave a wonderful trip to New York! Is there anything else I can help you with?",
+        "kind": "FinishAction"
+      }
+    }
+  ],
+  "observations": [
+    {
+      "action_id": "cbed1dd2-2008-4f11-91f1-51466c3badad",
+      "tool_name": "reserve_hotel_room",
+      "tool_call_id": "call_function_t969fkx579ni_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "{\"results\": {\"reservation\": \"success\", \"confirmation\": \"RES123456\"}}"
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "eedbb014-053f-4e0a-8ebc-1f436df9f3a2",
+      "tool_name": "get_city_from_zipcode",
+      "tool_call_id": "call_function_t969fkx579ni_2",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "{\"results\": {\"city\": \"New York\"}}"
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "b038704b-76ca-417f-85bc-e2bf412bc77c",
+      "tool_name": "finish",
+      "tool_call_id": "call_function_d775n3lx9u7d_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "Here's your trip information:\n\n**Hotel Reservation:**\n- \u2705 Reservation confirmed! Confirmation number: **RES123456**\n- Hotel: Renaissance Hotel\n- Room Type: Deluxe\n- Nightly Rate: $350\n- Check-in: August 4, 2024\n- Check-out: August 9, 2024\n- Guest ID: NYR543\n\n**ZIP Code Lookup:**\n- ZIP code 10001 corresponds to **New York, NY** - so you're already in the right city for your trip!\n\nHave a wonderful trip to New York! Is there anything else I can help you with?"
+          }
+        ],
+        "is_error": false,
+        "kind": "FinishObservation"
+      }
+    }
+  ],
+  "completion_written": true,
+  "error": null,
+  "called_finish_tool": true,
+  "validation_status": "completed",
+  "failure_reason": null,
+  "performed_environment_tool_call": true,
+  "completed_with_any_tool_call": true
+}

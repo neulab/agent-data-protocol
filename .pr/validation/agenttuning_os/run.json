@@ -1,0 +1,92 @@
+{
+  "dataset": "agenttuning_os",
+  "record_id": "os_20",
+  "model": "openhands/minimax-m2.7",
+  "selected_user_index": 1,
+  "selected_user_text": "tell me how many files are in the directory \"/etc\"?\n\nIf you think you have got the answer to the question, you should print like this:\n\n<solution> Your solution here </solution>",
+  "validation_mode": "OpenHands SDK Agent/Conversation with replayed mock tool executors for non-finish/non-think tools",
+  "mocked_tools": [
+    "terminal"
+  ],
+  "expected_tool_calls_in_record": 5,
+  "max_iterations": 12,
+  "final_status": "ConversationExecutionStatus.FINISHED",
+  "completed_with_tool_execution": true,
+  "performed_tool_call": true,
+  "reached_finish": true,
+  "action_names": [
+    "terminal",
+    "terminal"
+  ],
+  "actions": [
+    {
+      "id": "814b8a7b-ba2d-4d67-9d99-7c13fc090c3f",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_76ej1gnu9cn5_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Count files in /etc directory",
+        "command": "ls -1 /etc | wc -l",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    },
+    {
+      "id": "ad995b6b-8c06-45c4-b805-f0ded03f95f5",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_26xruawcdf7m_1",
+      "action": {
+        "security_risk": null,
+        "summary": "Count items in /etc directory",
+        "command": "ls /etc | wc -l",
+        "is_input": null,
+        "timeout": null,
+        "reset": null,
+        "kind": "TerminalAction"
+      }
+    }
+  ],
+  "observations": [
+    {
+      "action_id": "814b8a7b-ba2d-4d67-9d99-7c13fc090c3f",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_76ej1gnu9cn5_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "cpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]"
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    },
+    {
+      "action_id": "ad995b6b-8c06-45c4-b805-f0ded03f95f5",
+      "tool_name": "terminal",
+      "tool_call_id": "call_function_26xruawcdf7m_1",
+      "observation": {
+        "content": [
+          {
+            "cache_prompt": false,
+            "type": "text",
+            "text": "220"
+          }
+        ],
+        "is_error": false,
+        "kind": "ReplayObservation"
+      }
+    }
+  ],
+  "completion_written": true,
+  "error": null,
+  "called_finish_tool": false,
+  "validation_status": "completed",
+  "failure_reason": null,
+  "performed_environment_tool_call": true,
+  "completed_with_any_tool_call": true
+}
