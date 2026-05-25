@@ -43,8 +43,6 @@ def backfill_adjacent_tool_call_links(content: list[Any]) -> list[Any]:
             generated_ordinal += 1
         elif action_tool_call_id is None:
             action_tool_call_id = observation_tool_call_id
-        else:
-            existing_ids.add(action_tool_call_id)
 
         item.tool_call_id = action_tool_call_id
         next_item.tool_call_id = action_tool_call_id
