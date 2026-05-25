@@ -72,6 +72,16 @@ class Trajectory(BaseModel):
 
         for index, item in enumerate(self.content):
             tool_call_id = getattr(item, "tool_call_id", None)
+            next_item = self.content[index + 1] if index + 1 < len(self.content) else None
+            if (
+                isinstance(item, (ApiAction, CodeAction))
+                and isinstance(next_item, Observation)
+                and tool_call_id is None
+            ):
+                raise ValueError(
+                    f"Tool action at content index {index} is followed by an "
+                    "Observation result but does not include tool_call_id"
+                )
             if tool_call_id is None:
                 continue
 

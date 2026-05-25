@@ -2,7 +2,6 @@ import importlib.util
 import inspect
 import json
 import os
-from collections import Counter
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
@@ -13,9 +12,6 @@ from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
-
-TOOL_ACTION_CLASSES = {"api_action", "code_action"}
-OBSERVATION_CLASSES = {"text_observation", "image_observation", "web_observation"}
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
 NUMERIC_DETAIL_KEYS = {"reward", "score", "step"}
@@ -70,46 +66,6 @@ def load_json(file_path):
     """Load JSON file, handling both indented and non-indented formats."""
     with open(file_path, "r") as file:
         return json.load(file)
-
-
-def assert_tool_call_links_are_complete(sample, sample_path, sample_id):
-    action_counts = Counter()
-    observation_counts = Counter()
-    content = sample.get("content", [])
-
-    for content_id, item in enumerate(content):
-        class_name = item.get("class_")
-        tool_call_id = item.get("tool_call_id")
-
-        if class_name in TOOL_ACTION_CLASSES:
-            next_item = content[content_id + 1] if content_id + 1 < len(content) else {}
-            if next_item.get("class_") in OBSERVATION_CLASSES:
-                assert tool_call_id, (
-                    f"Tool action followed by a result must include tool_call_id in "
-                    f"{sample_path} sample {sample_id} content {content_id}"
-                )
-
-        if not tool_call_id:
-            continue
-
-        if class_name and class_name.endswith("_action"):
-            action_counts[tool_call_id] += 1
-        elif class_name in OBSERVATION_CLASSES:
-            observation_counts[tool_call_id] += 1
-
-    all_ids = sorted(set(action_counts) | set(observation_counts))
-    invalid_ids = {
-        tool_call_id: {
-            "actions": action_counts[tool_call_id],
-            "observations": observation_counts[tool_call_id],
-        }
-        for tool_call_id in all_ids
-        if action_counts[tool_call_id] != 1 or observation_counts[tool_call_id] != 1
-    }
-    assert not invalid_ids, (
-        f"Every tool_call_id must appear on exactly one action and one observation in "
-        f"{sample_path} sample {sample_id}: {invalid_ids}"
-    )
 
 
 def test_numeric_detail_key_detection():
@@ -245,6 +201,25 @@ def test_raw_converter_helper_backfills_adjacent_tool_call_result(
     assert observation.source == "environment"
 
 
+def test_standardized_schema_rejects_missing_tool_call_id_for_tool_result():
+    with pytest.raises(ValidationError, match="does not include tool_call_id"):
+        Trajectory(
+            id="missing-tool-call-id",
+            content=[
+                {
+                    "class_": "api_action",
+                    "function": "search",
+                    "kwargs": {"query": "agent data protocol"},
+                },
+                {
+                    "class_": "text_observation",
+                    "content": "Search result text",
+                    "source": "environment",
+                },
+            ],
+        )
+
+
 def test_standardized_schema_rejects_unmatched_tool_result():
     with pytest.raises(ValidationError, match="does not match any preceding Action"):
         Trajectory(
@@ -368,7 +343,6 @@ def test_sample_standardized_against_schema(sample_path):
         return dataset_api, api_function_names
 
     for sample_id, sample in enumerate(samples):
-        assert_tool_call_links_are_complete(sample, sample_path, sample_id)
         try:
             traj = Trajectory(**sample)
             assert "available_apis" not in traj.details, (
