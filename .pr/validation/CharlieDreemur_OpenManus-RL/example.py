@@ -1,0 +1,130 @@
+from __future__ import annotations
+
+import json
+import os
+import re
+import shutil
+import tempfile
+from pathlib import Path
+from typing import Self
+
+from openhands.sdk import LLM, Message, TextContent
+from openhands.sdk.tool import ToolDefinition
+from openhands.sdk.tool.schema import Action
+
+
+DATASET_NAME = 'CharlieDreemur_OpenManus-RL'
+MODEL = os.getenv("LLM_MODEL", "openhands/minimax-m2.7")
+TARGET_TOOL = 'perform_action'
+TARGET_ARGUMENTS = '{\n  "action": "go to desk 1",\n  "security_risk": "UNKNOWN",\n  "summary": "To complete the task, I need to find the alarm clock first, then locate the desk lamp to view the alarm clock under it. "\n}'
+USED_TOOL_NAMES = '[\n  "get_movie_production_companies",\n  "get_search_movie",\n  "perform_action",\n  "pharmacies_de_garde_nc_all_for_pharmacies_de_garde_nc",\n  "pharmacies_de_garde_nc_health_for_pharmacies_de_garde_nc",\n  "weather_get_120_hour_forecast_for_weather"\n]'
+TOOL_SPECS_JSON = '[{"function": {"description": "Get the production companies of a movie by its ID.", "name": "get_movie_production_companies", "parameters": {"properties": {"movie_id": {"type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": ["movie_id"], "type": "object"}}, "type": "function"}, {"function": {"description": "Search for a movie by name and return basic details.", "name": "get_search_movie", "parameters": {"properties": {"movie_name": {"type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": ["movie_name"], "type": "object"}}, "type": "function"}, {"function": {"description": "Execute a text action in an interactive environment.\\n\\nArgs:\\n----\\n    action: The environment action to perform, such as \\"go to desk 1\\".", "name": "perform_action", "parameters": {"properties": {"action": {"type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": ["action"], "type": "object"}}, "type": "function"}, {"function": {"description": "Return pharmacies de garde in Nouvelle-Calédonie.\\n\\nOriginal tool name: pharmacies_de_garde_nc.all_for_pharmacies_de_garde_nc.", "name": "pharmacies_de_garde_nc_all_for_pharmacies_de_garde_nc", "parameters": {"properties": {"security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": [], "type": "object"}}, "type": "function"}, {"function": {"description": "Return the health status of the Pharmacies de garde NC application.\\n\\nOriginal tool name: pharmacies_de_garde_nc.health_for_pharmacies_de_garde_nc.", "name": "pharmacies_de_garde_nc_health_for_pharmacies_de_garde_nc", "parameters": {"properties": {"security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}}, "required": [], "type": "object"}}, "type": "function"}, {"function": {"description": "Return a weather forecast for up to 120 hours.\\n\\nOriginal tool name: weather.get_120_hour_forecast_for_weather.", "name": "weather_get_120_hour_forecast_for_weather", "parameters": {"properties": {"hours": {"type": "string"}, "lang": {"type": "string"}, "lat": {"type": "string"}, "lon": {"type": "string"}, "security_risk": {"description": "Security risk for the action.", "enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH"], "type": "string"}, "summary": {"description": "Concise summary of what this action does.", "type": "string"}, "units": {"type": "string"}}, "required": ["lat", "lon"], "type": "object"}}, "type": "function"}]'
+
+
+class ValidationTool(ToolDefinition):
+    @classmethod
+    def create(cls, *args, **kwargs) -> list[Self]:
+        return []
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def load_env_file(path: Path) -> None:
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+def class_name(name: str) -> str:
+    parts = re.split(r"[^A-Za-z0-9]+", name)
+    text = "".join(part[:1].upper() + part[1:] for part in parts if part)
+    if not text or text[0].isdigit():
+        text = "Dataset" + text
+    return text
+
+
+def make_tool(spec: dict) -> ToolDefinition:
+    function = spec["function"]
+    name = function["name"]
+    parameters = function.get("parameters") or {"type": "object", "properties": {}}
+    action_type = Action.from_mcp_schema(f"{class_name(name)}Action", parameters)
+    tool_cls = type(f"{class_name(name)}Tool", (ValidationTool,), {"name": name})
+    return tool_cls(
+        description=function.get("description") or f"Validation tool {name}.",
+        action_type=action_type,
+        observation_type=None,
+    )
+
+
+def latest_log(log_dir: Path) -> Path:
+    logs = sorted(log_dir.glob("*.json"), key=lambda path: path.stat().st_mtime)
+    if not logs:
+        raise RuntimeError("SDK did not write a completion log")
+    return logs[-1]
+
+
+def has_tool_call(log_path: Path) -> bool:
+    data = json.loads(log_path.read_text())
+    for choice in data.get("response", {}).get("choices", []):
+        message = choice.get("message") or {}
+        if message.get("tool_calls"):
+            return True
+    return False
+
+
+def main() -> None:
+    root = repo_root()
+    load_env_file(root / ".env")
+    load_env_file(Path.home() / "work" / "agent-data-protocol" / ".env")
+    if not os.getenv("LLM_API_KEY"):
+        raise RuntimeError("LLM_API_KEY is required")
+
+    system_prompt = (root / "agents" / "openhands_sdk" / "system_prompt.txt").read_text()
+    tools = [make_tool(spec) for spec in json.loads(TOOL_SPECS_JSON)]
+    log_dir = Path(tempfile.mkdtemp(prefix=f"{DATASET_NAME}-completion-"))
+    llm = LLM(
+        model=MODEL,
+        api_key=os.getenv("LLM_API_KEY"),
+        base_url=os.getenv("LLM_BASE_URL"),
+        log_completions=True,
+        log_completions_folder=str(log_dir),
+        max_output_tokens=160,
+    )
+    prompt = (
+        f"This is an OpenHands SDK logging validation for the ADP dataset "
+        f"{DATASET_NAME}. The available tools are: {', '.join(USED_TOOL_NAMES) or TARGET_TOOL}. "
+        f"Call exactly one tool now: `{TARGET_TOOL}`. Use arguments similar to this JSON: "
+        f"{TARGET_ARGUMENTS}. Do not answer in plain text only."
+    )
+    last_log = None
+    for _ in range(2):
+        llm.completion(
+            messages=[
+                Message(role="system", content=[TextContent(text=system_prompt)]),
+                Message(role="user", content=[TextContent(text=prompt)]),
+            ],
+            tools=tools,
+            add_security_risk_prediction=True,
+            temperature=0,
+            tool_choice={"type": "function", "function": {"name": TARGET_TOOL}},
+        )
+        last_log = latest_log(log_dir)
+        if has_tool_call(last_log):
+            break
+        prompt = (
+            f"You must call the `{TARGET_TOOL}` tool exactly once for validation. "
+            f"Use arguments like: {TARGET_ARGUMENTS}."
+        )
+    assert last_log is not None
+    shutil.copyfile(last_log, Path(__file__).with_name("completion.json"))
+
+
+if __name__ == "__main__":
+    main()

@@ -492,13 +492,14 @@ def make_tool_call(
     tool_name: str,
     args: dict[str, Any],
     thought: str,
+    explicit_id: str | None = None,
 ) -> dict[str, Any]:
     enriched_args = dict(args)
     if supports_security_risk(tool_name):
         enriched_args.setdefault("security_risk", default_security_risk(tool_name, args))
     enriched_args.setdefault("summary", summary_from_content(thought, tool_name))
     return {
-        "id": tool_call_id(index, tool_name),
+        "id": explicit_id or tool_call_id(index, tool_name),
         "type": "function",
         "function": {
             "name": tool_name,
@@ -564,13 +565,20 @@ class ConversionState:
         args: dict[str, Any],
         content: str,
         reasoning_content: str | None = None,
+        explicit_id: str | None = None,
     ) -> None:
         self.add_tool(tool_name, args)
         self.call_index += 1
         summary_source = "\n\n".join(
             part for part in [content, reasoning_content] if part
         )
-        tool_call = make_tool_call(self.call_index, tool_name, args, summary_source)
+        tool_call = make_tool_call(
+            self.call_index,
+            tool_name,
+            args,
+            summary_source,
+            explicit_id=explicit_id,
+        )
         pending = {
             "id": tool_call["id"],
             "name": tool_name,
@@ -605,11 +613,24 @@ class ConversionState:
             self.messages.append(message)
         self.pending_tool_calls.append(pending)
 
-    def add_tool_result(self, content: str) -> None:
+    def add_tool_result(self, content: str, explicit_id: str | None = None) -> None:
         if not self.pending_tool_calls:
             self.add_user_message(content)
             return
-        pending = self.pending_tool_calls.pop(0)
+        if explicit_id is None:
+            pending_index = 0
+        else:
+            pending_index = next(
+                (
+                    index
+                    for index, pending_tool_call in enumerate(self.pending_tool_calls)
+                    if pending_tool_call["id"] == explicit_id
+                ),
+                None,
+            )
+            if pending_index is None:
+                raise ValueError(f"No pending tool call found for id {explicit_id!r}")
+        pending = self.pending_tool_calls.pop(pending_index)
         self.messages.append(
             {
                 "role": "tool",
@@ -659,7 +680,7 @@ class ConversionState:
 def convert_event(state: ConversionState, event: Any) -> None:
     if isinstance(event, TextObservation):
         if state.pending_tool_calls:
-            state.add_tool_result(event.content)
+            state.add_tool_result(event.content, event.tool_call_id)
         elif event.source == "agent":
             state.add_assistant_message(event.content)
         else:
@@ -669,7 +690,7 @@ def convert_event(state: ConversionState, event: Any) -> None:
     if isinstance(event, WebObservation):
         content = web_observation_to_content(event)
         if state.pending_tool_calls:
-            state.add_tool_result(content)
+            state.add_tool_result(content, event.tool_call_id)
         else:
             state.add_user_message(content)
         return
@@ -685,7 +706,7 @@ def convert_event(state: ConversionState, event: Any) -> None:
             if annotations:
                 content += "\nElements detected: " + ", ".join(annotations)
         if state.pending_tool_calls:
-            state.add_tool_result(content)
+            state.add_tool_result(content, event.tool_call_id)
         else:
             state.add_user_message(content)
         return
@@ -697,6 +718,7 @@ def convert_event(state: ConversionState, event: Any) -> None:
             args,
             action_content(event),
             event_reasoning_content(event),
+            explicit_id=event.tool_call_id,
         )
         return
 
@@ -707,6 +729,7 @@ def convert_event(state: ConversionState, event: Any) -> None:
             args,
             action_content(event),
             event_reasoning_content(event),
+            explicit_id=event.tool_call_id,
         )
         return
 
@@ -718,6 +741,7 @@ def convert_event(state: ConversionState, event: Any) -> None:
                 {"message": finish_message},
                 action_content(event),
                 event_reasoning_content(event),
+                explicit_id=event.tool_call_id,
             )
         elif legacy_tool_call := extract_legacy_tool_call(event.content):
             function_name, kwargs, thought = legacy_tool_call
@@ -732,6 +756,7 @@ def convert_event(state: ConversionState, event: Any) -> None:
                 args,
                 content,
                 event_reasoning_content(event),
+                explicit_id=event.tool_call_id,
             )
         else:
             state.close_pending_tools()

@@ -32,6 +32,20 @@ def run_converter(dataset: str, sample_name: str = "sample_std.json"):
     return [json.loads(line) for line in converter_proc.stdout.splitlines() if line]
 
 
+def run_converter_rows(rows: list[dict]):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = f"{ROOT}:{env.get('PYTHONPATH', '')}"
+    converter_proc = subprocess.run(
+        [sys.executable, str(ROOT / "agents/openhands_sdk/std_to_sft.py")],
+        input="\n".join(json.dumps(row) for row in rows),
+        text=True,
+        capture_output=True,
+        check=True,
+        env=env,
+    )
+    return [json.loads(line) for line in converter_proc.stdout.splitlines() if line]
+
+
 def get_dataset_dirs():
     return sorted(
         path.name
@@ -142,6 +156,63 @@ def test_openhands_sdk_converter_maps_followup_observation_to_tool_result():
     go_result = record["messages"][go_result_index]
     assert "On the shelf 1" in content_text(go_result)
     assert record["messages"][go_result_index + 1]["role"] == "assistant"
+
+
+def test_openhands_sdk_converter_preserves_explicit_tool_call_ids():
+    records = run_converter_rows(
+        [
+            {
+                "id": "explicit-tool-call-ids",
+                "content": [
+                    {
+                        "class_": "text_observation",
+                        "content": "Search for ADP and inspect the repo.",
+                        "source": "user",
+                    },
+                    {
+                        "class_": "api_action",
+                        "tool_call_id": "source_call_search",
+                        "function": "search",
+                        "kwargs": {"query": "agent data protocol"},
+                    },
+                    {
+                        "class_": "code_action",
+                        "tool_call_id": "source_call_shell",
+                        "language": "bash",
+                        "content": "ls",
+                        "description": None,
+                    },
+                    {
+                        "class_": "text_observation",
+                        "tool_call_id": "source_call_shell",
+                        "content": "README.md\nschema",
+                        "source": "environment",
+                    },
+                    {
+                        "class_": "text_observation",
+                        "tool_call_id": "source_call_search",
+                        "content": "ADP standardizes agent trajectories.",
+                        "source": "environment",
+                    },
+                ],
+            }
+        ]
+    )
+    record = records[0]
+
+    assert_openai_chat_record(record)
+    tool_call_ids = [
+        tool_call["id"]
+        for message in record["messages"]
+        for tool_call in message.get("tool_calls", [])
+    ]
+    tool_result_ids = [
+        message["tool_call_id"]
+        for message in record["messages"]
+        if message["role"] == "tool"
+    ]
+    assert tool_call_ids == ["source_call_search", "source_call_shell"]
+    assert tool_result_ids == ["source_call_shell", "source_call_search"]
 
 
 def test_openhands_sdk_samples_align_with_standardized_ids_when_present():
