@@ -37,7 +37,9 @@ browser_default_apis = {
 
 def check_exclude_openhands_v0_default_tools(name, sig, required, optional):
     if not all(
-        api in openhands_v0_default_tools[name]["required"] + openhands_v0_default_tools[name]["optional"]
+        api
+        in openhands_v0_default_tools[name]["required"]
+        + openhands_v0_default_tools[name]["optional"]
         for api in required
     ):
         # print(f"mismatch required arguments: {name}, {sig}", file=sys.stderr)
