@@ -133,6 +133,114 @@ def test_standardized_schema_rejects_extra_fields(sample):
     assert any(error["type"] == "extra_forbidden" for error in exc_info.value.errors())
 
 
+def test_standardized_schema_accepts_matched_tool_call_result():
+    trajectory = Trajectory(
+        id="matched-tool-result",
+        content=[
+            {
+                "class_": "api_action",
+                "tool_call_id": "call_000001",
+                "function": "search",
+                "kwargs": {"query": "agent data protocol"},
+            },
+            {
+                "class_": "text_observation",
+                "tool_call_id": "call_000001",
+                "content": "Search result text",
+                "source": "environment",
+            },
+        ],
+    )
+
+    action, observation = trajectory.content
+    assert action.tool_call_id == "call_000001"
+    assert observation.tool_call_id == "call_000001"
+
+
+def test_standardized_schema_rejects_unmatched_tool_result():
+    with pytest.raises(ValidationError, match="does not match any preceding Action"):
+        Trajectory(
+            id="unmatched-tool-result",
+            content=[
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_missing",
+                    "content": "orphaned result",
+                    "source": "environment",
+                }
+            ],
+        )
+
+
+def test_standardized_schema_rejects_duplicate_tool_call_ids():
+    with pytest.raises(ValidationError, match="Duplicate Action.tool_call_id"):
+        Trajectory(
+            id="duplicate-tool-call-id",
+            content=[
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_duplicate",
+                    "function": "search",
+                    "kwargs": {"query": "first"},
+                },
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_duplicate",
+                    "function": "search",
+                    "kwargs": {"query": "second"},
+                },
+            ],
+        )
+
+
+def test_standardized_schema_rejects_duplicate_tool_results():
+    with pytest.raises(ValidationError, match="Duplicate observation result"):
+        Trajectory(
+            id="duplicate-tool-result",
+            content=[
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_000001",
+                    "function": "search",
+                    "kwargs": {"query": "agent data protocol"},
+                },
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_000001",
+                    "content": "first result",
+                    "source": "environment",
+                },
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_000001",
+                    "content": "second result",
+                    "source": "environment",
+                },
+            ],
+        )
+
+
+def test_standardized_schema_rejects_user_source_tool_result():
+    with pytest.raises(ValidationError, match="must not use source='user'"):
+        Trajectory(
+            id="user-source-tool-result",
+            content=[
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_000001",
+                    "function": "search",
+                    "kwargs": {"query": "agent data protocol"},
+                },
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_000001",
+                    "content": "Search result text",
+                    "source": "user",
+                },
+            ],
+        )
+
+
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))
 def test_sample_standardized_against_schema(sample_path):
     samples = load_json(sample_path)
