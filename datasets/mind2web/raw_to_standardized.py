@@ -20,7 +20,7 @@ from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def fix_iframes(html_str: str) -> str:
@@ -392,7 +392,7 @@ if __name__ == "__main__":
             )
             content.extend(assistant_end_message)
 
-        standardized_data = Trajectory(
+        standardized_data = create_trajectory_with_tool_call_links(
             id=data.annotation_id,
             content=content,
             details={

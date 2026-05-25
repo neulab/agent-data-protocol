@@ -7,6 +7,7 @@ from schema.action.code import CodeAction
 from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 
@@ -70,7 +71,7 @@ for line in sys.stdin:
     raw_example = json.loads(line)
     example = convert_example(raw_example)
 
-    traj: Trajectory = Trajectory(
+    traj: Trajectory = create_trajectory_with_tool_call_links(
         id=raw_example["id"],
         content=example,
     )

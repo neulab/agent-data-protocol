@@ -7,6 +7,7 @@ from schema.action.api import ApiAction
 from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 root = "datasets/wonderbread"
@@ -51,7 +52,7 @@ def process_single_data(raw_traj: Dict) -> Dict:
     task_stamp = raw_traj["task_stamp"]
     sop = raw_traj["sop"]
 
-    traj: Trajectory = Trajectory(
+    traj: Trajectory = create_trajectory_with_tool_call_links(
         id=task_stamp,
         content=[TextObservation(content=task, source="user")],  # first message is the task
     )
@@ -71,9 +72,8 @@ def process_single_data(raw_traj: Dict) -> Dict:
                 )
                 element_type = state["tag"]
                 text = state.get("text", "")
-                xpath = state.get("xpath", None)
                 annotation = ImageAnnotation(
-                    text=text, element_type=element_type, bounding_box=bbox, xpath=xpath
+                    text=text, element_type=element_type, bounding_box=bbox
                 )
                 annotations.append(annotation)
             image_observation = ImageObservation(
@@ -133,7 +133,10 @@ def process_single_data(raw_traj: Dict) -> Dict:
         else:
             raise ValueError(f"Unknown element type: {element['type']}")
 
-    return traj.model_dump()
+    return create_trajectory_with_tool_call_links(
+        id=traj.id,
+        content=traj.content,
+    ).model_dump()
 
 
 if __name__ == "__main__":

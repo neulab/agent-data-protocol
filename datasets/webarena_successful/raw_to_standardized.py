@@ -8,7 +8,7 @@ from schema.action.api import ApiAction
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 _id2key = list(chain(SPECIAL_KEYS, ASCII_CHARSET, FREQ_UNICODE_CHARSET, ["\n"]))
 
@@ -24,7 +24,7 @@ def process_data(raw_traj):
     if model in SOURCE_BLACK_LIST:
         return None
 
-    traj = Trajectory(
+    traj = create_trajectory_with_tool_call_links(
         id=str(raw_traj["task_id"]),
         content=[TextObservation(content=task, source="user")],
     )
@@ -94,7 +94,10 @@ def process_data(raw_traj):
         else:
             raise ValueError(f"Unknown element type: {element}")
 
-    return traj.model_dump()
+    return create_trajectory_with_tool_call_links(
+        id=traj.id,
+        content=traj.content,
+    ).model_dump()
 
 
 if __name__ == "__main__":

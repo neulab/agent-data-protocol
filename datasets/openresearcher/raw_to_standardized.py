@@ -9,6 +9,7 @@ from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 
@@ -144,7 +145,7 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
     if not content:
         return None
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=f"{data.config or 'openresearcher'}_{data.split or 'train'}_{data.qid}",
         content=content,
         details={

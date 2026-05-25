@@ -52,12 +52,14 @@ def test_openhands_v0_converter_preserves_tool_roles(monkeypatch):
                 },
                 {
                     "class_": "code_action",
+                    "tool_call_id": "call_000001",
                     "language": "bash",
                     "content": "pwd",
                     "description": None,
                 },
                 {
                     "class_": "text_observation",
+                    "tool_call_id": "call_000001",
                     "content": "/workspace/project",
                     "source": "environment",
                 },
@@ -217,12 +219,14 @@ def test_openhands_v0_converter_does_not_duplicate_execution_result_prefix(monke
                 },
                 {
                     "class_": "code_action",
+                    "tool_call_id": "call_000001",
                     "language": "bash",
                     "content": "pwd",
                     "description": None,
                 },
                 {
                     "class_": "text_observation",
+                    "tool_call_id": "call_000001",
                     "content": "EXECUTION RESULT of [execute_bash]:\n/workspace",
                     "source": "environment",
                 },

@@ -9,6 +9,7 @@ from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 
@@ -394,7 +395,9 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
                 MessageAction(content="<finish> Task completed. </finish>", description=None)
             )
 
-    return Trajectory(id=trajectory_id, content=content, available_apis=available_apis)
+    return create_trajectory_with_tool_call_links(
+        id=trajectory_id, content=content, available_apis=available_apis
+    )
 
 
 # Process each line of input individually

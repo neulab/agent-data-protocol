@@ -9,6 +9,7 @@ from schema.action.action import Action
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 
@@ -200,7 +201,9 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
     if data.rollout_number is not None:
         details["rollout_number"] = data.rollout_number
 
-    return Trajectory(id=trajectory_id(data), content=content, details=details)
+    return create_trajectory_with_tool_call_links(
+        id=trajectory_id(data), content=content, details=details
+    )
 
 
 if __name__ == "__main__":

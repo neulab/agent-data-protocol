@@ -10,6 +10,7 @@ from schema_raw import SchemaRaw
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 ACTION_RE = re.compile(r"(?:^|\n)(?:Action|Act)\s*:\s*(.*)", re.IGNORECASE | re.DOTALL)
@@ -324,7 +325,7 @@ def process_data(raw_data: dict) -> Trajectory:
         if api != "perform_action" and advertised_apis:
             available_apis.append(api)
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=data.id,
         content=content,
         available_apis=ordered_unique(available_apis) or None,

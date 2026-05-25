@@ -9,7 +9,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 BASH_TOOLS = {"bash", "execute_bash", "terminal"}
 FINISH_TOOLS = {"submit", "finish"}
@@ -122,7 +122,7 @@ def process_data(data: SchemaRaw, row_number: int = 0):
     if not content or not isinstance(content[0], TextObservation):
         return None
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=data.sample_name or data.id or f"gair_davinci_dev_{row_number}",
         content=content,
         details={

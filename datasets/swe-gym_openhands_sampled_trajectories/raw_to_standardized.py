@@ -8,7 +8,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 PRIOR_INS = "2. Create a script to reproduce the error and execute it with `python <filename.py>` using the BashTool"
 NEW_INS = "2. Create a script to reproduce the error and execute it"
@@ -150,7 +150,7 @@ def process_data(data):
         )
         content.extend(assistant_end_message)
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=id,
         content=content,
         details={

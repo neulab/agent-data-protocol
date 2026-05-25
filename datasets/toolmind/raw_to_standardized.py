@@ -9,6 +9,7 @@ from schema_raw import Message, SchemaRaw
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 
@@ -119,7 +120,7 @@ def process_data(data: SchemaRaw) -> Trajectory:
         "row_index": data.row_index,
     }
     available_apis = build_available_apis(data)
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=data.id,
         content=content,
         available_apis=available_apis or None,

@@ -2,7 +2,6 @@ from typing import Any, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
@@ -72,10 +71,26 @@ class Trajectory(BaseModel):
 
         for index, item in enumerate(self.content):
             tool_call_id = getattr(item, "tool_call_id", None)
+            next_item = self.content[index + 1] if index + 1 < len(self.content) else None
+            if (
+                isinstance(item, (ApiAction, CodeAction))
+                and isinstance(next_item, Observation)
+                and tool_call_id is None
+            ):
+                raise ValueError(
+                    f"Tool action at content index {index} is followed by an "
+                    "Observation result but does not include tool_call_id"
+                )
             if tool_call_id is None:
                 continue
 
-            if isinstance(item, Action):
+            if isinstance(item, MessageAction):
+                raise ValueError(
+                    f"MessageAction.tool_call_id {tool_call_id!r} at content index "
+                    f"{index} is not allowed because MessageAction is not a tool call"
+                )
+
+            if isinstance(item, (ApiAction, CodeAction)):
                 if tool_call_id in action_indices:
                     raise ValueError(
                         f"Duplicate Action.tool_call_id {tool_call_id!r} at content "

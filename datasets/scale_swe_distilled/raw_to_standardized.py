@@ -8,7 +8,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 FUNCTION_PATTERN = re.compile(r"<function=([^>\n]+)>\s*(.*?)\s*</function>", re.DOTALL)
 PARAM_PATTERN = re.compile(r"<parameter(?:=([^>\n]+))?>(.*?)</parameter>", re.DOTALL)
@@ -131,7 +131,7 @@ def process_data(data):
     if not content:
         return None
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=data.id,
         content=content,
         details={

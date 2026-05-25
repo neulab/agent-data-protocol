@@ -7,6 +7,7 @@ from schema_raw import SchemaRaw
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 _FORMATTING_RULES_RE = re.compile(r"^.*?(?=##\s*Submission)", re.DOTALL | re.IGNORECASE)
@@ -92,7 +93,7 @@ def process_data(data: SchemaRaw) -> Trajectory | None:
             description="",
         )
     )
-    return Trajectory(id=data.instance_id, content=content)
+    return create_trajectory_with_tool_call_links(id=data.instance_id, content=content)
 
 
 if __name__ == "__main__":

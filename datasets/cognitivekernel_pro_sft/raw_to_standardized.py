@@ -13,6 +13,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 THOUGHT_CODE_RE = re.compile(
@@ -176,7 +177,7 @@ def process_record(record: SchemaRaw) -> Trajectory:
         convert_assistant_message(message, record.source_file) for message in assistant_messages
     )
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=record.id,
         content=content,
         available_apis=AVAILABLE_APIS_BY_SOURCE_FILE.get(record.source_file),

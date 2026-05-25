@@ -41,6 +41,8 @@ class HTMLToAXTree:
         return self.last_xtree
 
     def get_bid(self, id, x_path: str, chunk) -> str:
+        if self.last_obs is None:
+            return None
         html_string = flatten_dom_to_str(self.last_obs["dom_object"])
         tree = etree.HTML(html_string)
         try:
