@@ -75,7 +75,7 @@ jobs:
               'The `.pr/` directory has been automatically removed.',
             ].join('\n');
 
-            const { data: comments } = await github.rest.issues.listComments({
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
@@ -138,7 +138,7 @@ jobs:
               '> For fork PRs: Manual removal is required before merging.',
             ].join('\n');
 
-            const { data: comments } = await github.rest.issues.listComments({
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
