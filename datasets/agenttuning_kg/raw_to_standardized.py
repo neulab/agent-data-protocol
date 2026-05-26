@@ -12,7 +12,7 @@ from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def convert_system(system_regex: re.Match[str]) -> list[Observation]:
@@ -135,7 +135,8 @@ for line in sys.stdin:
     if not isinstance(content[-1], MessageAction) or "<solution>" not in content[-1].content:
         continue
 
-    user_end_message = random.choice(
+    terminal_message_rng = random.Random(str(raw_data["id"]))
+    user_end_message = terminal_message_rng.choice(
         [
             [
                 TextObservation(
@@ -165,7 +166,7 @@ for line in sys.stdin:
         ]
     )
     content.extend(user_end_message)
-    assistant_end_message = random.choice(
+    assistant_end_message = terminal_message_rng.choice(
         [
             [
                 MessageAction(
@@ -202,7 +203,7 @@ for line in sys.stdin:
     content.extend(assistant_end_message)
 
     # Standardize the data
-    standardize_data = Trajectory(
+    standardize_data = create_trajectory_with_tool_call_links(
         id=raw_data["id"],
         content=content,
     )

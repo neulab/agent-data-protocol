@@ -12,7 +12,7 @@ from schema.action.message import MessageAction
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 SCREENSHOTS_DIR = "datasets/go-browse-wa/screenshots"
 GO_BROWSE_WA_VIEWPORT_SIZE = (1280, 1440)
@@ -176,7 +176,7 @@ if __name__ == "__main__":
                 if not isinstance(traj_content[-1], MessageAction):
                     raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
                 traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
-                traj = Trajectory(
+                traj = create_trajectory_with_tool_call_links(
                     id=str(traj_id),
                     content=traj_content,
                     details={"source": "go-browse-wa"},
@@ -216,7 +216,7 @@ if __name__ == "__main__":
         if not isinstance(traj_content[-1], MessageAction):
             raise ValueError(f"trajectory did not complete: {traj_content[-1]}")
         traj_content[-1].content = f"<finish> {traj_content[-1].content} </finish>"
-        traj = Trajectory(
+        traj = create_trajectory_with_tool_call_links(
             id=str(traj_id),
             content=traj_content,
             details={"source": "go-browse-wa"},

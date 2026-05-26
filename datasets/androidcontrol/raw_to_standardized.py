@@ -12,6 +12,7 @@ from schema.action.message import MessageAction
 from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 prev_id = None
@@ -120,7 +121,7 @@ def convert_to_trajectory(data: dict[str, Any]) -> Trajectory:
             elif action["action_type"] == "wait":
                 content.append(ApiAction(function="wait", kwargs={}, description=step_inst))
     # print(content)
-    return Trajectory(id=str(data["episode_id"]), content=content)
+    return create_trajectory_with_tool_call_links(id=str(data["episode_id"]), content=content)
 
 
 for line in sys.stdin:

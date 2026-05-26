@@ -9,6 +9,7 @@ from schema_raw import SchemaRaw
 from schema.action.api import ApiAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 INPUT_ELEMENTS = [
@@ -388,7 +389,7 @@ def process_data(data: dict) -> Trajectory:
         else:
             print_error_once(f"Unhandled input element type: {get_element_type(el)}")
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=data["_id"],
         content=content,
         details={

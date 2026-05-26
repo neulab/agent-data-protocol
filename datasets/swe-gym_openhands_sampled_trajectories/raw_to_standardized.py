@@ -8,7 +8,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 PRIOR_INS = "2. Create a script to reproduce the error and execute it with `python <filename.py>` using the BashTool"
 NEW_INS = "2. Create a script to reproduce the error and execute it"
@@ -84,7 +84,8 @@ def process_data(data):
         else:
             assert False
     if not isinstance(content[-1], MessageAction) or "<finish>" not in content[-1].content:
-        user_end_message = random.choice(
+        terminal_message_rng = random.Random(str(id))
+        user_end_message = terminal_message_rng.choice(
             [
                 [
                     TextObservation(
@@ -114,7 +115,7 @@ def process_data(data):
             ]
         )
         content.extend(user_end_message)
-        assistant_end_message = random.choice(
+        assistant_end_message = terminal_message_rng.choice(
             [
                 [
                     MessageAction(
@@ -150,7 +151,7 @@ def process_data(data):
         )
         content.extend(assistant_end_message)
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=id,
         content=content,
         details={

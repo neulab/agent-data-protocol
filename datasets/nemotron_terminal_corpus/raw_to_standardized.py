@@ -6,6 +6,7 @@ from typing import List
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 THINK_BLOCK_RE = re.compile(r"<think>\s*(.*?)\s*</think>", re.DOTALL)
@@ -219,7 +220,7 @@ def process_trajectory(raw_data: dict) -> Trajectory | None:
     else:
         traj_id = f"traj_{hash(str(raw_data)) % 100000}"
 
-    return Trajectory(id=traj_id, content=content)
+    return create_trajectory_with_tool_call_links(id=traj_id, content=content)
 
 
 if __name__ == "__main__":

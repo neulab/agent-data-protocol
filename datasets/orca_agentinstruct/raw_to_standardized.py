@@ -8,7 +8,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 global errors, languages
 errors = []
@@ -73,7 +73,8 @@ for line in sys.stdin:
         and content[-1].source == "assistant"
         or isinstance(content[-1], CodeAction)
     ):
-        user_end_message = random.choice(
+        terminal_message_rng = random.Random(str(raw_data["id"]))
+        user_end_message = terminal_message_rng.choice(
             [
                 [
                     TextObservation(
@@ -103,7 +104,7 @@ for line in sys.stdin:
             ]
         )
         content.extend(user_end_message)
-        assistant_end_message = random.choice(
+        assistant_end_message = terminal_message_rng.choice(
             [
                 [
                     MessageAction(
@@ -144,7 +145,9 @@ for line in sys.stdin:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
     # Standardize the data
-    standardize_data = Trajectory(id=str(raw_data["id"]), content=content)
+    standardize_data = create_trajectory_with_tool_call_links(
+        id=str(raw_data["id"]), content=content
+    )
 
     # Print the standardized data as JSON
     print(json.dumps(standardize_data.model_dump()))

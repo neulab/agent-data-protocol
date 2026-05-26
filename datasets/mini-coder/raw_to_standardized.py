@@ -9,7 +9,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 # Remove ONLY formatting / style constraints, not termination semantics
 _FORMATTING_RULES_RE = re.compile(
@@ -149,7 +149,8 @@ def process_data(data):
         print(f"not COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT: {content[-1]}", file=sys.stderr)
         return None
     # Add success message from user
-    user_end_message = random.choice(
+    terminal_message_rng = random.Random(str(data.id))
+    user_end_message = terminal_message_rng.choice(
         [
             [
                 TextObservation(
@@ -181,7 +182,7 @@ def process_data(data):
     content.extend(user_end_message)
 
     # Add assistant end message
-    assistant_end_message = random.choice(
+    assistant_end_message = terminal_message_rng.choice(
         [
             [
                 MessageAction(
@@ -216,7 +217,7 @@ def process_data(data):
         ]
     )
     content.extend(assistant_end_message)
-    return Trajectory(id=data.id, content=content)
+    return create_trajectory_with_tool_call_links(id=data.id, content=content)
 
 
 if __name__ == "__main__":

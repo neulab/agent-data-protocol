@@ -7,6 +7,7 @@ from datasets.screenagent.schema_raw import SchemaRaw, ScreenAgentItem
 from schema.action.message import MessageAction
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 
@@ -50,7 +51,7 @@ def process_data(data: List[ScreenAgentItem], keep_all: bool = False) -> List[Tr
         )
 
         # Create a trajectory
-        trajectory = Trajectory(
+        trajectory = create_trajectory_with_tool_call_links(
             id=f"{trajectory_data.session_id}_{i}",
             content=content,
         )

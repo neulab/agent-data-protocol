@@ -8,7 +8,11 @@ import pytest
 from pydantic import ValidationError
 
 from schema.action.api import ApiAction
+from schema.action.code import CodeAction
 from schema.observation.image import ImageObservation
+from schema.observation.text import TextObservation
+from schema.observation.web import WebObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
@@ -131,6 +135,255 @@ def test_standardized_schema_rejects_extra_fields(sample):
     # error list, so extra_forbidden errors on nested Action/Observation models
     # surface here even though they originate inside the `content` union.
     assert any(error["type"] == "extra_forbidden" for error in exc_info.value.errors())
+
+
+def test_standardized_schema_accepts_matched_tool_call_result():
+    trajectory = Trajectory(
+        id="matched-tool-result",
+        content=[
+            {
+                "class_": "api_action",
+                "tool_call_id": "call_000001",
+                "function": "search",
+                "kwargs": {"query": "agent data protocol"},
+            },
+            {
+                "class_": "text_observation",
+                "tool_call_id": "call_000001",
+                "content": "Search result text",
+                "source": "environment",
+            },
+        ],
+    )
+
+    action, observation = trajectory.content
+    assert action.tool_call_id == "call_000001"
+    assert observation.tool_call_id == "call_000001"
+
+
+@pytest.mark.parametrize(
+    ("action", "observation", "expected_tool_call_id"),
+    [
+        (
+            ApiAction(function="search", kwargs={"query": "agent data protocol"}),
+            TextObservation(content="Search result text", source="user"),
+            "call_000001",
+        ),
+        (
+            CodeAction(language="bash", content="pwd", description=None),
+            TextObservation(content="/workspace/project", source="environment"),
+            "call_000001",
+        ),
+        (
+            ApiAction(function="screenshot", kwargs={}),
+            ImageObservation(content="screen.png", source="user", annotations=None),
+            "call_000001",
+        ),
+        (
+            ApiAction(function="observe", kwargs={}),
+            WebObservation(
+                html="<html></html>",
+                axtree=None,
+                url="https://example.com",
+                image_observation=None,
+                viewport_size=None,
+            ),
+            "call_000001",
+        ),
+        (
+            ApiAction(
+                tool_call_id="call_from_both",
+                function="search",
+                kwargs={"query": "agent data protocol"},
+            ),
+            TextObservation.model_construct(
+                tool_call_id="call_from_both",
+                content="Search result text",
+                source="user",
+            ),
+            "call_from_both",
+        ),
+        (
+            ApiAction(
+                tool_call_id="call_from_action",
+                function="search",
+                kwargs={"query": "agent data protocol"},
+            ),
+            TextObservation(content="Search result text", source="environment"),
+            "call_from_action",
+        ),
+        (
+            ApiAction(function="search", kwargs={"query": "agent data protocol"}),
+            TextObservation(
+                tool_call_id="call_from_observation",
+                content="Search result text",
+                source="environment",
+            ),
+            "call_from_observation",
+        ),
+    ],
+)
+def test_raw_converter_helper_backfills_adjacent_tool_call_result(
+    action, observation, expected_tool_call_id
+):
+    trajectory = create_trajectory_with_tool_call_links(
+        id="backfilled-tool-result",
+        content=[action, observation],
+    )
+
+    action, observation = trajectory.content
+    assert action.tool_call_id == expected_tool_call_id
+    assert observation.tool_call_id == expected_tool_call_id
+    if isinstance(observation, (TextObservation, ImageObservation)):
+        assert observation.source == "environment"
+
+
+def test_standardized_schema_rejects_tool_call_id_on_message_action():
+    with pytest.raises(ValidationError, match="MessageAction.tool_call_id"):
+        Trajectory(
+            id="message-action-tool-call-id",
+            content=[
+                {
+                    "class_": "message_action",
+                    "tool_call_id": "call_message",
+                    "content": "Done.",
+                }
+            ],
+        )
+
+
+def test_standardized_schema_rejects_missing_tool_call_id_for_tool_result():
+    with pytest.raises(ValidationError, match="does not include tool_call_id"):
+        Trajectory(
+            id="missing-tool-call-id",
+            content=[
+                {
+                    "class_": "api_action",
+                    "function": "search",
+                    "kwargs": {"query": "agent data protocol"},
+                },
+                {
+                    "class_": "text_observation",
+                    "content": "Search result text",
+                    "source": "environment",
+                },
+            ],
+        )
+
+
+def test_standardized_schema_rejects_unmatched_tool_result():
+    with pytest.raises(ValidationError, match="does not match any preceding Action"):
+        Trajectory(
+            id="unmatched-tool-result",
+            content=[
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_missing",
+                    "content": "orphaned result",
+                    "source": "environment",
+                }
+            ],
+        )
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        [
+            {
+                "class_": "api_action",
+                "tool_call_id": "call_without_result",
+                "function": "search",
+                "kwargs": {"query": "agent data protocol"},
+            }
+        ],
+        [
+            {
+                "class_": "api_action",
+                "tool_call_id": "call_without_result",
+                "function": "search",
+                "kwargs": {"query": "agent data protocol"},
+            },
+            {
+                "class_": "text_observation",
+                "content": "Search result text",
+                "source": "environment",
+            },
+        ],
+    ],
+)
+def test_standardized_schema_rejects_unmatched_tool_call(content):
+    with pytest.raises(ValidationError, match="does not have a matching Observation"):
+        Trajectory(id="unmatched-tool-call", content=content)
+
+
+def test_standardized_schema_rejects_duplicate_tool_call_ids():
+    with pytest.raises(ValidationError, match="Duplicate Action.tool_call_id"):
+        Trajectory(
+            id="duplicate-tool-call-id",
+            content=[
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_duplicate",
+                    "function": "search",
+                    "kwargs": {"query": "first"},
+                },
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_duplicate",
+                    "function": "search",
+                    "kwargs": {"query": "second"},
+                },
+            ],
+        )
+
+
+def test_standardized_schema_rejects_duplicate_tool_results():
+    with pytest.raises(ValidationError, match="Duplicate observation result"):
+        Trajectory(
+            id="duplicate-tool-result",
+            content=[
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_000001",
+                    "function": "search",
+                    "kwargs": {"query": "agent data protocol"},
+                },
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_000001",
+                    "content": "first result",
+                    "source": "environment",
+                },
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_000001",
+                    "content": "second result",
+                    "source": "environment",
+                },
+            ],
+        )
+
+
+def test_standardized_schema_rejects_user_source_tool_result():
+    with pytest.raises(ValidationError, match="must not use source='user'"):
+        Trajectory(
+            id="user-source-tool-result",
+            content=[
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_000001",
+                    "function": "search",
+                    "kwargs": {"query": "agent data protocol"},
+                },
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_000001",
+                    "content": "Search result text",
+                    "source": "user",
+                },
+            ],
+        )
 
 
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))

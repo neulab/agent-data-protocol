@@ -9,7 +9,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def convert_step(step) -> list:
@@ -105,7 +105,8 @@ def process_data(data):
     # Only keep successful trajectories
     if not isinstance(content[-1], ApiAction) or content[-1].function != "submit":
         return None
-    user_end_message = random.choice(
+    terminal_message_rng = random.Random(str(data.id))
+    user_end_message = terminal_message_rng.choice(
         [
             [
                 TextObservation(
@@ -135,7 +136,7 @@ def process_data(data):
         ]
     )
     content.extend(user_end_message)
-    assistant_end_message = random.choice(
+    assistant_end_message = terminal_message_rng.choice(
         [
             [
                 MessageAction(
@@ -170,7 +171,7 @@ def process_data(data):
         ]
     )
     content.extend(assistant_end_message)
-    return Trajectory(id=data.id, content=content)
+    return create_trajectory_with_tool_call_links(id=data.id, content=content)
 
 
 if __name__ == "__main__":

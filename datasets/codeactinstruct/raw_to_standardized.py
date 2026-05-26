@@ -8,7 +8,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 TOOL_DESCRIPTION = "Tool function available (already imported in <execute> environment):"
 WARNING_MSG = "Observation:\nI don't understand your input. \nIf you want to execute code, please use <execute> YOUR_CODE_HERE </execute>.\nIf you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>.\nFor example: The answer to the question is <solution> 42 </solution>."
@@ -115,7 +115,8 @@ for line in sys.stdin:
     if (isinstance(content[-1], TextObservation) and content[-1].source == "agent") or isinstance(
         content[-1], CodeAction
     ):
-        user_end_message = random.choice(
+        terminal_message_rng = random.Random(str(raw_data["id"]))
+        user_end_message = terminal_message_rng.choice(
             [
                 [
                     TextObservation(
@@ -145,7 +146,7 @@ for line in sys.stdin:
             ]
         )
         content.extend(user_end_message)
-        assistant_end_message = random.choice(
+        assistant_end_message = terminal_message_rng.choice(
             [
                 [
                     MessageAction(
@@ -185,7 +186,7 @@ for line in sys.stdin:
     if isinstance(content[-1], MessageAction) and "<finish>" not in content[-1].content:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
-    traj = Trajectory(
+    traj = create_trajectory_with_tool_call_links(
         id=raw_data["id"],
         content=content,
     )

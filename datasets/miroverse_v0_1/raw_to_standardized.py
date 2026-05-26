@@ -13,7 +13,7 @@ from schema_raw import SchemaRaw
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 MCP_CALL_RE = re.compile(r"<use_mcp_tool>\s*(.*?)\s*</use_mcp_tool>", re.DOTALL)
 TAG_RE_TEMPLATE = r"<{tag}>\s*(.*?)\s*</{tag}>"
@@ -158,7 +158,7 @@ for line in sys.stdin:
     seen: set[str] = set()
     available_apis = [n for n in available_apis if not (n in seen or seen.add(n))]
 
-    trajectory = Trajectory(
+    trajectory = create_trajectory_with_tool_call_links(
         id=data.id or f"{data.split or 'miroverse'}-unknown",
         content=content,
         available_apis=available_apis or None,

@@ -7,6 +7,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
 OSC_SEQUENCE = re.compile(r"\x1b\][^\x07]*(?:\x07|\x1b\\)")
@@ -123,7 +124,7 @@ def process_raw_data(raw_data: dict) -> Trajectory:
     if isinstance(content[-1], MessageAction) and "<solution>" in content[-1].content:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=raw_data["id"],
         content=content,
     )

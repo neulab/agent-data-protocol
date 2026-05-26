@@ -10,7 +10,7 @@ from schema.action.message import MessageAction
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 DOWNLOAD_INSTRUCTIONS = """
     # Please download the raw dumps first:
@@ -76,17 +76,22 @@ def convert_step(
                 .as_posix()
             )
             image_observation = ImageObservation(content=img_path, source="environment")
+        html = step.action.get("element_html") or ""
+        axtree = ""
+        if step.state.page:
+            page_path = WEBLINX_DUMP / "demonstrations" / shortcode / "pages" / step.state.page
+            if page_path.exists():
+                html = page_path.read_text()
+                axtree = None
         web_observation = WebObservation(
-            html=(
-                WEBLINX_DUMP / "demonstrations" / shortcode / "pages" / step.state.page
-            ).read_text(),
+            html=html,
             url=args["metadata"]["url"],
             viewport_size=[
                 args["metadata"]["viewportWidth"],
                 args["metadata"]["viewportHeight"],
             ],
             image_observation=image_observation,
-            axtree=None,
+            axtree=axtree,
         )
         if step.action["intent"] == "scroll":
             return [
@@ -145,7 +150,7 @@ def process_data(raw_data_list: List[Dict]) -> List[Dict]:
         for step in data.data:
             content.extend(convert_step(step, data.shortcode))
 
-        standardized_data = Trajectory(
+        standardized_data = create_trajectory_with_tool_call_links(
             id=data.shortcode,
             content=content,
             details={
@@ -218,7 +223,7 @@ def process_single_data(raw_data: Dict) -> Dict:
     for step in data.data:
         content.extend(convert_step(step, data.shortcode))
 
-    standardized_data = Trajectory(
+    standardized_data = create_trajectory_with_tool_call_links(
         id=data.shortcode,
         content=content,
         details={
@@ -230,27 +235,22 @@ def process_single_data(raw_data: Dict) -> Dict:
 
 
 if __name__ == "__main__":
-    # Check if WebLINX-full directory exists
-    if not WEBLINX_DUMP.is_dir():
-        print(
-            f"Warning: {WEBLINX_DUMP} directory not found. Using sample data instead.",
-            file=sys.stderr,
-        )
-        print(f"{DOWNLOAD_INSTRUCTIONS}", file=sys.stderr)
-        # Create a sample standardized trajectory for testing
-        standardized_trajectories = create_sample_std()
-
-        # Print the standardized data as JSONL (one JSON object per line)
-        for traj in standardized_trajectories:
-            print(json.dumps(traj))
-    else:
-        # Process each line of input individually
-        for line in sys.stdin:
+    input_lines = list(sys.stdin)
+    if input_lines:
+        for line in input_lines:
             raw_data = json.loads(line)
             standardized_data = process_single_data(raw_data)
-
-            # Print the standardized data as JSON
             print(json.dumps(standardized_data))
+    else:
+        if not WEBLINX_DUMP.is_dir():
+            print(
+                f"Warning: {WEBLINX_DUMP} directory not found. Using sample data instead.",
+                file=sys.stderr,
+            )
+            print(f"{DOWNLOAD_INSTRUCTIONS}", file=sys.stderr)
+            standardized_trajectories = create_sample_std()
+            for traj in standardized_trajectories:
+                print(json.dumps(traj))
 
-        if intents_skipped:
-            print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)
+    if intents_skipped:
+        print("intents skipped: " + ", ".join(intents_skipped), file=sys.stderr)

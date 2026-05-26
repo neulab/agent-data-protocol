@@ -8,7 +8,7 @@ from schema.action.api import ApiAction
 from schema.action.message import MessageAction
 from schema.observation.image import BoundingBox, ImageAnnotation, ImageObservation
 from schema.observation.observation import Observation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def image_observation_path(image_reference: str) -> str:
@@ -97,7 +97,7 @@ def process_episode(episode_data: List[Dict]) -> Dict:
         else:
             raise ValueError(f"Unknown action type: {data['results/action_type']}")
 
-    traj = Trajectory(id=episode_id, content=content)
+    traj = create_trajectory_with_tool_call_links(id=episode_id, content=content)
     return traj.model_dump()
 
 

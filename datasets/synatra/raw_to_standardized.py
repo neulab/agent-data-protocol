@@ -7,7 +7,7 @@ from trajectory import Trajectory as synatra_trajectory
 from schema.action.api import ApiAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 def convert_step(step: synatra_trajectory) -> tuple[WebObservation, ApiAction]:
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
         content.extend(convert_step(data))
 
-        standardized_data = Trajectory(
+        standardized_data = create_trajectory_with_tool_call_links(
             id=str(idx),
             content=content,
             details={

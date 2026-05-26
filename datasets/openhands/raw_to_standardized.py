@@ -17,7 +17,7 @@ from schema.observation.image import ImageObservation
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from schema.tool_call_links import create_trajectory_with_tool_call_links
 
 
 # click('48', 'example with "quotes" and, a comma', 10, button='middle', modifiers=['Shift', 'Alt'])
@@ -79,7 +79,6 @@ def process_data(data, keep_all=False):
                     _html = markdown.markdown(item.content)
                 content.append(
                     WebObservation(
-                        source=map_source(item.source),
                         url=item.extras.url,
                         html=_html,
                         axtree=None
@@ -454,7 +453,8 @@ def process_data(data, keep_all=False):
     if not isinstance(content[0], Observation):
         return None
     # Handle Finish Message
-    user_end_message = random.choice(
+    terminal_message_rng = random.Random(str(data.id))
+    user_end_message = terminal_message_rng.choice(
         [
             "Congratulations! You have successfully solved the task.",
             "Your solution has been verified as correct. ",
@@ -463,7 +463,7 @@ def process_data(data, keep_all=False):
             "Task completed successfully.",
         ]
     )
-    assistant_end_message = random.choice(
+    assistant_end_message = terminal_message_rng.choice(
         [
             "<finish> I have successfully completed the task. </finish>",
             "<finish> I did it! The task is now complete. </finish>",
@@ -501,7 +501,7 @@ def process_data(data, keep_all=False):
             ),
         )
 
-    return Trajectory(
+    return create_trajectory_with_tool_call_links(
         id=data.id,
         content=content,
         details={
