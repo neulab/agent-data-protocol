@@ -105,7 +105,8 @@ def process_data(data):
     # Only keep successful trajectories
     if not isinstance(content[-1], ApiAction) or content[-1].function != "submit":
         return None
-    user_end_message = random.choice(
+    terminal_message_rng = random.Random(str(data.id))
+    user_end_message = terminal_message_rng.choice(
         [
             [
                 TextObservation(
@@ -135,7 +136,7 @@ def process_data(data):
         ]
     )
     content.extend(user_end_message)
-    assistant_end_message = random.choice(
+    assistant_end_message = terminal_message_rng.choice(
         [
             [
                 MessageAction(

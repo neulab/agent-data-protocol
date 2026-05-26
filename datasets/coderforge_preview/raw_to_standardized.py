@@ -84,7 +84,8 @@ def process_data(data):
         else:
             assert False
     if not isinstance(content[-1], MessageAction) or "<finish>" not in content[-1].content:
-        user_end_message = random.choice(
+        terminal_message_rng = random.Random(str(id))
+        user_end_message = terminal_message_rng.choice(
             [
                 [
                     TextObservation(
@@ -114,7 +115,7 @@ def process_data(data):
             ]
         )
         content.extend(user_end_message)
-        assistant_end_message = random.choice(
+        assistant_end_message = terminal_message_rng.choice(
             [
                 [
                     MessageAction(

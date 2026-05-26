@@ -214,7 +214,8 @@ for line in sys.stdin:
     if (isinstance(content[-1], TextObservation) and content[-1].source == "agent") or isinstance(
         content[-1], ApiAction
     ):
-        user_end_message = random.choice(
+        terminal_message_rng = random.Random(str(id))
+        user_end_message = terminal_message_rng.choice(
             [
                 [
                     TextObservation(
@@ -244,7 +245,7 @@ for line in sys.stdin:
             ]
         )
         content.extend(user_end_message)
-        assistant_end_message = random.choice(
+        assistant_end_message = terminal_message_rng.choice(
             [
                 [
                     MessageAction(
