@@ -52,9 +52,7 @@ class OpenAIFunctionSpec(BaseModel):
 
     name: str
     description: str | None = None
-    parameters: dict[str, Any] = Field(
-        default_factory=lambda: {"type": "object", "properties": {}}
-    )
+    parameters: dict[str, Any] = Field(default_factory=lambda: {"type": "object", "properties": {}})
 
 
 class OpenAIToolSpec(BaseModel):
@@ -190,9 +188,12 @@ def split_docstring(docstring: str) -> tuple[str, dict[str, str]]:
 
 def json_schema_from_type(py_type: Any) -> dict[str, Any]:
     try:
-        return TypeAdapter(py_type).json_schema()
+        schema = TypeAdapter(py_type).json_schema()
     except Exception:
         return {"type": "string"}
+    if isinstance(schema, dict):
+        return schema
+    return {"type": "string"}
 
 
 def openai_tool_from_function(function: Any) -> dict[str, Any]:
@@ -254,7 +255,9 @@ def _format_signature(name: str, required: list[str], optional: list[str]) -> st
 def infer_metadata_usage(trajectories: list[Any]) -> tuple[set[str], bool, set[str]]:
     code_languages: set[str] = set()
     has_web_observation = any(
-        isinstance(item, WebObservation) for trajectory in trajectories for item in trajectory.content
+        isinstance(item, WebObservation)
+        for trajectory in trajectories
+        for item in trajectory.content
     )
     browser_enabled = has_web_observation
     api_functions: set[str] = set()

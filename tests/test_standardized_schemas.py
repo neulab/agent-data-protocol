@@ -530,9 +530,7 @@ def test_sample_standardized_against_schema(sample_path):
                         browser_context=metadata.browser_enabled,
                     )
                 }
-                missing_used_tools = sorted(
-                    used_custom_tools - set(traj.available_custom_tools)
-                )
+                missing_used_tools = sorted(used_custom_tools - set(traj.available_custom_tools))
                 assert not missing_used_tools, (
                     f"ApiAction functions are missing from available_custom_tools in "
                     f"{sample_path} sample {sample_id}: {missing_used_tools}"

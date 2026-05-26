@@ -151,7 +151,7 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.5.0",
+  "schema_version": "1.4.0",
   "id": "example_trajectory_001",
   "available_code_languages": ["bash"],
   "content": [
@@ -205,7 +205,7 @@ the same `tool_call_id` on both records:
 - In schema version 1.4.0 and later, trajectories with code actions should
   populate `available_code_languages` with the exact `CodeAction.language`
   values used by the trajectory.
-- In schema version 1.5.0 and later, dataset-level `metadata.json` replaces
+- In schema version 1.4.0 and later, dataset-level `metadata.json` replaces
   `api.py` as the canonical declaration for custom tools and dataset-level
   code/browser capabilities. The per-trajectory API availability field is named
   `available_custom_tools`.
