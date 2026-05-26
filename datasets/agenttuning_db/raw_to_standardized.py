@@ -1,3 +1,4 @@
+import ast
 import json
 import re
 import sys
@@ -8,6 +9,41 @@ from schema.action.message import MessageAction
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.tool_call_links import create_trajectory_with_tool_call_links
+from schema.trajectory import Trajectory
+
+SQL_STATEMENT_RE = re.compile(
+    r"^\s*(?:SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE|REPLACE|WITH)\b",
+    re.IGNORECASE,
+)
+
+
+def parse_final_answer(answer: str) -> object:
+    try:
+        return json.loads(answer)
+    except json.JSONDecodeError:
+        return ast.literal_eval(answer)
+
+
+def extract_sql_answer(answer: str) -> str | None:
+    try:
+        parsed_answer = parse_final_answer(answer)
+    except (SyntaxError, ValueError):
+        return None
+
+    if isinstance(parsed_answer, str):
+        candidates = [parsed_answer]
+    elif isinstance(parsed_answer, list):
+        candidates = parsed_answer
+    else:
+        return None
+
+    if len(candidates) != 1 or not isinstance(candidates[0], str):
+        return None
+
+    sql = candidates[0].strip()
+    if SQL_STATEMENT_RE.match(sql):
+        return sql
+    return None
 
 
 def convert_system(system_regex: re.Match[str]) -> list[Observation]:
@@ -55,6 +91,15 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
             ),
         ]
     elif sql_solution_regex:
+        sql_answer = extract_sql_answer(sql_solution_regex.group(2))
+        if sql_answer is not None:
+            return [
+                CodeAction(
+                    language="mysql",
+                    content=sql_answer,
+                    description=sql_solution_regex.group(1),
+                ),
+            ]
         return [
             MessageAction(
                 content=f"<solution> {sql_solution_regex.group(2)} </solution>",
@@ -89,8 +134,7 @@ def convert_step(step: dict[str, str]) -> list[Action | Observation]:
         ]
 
 
-for line in sys.stdin:
-    raw_data = json.loads(line)
+def convert_trajectory(raw_data: dict) -> Trajectory:
     content = []
 
     for step in raw_data["conversations"]:
@@ -100,15 +144,18 @@ for line in sys.stdin:
     if isinstance(content[-1], MessageAction) and "<finish>" not in content[-1].content:
         content[-1].content = f"<finish> {content[-1].content} </finish>"
 
-    # Handle finish actions for code actions: Should not have a code action without an observation, skip
-    if isinstance(content[-1], CodeAction):
-        continue
-
-    # Standardize the data
-    standardize_data = create_trajectory_with_tool_call_links(
+    return create_trajectory_with_tool_call_links(
         id=raw_data["id"],
         content=content,
     )
 
-    # Print the standardized data
-    print(standardize_data.model_dump_json())
+
+def main() -> None:
+    for line in sys.stdin:
+        raw_data = json.loads(line)
+        standardize_data = convert_trajectory(raw_data)
+        print(standardize_data.model_dump_json(exclude_none=True))
+
+
+if __name__ == "__main__":
+    main()

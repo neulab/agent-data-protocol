@@ -149,7 +149,8 @@ def process_data(data):
         print(f"not COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT: {content[-1]}", file=sys.stderr)
         return None
     # Add success message from user
-    user_end_message = random.choice(
+    terminal_message_rng = random.Random(str(data.id))
+    user_end_message = terminal_message_rng.choice(
         [
             [
                 TextObservation(
@@ -181,7 +182,7 @@ def process_data(data):
     content.extend(user_end_message)
 
     # Add assistant end message
-    assistant_end_message = random.choice(
+    assistant_end_message = terminal_message_rng.choice(
         [
             [
                 MessageAction(

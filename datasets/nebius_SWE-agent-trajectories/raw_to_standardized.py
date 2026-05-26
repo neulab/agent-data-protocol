@@ -93,7 +93,8 @@ def process_data(data):
 
     # Handle finish action
     if isinstance(content[-1], ApiAction) or isinstance(content[-1], CodeAction):
-        user_end_message = random.choice(
+        terminal_message_rng = random.Random(str(data.instance_id))
+        user_end_message = terminal_message_rng.choice(
             [
                 [
                     TextObservation(
@@ -123,7 +124,7 @@ def process_data(data):
             ]
         )
         content.extend(user_end_message)
-        assistant_end_message = random.choice(
+        assistant_end_message = terminal_message_rng.choice(
             [
                 [
                     MessageAction(

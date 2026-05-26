@@ -126,7 +126,8 @@ for line in sys.stdin:
     if not isinstance(content[-1], MessageAction) or "<solution>" not in content[-1].content:
         continue
 
-    user_end_message = random.choice(
+    terminal_message_rng = random.Random(str(raw_data["id"]))
+    user_end_message = terminal_message_rng.choice(
         [
             [
                 TextObservation(
@@ -156,7 +157,7 @@ for line in sys.stdin:
         ]
     )
     content.extend(user_end_message)
-    assistant_end_message = random.choice(
+    assistant_end_message = terminal_message_rng.choice(
         [
             [
                 MessageAction(
