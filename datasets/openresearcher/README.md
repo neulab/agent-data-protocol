@@ -18,7 +18,7 @@ The Hugging Face dataset is organized into seed configurations (`seed_42` throug
 
 - Raw `developer` and first `user` messages are combined into an initial `TextObservation` with `source="user"`.
 - Assistant analysis text is stored as the `description` of the following browser `ApiAction` when possible.
-- Assistant code messages addressed to `browser.search`, `browser.open`, and `browser.find` become `ApiAction` events using the dataset-local API signatures.
+- Assistant code messages addressed to `browser.search`, `browser.open`, and `browser.find` become `ApiAction` events using the dataset metadata tool signatures.
 - Raw browser `tool` messages that include a rendered URL become `WebObservation` events; fetch errors and non-browser tool outputs remain `TextObservation(source="environment")` events.
 - Assistant final-channel messages become `MessageAction` finish events.
 

@@ -1,0 +1,91 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files with a custom editing tool.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "Editor command. Allowed values include view, create, str_replace, insert, and undo_edit."
+            },
+            "path": {
+              "type": "string",
+              "description": "Absolute path to a file or directory."
+            },
+            "file_text": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "File content for create commands."
+            },
+            "old_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact string to replace for str_replace commands."
+            },
+            "new_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Replacement or inserted string."
+            },
+            "insert_line": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Line number after which to insert new_str."
+            },
+            "view_range": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional line range to view."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

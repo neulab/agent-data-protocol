@@ -132,228 +132,19 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "finish",
-          "description": "Signals completion of the current task or conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "message": {
-                "type": "string",
-                "description": "Final message to send to the user."
-              }
-            },
-            "required": [
-              "message"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "perform_action",
-          "description": "Execute a text action in an interactive environment.\n\nArgs:\n----\n    action: The environment action to perform, such as \"go to desk 1\".",
+          "description": "Execute a text action in an interactive environment.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "action": {
-                "type": "string"
+                "type": "string",
+                "description": "The environment action to perform, such as \"go to desk 1\"."
               }
             },
+            "additionalProperties": false,
             "required": [
               "action"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }
@@ -1025,228 +816,19 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "finish",
-          "description": "Signals completion of the current task or conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "message": {
-                "type": "string",
-                "description": "Final message to send to the user."
-              }
-            },
-            "required": [
-              "message"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "perform_action",
-          "description": "Execute a text action in an interactive environment.\n\nArgs:\n----\n    action: The environment action to perform, such as \"go to desk 1\".",
+          "description": "Execute a text action in an interactive environment.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "action": {
-                "type": "string"
+                "type": "string",
+                "description": "The environment action to perform, such as \"go to desk 1\"."
               }
             },
+            "additionalProperties": false,
             "required": [
               "action"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }
@@ -1344,66 +926,28 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "check_valid_actions",
+          "description": "Get supported actions for the current tool.",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_movie_alternative_titles",
+          "description": "Get alternative titles for a movie by ID.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
+              "movie_id": {}
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "movie_id"
             ]
           }
         }
@@ -1411,22 +955,67 @@
       {
         "type": "function",
         "function": {
-          "name": "finish",
-          "description": "Signals completion of the current task or conversation.",
+          "name": "get_movie_cast",
+          "description": "Retrieve the top cast members from a movie by its ID.",
           "parameters": {
             "type": "object",
             "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "message": {
-                "type": "string",
-                "description": "Final message to send to the user."
-              }
+              "movie_id": {}
             },
+            "additionalProperties": false,
             "required": [
-              "message"
+              "movie_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_movie_crew",
+          "description": "Retrieve crew members from a movie by its ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "movie_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "movie_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_movie_details",
+          "description": "Get detailed information about a movie by ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "movie_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "movie_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_movie_keywords",
+          "description": "Get the keywords associated with a movie by ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "movie_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "movie_id"
             ]
           }
         }
@@ -1439,26 +1028,113 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "movie_id": {
-                "type": "string"
-              }
+              "movie_id": {}
             },
+            "additionalProperties": false,
             "required": [
               "movie_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_movie_production_countries",
+          "description": "Get the production countries of a movie by its ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "movie_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "movie_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_movie_translation",
+          "description": "Get description translations for a movie by ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "movie_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "movie_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_person_cast",
+          "description": "Retrieve movie cast roles for a person by their ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "person_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "person_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_person_crew",
+          "description": "Retrieve movie crew roles for a person by their ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "person_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "person_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_person_details",
+          "description": "Get detailed information about a person by ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "person_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "person_id"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_person_external_ids",
+          "description": "Get the external IDs for a person by ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "person_id": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "person_id"
             ]
           }
         }
@@ -1471,24 +1147,9 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "movie_name": {
-                "type": "string"
-              }
+              "movie_name": {}
             },
+            "additionalProperties": false,
             "required": [
               "movie_name"
             ]
@@ -1498,106 +1159,16 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "get_search_person",
+          "description": "Search for a person by name.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
+              "person_name": {}
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
+              "person_name"
             ]
           }
         }
@@ -1660,238 +1231,18 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "finish",
-          "description": "Signals completion of the current task or conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "message": {
-                "type": "string",
-                "description": "Final message to send to the user."
-              }
-            },
-            "required": [
-              "message"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "weather_get_120_hour_forecast_for_weather",
           "description": "Return a weather forecast for up to 120 hours.\n\nOriginal tool name: weather.get_120_hour_forecast_for_weather.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "lat": {
-                "type": "string"
-              },
-              "lon": {
-                "type": "string"
-              },
-              "lang": {
-                "type": "string"
-              },
-              "hours": {
-                "type": "string"
-              },
-              "units": {
-                "type": "string"
-              }
+              "lat": {},
+              "lon": {},
+              "lang": {},
+              "hours": {},
+              "units": {}
             },
+            "additionalProperties": false,
             "required": [
               "lat",
               "lon"
@@ -1923,7 +1274,7 @@
         "content": [
           {
             "type": "text",
-            "text": "I want to check the health status of the Pharmacies de garde NC application. Could you please provide me with the current status? Additionally, I need a list of all the pharmacies de garde in Nouvelle-Calédonie.\nBegin!"
+            "text": "I want to check the health status of the Pharmacies de garde NC application. Could you please provide me with the current status? Additionally, I need a list of all the pharmacies de garde in Nouvelle-Cal\u00e9donie.\nBegin!"
           }
         ]
       },
@@ -1964,7 +1315,7 @@
             }
           }
         ],
-        "reasoning_content": "Based on the user's request to check the health status of the Pharmacies de garde NC application and retrieve a list of all the pharmacies de garde in Nouvelle-Calédonie, I identified the need to call the \"health_for_pharmacies_de_garde_nc\" function to retrieve the current status. By making this function call, I will be able to gather information about the health of the application, ensuring that it is functioning properly or if there are any issues. Additionally, I will proceed to call the \"all_for_pharmacies_de_garde_nc\" function to obtain the complete list of pharmacies de garde in Nouvelle-Calédonie, meeting the user's requirements effectively and providing them with the necessary information. At this step, I am going to execute pharmacies_de_garde_nc.all_for_pharmacies_de_garde_nc. To represent this tool and its parameters using a Python dictionary, it would look like this:"
+        "reasoning_content": "Based on the user's request to check the health status of the Pharmacies de garde NC application and retrieve a list of all the pharmacies de garde in Nouvelle-Cal\u00e9donie, I identified the need to call the \"health_for_pharmacies_de_garde_nc\" function to retrieve the current status. By making this function call, I will be able to gather information about the health of the application, ensuring that it is functioning properly or if there are any issues. Additionally, I will proceed to call the \"all_for_pharmacies_de_garde_nc\" function to obtain the complete list of pharmacies de garde in Nouvelle-Cal\u00e9donie, meeting the user's requirements effectively and providing them with the necessary information. At this step, I am going to execute pharmacies_de_garde_nc.all_for_pharmacies_de_garde_nc. To represent this tool and its parameters using a Python dictionary, it would look like this:"
       },
       {
         "role": "tool",
@@ -1982,7 +1333,7 @@
         "content": [
           {
             "type": "text",
-            "text": "The current status of the Pharmacies de garde NC application is \"UP\". There are no reported checks or issues at the moment.\n\nHere is a list of all the pharmacies de garde in Nouvelle-Calédonie:\n\n- Baie (Pharmacie) - Next date: 2023-07-08\n- Robinson (Pharmacie) - Next date: 2023-07-08\n- DANNER Delphine (Médecin) - Next date: 2023-07-08\n- OLLIER Lin (Médecin) - Next date: 2023-07-08\n- Baie (Pharmacie) - Next date: 2023-07-09\n- Robinson (Pharmacie) - Next date: 2023-07-09\n- DANNER Delphine (Médecin) - Next date: 2023-07-09\n- OLLIER Lin (Médecin) - Next date: 2023-07-09\n- Victoire (Pharmacie) - Next date: 2023-07-14\n- Mall dumbea (Pharmacie) - Next date: 2023-07-14\n- HOUDAYER Amandine (Médecin) - Next date: 2023-07-14\n- NACAS Michael (Médecin) - Next date: 2023-07-14\n- Rivière Salée (Pharmacie) - Next date: 2023-07-15\n- Mall dumbea (Pharmacie) - Next date: 2023-07-15\n- PARELON Elodie (Médecin) - Next date: 2023-07-15\n\nPlease let me know if there's anything else I can assist you with.The Pharmacies de garde NC application is currently UP. Here is a list of all the pharmacies de garde in Nouvelle-Calédonie: [Baie, Robinson, DANNER Delphine, OLLIER Lin, Baie, Robinson, DANNER Delphine, OLLIER Lin, Victoire, Mall dumbea, HOUDAYER Amandine, NACAS Michael, Rivière Salée, Mall dumbea, PARELON Elodie]"
+            "text": "The current status of the Pharmacies de garde NC application is \"UP\". There are no reported checks or issues at the moment.\n\nHere is a list of all the pharmacies de garde in Nouvelle-Cal\u00e9donie:\n\n- Baie (Pharmacie) - Next date: 2023-07-08\n- Robinson (Pharmacie) - Next date: 2023-07-08\n- DANNER Delphine (M\u00e9decin) - Next date: 2023-07-08\n- OLLIER Lin (M\u00e9decin) - Next date: 2023-07-08\n- Baie (Pharmacie) - Next date: 2023-07-09\n- Robinson (Pharmacie) - Next date: 2023-07-09\n- DANNER Delphine (M\u00e9decin) - Next date: 2023-07-09\n- OLLIER Lin (M\u00e9decin) - Next date: 2023-07-09\n- Victoire (Pharmacie) - Next date: 2023-07-14\n- Mall dumbea (Pharmacie) - Next date: 2023-07-14\n- HOUDAYER Amandine (M\u00e9decin) - Next date: 2023-07-14\n- NACAS Michael (M\u00e9decin) - Next date: 2023-07-14\n- Rivi\u00e8re Sal\u00e9e (Pharmacie) - Next date: 2023-07-15\n- Mall dumbea (Pharmacie) - Next date: 2023-07-15\n- PARELON Elodie (M\u00e9decin) - Next date: 2023-07-15\n\nPlease let me know if there's anything else I can assist you with.The Pharmacies de garde NC application is currently UP. Here is a list of all the pharmacies de garde in Nouvelle-Cal\u00e9donie: [Baie, Robinson, DANNER Delphine, OLLIER Lin, Baie, Robinson, DANNER Delphine, OLLIER Lin, Victoire, Mall dumbea, HOUDAYER Amandine, NACAS Michael, Rivi\u00e8re Sal\u00e9e, Mall dumbea, PARELON Elodie]"
           }
         ]
       }
@@ -1991,90 +1342,12 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "app_store_new_free_ios_apps_for_app_store",
+          "description": "Get a list of new free iOS apps.\n\nOriginal tool name: app_store.new_free_ios_apps_for_app_store.",
           "parameters": {
             "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "finish",
-          "description": "Signals completion of the current task or conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "message": {
-                "type": "string",
-                "description": "Final message to send to the user."
-              }
-            },
-            "required": [
-              "message"
-            ]
+            "properties": {},
+            "additionalProperties": false
           }
         }
       },
@@ -2082,26 +1355,11 @@
         "type": "function",
         "function": {
           "name": "pharmacies_de_garde_nc_all_for_pharmacies_de_garde_nc",
-          "description": "Return pharmacies de garde in Nouvelle-Calédonie.\n\nOriginal tool name: pharmacies_de_garde_nc.all_for_pharmacies_de_garde_nc.",
+          "description": "Return pharmacies de garde in Nouvelle-Cal\u00e9donie.\n\nOriginal tool name: pharmacies_de_garde_nc.all_for_pharmacies_de_garde_nc.",
           "parameters": {
             "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              }
-            },
-            "required": []
+            "properties": {},
+            "additionalProperties": false
           }
         }
       },
@@ -2112,130 +1370,8 @@
           "description": "Return the health status of the Pharmacies de garde NC application.\n\nOriginal tool name: pharmacies_de_garde_nc.health_for_pharmacies_de_garde_nc.",
           "parameters": {
             "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
+            "properties": {},
+            "additionalProperties": false
           }
         }
       }

@@ -1,0 +1,74 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files with this custom editing tool.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The commands to run. Allowed options are: `view`, `create`, `str_replace`, `insert`, `undo_edit`."
+            },
+            "path": {
+              "type": "string",
+              "description": "Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`."
+            },
+            "file_text": {
+              "type": "string",
+              "description": "Required parameter of `create` command, with the content of the file to be created."
+            },
+            "old_str": {
+              "type": "string",
+              "description": "Required parameter of `str_replace` command containing the string in `path` to replace."
+            },
+            "new_str": {
+              "type": "string",
+              "description": "Optional parameter of `str_replace` command containing the new string. Required parameter of `insert` command containing the string to insert."
+            },
+            "insert_line": {
+              "type": "integer",
+              "description": "Required parameter of `insert` command. The `new_str` will be inserted after this line."
+            },
+            "view_range": {
+              "items": {},
+              "type": "array",
+              "description": "Optional `[start_line, end_line]` range to view."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "think",
+        "description": "Record a private reasoning step.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "thought": {
+              "type": "string",
+              "description": "The thought or reasoning to record."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "thought"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

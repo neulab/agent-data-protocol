@@ -1,5 +1,3 @@
-import importlib.util
-import inspect
 import json
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
@@ -9,6 +7,14 @@ from pydantic import ValidationError
 
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
+from schema.dataset_metadata import (
+    DatasetMetadata,
+    custom_tool_names,
+    infer_metadata_usage,
+    is_browser_api_action,
+    load_dataset_metadata,
+    validate_trajectory_metadata,
+)
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
@@ -68,6 +74,35 @@ def load_json(file_path):
     """Load JSON file, handling both indented and non-indented formats."""
     with open(file_path, "r") as file:
         return json.load(file)
+
+
+def validate_kwargs_against_openai_tool(
+    content: ApiAction,
+    metadata: DatasetMetadata,
+    sample_path: str,
+    sample_id: int,
+    content_id: int,
+) -> None:
+    tools_by_name = {tool.function.name: tool for tool in metadata.custom_tools}
+    tool = tools_by_name.get(content.function)
+    if tool is None:
+        return
+    parameters = tool.function.parameters or {}
+    properties = parameters.get("properties") or {}
+    required = set(parameters.get("required") or [])
+    provided = set(content.kwargs)
+    missing_required = sorted(required - provided)
+    assert not missing_required, (
+        f"ApiAction {content.function!r} is missing required metadata.json "
+        f"arguments in {sample_path} sample {sample_id} content {content_id}: "
+        f"{missing_required}"
+    )
+    if parameters.get("additionalProperties") is not True:
+        unexpected = sorted(provided - set(properties))
+        assert not unexpected, (
+            f"ApiAction {content.function!r} has kwargs not declared by metadata.json "
+            f"in {sample_path} sample {sample_id} content {content_id}: {unexpected}"
+        )
 
 
 def test_numeric_detail_key_detection():
@@ -444,29 +479,21 @@ def test_sample_standardized_against_schema(sample_path):
     assert isinstance(samples, list), "sample_std.json should be a list"
     assert len(samples) > 0, "sample_std.json should have at least one sample"
 
-    # dynamically load api.py in the same directory as sample_std.json
-    dataset_api = None
-    api_function_names = None
-
-    def load_dataset_api():
-        nonlocal dataset_api, api_function_names
-        if dataset_api is None:
-            api_path = os.path.join(os.path.dirname(sample_path), "api.py")
-            assert os.path.exists(api_path)
-            spec = importlib.util.spec_from_file_location("dataset_api", api_path)
-            dataset_api = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(dataset_api)
-            api_function_names = {
-                name for name, _ in inspect.getmembers(dataset_api, inspect.isfunction)
-            }
-        return dataset_api, api_function_names
+    dataset_name = Path(sample_path).parent.name
+    metadata_path = Path(sample_path).with_name("metadata.json")
+    assert metadata_path.exists(), f"metadata.json not found for {dataset_name}"
+    metadata = load_dataset_metadata(dataset_name, required=True)
+    metadata_custom_tool_names = custom_tool_names(metadata)
+    trajectories = []
 
     for sample_id, sample in enumerate(samples):
         try:
             traj = Trajectory(**sample)
-            assert "available_apis" not in traj.details, (
-                f"available_apis must be a top-level Trajectory field, not details metadata, "
-                f"in {sample_path} sample {sample_id}"
+            trajectories.append(traj)
+            validate_trajectory_metadata(traj, metadata, dataset_name=dataset_name)
+            assert "available_custom_tools" not in traj.details, (
+                f"available_custom_tools must be a top-level Trajectory field, not "
+                f"details metadata, in {sample_path} sample {sample_id}"
             )
             assert "available_code_languages" not in traj.details, (
                 f"available_code_languages must be a top-level Trajectory field, "
@@ -485,21 +512,30 @@ def test_sample_standardized_against_schema(sample_path):
                 f"Numeric details must be stored as native JSON numbers in {sample_path} "
                 f"sample {sample_id}: {stringified_numeric_details}"
             )
-            if traj.available_apis is not None:
-                available_apis = traj.available_apis
-                _, api_function_names = load_dataset_api()
-                missing_available_apis = sorted(set(available_apis) - api_function_names)
-                assert not missing_available_apis, (
-                    f"available_apis contains functions not found in api.py in "
-                    f"{os.path.dirname(sample_path)}: {missing_available_apis}"
+            if traj.available_custom_tools is not None:
+                missing_available_tools = sorted(
+                    set(traj.available_custom_tools) - metadata_custom_tool_names
                 )
-                used_apis = {
-                    content.function for content in traj.content if isinstance(content, ApiAction)
+                assert not missing_available_tools, (
+                    f"available_custom_tools contains tools not found in metadata.json "
+                    f"in {os.path.dirname(sample_path)}: {missing_available_tools}"
+                )
+                used_custom_tools = {
+                    content.function
+                    for content in traj.content
+                    if isinstance(content, ApiAction)
+                    and not is_browser_api_action(
+                        content.function,
+                        content.kwargs,
+                        browser_context=metadata.browser_enabled,
+                    )
                 }
-                missing_used_apis = sorted(used_apis - set(available_apis))
-                assert not missing_used_apis, (
-                    f"ApiAction functions are missing from available_apis in {sample_path} "
-                    f"sample {sample_id}: {missing_used_apis}"
+                missing_used_tools = sorted(
+                    used_custom_tools - set(traj.available_custom_tools)
+                )
+                assert not missing_used_tools, (
+                    f"ApiAction functions are missing from available_custom_tools in "
+                    f"{sample_path} sample {sample_id}: {missing_used_tools}"
                 )
 
             used_code_languages = {
@@ -526,14 +562,28 @@ def test_sample_standardized_against_schema(sample_path):
                         f"content {content_id}: {content.content}"
                     )
                 if isinstance(content, ApiAction):
-                    # Make sure that content.function exists in api.py
-                    dataset_api, _ = load_dataset_api()
-                    assert hasattr(dataset_api, content.function), (
-                        f"{content.function} not found in api.py in {os.path.dirname(sample_path)}"
+                    if not is_browser_api_action(
+                        content.function,
+                        content.kwargs,
+                        browser_context=metadata.browser_enabled,
+                    ):
+                        assert content.function in metadata_custom_tool_names, (
+                            f"{content.function} not found in metadata.json custom_tools "
+                            f"in {os.path.dirname(sample_path)}"
+                        )
+                    validate_kwargs_against_openai_tool(
+                        content, metadata, sample_path, sample_id, content_id
                     )
-                    # Validate content.kwargs against the function signature
-                    function = getattr(dataset_api, content.function)
-                    function(**content.kwargs)
 
         except ValidationError as e:
             pytest.fail(f"Validation failed for {sample_path}: {str(e)}")
+
+    used_code_languages, browser_enabled, _ = infer_metadata_usage(trajectories)
+    assert metadata.code_enabled == sorted(used_code_languages), (
+        f"metadata.json code_enabled must exactly match CodeAction languages in "
+        f"{sample_path}: expected {sorted(used_code_languages)}, got {metadata.code_enabled}"
+    )
+    assert metadata.browser_enabled is browser_enabled, (
+        f"metadata.json browser_enabled must match browser usage in {sample_path}: "
+        f"expected {browser_enabled}, got {metadata.browser_enabled}"
+    )

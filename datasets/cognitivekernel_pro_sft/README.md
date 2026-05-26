@@ -19,7 +19,7 @@ The released files cover URLQA (`ck-pro-web.sft.jsonl`), DocBench (`docbench.sft
 - Source `system` messages are filtered out during extraction.
 - User prompt scaffolding after the first `## Target Task` section, including recent-step state, repeated task text, and required Thought/Code formatting instructions, is removed during extraction.
 - Raw task instruction content becomes `TextObservation(source="user")`.
-- Raw assistant messages matching the `Thought:` plus fenced Python `Code:` format are parsed for exactly one CognitiveKernel function call. Parsed calls become `ApiAction` entries with the thought stored as the action description and the source-advertised API set recorded on `available_apis`.
+- Raw assistant messages matching the `Thought:` plus fenced Python `Code:` format are parsed for exactly one CognitiveKernel function call. Parsed calls become `ApiAction` entries with the thought stored as the action description and the source-advertised API set recorded on `available_custom_tools`.
 - Thought/Code messages whose Python block is not a single supported function call fall back to `CodeAction(language="python")`; messages that do not match the expected Thought/Code format fall back to `MessageAction` to preserve the raw content.
 
 ## Sample Generation
@@ -39,4 +39,4 @@ cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | pyt
 
 - The source dataset is already SFT-style next-action data rather than full environment rollouts. Each ADP trajectory therefore contains the prompt state and the assistant's next action, not an entire multi-step episode.
 - CognitiveKernel function calls such as `simple_web_search`, `web_agent`, `load_file`, and `stop` are converted to ADP `ApiAction` entries when the Python code block contains exactly one supported call. More complex Python blocks remain `CodeAction` entries so non-tool computation is preserved instead of guessed.
-- Source system prompts and user-side formatting scaffolding are intentionally excluded from raw and standardized prompts; only the source-advertised API names are retained in `available_apis` for parsed function calls.
+- Source system prompts and user-side formatting scaffolding are intentionally excluded from raw and standardized prompts; only the source-advertised API names are retained in `available_custom_tools` for parsed function calls.

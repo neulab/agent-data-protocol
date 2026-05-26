@@ -1,0 +1,740 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "add_task",
+        "description": "Add a task to the task planner.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "goal": {
+              "type": "string",
+              "description": "The goal of the task."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "goal"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "change_agent_state",
+        "description": "Change the agent state.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "agent_state": {
+              "type": "string",
+              "description": "The new agent state."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "agent_state"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "clear",
+        "description": "Clear the value of an input field.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "Element ID to clear."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "click",
+        "description": "Click an element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "Element ID to click."
+            },
+            "button": {
+              "enum": [
+                "left",
+                "middle",
+                "right"
+              ],
+              "type": "string",
+              "description": "Mouse button to use."
+            },
+            "modifiers": {
+              "items": {
+                "enum": [
+                  "Alt",
+                  "Control",
+                  "ControlOrMeta",
+                  "Meta",
+                  "Shift"
+                ],
+                "type": "string"
+              },
+              "type": "array",
+              "description": "List of modifier keys."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "crawl",
+        "description": "Crawl a webpage.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "link": {
+              "type": "string",
+              "description": "The link to crawl."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "link"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "dblclick",
+        "description": "Double-click an element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "Element ID to double-click."
+            },
+            "button": {
+              "enum": [
+                "left",
+                "middle",
+                "right"
+              ],
+              "type": "string",
+              "description": "Mouse button to use."
+            },
+            "modifiers": {
+              "items": {
+                "enum": [
+                  "Alt",
+                  "Control",
+                  "ControlOrMeta",
+                  "Meta",
+                  "Shift"
+                ],
+                "type": "string"
+              },
+              "type": "array",
+              "description": "List of modifier keys."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_to_CrawlAgent",
+        "description": "Delegate the task to the CrawlAgent.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string",
+              "description": "task description."
+            },
+            "link": {
+              "type": "string",
+              "description": "the link to crawl."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "task",
+            "link"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_to_RagAgent",
+        "description": "Delegate the task to the RagAgent.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string",
+              "description": "task description."
+            },
+            "query": {
+              "type": "string",
+              "description": "the query to search."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "task",
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_to_agent",
+        "description": "Delegate the task to the BrowsingAgent.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "agent": {
+              "type": "string",
+              "description": "The agent to delegate the task to."
+            },
+            "task": {
+              "type": "string",
+              "description": "task description."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "agent",
+            "task"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "drag_and_drop",
+        "description": "Perform drag-and-drop from one element to another.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "from_bid": {
+              "type": "string",
+              "description": "Source element ID."
+            },
+            "to_bid": {
+              "type": "string",
+              "description": "Target element ID."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "from_bid",
+            "to_bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "edit",
+        "description": "Edit a file.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "The path of the file."
+            },
+            "content": {
+              "type": "string",
+              "description": "The new content of the file."
+            },
+            "start": {
+              "type": "integer",
+              "description": "The start position of the edit."
+            },
+            "end": {
+              "type": "integer",
+              "description": "The end position of the edit."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "content",
+            "start",
+            "end"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "fill",
+        "description": "Fill a form field with text.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "Element ID to fill."
+            },
+            "value": {
+              "type": "string",
+              "description": "Text to input."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "value"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "finish",
+        "description": "Finish the task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "output": {
+              "type": "string",
+              "description": "The output of the task."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "output"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "focus",
+        "description": "Focus the specified element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "Element ID to focus."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "go_back",
+        "description": "Navigate to the previous page in history.\n\nExample: go_back()",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "go_forward",
+        "description": "Navigate to the next page in history.\n\nExample: go_forward()",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "goto",
+        "description": "Navigate to a URL.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The target URL to visit."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "hover",
+        "description": "Hover over an element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "Element ID to hover on."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "initialize",
+        "description": "Set environment variables.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "env_vars": {
+              "additionalProperties": true,
+              "type": "object",
+              "description": "The environment variables."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "env_vars"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "modify_task",
+        "description": "Modify the state of a task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "string",
+              "description": "The id of the task."
+            },
+            "state": {
+              "type": "string",
+              "description": "The new state of the task."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "task_id",
+            "state"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "noop",
+        "description": "Do nothing and optionally wait.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "wait_ms": {
+              "type": "number",
+              "description": "Time to wait in milliseconds (default is 1000)."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "press",
+        "description": "Press a key combination on a focused element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "Element ID to focus."
+            },
+            "key_comb": {
+              "type": "string",
+              "description": "Key combination to simulate."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "key_comb"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "rag_search",
+        "description": "Search using the RAG model.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The query to search."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read",
+        "description": "Read a file.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "The path of the file."
+            },
+            "start": {
+              "type": "integer",
+              "description": "The start position of the read."
+            },
+            "end": {
+              "type": "integer",
+              "description": "The end position of the read."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "start",
+            "end"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "save_plan",
+        "description": "Save the plan.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "plan": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "description": "The plan to save."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "plan"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "scroll",
+        "description": "Scroll horizontally and/or vertically in pixels.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "delta_x": {
+              "type": "number",
+              "description": "Horizontal scroll in pixels."
+            },
+            "delta_y": {
+              "type": "number",
+              "description": "Vertical scroll in pixels."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "delta_x",
+            "delta_y"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "select_option",
+        "description": "Select one or more options in a dropdown/select element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The element ID."
+            },
+            "options": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ],
+              "description": "One or more option values or labels to select."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "options"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_msg_to_user",
+        "description": "Send a message to the user.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "msg": {
+              "type": "string",
+              "description": "The message content to send."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "msg"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "task_plan",
+        "description": "Plan a task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string",
+              "description": "The task to plan."
+            },
+            "plan": {
+              "type": "string",
+              "description": "The plan."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "task",
+            "plan"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "upload_file",
+        "description": "Upload file(s) via a file input element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "Element ID to click for upload."
+            },
+            "file": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ],
+              "description": "Path(s) to file(s) to upload."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "file"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash",
+    "python"
+  ],
+  "browser_enabled": true
+}

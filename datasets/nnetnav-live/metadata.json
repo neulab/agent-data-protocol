@@ -1,0 +1,273 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "click",
+        "description": "Click an element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to click."
+            },
+            "button": {
+              "enum": [
+                "left",
+                "middle",
+                "right"
+              ],
+              "type": "string",
+              "description": "The mouse button to use. Defaults to \"left\"."
+            },
+            "modifiers": {
+              "items": {
+                "enum": [
+                  "Alt",
+                  "Control",
+                  "ControlOrMeta",
+                  "Meta",
+                  "Shift"
+                ],
+                "type": "string"
+              },
+              "type": "array",
+              "description": "List of modifier keys to hold while clicking. Defaults to None."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "fill",
+        "description": "Fill out a form field.\n\nIt focuses the element and triggers an input event with the entered text.\nWorks for <input>, <textarea> and [contenteditable] elements.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to fill."
+            },
+            "value": {
+              "type": "string",
+              "description": "The text to enter into the field."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "value"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "go_back",
+        "description": "Navigate to the previous page in history.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "go_forward",
+        "description": "Navigate to the next page in history.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "goto",
+        "description": "Navigate to a url.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to navigate to."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "hover",
+        "description": "Hover over an element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to hover over."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "keyboard_press",
+        "description": "Press a combination of keys.\n\nAccepts the logical key names that are emitted in the keyboardEvent.key property\nof the keyboard events: Backquote, Minus, Equal, Backslash, Backspace, Tab,\nDelete, Escape, ArrowDown, End, Enter, Home, Insert, PageDown, PageUp,\nArrowRight, ArrowUp, F1 - F12, Digit0 - Digit9, KeyA - KeyZ, etc. You can\nalternatively specify a single character you'd like to produce such as \"a\" or \"#\".\nFollowing modification shortcuts are also supported: Shift, Control, Alt, Meta,\nShiftLeft, ControlOrMeta. ControlOrMeta resolves to Control on Windows and Linux\nand to Meta on macOS.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "The key or key combination to press."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "key"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "new_tab",
+        "description": "Open a new tab.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "noop",
+        "description": "Do nothing, and optionally wait for the given time (in milliseconds).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "wait_ms": {
+              "type": "number",
+              "description": "Time to wait in milliseconds. Defaults to 1000ms."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "scroll",
+        "description": "Scroll horizontally and vertically.\n\nAmounts in pixels, positive for right or down scrolling,\nnegative for left or up scrolling. Dispatches a wheel event.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "delta_x": {
+              "type": "number",
+              "description": "The distance to scroll horizontally in pixels."
+            },
+            "delta_y": {
+              "type": "number",
+              "description": "The distance to scroll vertically in pixels."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "delta_x",
+            "delta_y"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tab_close",
+        "description": "Close the current tab.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tab_focus",
+        "description": "Bring tab to front (activate tab).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "description": "The index of the tab to focus."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "index"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "type",
+        "description": "Type the given text into an element with the given id.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to type into."
+            },
+            "text": {
+              "type": "string",
+              "description": "The text to type."
+            },
+            "press_enter_after": {
+              "type": "integer",
+              "description": "Whether to press enter after typing the text. Defaults to 1. 0 means, do not press enter."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "text"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [],
+  "browser_enabled": true
+}

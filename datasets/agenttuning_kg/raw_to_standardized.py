@@ -1,15 +1,13 @@
-import inspect
 import json
-import os
 import random
 import re
 import sys
-import types
 from typing import Tuple
 
 from schema.action.action import Action
 from schema.action.api import ApiAction
 from schema.action.message import MessageAction
+from schema.dataset_metadata import load_dataset_metadata, openai_tool_signature
 from schema.observation.observation import Observation
 from schema.observation.text import TextObservation
 from schema.tool_call_links import create_trajectory_with_tool_call_links
@@ -18,7 +16,7 @@ from schema.tool_call_links import create_trajectory_with_tool_call_links
 def convert_system(system_regex: re.Match[str]) -> list[Observation]:
     """
     Extracts and formats the essential parts of a system prompt,
-    removing tool descriptions since we already have these in the api.py.
+    removing tool descriptions since we already have these in metadata.json.
     """
     assert re.search(r"Final Answer: #3", system_regex.group(1), re.DOTALL)
 
@@ -36,19 +34,12 @@ def convert_system(system_regex: re.Match[str]) -> list[Observation]:
     ]
 
 
-# Extracts function signatures and docstrings from a python file content string
 def get_api_sigs() -> dict[str, list]:
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "api.py")) as f:
-        api_content = f.read()
-    api_module = types.ModuleType("api_module")
-    exec(api_content, api_module.__dict__)
-    functions = inspect.getmembers(api_module, inspect.isfunction)
     sigs = {}
-    for name, func in functions:
-        sig = inspect.signature(func)
-        sigs[name] = []
-        for arg_name, _ in sig.parameters.items():
-            sigs[name].append(arg_name)
+    metadata = load_dataset_metadata("agenttuning_kg", required=True)
+    for tool in metadata.custom_tools:
+        required, optional, _ = openai_tool_signature(tool)
+        sigs[tool.function.name] = required + optional
     return sigs
 
 

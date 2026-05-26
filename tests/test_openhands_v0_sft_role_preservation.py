@@ -6,7 +6,7 @@ import types
 
 def import_openhands_v0_converter(monkeypatch):
     """Import std_to_sft without constructing the browsergym environment."""
-    monkeypatch.setenv("MY_DATASET", "role_preservation_test")
+    monkeypatch.setenv("MY_DATASET", "openhands")
 
     fake_html_module = types.ModuleType("scripts.html_to_axtree")
 

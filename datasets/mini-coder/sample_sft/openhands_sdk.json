@@ -16,7 +16,7 @@
         "content": [
           {
             "type": "text",
-            "text": "<pr_description>\nConsider the following PR description:\nBleach HTML serializer fails to produce any output\n### What happened?\n\nAfter recent changes to `BleachHTMLSerializer`, calling `.serialize()` returns nothing—no HTML output is generated at all, regardless of input.\n\n### What did you expect to happen?\n\nThe serializer should return properly serialized HTML strings when processing a tree walker, just like before. Tags should be correctly rendered, attributes preserved (where allowed), and content properly escaped or passed through.\n\nInstead, it silently produces no output.\n\n### Minimal Complete Verifiable Example\n\n```python\nfrom bleach import clean\n\n# This should return a cleaned string with links and tags handled\nhtml = 'Check <a href=\"https://example.com\">this link</a> out!'\nresult = clean(html)\nprint(result)\n```\n\nExpected output:\n```html\nCheck <a href=\"https://example.com\" rel=\"nofollow\">this link</a> out!\n```\n\nActual output:\n```\n(nothing — empty string or None)\n```\n\nThis affects `clean`, `linkify`, and any function relying on HTML serialization.\n\n### Anything else we need to know?\n\n- All tests involving HTML output now fail silently or with type errors due to `None` being returned unexpectedly.\n- Appears to be related to the `BleachHTMLSerializer.serialize` method being effectively disabled.\n\n### Environment\n\n- bleach version: main (post-html5lib_shim changes)\n- Python: 3.8+\n- No external dependencies beyond standard test suite\n</pr_description>\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting."
+            "text": "<pr_description>\nConsider the following PR description:\nBleach HTML serializer fails to produce any output\n### What happened?\n\nAfter recent changes to `BleachHTMLSerializer`, calling `.serialize()` returns nothing\u2014no HTML output is generated at all, regardless of input.\n\n### What did you expect to happen?\n\nThe serializer should return properly serialized HTML strings when processing a tree walker, just like before. Tags should be correctly rendered, attributes preserved (where allowed), and content properly escaped or passed through.\n\nInstead, it silently produces no output.\n\n### Minimal Complete Verifiable Example\n\n```python\nfrom bleach import clean\n\n# This should return a cleaned string with links and tags handled\nhtml = 'Check <a href=\"https://example.com\">this link</a> out!'\nresult = clean(html)\nprint(result)\n```\n\nExpected output:\n```html\nCheck <a href=\"https://example.com\" rel=\"nofollow\">this link</a> out!\n```\n\nActual output:\n```\n(nothing \u2014 empty string or None)\n```\n\nThis affects `clean`, `linkify`, and any function relying on HTML serialization.\n\n### Anything else we need to know?\n\n- All tests involving HTML output now fail silently or with type errors due to `None` being returned unexpectedly.\n- Appears to be related to the `BleachHTMLSerializer.serialize` method being effectively disabled.\n\n### Environment\n\n- bleach version: main (post-html5lib_shim changes)\n- Python: 3.8+\n- No external dependencies beyond standard test suite\n</pr_description>\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting."
           }
         ]
       },
@@ -859,73 +859,6 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "finish",
           "description": "Signals completion of the current task or conversation.",
           "parameters": {
@@ -943,45 +876,6 @@
             "required": [
               "message"
             ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
           }
         }
       },
@@ -1029,29 +923,6 @@
             ]
           }
         }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
-          }
-        }
       }
     ],
     "metadata": {
@@ -1077,7 +948,7 @@
         "content": [
           {
             "type": "text",
-            "text": "<pr_description>\nConsider the following PR description:\nLinkifyFilter incorrectly handles URLs when using callbacks that prevent linking\n\nWhen using `bleach.linkify` with a callback that returns `None` to prevent certain URLs from being linkified, the original URL text is not preserved correctly. Instead, parts of the URL are being dropped from the output.\n\nFor example, given the input string `a ex.mp http://ex.mp <a href=\"/foo\">bar</a>` and a callback that only allows links with `http:` or `https:` protocols, I would expect the output to preserve `ex.mp` as plain text when it's not linkified. However, the current behavior appears to drop or mishandle the text surrounding the URL in some cases.\n\nThis also affects cases with parentheses. When processing a string like `(test.py)` with a callback that blocks all links (e.g. `lambda *a: None`), the output should remain `(test.py)`, but instead it seems to produce incorrect or incomplete results.\n\nIt seems related to how the `LinkifyFilter` handles tokens when a link is prevented — the prefix and suffix handling may not be correctly reassembling the original text when the URL is rejected by a callback.\n\nThis behavior was observed in cases where:\n- Only protocol-prefixed URLs should be linkified\n- All links are intentionally blocked via callback\n- Text adjacent to unlinked URLs should remain intact\n\nThe issue appears to be in the token processing logic when deciding how to render non-linkified URLs.\n</pr_description>\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting."
+            "text": "<pr_description>\nConsider the following PR description:\nLinkifyFilter incorrectly handles URLs when using callbacks that prevent linking\n\nWhen using `bleach.linkify` with a callback that returns `None` to prevent certain URLs from being linkified, the original URL text is not preserved correctly. Instead, parts of the URL are being dropped from the output.\n\nFor example, given the input string `a ex.mp http://ex.mp <a href=\"/foo\">bar</a>` and a callback that only allows links with `http:` or `https:` protocols, I would expect the output to preserve `ex.mp` as plain text when it's not linkified. However, the current behavior appears to drop or mishandle the text surrounding the URL in some cases.\n\nThis also affects cases with parentheses. When processing a string like `(test.py)` with a callback that blocks all links (e.g. `lambda *a: None`), the output should remain `(test.py)`, but instead it seems to produce incorrect or incomplete results.\n\nIt seems related to how the `LinkifyFilter` handles tokens when a link is prevented \u2014 the prefix and suffix handling may not be correctly reassembling the original text when the URL is rejected by a callback.\n\nThis behavior was observed in cases where:\n- Only protocol-prefixed URLs should be linkified\n- All links are intentionally blocked via callback\n- Text adjacent to unlinked URLs should remain intact\n\nThe issue appears to be in the token processing logic when deciding how to render non-linkified URLs.\n</pr_description>\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting."
           }
         ]
       },
@@ -1599,14 +1470,14 @@
             "type": "function",
             "function": {
               "name": "terminal",
-              "arguments": "{\"command\": \"#!/usr/bin/env python3\\n\\nimport bleach\\n\\ndef test_edge_cases():\\n    # Test case 3: Multiple URLs with mixed protocols\\n    def allow_http_https_only(attrs, new):\\n        if attrs.get('href', '').startswith(('http:', 'https:')):\\n            return attrs\\n        return None\\n    \\n    text3 = 'Visit http://example.com and ftp://files.org and ex.mp'\\n    result3 = bleach.linkify(text3, callbacks=[allow_http_https_only])\\n    print(f\\\"Test 3 - Input: {text3}\\\")\\n    print(f\\\"Test 3 - Output: {result3}\\\")\\n    print()\\n    \\n    # Test case 4: Nested parentheses\\n    text4 = '((test.py))'\\n    result4 = bleach.linkify(text4, callbacks=[lambda *a: None])\\n    print(f\\\"Test 4 - Input: {text4}\\\")\\n    print(f\\\"Test 4 - Output: {result4}\\\")\\n    print()\\n    \\n    # Test case 5: Empty callback (should linkify everything)\\n    text5 = '(test.py) http://example.com'\\n    result5 = bleach.linkify(text5, callbacks=[])\\n    print(f\\\"Test 5 - Input: {text5}\\\")\\n    print(f\\\"Test 5 - Output: {result5}\\\")\\n    print()\\n\\nif __name__ == \\\"__main__\\\":\\n    test_edge_cases()\", \"security_risk\": \"MEDIUM\", \"summary\": \"Excellent! Both test cases are now working correctly: 1. Test 1: `a ex.mp http://ex.mp <a href=\\\"/foo\\\">bar</a>` → `a ex.m\"}"
+              "arguments": "{\"command\": \"#!/usr/bin/env python3\\n\\nimport bleach\\n\\ndef test_edge_cases():\\n    # Test case 3: Multiple URLs with mixed protocols\\n    def allow_http_https_only(attrs, new):\\n        if attrs.get('href', '').startswith(('http:', 'https:')):\\n            return attrs\\n        return None\\n    \\n    text3 = 'Visit http://example.com and ftp://files.org and ex.mp'\\n    result3 = bleach.linkify(text3, callbacks=[allow_http_https_only])\\n    print(f\\\"Test 3 - Input: {text3}\\\")\\n    print(f\\\"Test 3 - Output: {result3}\\\")\\n    print()\\n    \\n    # Test case 4: Nested parentheses\\n    text4 = '((test.py))'\\n    result4 = bleach.linkify(text4, callbacks=[lambda *a: None])\\n    print(f\\\"Test 4 - Input: {text4}\\\")\\n    print(f\\\"Test 4 - Output: {result4}\\\")\\n    print()\\n    \\n    # Test case 5: Empty callback (should linkify everything)\\n    text5 = '(test.py) http://example.com'\\n    result5 = bleach.linkify(text5, callbacks=[])\\n    print(f\\\"Test 5 - Input: {text5}\\\")\\n    print(f\\\"Test 5 - Output: {result5}\\\")\\n    print()\\n\\nif __name__ == \\\"__main__\\\":\\n    test_edge_cases()\", \"security_risk\": \"MEDIUM\", \"summary\": \"Excellent! Both test cases are now working correctly: 1. Test 1: `a ex.mp http://ex.mp <a href=\\\"/foo\\\">bar</a>` \u2192 `a ex.m\"}"
             }
           }
         ],
         "content": [
           {
             "type": "text",
-            "text": "Excellent! Both test cases are now working correctly:\n\n1. Test 1: `a ex.mp http://ex.mp <a href=\"/foo\">bar</a>` → `a ex.mp http://ex.mp bar`\n   - The `ex.mp` without protocol is correctly preserved as plain text\n   - The `http://ex.mp` with protocol is correctly linkified\n   - The existing `<a href=\"/foo\">bar</a>` tag is preserved correctly\n\n2. Test 2: `(test.py)` → `(test.py)`\n   - The parentheses are correctly preserved in their entirety\n\nLet me run a few more edge case tests to make sure my fix is robust:"
+            "text": "Excellent! Both test cases are now working correctly:\n\n1. Test 1: `a ex.mp http://ex.mp <a href=\"/foo\">bar</a>` \u2192 `a ex.mp http://ex.mp bar`\n   - The `ex.mp` without protocol is correctly preserved as plain text\n   - The `http://ex.mp` with protocol is correctly linkified\n   - The existing `<a href=\"/foo\">bar</a>` tag is preserved correctly\n\n2. Test 2: `(test.py)` \u2192 `(test.py)`\n   - The parentheses are correctly preserved in their entirety\n\nLet me run a few more edge case tests to make sure my fix is robust:"
           }
         ]
       },
@@ -1786,7 +1657,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Perfect! My fix is working correctly for both test cases mentioned in the issue description:\n\n1. Test 1: `'a ex.mp http://ex.mp <a href=\"/foo\">bar</a>'` → `'a ex.mp http://ex.mp bar'`\n   - The `ex.mp` without protocol is correctly preserved as plain text\n   - The `http://ex.mp` with protocol is correctly linkified \n   - The existing `<a href=\"/foo\">bar</a>` tag is preserved correctly\n\n2. Test 2: `'(test.py)'` → `'(test.py)'`\n   - The parentheses are correctly preserved in their entirety\n\nThe fix I applied was to change line 441 in `bleach/linkifier.py` from `prefix + suffix` to `match.group(0)`, which ensures that when a callback prevents linkification, the original matched text is properly preserved instead of dropping parts of it.\n\nLet me now show the exact change that was made:"
+            "text": "Perfect! My fix is working correctly for both test cases mentioned in the issue description:\n\n1. Test 1: `'a ex.mp http://ex.mp <a href=\"/foo\">bar</a>'` \u2192 `'a ex.mp http://ex.mp bar'`\n   - The `ex.mp` without protocol is correctly preserved as plain text\n   - The `http://ex.mp` with protocol is correctly linkified \n   - The existing `<a href=\"/foo\">bar</a>` tag is preserved correctly\n\n2. Test 2: `'(test.py)'` \u2192 `'(test.py)'`\n   - The parentheses are correctly preserved in their entirety\n\nThe fix I applied was to change line 441 in `bleach/linkifier.py` from `prefix + suffix` to `match.group(0)`, which ensures that when a callback prevents linkification, the original matched text is properly preserved instead of dropping parts of it.\n\nLet me now show the exact change that was made:"
           }
         ]
       },
@@ -1854,73 +1725,6 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "finish",
           "description": "Signals completion of the current task or conversation.",
           "parameters": {
@@ -1938,45 +1742,6 @@
             "required": [
               "message"
             ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
           }
         }
       },
@@ -2021,29 +1786,6 @@
             },
             "required": [
               "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }
@@ -2645,73 +2387,6 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "finish",
           "description": "Signals completion of the current task or conversation.",
           "parameters": {
@@ -2729,45 +2404,6 @@
             "required": [
               "message"
             ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
           }
         }
       },
@@ -2815,29 +2451,6 @@
             ]
           }
         }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
-          }
-        }
       }
     ],
     "metadata": {
@@ -2863,7 +2476,7 @@
         "content": [
           {
             "type": "text",
-            "text": "<pr_description>\nConsider the following PR description:\nUnboundLocalError in attribute filter when using dict-based attribute lists\n\nGetting an `UnboundLocalError: local variable 'attr_val' referenced before assignment` when cleaning HTML with tag-specific attribute lists.\n\nExample:\n```python\nfrom bleach import clean\n\nATTRS = {'a': ['href', 'target']}\nclean('<a href=\"http://example.com\" target=\"_blank\">link</a>', attributes=ATTRS)\n```\n\nFails for any use of dictionary-style `attributes` where tags are keys and lists of allowed attributes are values. Seems to affect all attribute handling—including wildcards, callables, and SVG-specific rules.\n</pr_description>\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting."
+            "text": "<pr_description>\nConsider the following PR description:\nUnboundLocalError in attribute filter when using dict-based attribute lists\n\nGetting an `UnboundLocalError: local variable 'attr_val' referenced before assignment` when cleaning HTML with tag-specific attribute lists.\n\nExample:\n```python\nfrom bleach import clean\n\nATTRS = {'a': ['href', 'target']}\nclean('<a href=\"http://example.com\" target=\"_blank\">link</a>', attributes=ATTRS)\n```\n\nFails for any use of dictionary-style `attributes` where tags are keys and lists of allowed attributes are values. Seems to affect all attribute handling\u2014including wildcards, callables, and SVG-specific rules.\n</pr_description>\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting."
           }
         ]
       },
@@ -3508,73 +3121,6 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "finish",
           "description": "Signals completion of the current task or conversation.",
           "parameters": {
@@ -3592,45 +3138,6 @@
             "required": [
               "message"
             ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
           }
         }
       },
@@ -3675,29 +3182,6 @@
             },
             "required": [
               "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }
@@ -4749,73 +4233,6 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "finish",
           "description": "Signals completion of the current task or conversation.",
           "parameters": {
@@ -4833,45 +4250,6 @@
             "required": [
               "message"
             ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
           }
         }
       },
@@ -4916,29 +4294,6 @@
             },
             "required": [
               "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }

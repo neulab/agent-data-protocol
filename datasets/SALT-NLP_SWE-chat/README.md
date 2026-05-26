@@ -26,7 +26,7 @@
 - File read/write/edit tools are mapped to the OpenHands `str_replace_editor` API when their paths and edit fields can be recovered.
 - Other source-specific tools are preserved with a dataset-specific `generic_tool` API action containing the original tool name and parsed tool input.
 - Tool-result rows and post-prompt metadata rows are converted to `TextObservation(source="environment")`; leading metadata before the first user prompt is skipped so SFT trajectories begin with a human task.
-- `available_apis` is intentionally not populated because SWE-chat does not specify per-session tool availability; tool availability is inferred only from observed tool calls.
+- `available_custom_tools` is intentionally not populated because SWE-chat does not specify per-session tool availability; tool availability is inferred only from observed tool calls.
 
 ## Sample Generation
 

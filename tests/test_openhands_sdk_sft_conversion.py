@@ -4,7 +4,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from agents.openhands_sdk.std_to_sft import BUILTIN_TOOLS
+from agents.openhands_sdk.std_to_sft import (
+    BROWSER_TOOL_ALIASES,
+    BUILTIN_TOOLS,
+    OPENHANDS_TOOL_ALIASES,
+)
+from schema.dataset_metadata import custom_tool_names, load_dataset_metadata
 
 ROOT = Path(__file__).parent.parent
 DATASET_PATH = ROOT / "datasets"
@@ -35,9 +40,10 @@ def run_converter(dataset: str, sample_name: str = "sample_std.json"):
     return [json.loads(line) for line in converter_proc.stdout.splitlines() if line]
 
 
-def run_converter_rows(rows: list[dict]):
+def run_converter_rows(rows: list[dict], dataset: str):
     env = os.environ.copy()
     env["PYTHONPATH"] = f"{ROOT}:{env.get('PYTHONPATH', '')}"
+    env["MY_DATASET"] = dataset
     converter_proc = subprocess.run(
         [sys.executable, str(ROOT / "agents/openhands_sdk/std_to_sft.py")],
         input="\n".join(json.dumps(row) for row in rows),
@@ -76,7 +82,6 @@ def assert_openai_chat_record(record):
 
     pending_tool_call_ids = []
     tool_names = {tool["function"]["name"] for tool in record["tools"]}
-    assert {"terminal", "file_editor", "task_tracker", "finish", "think"} <= tool_names
 
     for message in record["messages"]:
         assert message["role"] in {"system", "user", "assistant", "tool"}
@@ -104,18 +109,29 @@ def tool_call_names(record):
     }
 
 
-def test_openhands_sdk_declares_custom_tools_iff_used():
+def test_openhands_sdk_declares_metadata_custom_tools():
     for dataset in get_dataset_dirs():
         sample_sft_path = DATASET_PATH / dataset / "sample_sft" / "openhands_sdk.json"
         if not sample_sft_path.exists():
             continue
+        metadata = load_dataset_metadata(dataset, required=True)
+        std_rows = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())
         records = json.loads(sample_sft_path.read_text())
-        for record in records:
+        for std_row, record in zip(std_rows, records, strict=True):
             provided_tool_names = {tool["function"]["name"] for tool in record["tools"]}
             used_tool_names = tool_call_names(record)
-            assert provided_tool_names - BUILTIN_TOOL_NAMES == (
-                used_tool_names - BUILTIN_TOOL_NAMES
+            available_custom_tools = set(
+                std_row.get("available_custom_tools") or custom_tool_names(metadata)
             )
+            expected_custom_tools = {
+                name
+                for name in available_custom_tools
+                if name not in OPENHANDS_TOOL_ALIASES
+                and not (metadata.browser_enabled and name in BROWSER_TOOL_ALIASES)
+                and name not in BUILTIN_TOOL_NAMES
+            }
+            assert used_tool_names <= provided_tool_names
+            assert provided_tool_names - BUILTIN_TOOL_NAMES == expected_custom_tools
 
 
 def test_openhands_sdk_converter_uses_native_tool_calls():
@@ -232,8 +248,11 @@ def test_openhands_sdk_converter_preserves_explicit_tool_call_ids():
                     {
                         "class_": "api_action",
                         "tool_call_id": "source_call_search",
-                        "function": "search",
-                        "kwargs": {"query": "agent data protocol"},
+                        "function": "generic_tool",
+                        "kwargs": {
+                            "tool_name": "search",
+                            "tool_input": {"query": "agent data protocol"},
+                        },
                     },
                     {
                         "class_": "code_action",
@@ -256,7 +275,8 @@ def test_openhands_sdk_converter_preserves_explicit_tool_call_ids():
                     },
                 ],
             }
-        ]
+        ],
+        dataset="SALT-NLP_SWE-chat",
     )
     record = records[0]
 

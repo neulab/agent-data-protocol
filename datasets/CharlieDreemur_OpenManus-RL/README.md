@@ -9,7 +9,7 @@ The converter preserves the raw conversation structure and maps the dataset's ma
 - Text-world and ScienceWorld `Action:` lines become `perform_action` API actions with native string kwargs.
 - `Action: <tool> with Action Input: ...`, JSON `Tool`/`Param` responses, and Python-dict tool call snippets become direct `ApiAction` calls using normalized Python identifiers and native JSON kwargs. Raw tool names containing punctuation are normalized by replacing non-word characters with `_` (for example, `weather.get_120_hour_forecast_for_weather` becomes `weather_get_120_hour_forecast_for_weather`).
 - ReAct `Thought:` / JSON `goal` text is stored in `reasoning_content` instead of being mixed into API kwargs.
-- Explicit tool catalogs in the raw prompt populate top-level `available_apis`; tool-catalog-only setup prompts are not duplicated as user observations.
+- Explicit tool catalogs in the raw prompt populate top-level `available_custom_tools`; tool-catalog-only setup prompts are not duplicated as user observations.
 - `finish` and final-action outputs become terminal `MessageAction` events without OpenHands-specific `<finish>` tags.
 - User turns following actions are treated as environment observations, with structured observations normalized to canonical JSON strings when possible.
 

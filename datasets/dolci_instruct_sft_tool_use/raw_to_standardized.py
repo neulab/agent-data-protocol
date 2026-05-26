@@ -36,14 +36,14 @@ def json_type_to_python(schema: dict[str, Any]) -> str:
     return TYPE_MAP.get(schema.get("type", "Any"), "Any")
 
 
-def parse_available_apis(messages: list[dict[str, Any]]) -> list[str]:
+def parse_available_custom_tools(messages: list[dict[str, Any]]) -> list[str]:
     """Return the identifiers of the tools advertised on this trajectory's `functions` payload.
 
     The Dolci raw schema stores the tool catalog as a JSON string on the
     `functions` field of one of the messages. Each tool entry contains a
     `function.name` whose identifier we record on the top-level
-    `Trajectory.available_apis` field. The dataset's `api.py` carries the
-    matching stub for every advertised identifier.
+    `Trajectory.available_custom_tools` field. The dataset's `metadata.json`
+    carries the matching tool specification for every advertised identifier.
     """
     functions_json = next(
         (message.get("functions") for message in messages if message.get("functions")), None
@@ -188,12 +188,12 @@ def convert_trajectory(raw_data: dict[str, Any]) -> Trajectory:
             MessageAction(content="<finish> Task completed. </finish>", description=None)
         )
 
-    available_apis = parse_available_apis(messages)
+    available_custom_tools = parse_available_custom_tools(messages)
     details = {"dataset_source": raw_data.get("dataset_source", "")}
     return create_trajectory_with_tool_call_links(
         id=raw_data["id"],
         content=content,
-        available_apis=available_apis or None,
+        available_custom_tools=available_custom_tools or None,
         details=details,
     )
 

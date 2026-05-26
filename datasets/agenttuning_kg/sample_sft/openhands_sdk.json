@@ -463,66 +463,64 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "argmax",
+          "description": "Return the entity with the maximum value of the given attribute.\n\nUse this function to find the entity with the highest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmax(\"#2\", \"age\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+              "variable": {
+                "type": "string"
               },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+              "attribute": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "argmin",
+          "description": "Return the entity with the minimum value of the given attribute.\n\nUse this function to find the entity with the lowest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmin(\"#2\", \"age\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              },
+              "attribute": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "count",
+          "description": "Count the number of entities in a variable.\n\nReturns the number of distinct entities represented by the variable.\n\nExample: count(\"#4\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
             ]
           }
         }
@@ -553,25 +551,30 @@
       {
         "type": "function",
         "function": {
+          "name": "get_attributes",
+          "description": "Get all numerical attributes of a variable.\n\nThis function helps to identify which attributes can be used in a\nsuperlative query (e.g., max/min age). Only use this when a question\ninvolves ranking or finding extremums.\n\nExample: get_attributes(\"#3\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
           "name": "get_neighbors",
           "description": "Get all entities connected to a variable via a specific relation.\n\nThis function retrieves a new variable containing all entities that are\nconnected to the input variable by the given relation. This is typically\nused after get_relations to determine which relation to follow.\n\nExample: get_neighbors(\"Barack Obama\", \"people.person.profession\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               },
@@ -579,6 +582,7 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable",
               "relation"
@@ -594,24 +598,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable"
             ]
@@ -626,20 +617,6 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable1": {
                 "type": "string"
               },
@@ -647,116 +624,10 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable1",
               "variable2"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }
@@ -1202,66 +1073,64 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "argmax",
+          "description": "Return the entity with the maximum value of the given attribute.\n\nUse this function to find the entity with the highest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmax(\"#2\", \"age\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+              "variable": {
+                "type": "string"
               },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+              "attribute": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "argmin",
+          "description": "Return the entity with the minimum value of the given attribute.\n\nUse this function to find the entity with the lowest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmin(\"#2\", \"age\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              },
+              "attribute": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "count",
+          "description": "Count the number of entities in a variable.\n\nReturns the number of distinct entities represented by the variable.\n\nExample: count(\"#4\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
             ]
           }
         }
@@ -1297,24 +1166,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable"
             ]
@@ -1329,20 +1185,6 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               },
@@ -1350,6 +1192,7 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable",
               "relation"
@@ -1365,24 +1208,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable"
             ]
@@ -1397,20 +1227,6 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable1": {
                 "type": "string"
               },
@@ -1418,116 +1234,10 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable1",
               "variable2"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }
@@ -2093,66 +1803,64 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "argmax",
+          "description": "Return the entity with the maximum value of the given attribute.\n\nUse this function to find the entity with the highest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmax(\"#2\", \"age\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+              "variable": {
+                "type": "string"
               },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+              "attribute": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "argmin",
+          "description": "Return the entity with the minimum value of the given attribute.\n\nUse this function to find the entity with the lowest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmin(\"#2\", \"age\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              },
+              "attribute": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "count",
+          "description": "Count the number of entities in a variable.\n\nReturns the number of distinct entities represented by the variable.\n\nExample: count(\"#4\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
             ]
           }
         }
@@ -2183,25 +1891,30 @@
       {
         "type": "function",
         "function": {
+          "name": "get_attributes",
+          "description": "Get all numerical attributes of a variable.\n\nThis function helps to identify which attributes can be used in a\nsuperlative query (e.g., max/min age). Only use this when a question\ninvolves ranking or finding extremums.\n\nExample: get_attributes(\"#3\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
           "name": "get_neighbors",
           "description": "Get all entities connected to a variable via a specific relation.\n\nThis function retrieves a new variable containing all entities that are\nconnected to the input variable by the given relation. This is typically\nused after get_relations to determine which relation to follow.\n\nExample: get_neighbors(\"Barack Obama\", \"people.person.profession\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               },
@@ -2209,6 +1922,7 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable",
               "relation"
@@ -2224,24 +1938,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable"
             ]
@@ -2256,20 +1957,6 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable1": {
                 "type": "string"
               },
@@ -2277,116 +1964,10 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable1",
               "variable2"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }
@@ -2952,66 +2533,64 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "argmax",
+          "description": "Return the entity with the maximum value of the given attribute.\n\nUse this function to find the entity with the highest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmax(\"#2\", \"age\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+              "variable": {
+                "type": "string"
               },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+              "attribute": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "argmin",
+          "description": "Return the entity with the minimum value of the given attribute.\n\nUse this function to find the entity with the lowest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmin(\"#2\", \"age\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              },
+              "attribute": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "count",
+          "description": "Count the number of entities in a variable.\n\nReturns the number of distinct entities represented by the variable.\n\nExample: count(\"#4\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
             ]
           }
         }
@@ -3042,25 +2621,30 @@
       {
         "type": "function",
         "function": {
+          "name": "get_attributes",
+          "description": "Get all numerical attributes of a variable.\n\nThis function helps to identify which attributes can be used in a\nsuperlative query (e.g., max/min age). Only use this when a question\ninvolves ranking or finding extremums.\n\nExample: get_attributes(\"#3\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
           "name": "get_neighbors",
           "description": "Get all entities connected to a variable via a specific relation.\n\nThis function retrieves a new variable containing all entities that are\nconnected to the input variable by the given relation. This is typically\nused after get_relations to determine which relation to follow.\n\nExample: get_neighbors(\"Barack Obama\", \"people.person.profession\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               },
@@ -3068,6 +2652,7 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable",
               "relation"
@@ -3083,24 +2668,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable"
             ]
@@ -3115,20 +2687,6 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable1": {
                 "type": "string"
               },
@@ -3136,116 +2694,10 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable1",
               "variable2"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }
@@ -3721,66 +3173,64 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "argmax",
+          "description": "Return the entity with the maximum value of the given attribute.\n\nUse this function to find the entity with the highest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmax(\"#2\", \"age\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+              "variable": {
+                "type": "string"
               },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+              "attribute": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "argmin",
+          "description": "Return the entity with the minimum value of the given attribute.\n\nUse this function to find the entity with the lowest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmin(\"#2\", \"age\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              },
+              "attribute": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable",
+              "attribute"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "count",
+          "description": "Count the number of entities in a variable.\n\nReturns the number of distinct entities represented by the variable.\n\nExample: count(\"#4\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
             ]
           }
         }
@@ -3811,25 +3261,30 @@
       {
         "type": "function",
         "function": {
+          "name": "get_attributes",
+          "description": "Get all numerical attributes of a variable.\n\nThis function helps to identify which attributes can be used in a\nsuperlative query (e.g., max/min age). Only use this when a question\ninvolves ranking or finding extremums.\n\nExample: get_attributes(\"#3\")",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "variable": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "variable"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
           "name": "get_neighbors",
           "description": "Get all entities connected to a variable via a specific relation.\n\nThis function retrieves a new variable containing all entities that are\nconnected to the input variable by the given relation. This is typically\nused after get_relations to determine which relation to follow.\n\nExample: get_neighbors(\"Barack Obama\", \"people.person.profession\")",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               },
@@ -3837,6 +3292,7 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable",
               "relation"
@@ -3852,24 +3308,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable"
             ]
@@ -3884,20 +3327,6 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "variable1": {
                 "type": "string"
               },
@@ -3905,116 +3334,10 @@
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "variable1",
               "variable2"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
             ]
           }
         }

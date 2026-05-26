@@ -1,0 +1,383 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "clear",
+        "description": "Clear the input field.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the input field to clear."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "click",
+        "description": "Click an element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to click."
+            },
+            "button": {
+              "enum": [
+                "left",
+                "middle",
+                "right"
+              ],
+              "type": "string",
+              "description": "The mouse button to use. Defaults to \"left\"."
+            },
+            "modifiers": {
+              "items": {
+                "enum": [
+                  "Alt",
+                  "Control",
+                  "ControlOrMeta",
+                  "Meta",
+                  "Shift"
+                ],
+                "type": "string"
+              },
+              "type": "array",
+              "description": "List of modifier keys to hold while clicking. Defaults to None."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "dblclick",
+        "description": "Double click an element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to double click."
+            },
+            "button": {
+              "enum": [
+                "left",
+                "middle",
+                "right"
+              ],
+              "type": "string",
+              "description": "The mouse button to use. Defaults to \"left\"."
+            },
+            "modifiers": {
+              "items": {
+                "enum": [
+                  "Alt",
+                  "Control",
+                  "ControlOrMeta",
+                  "Meta",
+                  "Shift"
+                ],
+                "type": "string"
+              },
+              "type": "array",
+              "description": "List of modifier keys to hold while double clicking. Defaults to None."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "drag_and_drop",
+        "description": "Perform a drag & drop operation.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "from_bid": {
+              "type": "string",
+              "description": "The browser ID of the element to drag."
+            },
+            "to_bid": {
+              "type": "string",
+              "description": "The browser ID of the element to drop onto."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "from_bid",
+            "to_bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "fill",
+        "description": "Fill out a form field.\n\nIt focuses the element and triggers an input event with the entered text.\nWorks for <input>, <textarea> and [contenteditable] elements.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to fill."
+            },
+            "value": {
+              "type": "string",
+              "description": "The text to enter into the field."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "value"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "focus",
+        "description": "Focus the matching element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to focus."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "go_back",
+        "description": "Navigate to the previous page in history.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "go_forward",
+        "description": "Navigate to the next page in history.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "goto",
+        "description": "Navigate to a url.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to navigate to."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "hover",
+        "description": "Hover over an element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to hover over."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "noop",
+        "description": "Do nothing, and optionally wait for the given time (in milliseconds).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "wait_ms": {
+              "type": "number",
+              "description": "Time to wait in milliseconds. Defaults to 1000ms."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "press",
+        "description": "Focus the matching element and press a combination of keys.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the element to focus."
+            },
+            "key_comb": {
+              "type": "string",
+              "description": "The key combination to press (e.g., \"Backspace\", \"ControlOrMeta+a\")."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "key_comb"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "scroll",
+        "description": "Scroll horizontally and vertically.\n\nAmounts in pixels, positive for right or down scrolling,\nnegative for left or up scrolling. Dispatches a wheel event.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "delta_x": {
+              "type": "number",
+              "description": "The distance to scroll horizontally in pixels."
+            },
+            "delta_y": {
+              "type": "number",
+              "description": "The distance to scroll vertically in pixels."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "delta_x",
+            "delta_y"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "select_option",
+        "description": "Select one or multiple options in a <select> element.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the select element."
+            },
+            "options": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ],
+              "description": "The option value(s) or label(s) to select."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "options"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "upload_file",
+        "description": "Click an element and wait for a \"filechooser\" event, then select file(s) for upload.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string",
+              "description": "The browser ID of the file input element."
+            },
+            "file": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ],
+              "description": "Path(s) to the file(s) to upload."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "file"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [],
+  "browser_enabled": true
+}

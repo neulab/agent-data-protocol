@@ -76,7 +76,7 @@
             "type": "function",
             "function": {
               "name": "finish",
-              "arguments": "{\"message\": \"I've compared the 5-day weather forecasts for both Paris and Madrid:\\n\\n- Paris: Highs range from 27°C to 32°C, lows from 16°C to 20°C.\\n- Madrid: Highs range from 33°C to 37°C, lows from 22°C to 26°C.\\n\\nOverall, Madrid will be warmer than Paris over the next 5 days.\", \"summary\": \"Call finish\"}"
+              "arguments": "{\"message\": \"I've compared the 5-day weather forecasts for both Paris and Madrid:\\n\\n- Paris: Highs range from 27\u00b0C to 32\u00b0C, lows from 16\u00b0C to 20\u00b0C.\\n- Madrid: Highs range from 33\u00b0C to 37\u00b0C, lows from 22\u00b0C to 26\u00b0C.\\n\\nOverall, Madrid will be warmer than Paris over the next 5 days.\", \"summary\": \"Call finish\"}"
             }
           }
         ]
@@ -88,79 +88,12 @@
         "content": [
           {
             "type": "text",
-            "text": "I've compared the 5-day weather forecasts for both Paris and Madrid:\n\n- Paris: Highs range from 27°C to 32°C, lows from 16°C to 20°C.\n- Madrid: Highs range from 33°C to 37°C, lows from 22°C to 26°C.\n\nOverall, Madrid will be warmer than Paris over the next 5 days."
+            "text": "I've compared the 5-day weather forecasts for both Paris and Madrid:\n\n- Paris: Highs range from 27\u00b0C to 32\u00b0C, lows from 16\u00b0C to 20\u00b0C.\n- Madrid: Highs range from 33\u00b0C to 37\u00b0C, lows from 22\u00b0C to 26\u00b0C.\n\nOverall, Madrid will be warmer than Paris over the next 5 days."
           }
         ]
       }
     ],
     "tools": [
-      {
-        "type": "function",
-        "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
       {
         "type": "function",
         "function": {
@@ -187,140 +120,27 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "weather_forecast_weather_api",
           "description": "Provide a placeholder for the `weather_forecast_weather_api` tool in the committed Dolci sample.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "days": {
-                "type": "string"
-              },
-              "q": {
-                "type": "string"
-              }
+              "days": {},
+              "q": {}
             },
-            "required": []
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "weather_getweatherforecast",
+          "description": "Stub for the advertised Dolci tool.",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
           }
         }
       }
@@ -348,7 +168,7 @@
         "content": [
           {
             "type": "text",
-            "text": "I’m planning a trip to New York! I’m staying at the Renaissance Hotel. My guest ID is NYR543, and I want to book a deluxe room at $350 per night from 2024-08-04 to 2024-08-09. Can you also check which city ZIP code 10001 refers to?"
+            "text": "I\u2019m planning a trip to New York! I\u2019m staying at the Renaissance Hotel. My guest ID is NYR543, and I want to book a deluxe room at $350 per night from 2024-08-04 to 2024-08-09. Can you also check which city ZIP code 10001 refers to?"
           }
         ]
       },
@@ -429,67 +249,19 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "calculate_calorie_intake",
+          "description": "Stub for the advertised Dolci tool.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
+              "weight_kg": {},
+              "height_cm": {},
+              "age": {},
+              "sex": {},
+              "activity_level": {},
+              "goal": {}
             },
-            "required": [
-              "command",
-              "path"
-            ]
+            "additionalProperties": false
           }
         }
       },
@@ -524,25 +296,54 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "zipcode": {
-                "type": "string"
-              }
+              "zipcode": {}
             },
-            "required": []
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_ip_zipcode",
+          "description": "Stub for the advertised Dolci tool.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "ip": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_pokemon_move_info",
+          "description": "Stub for the advertised Dolci tool.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "pokemon_name": {},
+              "move_name": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "predict_evolution_rate",
+          "description": "Stub for the advertised Dolci tool.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "species": {},
+              "years": {},
+              "model": {}
+            },
+            "additionalProperties": false
           }
         }
       },
@@ -554,144 +355,13 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "checkin_date": {
-                "type": "string"
-              },
-              "checkout_date": {
-                "type": "string"
-              },
-              "guest_id": {
-                "type": "string"
-              },
-              "nightly_rate": {
-                "type": "string"
-              },
-              "room_type": {
-                "type": "string"
-              }
+              "checkin_date": {},
+              "checkout_date": {},
+              "guest_id": {},
+              "nightly_rate": {},
+              "room_type": {}
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
+            "additionalProperties": false
           }
         }
       }
@@ -848,100 +518,29 @@
       {
         "type": "function",
         "function": {
-          "name": "cell_density",
-          "description": "Provide a placeholder for the `cell_density` tool in the committed Dolci sample.",
+          "name": "can_attend_all_meetings",
+          "description": "Stub for the advertised Dolci tool.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "dilution": {
-                "type": "string"
-              },
-              "od": {
-                "type": "string"
-              }
+              "intervals": {}
             },
-            "required": []
+            "additionalProperties": false
           }
         }
       },
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "cell_density",
+          "description": "Provide a placeholder for the `cell_density` tool in the committed Dolci sample.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
+              "dilution": {},
+              "od": {}
             },
-            "required": [
-              "command",
-              "path"
-            ]
+            "additionalProperties": false
           }
         }
       },
@@ -976,132 +575,9 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "num": {
-                "type": "string"
-              }
+              "num": {}
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
+            "additionalProperties": false
           }
         }
       }
@@ -1129,7 +605,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Can you help with two things at once? 1) Calculate the final velocity of a car that starts at 20 m/s, accelerates at 2 m/s² for 15 seconds. 2) Also, find the number of ways 4 books can be arranged out of a set of 10."
+            "text": "Can you help with two things at once? 1) Calculate the final velocity of a car that starts at 20 m/s, accelerates at 2 m/s\u00b2 for 15 seconds. 2) Also, find the number of ways 4 books can be arranged out of a set of 10."
           }
         ]
       },
@@ -1252,7 +728,7 @@
         "content": [
           {
             "type": "text",
-            "text": "With an initial velocity of 0 m/s, the car's final velocity after 15 seconds at 2 m/s² acceleration is 30.0 m/s.\nFor arranging all 10 books, there are 3,628,800 possible permutations."
+            "text": "With an initial velocity of 0 m/s, the car's final velocity after 15 seconds at 2 m/s\u00b2 acceleration is 30.0 m/s.\nFor arranging all 10 books, there are 3,628,800 possible permutations."
           }
         ]
       },
@@ -1318,7 +794,7 @@
         "content": [
           {
             "type": "text",
-            "text": "If you arrange all 6 books, there are 720 ways to do so. With an initial velocity of 0 m/s and acceleration of 2 m/s² for 5 seconds, the final velocity is 10.0 m/s."
+            "text": "If you arrange all 6 books, there are 720 ways to do so. With an initial velocity of 0 m/s and acceleration of 2 m/s\u00b2 for 5 seconds, the final velocity is 10.0 m/s."
           }
         ]
       },
@@ -1384,7 +860,7 @@
         "content": [
           {
             "type": "text",
-            "text": "You can arrange 3 of the 6 books in 120 different ways. If you accelerate from 0 m/s for 30 seconds at 2 m/s², the final velocity is 60.0 m/s."
+            "text": "You can arrange 3 of the 6 books in 120 different ways. If you accelerate from 0 m/s for 30 seconds at 2 m/s\u00b2, the final velocity is 60.0 m/s."
           }
         ]
       },
@@ -1453,7 +929,7 @@
             "type": "function",
             "function": {
               "name": "finish",
-              "arguments": "{\"message\": \"There are 6 ways to arrange just 1 book out of 6. After accelerating from 0 m/s for 1 second at 2 m/s², the car's final velocity is 2.0 m/s.\", \"summary\": \"Call finish\"}"
+              "arguments": "{\"message\": \"There are 6 ways to arrange just 1 book out of 6. After accelerating from 0 m/s for 1 second at 2 m/s\u00b2, the car's final velocity is 2.0 m/s.\", \"summary\": \"Call finish\"}"
             }
           }
         ]
@@ -1465,7 +941,7 @@
         "content": [
           {
             "type": "text",
-            "text": "There are 6 ways to arrange just 1 book out of 6. After accelerating from 0 m/s for 1 second at 2 m/s², the car's final velocity is 2.0 m/s."
+            "text": "There are 6 ways to arrange just 1 book out of 6. After accelerating from 0 m/s for 1 second at 2 m/s\u00b2, the car's final velocity is 2.0 m/s."
           }
         ]
       }
@@ -1479,95 +955,10 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "k": {
-                "type": "string"
-              },
-              "n": {
-                "type": "string"
-              }
+              "k": {},
+              "n": {}
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
+            "additionalProperties": false
           }
         }
       },
@@ -1602,138 +993,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "acceleration": {
-                "type": "string"
-              },
-              "initial_velocity": {
-                "type": "string"
-              },
-              "time": {
-                "type": "string"
-              }
+              "acceleration": {},
+              "initial_velocity": {},
+              "time": {}
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
+            "additionalProperties": false
           }
         }
       }
@@ -1785,7 +1049,7 @@
         "content": [
           {
             "type": "text",
-            "text": "{\"results\": {\"matches\": [{\"match_id\": \"2023-08-12-ARS–NEW\", \"home\": \"Arsenal\", \"away\": \"Newcastle\", \"kickoff\": \"14:00\"}, {\"match_id\": \"2023-08-12-MUNLIV\", \"home\": \"Manchester United\", \"away\": \"Liverpool\", \"kickoff\": \"16:30\"}, {\"match_id\": \"2023-08-12-VALBAR\", \"home\": \"Valencia\", \"away\": \"Barcelona\", \"kickoff\": \"19:00\"}]}}"
+            "text": "{\"results\": {\"matches\": [{\"match_id\": \"2023-08-12-ARS\u2013NEW\", \"home\": \"Arsenal\", \"away\": \"Newcastle\", \"kickoff\": \"14:00\"}, {\"match_id\": \"2023-08-12-MUNLIV\", \"home\": \"Manchester United\", \"away\": \"Liverpool\", \"kickoff\": \"16:30\"}, {\"match_id\": \"2023-08-12-VALBAR\", \"home\": \"Valencia\", \"away\": \"Barcelona\", \"kickoff\": \"19:00\"}]}}"
           }
         ]
       },
@@ -1794,7 +1058,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Here are the matches for 2023-08-12 in your UTC+2 timezone:\n• Arsenal vs. Newcastle (14:00)\n• Manchester United vs. Liverpool (16:30) — Match ID: 2023-08-12-MUNLIV\n• Valencia vs. Barcelona (19:00)\nLet me know if you need details on any of them!"
+            "text": "Here are the matches for 2023-08-12 in your UTC+2 timezone:\n\u2022 Arsenal vs. Newcastle (14:00)\n\u2022 Manchester United vs. Liverpool (16:30) \u2014 Match ID: 2023-08-12-MUNLIV\n\u2022 Valencia vs. Barcelona (19:00)\nLet me know if you need details on any of them!"
           }
         ]
       },
@@ -1860,7 +1124,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Here are the details you requested:\nMatch 2023-08-12-MUNLIV (Premier League)\nVenue: Old Trafford\nHalf-time: 1-0 | Full-time: 2-2\nScorers: Rashford 23’, Fernandes 54’ — Salah 67’, Jota 88’\n\nCurrent Power-Ranking Rounds (Tournament 16, Season 41087):\n• Round 1 leader: Manchester City\n• Round 2 leader: Arsenal\n• Round 3 leader: Liverpool\nAnything else I can help you with?"
+            "text": "Here are the details you requested:\nMatch 2023-08-12-MUNLIV (Premier League)\nVenue: Old Trafford\nHalf-time: 1-0 | Full-time: 2-2\nScorers: Rashford 23\u2019, Fernandes 54\u2019 \u2014 Salah 67\u2019, Jota 88\u2019\n\nCurrent Power-Ranking Rounds (Tournament 16, Season 41087):\n\u2022 Round 1 leader: Manchester City\n\u2022 Round 2 leader: Arsenal\n\u2022 Round 3 leader: Liverpool\nAnything else I can help you with?"
           }
         ]
       },
@@ -1902,7 +1166,7 @@
         "content": [
           {
             "type": "text",
-            "text": "After the latest round, Real Madrid are on top of LaLiga 2023 with 82 points, followed by Barcelona (78) and Atlético Madrid (74)."
+            "text": "After the latest round, Real Madrid are on top of LaLiga 2023 with 82 points, followed by Barcelona (78) and Atl\u00e9tico Madrid (74)."
           }
         ]
       },
@@ -1986,7 +1250,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Here are the betting tips from oldest to newest:\n1. Chelsea vs Spurs — Over 2.5 goals\n2. PSG vs Lyon — PSG to win\n3. Bayern vs Dortmund — Both teams to score"
+            "text": "Here are the betting tips from oldest to newest:\n1. Chelsea vs Spurs \u2014 Over 2.5 goals\n2. PSG vs Lyon \u2014 PSG to win\n3. Bayern vs Dortmund \u2014 Both teams to score"
           }
         ]
       },
@@ -2031,7 +1295,7 @@
             "type": "function",
             "function": {
               "name": "finish",
-              "arguments": "{\"message\": \"Formula 1 Race 5 (Monaco GP):\\n• Winner: Max Verstappen (Red Bull Racing) — 1:42:37.101\\n• Podium: 1) Verstappen  2) Leclerc  3) Hamilton\\nHope that covers everything!\", \"summary\": \"Call finish\"}"
+              "arguments": "{\"message\": \"Formula 1 Race 5 (Monaco GP):\\n\u2022 Winner: Max Verstappen (Red Bull Racing) \u2014 1:42:37.101\\n\u2022 Podium: 1) Verstappen  2) Leclerc  3) Hamilton\\nHope that covers everything!\", \"summary\": \"Call finish\"}"
             }
           }
         ]
@@ -2043,7 +1307,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Formula 1 Race 5 (Monaco GP):\n• Winner: Max Verstappen (Red Bull Racing) — 1:42:37.101\n• Podium: 1) Verstappen  2) Leclerc  3) Hamilton\nHope that covers everything!"
+            "text": "Formula 1 Race 5 (Monaco GP):\n\u2022 Winner: Max Verstappen (Red Bull Racing) \u2014 1:42:37.101\n\u2022 Podium: 1) Verstappen  2) Leclerc  3) Hamilton\nHope that covers everything!"
           }
         ]
       }
@@ -2052,67 +1316,14 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "daily_match_list_all",
+          "description": "Stub for the advertised Dolci tool.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
+              "date": {}
             },
-            "required": [
-              "command",
-              "path"
-            ]
+            "additionalProperties": false
           }
         }
       },
@@ -2147,25 +1358,9 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "sort": {
-                "type": "string"
-              }
+              "sort": {}
             },
-            "required": []
+            "additionalProperties": false
           }
         }
       },
@@ -2177,28 +1372,10 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "date": {
-                "type": "string"
-              },
-              "utc_offset": {
-                "type": "string"
-              }
+              "date": {},
+              "utc_offset": {}
             },
-            "required": []
+            "additionalProperties": false
           }
         }
       },
@@ -2210,25 +1387,9 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "season": {
-                "type": "string"
-              }
+              "season": {}
             },
-            "required": []
+            "additionalProperties": false
           }
         }
       },
@@ -2240,28 +1401,10 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "seasonid": {
-                "type": "string"
-              },
-              "tournamentid": {
-                "type": "string"
-              }
+              "seasonid": {},
+              "tournamentid": {}
             },
-            "required": []
+            "additionalProperties": false
           }
         }
       },
@@ -2273,25 +1416,9 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "match_id": {
-                "type": "string"
-              }
+              "match_id": {}
             },
-            "required": []
+            "additionalProperties": false
           }
         }
       },
@@ -2303,25 +1430,9 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "identifier": {
-                "type": "string"
-              }
+              "identifier": {}
             },
-            "required": []
+            "additionalProperties": false
           }
         }
       },
@@ -2333,132 +1444,9 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "race_no": {
-                "type": "string"
-              }
+              "race_no": {}
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
-            "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
-            ]
+            "additionalProperties": false
           }
         }
       }

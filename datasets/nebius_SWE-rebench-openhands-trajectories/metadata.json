@@ -1,0 +1,140 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The editor command to run."
+            },
+            "path": {
+              "type": "string",
+              "description": "Absolute path to the target file or directory."
+            },
+            "file_text": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Content for create operations."
+            },
+            "old_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Text to replace for str_replace operations."
+            },
+            "new_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Replacement text or insertion text."
+            },
+            "insert_line": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Line after which to insert text."
+            },
+            "view_range": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional line range for view operations."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "task_tracker",
+        "description": "Track task progress.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The task tracker command."
+            },
+            "task_list": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array",
+              "description": "The full task list with statuses and notes."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "task_list"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "think",
+        "description": "Log reasoning without changing the environment.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "thought": {
+              "type": "string",
+              "description": "The reasoning text to record."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "thought"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

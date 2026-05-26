@@ -17,6 +17,7 @@ from agents.openhands_v0.system_prompt.user import get_web_user_message
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
+from schema.dataset_metadata import load_dataset_metadata, validate_trajectory_metadata
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
@@ -38,6 +39,7 @@ def get_generate_axtree():
 action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
 function_call_patterns = ("<function=", "<function_calls>", "<invoke name=")
+OPENHANDS_V0_NATIVE_API_NAMES = set(openhands_v0_default_tools)
 
 
 def contains_function_call_pattern(content: str) -> bool:
@@ -307,16 +309,22 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
     std_dataset = [json.loads(line)]
     std_data = std_dataset[0]
     trajectory = Trajectory(**std_data)
+    validate_trajectory_metadata(
+        trajectory,
+        load_dataset_metadata(dataset),
+        dataset_name=dataset,
+        native_api_names=OPENHANDS_V0_NATIVE_API_NAMES,
+    )
     id = trajectory.id
     events = trajectory.content
-    if trajectory.available_apis is not None:
+    if trajectory.available_custom_tools is not None:
         try:
             exclude_apis = browser_default_apis if is_web else {}
             api_tool_description, api_sigs = get_api_tool_description(
                 dataset,
                 exclude_apis,
                 api_env,
-                include_apis=trajectory.available_apis,
+                include_custom_tools=trajectory.available_custom_tools,
             )
         except Exception as e:
             print(e, file=sys.stderr)

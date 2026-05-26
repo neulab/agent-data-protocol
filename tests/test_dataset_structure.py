@@ -43,11 +43,15 @@ def test_dataset_structure(subdir):
     if os.path.exists(sample_std_path):
         sample_sft_dir = os.path.join(subdir_path, "sample_sft")
         openhands_v0_sft_path = os.path.join(sample_sft_dir, "openhands_v0.json")
+        metadata_path = os.path.join(subdir_path, "metadata.json")
         assert os.path.isdir(sample_sft_dir), (
             f"sample_std.json exists but sample_sft directory not found in {subdir_path}"
         )
         assert os.path.exists(openhands_v0_sft_path), (
             f"sample_std.json exists but sample_sft/openhands_v0.json not found in {subdir_path}"
+        )
+        assert os.path.exists(metadata_path), (
+            f"sample_std.json exists but metadata.json not found in {subdir_path}"
         )
 
     # Check for other JSON files that shouldn't be there
@@ -55,6 +59,7 @@ def test_dataset_structure(subdir):
         "sample_raw.json",
         "sample_std.json",
         "generated_thoughts.json",
+        "metadata.json",
     ]
     for file in os.listdir(subdir_path):
         if file.endswith(".json") and file not in allowed_jsons:

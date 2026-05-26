@@ -30,13 +30,13 @@ class Trajectory(BaseModel):
             WebObservation,
         ]
     ]
-    available_apis: list[str] | None = Field(
+    available_custom_tools: list[str] | None = Field(
         default=None,
         description=(
-            "API function names available to this trajectory. Only populate this for "
-            "datasets with api.py where the source data explicitly specifies per-instance "
-            "tool availability. When provided, this must be a subset of the dataset's api.py "
-            "functions and must include every ApiAction function used in the trajectory."
+            "Custom tool names available to this trajectory. Only populate this when "
+            "the source data explicitly specifies per-instance custom tool availability. "
+            "When provided, this must be a subset of metadata.json custom_tools and "
+            "must include every custom ApiAction.function used in the trajectory."
         ),
         exclude_if=lambda value: value is None,
     )

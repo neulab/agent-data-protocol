@@ -16,7 +16,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Take Jim Molinari’s total wins as head coach at Northern Illinois and Bradley, subtract the number of regular season Summit League titles he won at Western Illinois, and then add the number of different NCAA Division I men's basketball programs where he served strictly as assistant coach (excluding head or interim head coach stints). What is the result?"
+            "text": "Take Jim Molinari\u2019s total wins as head coach at Northern Illinois and Bradley, subtract the number of regular season Summit League titles he won at Western Illinois, and then add the number of different NCAA Division I men's basketball programs where he served strictly as assistant coach (excluding head or interim head coach stints). What is the result?"
           }
         ]
       },
@@ -28,14 +28,14 @@
             "type": "function",
             "function": {
               "name": "simple_web_search",
-              "arguments": "{\"query\": \"Jim Molinari total wins as head coach at Northern Illinois\", \"security_risk\": \"UNKNOWN\", \"summary\": \"Since no previous steps have been taken, I will start by searching for Jim Molinari’s total wins as head coach at Northe\"}"
+              "arguments": "{\"query\": \"Jim Molinari total wins as head coach at Northern Illinois\", \"security_risk\": \"UNKNOWN\", \"summary\": \"Since no previous steps have been taken, I will start by searching for Jim Molinari\u2019s total wins as head coach at Northe\"}"
             }
           }
         ],
         "content": [
           {
             "type": "text",
-            "text": "Since no previous steps have been taken, I will start by searching for Jim Molinari’s total wins as head coach at Northern Illinois to address the first sub-task."
+            "text": "Since no previous steps have been taken, I will start by searching for Jim Molinari\u2019s total wins as head coach at Northern Illinois to address the first sub-task."
           }
         ]
       },
@@ -55,66 +55,48 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "ask_llm",
+          "description": "Ask a language model for tasks that need no external tools.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+              "query": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "query"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "file_agent",
+          "description": "Use a file-analysis agent to answer a task over local files.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "task": {
+                "type": "string"
+              },
+              "file_path_dict": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "task"
             ]
           }
         }
@@ -150,24 +132,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "query": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "query"
             ]
@@ -177,106 +146,18 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "web_agent",
+          "description": "Use a web browser agent to complete a web task.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+              "task": {
+                "type": "string"
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
+              "task"
             ]
           }
         }
@@ -344,66 +225,48 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "ask_llm",
+          "description": "Ask a language model for tasks that need no external tools.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+              "query": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "query"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "file_agent",
+          "description": "Use a file-analysis agent to answer a task over local files.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "task": {
+                "type": "string"
+              },
+              "file_path_dict": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "task"
             ]
           }
         }
@@ -434,83 +297,18 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "simple_web_search",
+          "description": "Run a quick web search for straightforward information needs.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+              "query": {
+                "type": "string"
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
+              "query"
             ]
           }
         }
@@ -518,22 +316,18 @@
       {
         "type": "function",
         "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
+          "name": "web_agent",
+          "description": "Use a web browser agent to complete a web task.",
           "parameters": {
             "type": "object",
             "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
+              "task": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "thought"
+              "task"
             ]
           }
         }
@@ -601,73 +395,6 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "finish",
           "description": "Signals completion of the current task or conversation.",
           "parameters": {
@@ -696,24 +423,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "file_name": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "file_name"
             ]
@@ -723,83 +437,23 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "read_screenshot",
+          "description": "Read selected file pages with screenshot-based processing.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+              "file_name": {
+                "type": "string"
               },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+              "page_id_list": {
+                "items": {},
+                "type": "array"
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
+              "file_name",
+              "page_id_list"
             ]
           }
         }
@@ -807,22 +461,47 @@
       {
         "type": "function",
         "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
+          "name": "read_text",
+          "description": "Read selected file pages as text.",
           "parameters": {
             "type": "object",
             "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
+              "file_name": {
+                "type": "string"
               },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
+              "page_id_list": {
+                "items": {},
+                "type": "array"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "thought"
+              "file_name",
+              "page_id_list"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "search",
+          "description": "Search a file for keywords and return matching pages.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_name": {
+                "type": "string"
+              },
+              "key_word_list": {
+                "items": {},
+                "type": "array"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "file_name",
+              "key_word_list"
             ]
           }
         }
@@ -890,73 +569,6 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
-              }
-            },
-            "required": [
-              "command",
-              "path"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "finish",
           "description": "Signals completion of the current task or conversation.",
           "parameters": {
@@ -980,83 +592,18 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "load_file",
+          "description": "Load a local file into the CognitiveKernel file environment.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+              "file_name": {
+                "type": "string"
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
+              "file_name"
             ]
           }
         }
@@ -1064,22 +611,71 @@
       {
         "type": "function",
         "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
+          "name": "read_screenshot",
+          "description": "Read selected file pages with screenshot-based processing.",
           "parameters": {
             "type": "object",
             "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
+              "file_name": {
+                "type": "string"
               },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
+              "page_id_list": {
+                "items": {},
+                "type": "array"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "thought"
+              "file_name",
+              "page_id_list"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "read_text",
+          "description": "Read selected file pages as text.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_name": {
+                "type": "string"
+              },
+              "page_id_list": {
+                "items": {},
+                "type": "array"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "file_name",
+              "page_id_list"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "search",
+          "description": "Search a file for keywords and return matching pages.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_name": {
+                "type": "string"
+              },
+              "key_word_list": {
+                "items": {},
+                "type": "array"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "file_name",
+              "key_word_list"
             ]
           }
         }
@@ -1108,7 +704,7 @@
         "content": [
           {
             "type": "text",
-            "text": "打印订单服务的注册截止日期是什么时候，具体时间是几点？ Please interact with https://2024.aclweb.org/ to get the answer."
+            "text": "\u6253\u5370\u8ba2\u5355\u670d\u52a1\u7684\u6ce8\u518c\u622a\u6b62\u65e5\u671f\u662f\u4ec0\u4e48\u65f6\u5019\uff0c\u5177\u4f53\u65f6\u95f4\u662f\u51e0\u70b9\uff1f Please interact with https://2024.aclweb.org/ to get the answer."
           }
         ]
       },
@@ -1147,66 +743,48 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "ask_llm",
+          "description": "Ask a language model for tasks that need no external tools.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+              "query": {
+                "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "query"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "file_agent",
+          "description": "Use a file-analysis agent to answer a task over local files.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "task": {
+                "type": "string"
+              },
+              "file_path_dict": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "task"
             ]
           }
         }
@@ -1237,106 +815,18 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "simple_web_search",
+          "description": "Run a quick web search for straightforward information needs.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+              "query": {
+                "type": "string"
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
+              "query"
             ]
           }
         }
@@ -1349,24 +839,11 @@
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "task": {
                 "type": "string"
               }
             },
+            "additionalProperties": false,
             "required": [
               "task"
             ]

@@ -318,17 +318,17 @@ def process_data(raw_data: dict) -> Trajectory:
             )
         )
 
-    available_apis = advertised_apis
+    available_custom_tools = advertised_apis
     if any(api == "perform_action" for api in used_apis):
-        available_apis.insert(0, "perform_action")
+        available_custom_tools.insert(0, "perform_action")
     for api in used_apis:
         if api != "perform_action" and advertised_apis:
-            available_apis.append(api)
+            available_custom_tools.append(api)
 
     return create_trajectory_with_tool_call_links(
         id=data.id,
         content=content,
-        available_apis=ordered_unique(available_apis) or None,
+        available_custom_tools=ordered_unique(available_custom_tools) or None,
     )
 
 

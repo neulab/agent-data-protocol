@@ -1,0 +1,116 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "finish",
+        "description": "Finish the task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "Final response to the user."
+            },
+            "task_completed": {
+              "type": "string",
+              "description": "Whether the task was completed successfully."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "message",
+            "task_completed"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files with the OpenHands string replacement editor.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "Editor command such as view, create, str_replace, insert, or undo_edit."
+            },
+            "path": {
+              "type": "string",
+              "description": "Absolute path to the file or directory to operate on."
+            },
+            "file_text": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Content to write when creating a file."
+            },
+            "old_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Existing text to replace."
+            },
+            "new_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Replacement text or text to insert."
+            },
+            "insert_line": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Line number after which to insert new_str."
+            },
+            "view_range": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional 1-indexed inclusive line range for view commands."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

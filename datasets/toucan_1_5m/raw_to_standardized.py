@@ -348,9 +348,9 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
     """Convert raw Toucan data to standardized trajectory format."""
     trajectory_id = raw_data["id"]
     messages = raw_data.get("messages", [])
-    available_apis = None
+    available_custom_tools = None
     if "available_tools" in raw_data:
-        available_apis = parse_available_tools(raw_data["available_tools"])
+        available_custom_tools = parse_available_tools(raw_data["available_tools"])
 
     if isinstance(messages, str):
         messages = json.loads(messages)
@@ -396,7 +396,7 @@ def convert_trajectory(raw_data: dict) -> Trajectory:
             )
 
     return create_trajectory_with_tool_call_links(
-        id=trajectory_id, content=content, available_apis=available_apis
+        id=trajectory_id, content=content, available_custom_tools=available_custom_tools
     )
 
 

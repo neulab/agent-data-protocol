@@ -59,14 +59,13 @@ def split_think_blocks(content: str) -> tuple[str, str | None]:
     return visible_content, reasoning_content
 
 
-def build_available_apis(data: SchemaRaw) -> list[str]:
+def build_available_custom_tools(data: SchemaRaw) -> list[str]:
     """Return the identifiers of the tools advertised for this ToolMind trajectory.
 
     The raw schema provides a `tools` array per row. Each tool's identifier is
-    recorded on the top-level `Trajectory.available_apis` field so the
-    OpenHands SFT converter can filter the dataset's `api.py` per-trajectory
-    via `include_apis`. The full set of advertised tool stubs lives in
-    `datasets/toolmind/api.py`.
+    recorded on the top-level `Trajectory.available_custom_tools` field so the
+    OpenHands SFT converter can filter the dataset's `metadata.json`
+    per-trajectory via `include_custom_tools`.
     """
     names: list[str] = []
     seen: set[str] = set()
@@ -119,11 +118,11 @@ def process_data(data: SchemaRaw) -> Trajectory:
         "source_file": data.source_file,
         "row_index": data.row_index,
     }
-    available_apis = build_available_apis(data)
+    available_custom_tools = build_available_custom_tools(data)
     return create_trajectory_with_tool_call_links(
         id=data.id,
         content=content,
-        available_apis=available_apis or None,
+        available_custom_tools=available_custom_tools or None,
         details=details,
     )
 

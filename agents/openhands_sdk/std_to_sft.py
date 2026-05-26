@@ -1,7 +1,5 @@
 import argparse
 import ast
-import importlib.util
-import inspect
 import json
 import os
 import re
@@ -12,6 +10,12 @@ from typing import Any
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
+from schema.dataset_metadata import (
+    custom_tool_map,
+    is_browser_api_action,
+    load_dataset_metadata,
+    validate_trajectory_metadata,
+)
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
@@ -233,7 +237,8 @@ BUILTIN_TOOLS: dict[str, dict[str, Any]] = {
 }
 
 
-DEFAULT_TOOL_NAMES = ["terminal", "file_editor", "task_tracker", "finish", "think"]
+BROWSER_BUILTIN_TOOL_NAMES = sorted(name for name in BUILTIN_TOOLS if name.startswith("browser_"))
+OPENHANDS_SDK_NATIVE_API_NAMES = set(OPENHANDS_TOOL_ALIASES)
 
 
 def text_content(text: str) -> list[dict[str, str]]:
@@ -309,63 +314,6 @@ def tool_call_id(index: int, name: str) -> str:
     return f"call_{index:06d}_{safe_tool_suffix(name)}"
 
 
-def infer_json_schema(value: Any) -> dict[str, Any]:
-    value = parse_scalar(value)
-    if isinstance(value, bool):
-        return {"type": "boolean"}
-    if isinstance(value, int):
-        return {"type": "integer"}
-    if isinstance(value, float):
-        return {"type": "number"}
-    if isinstance(value, list):
-        return {"type": "array"}
-    if isinstance(value, dict):
-        return {"type": "object"}
-    return {"type": "string"}
-
-
-def load_dataset_api_tools(dataset_name: str | None) -> dict[str, dict[str, Any]]:
-    if not dataset_name:
-        return {}
-    api_file_path = Path("datasets") / dataset_name / "api.py"
-    if not api_file_path.exists():
-        return {}
-    spec = importlib.util.spec_from_file_location(f"{dataset_name}_api", api_file_path)
-    if spec is None or spec.loader is None:
-        return {}
-    api_module = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(api_module)
-    except Exception:
-        return {}
-    tools = {}
-    for name, func in inspect.getmembers(api_module, inspect.isfunction):
-        sig = inspect.signature(func)
-        properties = {}
-        required = []
-        for arg_name, param in sig.parameters.items():
-            properties[arg_name] = _json_schema("string")
-            if param.default is inspect.Parameter.empty:
-                required.append(arg_name)
-        tools[name] = _openai_tool(
-            name,
-            inspect.getdoc(func) or f"Dataset API function `{name}`.",
-            properties,
-            required,
-        )
-    return tools
-
-
-def loose_tool_schema(name: str, kwargs: dict[str, Any]) -> dict[str, Any]:
-    properties = {key: infer_json_schema(value) for key, value in kwargs.items()}
-    return _openai_tool(
-        name,
-        f"Dataset-specific tool call `{name}`.",
-        properties,
-        list(properties.keys()),
-    )
-
-
 def coerce_browser_index(value: Any) -> int:
     value = parse_scalar(value)
     if isinstance(value, int):
@@ -402,10 +350,10 @@ def map_browser_action(function_name: str, kwargs: dict[str, Any]) -> tuple[str,
     return BROWSER_TOOL_ALIASES[function_name], kwargs
 
 
-def map_api_action(event: ApiAction) -> tuple[str, dict[str, Any]]:
+def map_api_action(event: ApiAction, *, browser_action: bool = False) -> tuple[str, dict[str, Any]]:
     function_name = event.function
     kwargs = normalize_kwargs(event.kwargs)
-    if function_name in BROWSER_TOOL_ALIASES:
+    if browser_action and function_name in BROWSER_TOOL_ALIASES:
         return map_browser_action(function_name, kwargs)
     tool_name = OPENHANDS_TOOL_ALIASES.get(function_name, function_name)
     if function_name == "submit":
@@ -428,9 +376,10 @@ def map_code_action(event: CodeAction) -> tuple[str, dict[str, Any]]:
     language = event.language
     if language == "bash":
         return "terminal", {"command": event.content}
-    if language == "python":
-        return "terminal", {"command": f"python - <<'PY'\n{event.content}\nPY"}
-    return "terminal", {"command": f"cat <<'CODE'\n{event.content}\nCODE"}
+    raise ValueError(
+        "OpenHands SDK SFT conversion only supports bash CodeAction entries. "
+        f"Encountered language {language!r}."
+    )
 
 
 def supports_security_risk(tool_name: str) -> bool:
@@ -512,17 +461,69 @@ def web_observation_to_content(event: WebObservation) -> str:
 
 
 class ConversionState:
-    def __init__(self, dataset_tools: dict[str, dict[str, Any]], system_prompt: str):
+    def __init__(
+        self,
+        dataset_tools: dict[str, dict[str, Any]],
+        system_prompt: str,
+        trajectory: Trajectory,
+        metadata_code_enabled: list[str],
+        metadata_browser_enabled: bool,
+    ):
         self.dataset_tools = dataset_tools
         self.system_prompt = system_prompt
         self.messages: list[dict[str, Any]] = [
             {"role": "system", "content": text_content(system_prompt)}
         ]
-        self.tools_by_name: dict[str, dict[str, Any]] = {
-            name: BUILTIN_TOOLS[name] for name in DEFAULT_TOOL_NAMES
-        }
+        self.tools_by_name: dict[str, dict[str, Any]] = {}
         self.pending_tool_calls: list[dict[str, str]] = []
         self.call_index = 0
+        self.metadata_browser_enabled = metadata_browser_enabled
+        self.enable_metadata_tools(
+            trajectory,
+            metadata_code_enabled=metadata_code_enabled,
+            metadata_browser_enabled=metadata_browser_enabled,
+        )
+
+    def add_builtin_tool(self, name: str) -> None:
+        self.tools_by_name[name] = BUILTIN_TOOLS[name]
+
+    def enable_metadata_tools(
+        self,
+        trajectory: Trajectory,
+        *,
+        metadata_code_enabled: list[str],
+        metadata_browser_enabled: bool,
+    ) -> None:
+        unsupported_code_languages = sorted(set(metadata_code_enabled) - {"bash"})
+        if unsupported_code_languages:
+            raise ValueError(
+                "OpenHands SDK SFT conversion only supports bash code actions. "
+                f"Unsupported code_enabled languages: {unsupported_code_languages}"
+            )
+        if "bash" in metadata_code_enabled:
+            self.add_builtin_tool("terminal")
+        if metadata_browser_enabled:
+            for tool_name in BROWSER_BUILTIN_TOOL_NAMES:
+                self.add_builtin_tool(tool_name)
+
+        available_custom_tools = (
+            trajectory.available_custom_tools
+            if trajectory.available_custom_tools is not None
+            else sorted(self.dataset_tools)
+        )
+        for source_tool_name in available_custom_tools:
+            if metadata_browser_enabled and source_tool_name in BROWSER_TOOL_ALIASES:
+                continue
+            tool_name = OPENHANDS_TOOL_ALIASES.get(source_tool_name, source_tool_name)
+            if tool_name in BUILTIN_TOOLS:
+                self.add_builtin_tool(tool_name)
+            elif source_tool_name in self.dataset_tools:
+                self.tools_by_name[source_tool_name] = self.dataset_tools[source_tool_name]
+            else:
+                raise ValueError(
+                    f"available_custom_tools contains {source_tool_name!r}, "
+                    "but metadata.json does not define that custom tool"
+                )
 
     def add_tool(self, name: str, args: dict[str, Any]) -> None:
         if name in self.tools_by_name:
@@ -532,7 +533,7 @@ class ConversionState:
         elif name in self.dataset_tools:
             self.tools_by_name[name] = self.dataset_tools[name]
         else:
-            self.tools_by_name[name] = loose_tool_schema(name, args)
+            raise ValueError(f"Tool {name!r} is not declared in metadata.json")
 
     def add_user_message(self, content: str) -> None:
         self.messages.append({"role": "user", "content": text_content(content)})
@@ -651,6 +652,13 @@ class ConversionState:
     def sorted_tools(self) -> list[dict[str, Any]]:
         return [self.tools_by_name[name] for name in sorted(self.tools_by_name)]
 
+    def api_action_is_browser(self, event: ApiAction) -> bool:
+        return is_browser_api_action(
+            event.function,
+            event.kwargs,
+            browser_context=self.metadata_browser_enabled,
+        )
+
     @staticmethod
     def message_text(message: dict[str, Any]) -> str:
         content = message.get("content")
@@ -700,7 +708,7 @@ def convert_event(state: ConversionState, event: Any) -> None:
         return
 
     if isinstance(event, ApiAction):
-        tool_name, args = map_api_action(event)
+        tool_name, args = map_api_action(event, browser_action=state.api_action_is_browser(event))
         state.add_tool_call(
             tool_name,
             args,
@@ -733,7 +741,11 @@ def convert_event(state: ConversionState, event: Any) -> None:
             )
         elif legacy_tool_call := extract_legacy_tool_call(event.content):
             function_name, kwargs, thought = legacy_tool_call
-            tool_name, args = map_api_action(ApiAction(function=function_name, kwargs=kwargs))
+            api_action = ApiAction(function=function_name, kwargs=kwargs)
+            tool_name, args = map_api_action(
+                api_action,
+                browser_action=state.api_action_is_browser(api_action),
+            )
             content = "\n\n".join(part for part in [action_content(event), thought] if part)
             state.add_tool_call(
                 tool_name,
@@ -755,7 +767,20 @@ def convert_event(state: ConversionState, event: Any) -> None:
 
 def process_row(line: str, system_prompt: str) -> dict[str, Any]:
     trajectory = Trajectory(**json.loads(line))
-    state = ConversionState(load_dataset_api_tools(dataset), system_prompt)
+    metadata = load_dataset_metadata(dataset, required=bool(dataset))
+    validate_trajectory_metadata(
+        trajectory,
+        metadata,
+        dataset_name=dataset,
+        native_api_names=OPENHANDS_SDK_NATIVE_API_NAMES,
+    )
+    state = ConversionState(
+        custom_tool_map(metadata),
+        system_prompt,
+        trajectory,
+        metadata_code_enabled=metadata.code_enabled,
+        metadata_browser_enabled=metadata.browser_enabled,
+    )
     for event in trajectory.content:
         convert_event(state, event)
     state.close_pending_tools()

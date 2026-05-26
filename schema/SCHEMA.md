@@ -22,9 +22,30 @@ The root container for all agent interaction data.
 - `schema_version` (str): ADP standardized schema version used by this trajectory. Defaults to the current schema version for backward-compatible parsing, but committed `sample_std.json` files must include it explicitly.
 - `id` (str): Unique identifier for the trajectory
 - `content` (list): Sequence of actions and observations that make up the trajectory
-- `available_apis` (list, optional): API function names available for this trajectory. Only populate this for datasets that have `api.py` and whose source data explicitly specifies per-instance tool/API availability; do not populate it by copying all functions from `api.py` or inferring it from APIs used in the trajectory. When present, it must be a subset of the dataset's `api.py` functions and cover every `ApiAction.function` in the trajectory.
+- `available_custom_tools` (list, optional): Custom tool names available for this trajectory. Only populate this when the source data explicitly specifies per-instance custom tool availability; do not populate it by copying all functions from `metadata.json` or inferring it from tools used in the trajectory. When present, it must be a subset of the dataset's `metadata.json` `custom_tools` entries and cover every custom `ApiAction.function` in the trajectory.
 - `available_code_languages` (list, optional): Code action languages available for this trajectory. Populate this when the trajectory contains `CodeAction` entries so converters can expose only the code/executor tools used by the trajectory. When present, it must exactly match the `CodeAction.language` values used in the trajectory.
 - `details` (dict): Additional dataset-specific metadata.
+
+### Dataset Metadata
+
+**File**: `datasets/<dataset>/metadata.json`
+
+Each dataset with a committed `sample_std.json` must also include `metadata.json`.
+This file declares dataset-level tool capabilities in a harness-independent
+format:
+
+- `custom_tools` (list): OpenAI-standard function tool specifications for
+  custom `ApiAction` functions used by the dataset.
+- `code_enabled` (list): Exact set of `CodeAction.language` values that appear
+  anywhere in the dataset's standardized sample.
+- `browser_enabled` (bool): `true` when the dataset contains browser state or
+  browser-style actions.
+
+SFT converters must reject records whose actions are inconsistent with the
+dataset metadata. Harness-specific converters may map metadata capabilities onto
+their own native tools. For example, the OpenHands SDK converter maps
+`code_enabled: ["bash"]` to `TerminalTool` and `browser_enabled: true` to
+`BrowserTool`.
 
 **Purpose**: Represents a complete sequence of agent interactions, containing both actions taken by the agent and observations received from the environment / user.
 
@@ -130,7 +151,7 @@ Represents web page state and structure.
 
 ```json
 {
-  "schema_version": "1.4.0",
+  "schema_version": "1.5.0",
   "id": "example_trajectory_001",
   "available_code_languages": ["bash"],
   "content": [
@@ -184,6 +205,10 @@ the same `tool_call_id` on both records:
 - In schema version 1.4.0 and later, trajectories with code actions should
   populate `available_code_languages` with the exact `CodeAction.language`
   values used by the trajectory.
+- In schema version 1.5.0 and later, dataset-level `metadata.json` replaces
+  `api.py` as the canonical declaration for custom tools and dataset-level
+  code/browser capabilities. The per-trajectory API availability field is named
+  `available_custom_tools`.
 
 This distinction matters because some datasets encode environment or tool
 feedback as text that otherwise looks like a user message. `source="user"`

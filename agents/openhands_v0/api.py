@@ -1,6 +1,7 @@
-import importlib.util
-import inspect
-import os
+from schema.dataset_metadata import (
+    load_dataset_metadata,
+    openai_tool_signature,
+)
 
 openhands_v0_default_tools = {
     "execute_bash": {"required": ["command"], "optional": ["is_input"]},
@@ -78,59 +79,49 @@ def check_exclude_tools(name: str, required: list, optional: list, exclude_apis:
 
 
 def get_api_tool_description(
-    dataset, exclude_apis=None, env="execute_ipython_cell", include_apis=None
+    dataset, exclude_apis=None, env="execute_ipython_cell", include_custom_tools=None
 ):
     if exclude_apis is None:
         exclude_apis = {}
-    if include_apis is not None:
-        if not isinstance(include_apis, list) or not all(
-            isinstance(api_name, str) for api_name in include_apis
+    if include_custom_tools is not None:
+        if not isinstance(include_custom_tools, list) or not all(
+            isinstance(api_name, str) for api_name in include_custom_tools
         ):
-            raise ValueError("available_apis must be a list of API function names")
-        include_api_names = set(include_apis)
+            raise ValueError("available_custom_tools must be a list of custom tool names")
+        include_api_names = set(include_custom_tools)
     else:
         include_api_names = None
 
-    api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
+    metadata = load_dataset_metadata(dataset)
     API_TOOL_DESCRIPTION = ""
-    if os.path.exists(api_file_path):
-        spec = importlib.util.spec_from_file_location("api", api_file_path)
-        api_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(api_module)
-        functions = inspect.getmembers(api_module, inspect.isfunction)
+    tools = metadata.custom_tools
+    if tools:
         if include_api_names is not None:
-            api_names = {name for name, _ in functions}
+            api_names = {tool.function.name for tool in tools}
             missing_api_names = sorted(include_api_names - api_names)
             if missing_api_names:
                 raise ValueError(
-                    f"available_apis contains functions not found in {api_file_path}: "
+                    f"available_custom_tools contains tools not found in metadata.json: "
                     f"{missing_api_names}"
                 )
         sigs = {}
-        for name, func in functions:
+        for tool in tools:
+            name = tool.function.name
             if include_api_names is not None and name not in include_api_names:
                 continue
-            docstring = "\n" + (inspect.getdoc(func) or "")
-            sig = inspect.signature(func)
-            required = []
-            optional = []
-            for arg_name, param in sig.parameters.items():
-                if param.default is inspect.Parameter.empty:
-                    if arg_name == "xpath" or arg_name == "element_id":
-                        arg_name = "bid"
-                    if arg_name not in required:
-                        required.append(arg_name)
-                else:
-                    optional.append(arg_name)
+            required, optional, signature = openai_tool_signature(tool)
+            required = ["bid" if arg in {"xpath", "element_id"} else arg for arg in required]
+            optional = ["bid" if arg in {"xpath", "element_id"} else arg for arg in optional]
             if name in openhands_v0_default_tools and check_exclude_openhands_v0_default_tools(
-                name, sig, required, optional
+                name, signature, required, optional
             ):
                 # print(f"excluded {name}", file=sys.stderr)
                 continue
             if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
                 # print(f"excluded {name}", file=sys.stderr)
                 continue
-            docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
+            description = "\n" + (tool.function.description or "")
+            docstring = f"{signature}" + description.replace("\n", "\n    ") + "\n\n"
             API_TOOL_DESCRIPTION += docstring
             sigs[name] = {"required": required, "optional": optional}
         if not API_TOOL_DESCRIPTION:

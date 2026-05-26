@@ -237,62 +237,37 @@
       {
         "type": "function",
         "function": {
-          "name": "finish",
-          "description": "Signals completion of the current task or conversation.",
+          "name": "generic_tool",
+          "description": "Represent a source-specific coding-agent tool call.",
           "parameters": {
             "type": "object",
             "properties": {
-              "summary": {
+              "tool_name": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
+                "description": "Original SWE-chat tool name."
               },
-              "message": {
-                "type": "string",
-                "description": "Final message to send to the user."
+              "tool_input": {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Parsed tool input parameters."
+              },
+              "content": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raw tool-call content when no structured input is available."
               }
             },
+            "additionalProperties": false,
             "required": [
-              "message"
+              "tool_name",
+              "tool_input"
             ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
           }
         }
       },
@@ -436,7 +411,7 @@
         "content": [
           {
             "type": "text",
-            "text": "That's the wrong parameter—the container animation is the slow part, not the individual card stagger."
+            "text": "That's the wrong parameter\u2014the container animation is the slow part, not the individual card stagger."
           }
         ]
       },
@@ -521,62 +496,37 @@
       {
         "type": "function",
         "function": {
-          "name": "finish",
-          "description": "Signals completion of the current task or conversation.",
+          "name": "generic_tool",
+          "description": "Represent a source-specific coding-agent tool call.",
           "parameters": {
             "type": "object",
             "properties": {
-              "summary": {
+              "tool_name": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
+                "description": "Original SWE-chat tool name."
               },
-              "message": {
-                "type": "string",
-                "description": "Final message to send to the user."
+              "tool_input": {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Parsed tool input parameters."
+              },
+              "content": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raw tool-call content when no structured input is available."
               }
             },
+            "additionalProperties": false,
             "required": [
-              "message"
+              "tool_name",
+              "tool_input"
             ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
           }
         }
       },
@@ -864,101 +814,37 @@
       {
         "type": "function",
         "function": {
-          "name": "finish",
-          "description": "Signals completion of the current task or conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "message": {
-                "type": "string",
-                "description": "Final message to send to the user."
-              }
-            },
-            "required": [
-              "message"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
           "name": "generic_tool",
-          "description": "Represent a source-specific coding-agent tool call.\n\nArgs:\n----\n    tool_name: Original SWE-chat tool name.\n    tool_input: Parsed tool input parameters.\n    content: Raw tool-call content when no structured input is available.",
+          "description": "Represent a source-specific coding-agent tool call.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "tool_name": {
-                "type": "string"
+                "type": "string",
+                "description": "Original SWE-chat tool name."
               },
               "tool_input": {
-                "type": "string"
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Parsed tool input parameters."
               },
               "content": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raw tool-call content when no structured input is available."
               }
             },
+            "additionalProperties": false,
             "required": [
               "tool_name",
               "tool_input"
             ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
-              }
-            },
-            "required": []
           }
         }
       },

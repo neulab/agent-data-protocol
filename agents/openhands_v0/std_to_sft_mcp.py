@@ -16,6 +16,7 @@ from agents.openhands_v0.system_prompt.user import get_web_user_message
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
+from schema.dataset_metadata import load_dataset_metadata, validate_trajectory_metadata
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
@@ -37,6 +38,7 @@ openhands_v0_default_tools = {
     },
     "edit_file": {"required": ["path", "content"], "optional": ["start", "end"]},
 }
+OPENHANDS_V0_NATIVE_API_NAMES = set(openhands_v0_default_tools)
 
 action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 
@@ -303,21 +305,27 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
     std_dataset = [json.loads(line)]
     std_data = std_dataset[0]
     trajectory = Trajectory(**std_data)
+    validate_trajectory_metadata(
+        trajectory,
+        load_dataset_metadata(dataset),
+        dataset_name=dataset,
+        native_api_names=OPENHANDS_V0_NATIVE_API_NAMES,
+    )
     id = trajectory.id
     events = trajectory.content
     row_api_tool_description = api_tool_description
     row_api_sigs = api_sigs
     row_api_tools = api_tools
-    if trajectory.available_apis is not None:
+    if trajectory.available_custom_tools is not None:
         try:
             exclude_apis = browser_default_apis if is_web else {}
             row_api_tool_description, row_api_sigs = get_api_tool_description(
                 dataset,
                 exclude_apis,
                 api_env,
-                include_apis=trajectory.available_apis,
+                include_custom_tools=trajectory.available_custom_tools,
             )
-            available_api_names = set(trajectory.available_apis)
+            available_api_names = set(trajectory.available_custom_tools)
             row_api_tools = {
                 name: tool for name, tool in api_tools.items() if name in available_api_names
             }

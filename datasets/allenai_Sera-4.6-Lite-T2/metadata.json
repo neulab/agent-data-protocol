@@ -1,0 +1,91 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files with the OpenHands editor tool.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "enum": [
+                "view",
+                "create",
+                "str_replace",
+                "insert",
+                "undo_edit"
+              ],
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "file_text": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "old_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "new_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "insert_line": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "view_range": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

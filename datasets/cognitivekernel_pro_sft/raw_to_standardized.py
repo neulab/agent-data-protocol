@@ -32,7 +32,7 @@ API_ARGUMENTS = {
     "search": ["file_name", "key_word_list"],
 }
 TABLEBENCH_API_ARGUMENTS = {**API_ARGUMENTS, "stop": ["answer", "summary"]}
-AVAILABLE_APIS_BY_SOURCE_FILE = {
+AVAILABLE_CUSTOM_TOOLS_BY_SOURCE_FILE = {
     "tablebench.sft.jsonl": [
         "load_file",
         "read_text",
@@ -180,7 +180,7 @@ def process_record(record: SchemaRaw) -> Trajectory:
     return create_trajectory_with_tool_call_links(
         id=record.id,
         content=content,
-        available_apis=AVAILABLE_APIS_BY_SOURCE_FILE.get(record.source_file),
+        available_custom_tools=AVAILABLE_CUSTOM_TOOLS_BY_SOURCE_FILE.get(record.source_file),
         details={
             "source": "CognitiveKernel/CognitiveKernel-Pro-SFT",
             "source_file": record.source_file,

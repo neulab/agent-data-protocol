@@ -271,66 +271,89 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "clean",
+          "description": "Clean an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "item": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+                "description": "The item to be cleaned (e.g., \"ladle 2\")."
               },
-              "summary": {
+              "appliance": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+                "description": "The appliance used for cleaning (e.g., \"sinkbasin 1\")."
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "close",
+          "description": "Close a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to close (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "cool",
+          "description": "Cool an item using a specified appliance.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to be cooled (e.g., \"plate 1\")."
+              },
+              "appliance": {
+                "type": "string",
+                "description": "The appliance to use for cooling (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "examine",
+          "description": "Inspect or look closely at an object in the environment.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to examine (e.g., \"dresser 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
             ]
           }
         }
@@ -362,28 +385,16 @@
         "type": "function",
         "function": {
           "name": "go",
-          "description": "Move to the specified location.\n\nArgs:\n    location (str): The target location to move to.\n\nExample:\n    go(\"bed 1\")",
+          "description": "Move to the specified location.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "location": {
-                "type": "string"
+                "type": "string",
+                "description": "The target location to move to."
               }
             },
+            "additionalProperties": false,
             "required": [
               "location"
             ]
@@ -393,32 +404,115 @@
       {
         "type": "function",
         "function": {
-          "name": "put",
-          "description": "Place an item onto or into a specified target.\n\nArgs:\n    item (str): The item to place.\n    target (str): The surface or container to place the item in/on.\n\nExample:\n    put(\"laptop 1\", \"bed 1\")",
+          "name": "heat",
+          "description": "Heat an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "item": {
-                "type": "string"
+                "type": "string",
+                "description": "The item to be heated (e.g., \"plate 1\")."
               },
-              "target": {
-                "type": "string"
+              "appliance": {
+                "type": "string",
+                "description": "The appliance to use for heating (e.g., \"microwave 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "inventory",
+          "description": "Check currently held items.\n\nThis function retrieves and lists the objects currently in possession.\n\nExample:\n    inventory()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look",
+          "description": "Survey the surroundings to get a description of the current environment.\n\nThis function allows the agent to observe visible objects and locations nearby.\n\nExample:\n    look()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look_at_under",
+          "description": "Look closely at an item that is located under a specified object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to examine (e.g., \"cellphone 1\")."
+              },
+              "reference": {
+                "type": "string",
+                "description": "The object under which the item is located (e.g., \"desklamp 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "reference"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "open",
+          "description": "Open a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to open (e.g., drawer, door)."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "put",
+          "description": "Place an item onto or into a specified target.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to place."
+              },
+              "target": {
+                "type": "string",
+                "description": "The surface or container to place the item in/on."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "item",
               "target"
@@ -429,32 +523,41 @@
       {
         "type": "function",
         "function": {
-          "name": "take",
-          "description": "Pick up an item from a specified source location.\n\nArgs:\n    item (str): The item to pick up.\n    source (str): The location from which to take the item.\n\nExample:\n    take(\"laptop 1\", \"diningtable 1\")",
+          "name": "report_problem",
+          "description": "Report an issue with a specified object in the environment.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "item": {
-                "type": "string"
-              },
-              "source": {
-                "type": "string"
+                "description": "The object with a problem (e.g., \"toilet 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "take",
+          "description": "Pick up an item from a specified source location.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to pick up."
+              },
+              "source": {
+                "type": "string",
+                "description": "The location from which to take the item."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "item",
               "source"
@@ -465,106 +568,19 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "use",
+          "description": "Use or activate a specified object or appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+                "description": "The object to use (e.g., \"desklamp 1\")."
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
+              "obj"
             ]
           }
         }
@@ -1358,66 +1374,89 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "clean",
+          "description": "Clean an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "item": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+                "description": "The item to be cleaned (e.g., \"ladle 2\")."
               },
-              "summary": {
+              "appliance": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+                "description": "The appliance used for cleaning (e.g., \"sinkbasin 1\")."
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "close",
+          "description": "Close a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to close (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "cool",
+          "description": "Cool an item using a specified appliance.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to be cooled (e.g., \"plate 1\")."
+              },
+              "appliance": {
+                "type": "string",
+                "description": "The appliance to use for cooling (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "examine",
+          "description": "Inspect or look closely at an object in the environment.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to examine (e.g., \"dresser 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
             ]
           }
         }
@@ -1449,28 +1488,16 @@
         "type": "function",
         "function": {
           "name": "go",
-          "description": "Move to the specified location.\n\nArgs:\n    location (str): The target location to move to.\n\nExample:\n    go(\"bed 1\")",
+          "description": "Move to the specified location.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "location": {
-                "type": "string"
+                "type": "string",
+                "description": "The target location to move to."
               }
             },
+            "additionalProperties": false,
             "required": [
               "location"
             ]
@@ -1481,31 +1508,20 @@
         "type": "function",
         "function": {
           "name": "heat",
-          "description": "Heat an item using a specified appliance.\n\nArgs:\n    item (str): The item to be heated (e.g., \"plate 1\").\n    appliance (str): The appliance to use for heating (e.g., \"microwave 1\").\n\nExample:\n    heat(\"plate 1\", \"microwave 1\")",
+          "description": "Heat an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "item": {
-                "type": "string"
+                "type": "string",
+                "description": "The item to be heated (e.g., \"plate 1\")."
               },
               "appliance": {
-                "type": "string"
+                "type": "string",
+                "description": "The appliance to use for heating (e.g., \"microwave 1\")."
               }
             },
+            "additionalProperties": false,
             "required": [
               "item",
               "appliance"
@@ -1516,29 +1532,66 @@
       {
         "type": "function",
         "function": {
-          "name": "open",
-          "description": "Open a specified container or object.\n\nArgs:\n    obj (str): The object to open (e.g., drawer, door).\n\nExample:\n    open(\"drawer 1\")",
+          "name": "inventory",
+          "description": "Check currently held items.\n\nThis function retrieves and lists the objects currently in possession.\n\nExample:\n    inventory()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look",
+          "description": "Survey the surroundings to get a description of the current environment.\n\nThis function allows the agent to observe visible objects and locations nearby.\n\nExample:\n    look()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look_at_under",
+          "description": "Look closely at an item that is located under a specified object.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "item": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+                "description": "The item to examine (e.g., \"cellphone 1\")."
               },
-              "summary": {
+              "reference": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "obj": {
-                "type": "string"
+                "description": "The object under which the item is located (e.g., \"desklamp 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "reference"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "open",
+          "description": "Open a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to open (e.g., drawer, door)."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "obj"
             ]
@@ -1549,31 +1602,20 @@
         "type": "function",
         "function": {
           "name": "put",
-          "description": "Place an item onto or into a specified target.\n\nArgs:\n    item (str): The item to place.\n    target (str): The surface or container to place the item in/on.\n\nExample:\n    put(\"laptop 1\", \"bed 1\")",
+          "description": "Place an item onto or into a specified target.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "item": {
-                "type": "string"
+                "type": "string",
+                "description": "The item to place."
               },
               "target": {
-                "type": "string"
+                "type": "string",
+                "description": "The surface or container to place the item in/on."
               }
             },
+            "additionalProperties": false,
             "required": [
               "item",
               "target"
@@ -1584,32 +1626,41 @@
       {
         "type": "function",
         "function": {
-          "name": "take",
-          "description": "Pick up an item from a specified source location.\n\nArgs:\n    item (str): The item to pick up.\n    source (str): The location from which to take the item.\n\nExample:\n    take(\"laptop 1\", \"diningtable 1\")",
+          "name": "report_problem",
+          "description": "Report an issue with a specified object in the environment.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "item": {
-                "type": "string"
-              },
-              "source": {
-                "type": "string"
+                "description": "The object with a problem (e.g., \"toilet 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "take",
+          "description": "Pick up an item from a specified source location.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to pick up."
+              },
+              "source": {
+                "type": "string",
+                "description": "The location from which to take the item."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "item",
               "source"
@@ -1620,106 +1671,19 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "use",
+          "description": "Use or activate a specified object or appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+                "description": "The object to use (e.g., \"desklamp 1\")."
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
+              "obj"
             ]
           }
         }
@@ -2603,66 +2567,89 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "clean",
+          "description": "Clean an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "item": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+                "description": "The item to be cleaned (e.g., \"ladle 2\")."
               },
-              "summary": {
+              "appliance": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+                "description": "The appliance used for cleaning (e.g., \"sinkbasin 1\")."
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "close",
+          "description": "Close a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to close (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "cool",
+          "description": "Cool an item using a specified appliance.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to be cooled (e.g., \"plate 1\")."
+              },
+              "appliance": {
+                "type": "string",
+                "description": "The appliance to use for cooling (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "examine",
+          "description": "Inspect or look closely at an object in the environment.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to examine (e.g., \"dresser 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
             ]
           }
         }
@@ -2694,28 +2681,16 @@
         "type": "function",
         "function": {
           "name": "go",
-          "description": "Move to the specified location.\n\nArgs:\n    location (str): The target location to move to.\n\nExample:\n    go(\"bed 1\")",
+          "description": "Move to the specified location.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "location": {
-                "type": "string"
+                "type": "string",
+                "description": "The target location to move to."
               }
             },
+            "additionalProperties": false,
             "required": [
               "location"
             ]
@@ -2725,29 +2700,91 @@
       {
         "type": "function",
         "function": {
-          "name": "open",
-          "description": "Open a specified container or object.\n\nArgs:\n    obj (str): The object to open (e.g., drawer, door).\n\nExample:\n    open(\"drawer 1\")",
+          "name": "heat",
+          "description": "Heat an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "item": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+                "description": "The item to be heated (e.g., \"plate 1\")."
               },
-              "summary": {
+              "appliance": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "obj": {
-                "type": "string"
+                "description": "The appliance to use for heating (e.g., \"microwave 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "inventory",
+          "description": "Check currently held items.\n\nThis function retrieves and lists the objects currently in possession.\n\nExample:\n    inventory()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look",
+          "description": "Survey the surroundings to get a description of the current environment.\n\nThis function allows the agent to observe visible objects and locations nearby.\n\nExample:\n    look()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look_at_under",
+          "description": "Look closely at an item that is located under a specified object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to examine (e.g., \"cellphone 1\")."
+              },
+              "reference": {
+                "type": "string",
+                "description": "The object under which the item is located (e.g., \"desklamp 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "reference"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "open",
+          "description": "Open a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to open (e.g., drawer, door)."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "obj"
             ]
@@ -2758,31 +2795,20 @@
         "type": "function",
         "function": {
           "name": "put",
-          "description": "Place an item onto or into a specified target.\n\nArgs:\n    item (str): The item to place.\n    target (str): The surface or container to place the item in/on.\n\nExample:\n    put(\"laptop 1\", \"bed 1\")",
+          "description": "Place an item onto or into a specified target.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "item": {
-                "type": "string"
+                "type": "string",
+                "description": "The item to place."
               },
               "target": {
-                "type": "string"
+                "type": "string",
+                "description": "The surface or container to place the item in/on."
               }
             },
+            "additionalProperties": false,
             "required": [
               "item",
               "target"
@@ -2793,32 +2819,41 @@
       {
         "type": "function",
         "function": {
-          "name": "take",
-          "description": "Pick up an item from a specified source location.\n\nArgs:\n    item (str): The item to pick up.\n    source (str): The location from which to take the item.\n\nExample:\n    take(\"laptop 1\", \"diningtable 1\")",
+          "name": "report_problem",
+          "description": "Report an issue with a specified object in the environment.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "item": {
-                "type": "string"
-              },
-              "source": {
-                "type": "string"
+                "description": "The object with a problem (e.g., \"toilet 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "take",
+          "description": "Pick up an item from a specified source location.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to pick up."
+              },
+              "source": {
+                "type": "string",
+                "description": "The location from which to take the item."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "item",
               "source"
@@ -2829,106 +2864,19 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "use",
+          "description": "Use or activate a specified object or appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+                "description": "The object to use (e.g., \"desklamp 1\")."
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
+              "obj"
             ]
           }
         }
@@ -3164,66 +3112,89 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "clean",
+          "description": "Clean an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "item": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+                "description": "The item to be cleaned (e.g., \"ladle 2\")."
               },
-              "summary": {
+              "appliance": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+                "description": "The appliance used for cleaning (e.g., \"sinkbasin 1\")."
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "close",
+          "description": "Close a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to close (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "cool",
+          "description": "Cool an item using a specified appliance.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to be cooled (e.g., \"plate 1\")."
+              },
+              "appliance": {
+                "type": "string",
+                "description": "The appliance to use for cooling (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "examine",
+          "description": "Inspect or look closely at an object in the environment.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to examine (e.g., \"dresser 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
             ]
           }
         }
@@ -3255,28 +3226,16 @@
         "type": "function",
         "function": {
           "name": "go",
-          "description": "Move to the specified location.\n\nArgs:\n    location (str): The target location to move to.\n\nExample:\n    go(\"bed 1\")",
+          "description": "Move to the specified location.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "location": {
-                "type": "string"
+                "type": "string",
+                "description": "The target location to move to."
               }
             },
+            "additionalProperties": false,
             "required": [
               "location"
             ]
@@ -3287,31 +3246,20 @@
         "type": "function",
         "function": {
           "name": "heat",
-          "description": "Heat an item using a specified appliance.\n\nArgs:\n    item (str): The item to be heated (e.g., \"plate 1\").\n    appliance (str): The appliance to use for heating (e.g., \"microwave 1\").\n\nExample:\n    heat(\"plate 1\", \"microwave 1\")",
+          "description": "Heat an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "item": {
-                "type": "string"
+                "type": "string",
+                "description": "The item to be heated (e.g., \"plate 1\")."
               },
               "appliance": {
-                "type": "string"
+                "type": "string",
+                "description": "The appliance to use for heating (e.g., \"microwave 1\")."
               }
             },
+            "additionalProperties": false,
             "required": [
               "item",
               "appliance"
@@ -3322,32 +3270,90 @@
       {
         "type": "function",
         "function": {
-          "name": "put",
-          "description": "Place an item onto or into a specified target.\n\nArgs:\n    item (str): The item to place.\n    target (str): The surface or container to place the item in/on.\n\nExample:\n    put(\"laptop 1\", \"bed 1\")",
+          "name": "inventory",
+          "description": "Check currently held items.\n\nThis function retrieves and lists the objects currently in possession.\n\nExample:\n    inventory()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look",
+          "description": "Survey the surroundings to get a description of the current environment.\n\nThis function allows the agent to observe visible objects and locations nearby.\n\nExample:\n    look()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look_at_under",
+          "description": "Look closely at an item that is located under a specified object.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "item": {
-                "type": "string"
+                "type": "string",
+                "description": "The item to examine (e.g., \"cellphone 1\")."
               },
-              "target": {
-                "type": "string"
+              "reference": {
+                "type": "string",
+                "description": "The object under which the item is located (e.g., \"desklamp 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "reference"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "open",
+          "description": "Open a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to open (e.g., drawer, door)."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "put",
+          "description": "Place an item onto or into a specified target.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to place."
+              },
+              "target": {
+                "type": "string",
+                "description": "The surface or container to place the item in/on."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "item",
               "target"
@@ -3358,32 +3364,41 @@
       {
         "type": "function",
         "function": {
-          "name": "take",
-          "description": "Pick up an item from a specified source location.\n\nArgs:\n    item (str): The item to pick up.\n    source (str): The location from which to take the item.\n\nExample:\n    take(\"laptop 1\", \"diningtable 1\")",
+          "name": "report_problem",
+          "description": "Report an issue with a specified object in the environment.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "item": {
-                "type": "string"
-              },
-              "source": {
-                "type": "string"
+                "description": "The object with a problem (e.g., \"toilet 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "take",
+          "description": "Pick up an item from a specified source location.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to pick up."
+              },
+              "source": {
+                "type": "string",
+                "description": "The location from which to take the item."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "item",
               "source"
@@ -3394,106 +3409,19 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "use",
+          "description": "Use or activate a specified object or appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+                "description": "The object to use (e.g., \"desklamp 1\")."
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
+              "obj"
             ]
           }
         }
@@ -3801,66 +3729,89 @@
       {
         "type": "function",
         "function": {
-          "name": "file_editor",
-          "description": "View, create, and edit files in plain-text format.",
+          "name": "clean",
+          "description": "Clean an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "item": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
+                "description": "The item to be cleaned (e.g., \"ladle 2\")."
               },
-              "summary": {
+              "appliance": {
                 "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "view",
-                  "create",
-                  "str_replace",
-                  "insert",
-                  "undo_edit"
-                ]
-              },
-              "path": {
-                "type": "string",
-                "description": "Absolute file path."
-              },
-              "file_text": {
-                "type": "string",
-                "description": "Content for create operations."
-              },
-              "old_str": {
-                "type": "string",
-                "description": "Text to replace."
-              },
-              "new_str": {
-                "type": "string",
-                "description": "Replacement text."
-              },
-              "insert_line": {
-                "type": "integer",
-                "description": "Line before which to insert."
-              },
-              "view_range": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "description": "Optional inclusive line range for view."
+                "description": "The appliance used for cleaning (e.g., \"sinkbasin 1\")."
               }
             },
+            "additionalProperties": false,
             "required": [
-              "command",
-              "path"
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "close",
+          "description": "Close a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to close (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "cool",
+          "description": "Cool an item using a specified appliance.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to be cooled (e.g., \"plate 1\")."
+              },
+              "appliance": {
+                "type": "string",
+                "description": "The appliance to use for cooling (e.g., \"fridge 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "examine",
+          "description": "Inspect or look closely at an object in the environment.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to examine (e.g., \"dresser 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
             ]
           }
         }
@@ -3892,28 +3843,16 @@
         "type": "function",
         "function": {
           "name": "go",
-          "description": "Move to the specified location.\n\nArgs:\n    location (str): The target location to move to.\n\nExample:\n    go(\"bed 1\")",
+          "description": "Move to the specified location.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "location": {
-                "type": "string"
+                "type": "string",
+                "description": "The target location to move to."
               }
             },
+            "additionalProperties": false,
             "required": [
               "location"
             ]
@@ -3923,32 +3862,115 @@
       {
         "type": "function",
         "function": {
-          "name": "put",
-          "description": "Place an item onto or into a specified target.\n\nArgs:\n    item (str): The item to place.\n    target (str): The surface or container to place the item in/on.\n\nExample:\n    put(\"laptop 1\", \"bed 1\")",
+          "name": "heat",
+          "description": "Heat an item using a specified appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
               "item": {
-                "type": "string"
+                "type": "string",
+                "description": "The item to be heated (e.g., \"plate 1\")."
               },
-              "target": {
-                "type": "string"
+              "appliance": {
+                "type": "string",
+                "description": "The appliance to use for heating (e.g., \"microwave 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "appliance"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "inventory",
+          "description": "Check currently held items.\n\nThis function retrieves and lists the objects currently in possession.\n\nExample:\n    inventory()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look",
+          "description": "Survey the surroundings to get a description of the current environment.\n\nThis function allows the agent to observe visible objects and locations nearby.\n\nExample:\n    look()",
+          "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "look_at_under",
+          "description": "Look closely at an item that is located under a specified object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to examine (e.g., \"cellphone 1\")."
+              },
+              "reference": {
+                "type": "string",
+                "description": "The object under which the item is located (e.g., \"desklamp 1\")."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "item",
+              "reference"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "open",
+          "description": "Open a specified container or object.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "obj": {
+                "type": "string",
+                "description": "The object to open (e.g., drawer, door)."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "put",
+          "description": "Place an item onto or into a specified target.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to place."
+              },
+              "target": {
+                "type": "string",
+                "description": "The surface or container to place the item in/on."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "item",
               "target"
@@ -3959,32 +3981,41 @@
       {
         "type": "function",
         "function": {
-          "name": "take",
-          "description": "Pick up an item from a specified source location.\n\nArgs:\n    item (str): The item to pick up.\n    source (str): The location from which to take the item.\n\nExample:\n    take(\"laptop 1\", \"diningtable 1\")",
+          "name": "report_problem",
+          "description": "Report an issue with a specified object in the environment.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "item": {
-                "type": "string"
-              },
-              "source": {
-                "type": "string"
+                "description": "The object with a problem (e.g., \"toilet 1\")."
               }
             },
+            "additionalProperties": false,
+            "required": [
+              "obj"
+            ]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "take",
+          "description": "Pick up an item from a specified source location.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "item": {
+                "type": "string",
+                "description": "The item to pick up."
+              },
+              "source": {
+                "type": "string",
+                "description": "The location from which to take the item."
+              }
+            },
+            "additionalProperties": false,
             "required": [
               "item",
               "source"
@@ -3995,106 +4026,19 @@
       {
         "type": "function",
         "function": {
-          "name": "task_tracker",
-          "description": "Create, update, and inspect the task list for the current conversation.",
+          "name": "use",
+          "description": "Use or activate a specified object or appliance.",
           "parameters": {
             "type": "object",
             "properties": {
-              "security_risk": {
+              "obj": {
                 "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "enum": [
-                  "plan",
-                  "update",
-                  "view"
-                ]
-              },
-              "task_list": {
-                "type": "string",
-                "description": "Markdown task list content."
+                "description": "The object to use (e.g., \"desklamp 1\")."
               }
             },
-            "required": []
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "terminal",
-          "description": "Execute a shell command in the terminal within a persistent shell session.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "security_risk": {
-                "type": "string",
-                "description": "Security risk for the action.",
-                "enum": [
-                  "UNKNOWN",
-                  "LOW",
-                  "MEDIUM",
-                  "HIGH"
-                ]
-              },
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "command": {
-                "type": "string",
-                "description": "The shell command or terminal input."
-              },
-              "is_input": {
-                "type": "boolean",
-                "description": "Whether command should be sent as input to a running process."
-              },
-              "timeout": {
-                "type": "number",
-                "description": "Optional timeout in seconds."
-              },
-              "reset": {
-                "type": "boolean",
-                "description": "Whether to reset the terminal session."
-              }
-            },
+            "additionalProperties": false,
             "required": [
-              "command"
-            ]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "think",
-          "description": "Log a thought without obtaining new information or changing the environment.",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "summary": {
-                "type": "string",
-                "description": "Concise summary of what this action does."
-              },
-              "thought": {
-                "type": "string",
-                "description": "The thought to log."
-              }
-            },
-            "required": [
-              "thought"
+              "obj"
             ]
           }
         }

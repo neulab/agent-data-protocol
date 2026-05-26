@@ -148,20 +148,20 @@ for line in sys.stdin:
     details = {"split": data.split or ""}
 
     # The per-trajectory list of advertised MCP tools is recorded on the
-    # top-level Trajectory.available_apis field as identifiers; the dataset's
-    # api.py carries matching stubs that the OpenHands SFT converter expands
-    # via include_apis when emitting the per-instance API docstring block.
-    available_apis = [
+    # top-level Trajectory.available_custom_tools field as identifiers; the dataset's
+    # metadata.json carries matching tool specs that the OpenHands SFT converter
+    # expands via include_custom_tools when emitting per-instance API docs.
+    available_custom_tools = [
         tool_function_name(tool["server_name"], tool["tool_name"]) for tool in available_tools
     ]
     # Deduplicate while preserving order.
     seen: set[str] = set()
-    available_apis = [n for n in available_apis if not (n in seen or seen.add(n))]
+    available_custom_tools = [n for n in available_custom_tools if not (n in seen or seen.add(n))]
 
     trajectory = create_trajectory_with_tool_call_links(
         id=data.id or f"{data.split or 'miroverse'}-unknown",
         content=content,
-        available_apis=available_apis or None,
+        available_custom_tools=available_custom_tools or None,
         details=details,
     )
     print(json.dumps(trajectory.model_dump(), ensure_ascii=False))

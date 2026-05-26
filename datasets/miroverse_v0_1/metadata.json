@@ -1,0 +1,747 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "browsing_agent__search_and_browse",
+        "description": "[browsing-agent/search_and_browse] This tool is an agent that performs the subtask of searching and browsing the web for specific missing information and generating the desired answer. The subtask should be clearly defined, include relevant background, and focus on factual gaps. It does not perform vague or speculative subtasks.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subtask": {
+              "type": "string",
+              "description": "the subtask to be performed."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "subtask"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__create_sandbox",
+        "description": "[tool-code/create_sandbox] Create a linux sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "timeout": {
+              "type": "integer",
+              "description": "Time in seconds before the sandbox is automatically shutdown. The default is 300 seconds."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__download_internet_file_to_sandbox",
+        "description": "[tool-code/download_internet_file_to_sandbox] Download a file from the internet to the `/home/user` dir of the remote python interpreter.\n\nYou should use this tool to download files from the internet.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "sandbox_id": {
+              "type": "string",
+              "description": "The id of the sandbox to run the code in. Reuse existing sandboxes whenever possible. To create a new sandbox, use tool `create_sandbox`."
+            },
+            "url": {
+              "type": "string",
+              "description": "The URL of the file to download."
+            },
+            "sandbox_file_path": {
+              "type": "string",
+              "description": "The path of directory to download the file to in the sandbox. Default is `/home/user/`."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "sandbox_id",
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__run_command",
+        "description": "[tool-code/run_command] Execute a command in the linux sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute"
+            },
+            "sandbox_id": {
+              "type": "string",
+              "description": "The id of the sandbox to execute the command in. To create a new sandbox, use tool `create_sandbox`."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "sandbox_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__run_python_code",
+        "description": "[tool-code/run_python_code] Run python code in an interpreter and return the execution result.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code_block": {
+              "type": "string",
+              "description": "The python code to run."
+            },
+            "sandbox_id": {
+              "type": "string",
+              "description": "The id of the sandbox to run the code in. Reuse existing sandboxes whenever possible. To create a new sandbox, use tool `create_sandbox`."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "code_block",
+            "sandbox_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__upload_local_file_to_sandbox",
+        "description": "[tool-code/upload_local_file_to_sandbox] Upload a local file to the `/home/user` dir of the remote python interpreter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "sandbox_id": {
+              "type": "string",
+              "description": "The id of the sandbox to run the code in. Reuse existing sandboxes whenever possible. To create a new sandbox, use tool `create_sandbox`."
+            },
+            "local_file_path": {
+              "type": "string",
+              "description": "The path of the file on local machine to upload."
+            },
+            "sandbox_file_path": {
+              "type": "string",
+              "description": "The path of directory to upload the file to in the sandbox. Default is `/home/user/`."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "sandbox_id",
+            "local_file_path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_google_search__google_search",
+        "description": "[tool-google-search/google_search] Tool to perform web searches via Serper API and retrieve rich results. It is able to retrieve organic search results, people also ask, related searches, and knowledge graph.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string",
+              "description": "Search query string"
+            },
+            "gl": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional region code for search results in ISO 3166-1 alpha-2 format (e.g., 'us')"
+            },
+            "hl": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional language code for search results in ISO 639-1 format (e.g., 'en')"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional location for search results (e.g., 'SoHo, New York, United States', 'California, United States')"
+            },
+            "num": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of results to return (default: 10)"
+            },
+            "tbs": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Time-based search filter ('qdr:h' for past hour, 'qdr:d' for past day, 'qdr:w' for past week, 'qdr:m' for past month, 'qdr:y' for past year)"
+            },
+            "page": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Page number of results to return (default: 1)"
+            },
+            "autocorrect": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whether to autocorrect spelling in query"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "q"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_google_search__scrape",
+        "description": "[tool-google-search/scrape] Tool to scrape a webpage and retrieve the text and, optionally, the markdown content. It will retrieve also the JSON-LD metadata and the head metadata.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL of the webpage to scrape."
+            },
+            "includeMarkdown": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whether to include markdown content."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__create_sandbox",
+        "description": "[tool-python/create_sandbox] Create a linux sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "timeout": {
+              "type": "integer",
+              "description": "Time in seconds before the sandbox is automatically shutdown. The default is 300 seconds."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__download_internet_file_to_python_interpreter",
+        "description": "[tool-python/download_internet_file_to_python_interpreter] Download a file from the internet to the `/home/user` dir of the remote python interpreter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL of the file to download."
+            },
+            "sandbox_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The id of the sandbox to run the code in. Reuse existing sandboxes whenever possible. Only create new ones if this is the first time running code in this sandbox."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__download_internet_file_to_sandbox",
+        "description": "[tool-python/download_internet_file_to_sandbox] Download a file from the internet to the `/home/user` dir of the remote python interpreter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "sandbox_id": {
+              "type": "string",
+              "description": "The id of the sandbox to run the code in. Reuse existing sandboxes whenever possible. To create a new sandbox, use tool `create_sandbox`."
+            },
+            "url": {
+              "type": "string",
+              "description": "The URL of the file to download."
+            },
+            "sandbox_file_path": {
+              "type": "string",
+              "description": "The path of directory to download the file to in the sandbox. Default is `/home/user/`."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "sandbox_id",
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__run_command",
+        "description": "[tool-python/run_command] Execute a command in the linux sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute"
+            },
+            "sandbox_id": {
+              "type": "string",
+              "description": "The id of the sandbox to execute the command in. To create a new sandbox, use tool `create_sandbox`."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "sandbox_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__run_python_code",
+        "description": "[tool-python/run_python_code] Run python code in an interperter and return the execution result.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code_block": {
+              "type": "string",
+              "description": "The python code to run."
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Time in seconds before the sandbox is automatically shutdown. The default is 300 seconds."
+            },
+            "sandbox_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The id of the sandbox to run the code in. Reuse existing sandboxes whenever possible. Only create new ones if this is the first time running code in this sandbox."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "code_block"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__upload_local_file_to_python_interpreter",
+        "description": "[tool-python/upload_local_file_to_python_interpreter] Upload a local file to the `/home/user` dir of the remote python interpreter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "local_file_path": {
+              "type": "string",
+              "description": "The path of the file on local machine to upload."
+            },
+            "sandbox_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The id of the sandbox to run the code in. Reuse existing sandboxes whenever possible. Only create new ones if this is the first time running code in this sandbox."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "local_file_path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__upload_local_file_to_sandbox",
+        "description": "[tool-python/upload_local_file_to_sandbox] Upload a local file to the `/home/user` dir of the remote python interpreter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "sandbox_id": {
+              "type": "string",
+              "description": "The id of the sandbox to run the code in. Reuse existing sandboxes whenever possible. To create a new sandbox, use tool `create_sandbox`."
+            },
+            "local_file_path": {
+              "type": "string",
+              "description": "The path of the file on local machine to upload."
+            },
+            "sandbox_file_path": {
+              "type": "string",
+              "description": "The path of directory to upload the file to in the sandbox. Default is `/home/user/`."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "sandbox_id",
+            "local_file_path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_reader__convert_to_markdown",
+        "description": "[tool-reader/convert_to_markdown] Convert a resource described by an http:, https:, file: or data: URI to markdown.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "Uri"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "uri"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_reading__convert_to_markdown",
+        "description": "[tool-reading/convert_to_markdown] Convert resources to markdown.\n\nSupports doc, ppt, pdf, excel, csv, zip file, and other resources\ndescribed by a file: or data: URI.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "Required. The URI of the resource to convert. Need to start with 'file:' or 'data:' schemes."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "uri"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_reasoning__reasoning",
+        "description": "[tool-reasoning/reasoning] Solve hard reasoning questions.\n\nUse this tool to solve hard math problems, puzzles, riddles, and IQ test questions that require a lot of chain-of-thought effort.\nDO NOT use this tool for simple and obvious question.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "The hard question."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_serper_search__google_search",
+        "description": "[tool-serper-search/google_search] Tool to perform web searches via Serper API and retrieve rich results. It is able to retrieve organic search results, people also ask, related searches, and knowledge graph.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string",
+              "description": "Search query string"
+            },
+            "gl": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional region code for search results in ISO 3166-1 alpha-2 format (e.g., 'us')"
+            },
+            "hl": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional language code for search results in ISO 639-1 format (e.g., 'en')"
+            },
+            "location": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional location for search results (e.g., 'SoHo, New York, United States', 'California, United States')"
+            },
+            "num": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Number of results to return (default: 10)"
+            },
+            "tbs": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Time-based search filter ('qdr:h' for past hour, 'qdr:d' for past day, 'qdr:w' for past week, 'qdr:m' for past month, 'qdr:y' for past year)"
+            },
+            "page": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Page number of results to return (default: 1)"
+            },
+            "autocorrect": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whether to autocorrect spelling in query"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "q"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_serper_search__scrape",
+        "description": "[tool-serper-search/scrape] Tool to scrape a webpage and retrieve the text and, optionally, the markdown content. It will retrieve also the JSON-LD metadata and the head metadata.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL of the webpage to scrape."
+            },
+            "includeMarkdown": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Whether to include markdown content."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_transcribe__audio_transcription",
+        "description": "[tool-transcribe/audio_transcription] Transcribe audio file to text and return the transcription.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "audio_path_or_url": {
+              "type": "string",
+              "description": "The path of the audio file locally or its URL."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "audio_path_or_url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_vqa__visual_question_answering",
+        "description": "[tool-vqa/visual_question_answering] This tool is used to ask question about an image or a video and get the answer with both Claude and OpenAI vision language models. It also automatically performs OCR (text extraction) on the image for additional context.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "image_path_or_url": {
+              "type": "string",
+              "description": "The path of the image file locally or its URL."
+            },
+            "question": {
+              "type": "string",
+              "description": "The question to ask about the image."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "image_path_or_url",
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "use_mcp_tool",
+        "description": "Fallback MCP wrapper for rows whose XML arguments cannot be parsed.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "server_name": {
+              "type": "string",
+              "description": "Name of the MCP server that provides the tool."
+            },
+            "tool_name": {
+              "type": "string",
+              "description": "Name of the tool to execute."
+            },
+            "arguments": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "description": "Tool arguments as a JSON object, or the raw argument string when parsing fails."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "server_name",
+            "tool_name",
+            "arguments"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [],
+  "browser_enabled": false
+}

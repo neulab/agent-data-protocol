@@ -1,0 +1,146 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "finish",
+        "description": "Finish the task and provide a final message.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "A summary message about the task completion."
+            },
+            "task_completed": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string",
+              "description": "Whether the task was successfully completed. \"true\" or \"false\"."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "message"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "enum": [
+                "view",
+                "create",
+                "str_replace",
+                "insert",
+                "undo_edit"
+              ],
+              "type": "string",
+              "description": "The command to execute. One of: view, create, str_replace, insert, undo_edit."
+            },
+            "path": {
+              "type": "string",
+              "description": "The absolute path to the file or directory."
+            },
+            "file_text": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Required for 'create' command. The content of the file to create."
+            },
+            "old_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Required for 'str_replace' command. The string to replace."
+            },
+            "new_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Required for 'str_replace' command. The new string to insert."
+            },
+            "insert_line": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Required for 'insert' command. Line number to insert at."
+            },
+            "view_range": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional for 'view' command. [start_line, end_line] to view."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "think",
+        "description": "Use this tool to think through a problem step by step.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "thought": {
+              "type": "string",
+              "description": "The thought or reasoning to record."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "thought"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

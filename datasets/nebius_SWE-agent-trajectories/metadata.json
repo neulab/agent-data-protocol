@@ -1,0 +1,210 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create",
+        "description": "Create and open a new file with the given name.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "type": "string",
+              "description": "The name of the file to create."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "filename"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "edit",
+        "description": "Replace lines from start_line to end_line (inclusive) with the given text in the open file. The replacement text is terminated by a line with only 'end_of_edit' on it. All of the replacement text will be entered, so make sure your indentation is formatted properly. Python files will be checked for syntax errors after the edit. If the system detects a syntax error, the edit will not be executed. Simply try to edit the file again, but make sure to read the error message and modify the edit command you issue accordingly. Issuing the same command a second time will just lead to the same error message again. Please note that THE EDIT COMMAND REQUIRES PROPER INDENTATION. If you'd like to add the line '        pr int(x)' you must fully write that out, with all those spaces before the code! Indentation is important and code that is not indented correctly will fail and require fixing before it can be run.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "start_line": {
+              "type": "integer",
+              "description": "The line number to start the edit at."
+            },
+            "end_line": {
+              "type": "integer",
+              "description": "The line number to end the edit at (inclusive)."
+            },
+            "replacement_text": {
+              "type": "string",
+              "description": "The text to replace the current selection with."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "start_line",
+            "end_line",
+            "replacement_text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "find_file",
+        "description": "Find all files with the given name in the specified directory. If dir is not provided, search in the current directory.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "file_name": {
+              "type": "string",
+              "description": "The name of the file to search for."
+            },
+            "dir": {
+              "type": "string",
+              "description": "The directory to search in (if not provided, search in the current directory)."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "file_name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "goto",
+        "description": "Move the window to show the specified line number.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "line_number": {
+              "type": "integer",
+              "description": "The line number to move the window to."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "line_number"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "open",
+        "description": "Open the file at the given path in the editor. If line_number is provided, the window will be moved to include that line.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "The path to the file to open."
+            },
+            "line_number": {
+              "type": "integer",
+              "description": "The line number to move the window to (if not provided, the window will start at the top of the file)."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "scroll_down",
+        "description": "Move the window down {WINDOW} lines.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "scroll_up",
+        "description": "Move the window up {WINDOW} lines.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_dir",
+        "description": "Search for the search_term in all files in the specified directory. If dir is not provided, search in the current directory.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "search_term": {
+              "type": "string",
+              "description": "The term to search for."
+            },
+            "dir": {
+              "type": "string",
+              "description": "The directory to search in (if not provided, search in the current directory)."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "search_term"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_file",
+        "description": "Search for the search_term in the specified file. If file is not provided, search in the current open file.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "search_term": {
+              "type": "string",
+              "description": "The term to search for."
+            },
+            "file": {
+              "type": "string",
+              "description": "The file to search in (if not provided, search in the current open file)."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "search_term"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "submit",
+        "description": "Submit your current code and terminate the interactive session.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

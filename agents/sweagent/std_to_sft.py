@@ -8,6 +8,7 @@ from agents.sweagent.system_message import base_template
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
+from schema.dataset_metadata import load_dataset_metadata, validate_trajectory_metadata
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
@@ -23,6 +24,7 @@ sweagent_default_tools = {
         "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"],
     },
 }
+SWEAGENT_NATIVE_API_NAMES = set(sweagent_default_tools)
 
 
 def get_system_message(api_tool_description) -> str:
@@ -143,12 +145,18 @@ def process_row(line, api_tool_description, api_sigs):
     std_dataset = [json.loads(line)]
     std_data = std_dataset[0]
     trajectory = Trajectory(**std_data)
+    validate_trajectory_metadata(
+        trajectory,
+        load_dataset_metadata(dataset),
+        dataset_name=dataset,
+        native_api_names=SWEAGENT_NATIVE_API_NAMES,
+    )
     id = trajectory.id
     events = trajectory.content
-    if trajectory.available_apis is not None:
+    if trajectory.available_custom_tools is not None:
         try:
             api_tool_description, api_sigs = get_api_tool_description(
-                dataset, include_apis=trajectory.available_apis
+                dataset, include_custom_tools=trajectory.available_custom_tools
             )
         except Exception as e:
             print(e, file=sys.stderr)

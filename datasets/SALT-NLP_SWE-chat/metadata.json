@@ -1,0 +1,146 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "generic_tool",
+        "description": "Represent a source-specific coding-agent tool call.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "tool_name": {
+              "type": "string",
+              "description": "Original SWE-chat tool name."
+            },
+            "tool_input": {
+              "additionalProperties": true,
+              "type": "object",
+              "description": "Parsed tool input parameters."
+            },
+            "content": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Raw tool-call content when no structured input is available."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tool_name",
+            "tool_input"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files with a custom editing tool.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "One of `view`, `create`, `str_replace`, `insert`, or `undo_edit`."
+            },
+            "path": {
+              "type": "string",
+              "description": "Absolute path to the target file or directory."
+            },
+            "file_text": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Content for `create` commands."
+            },
+            "old_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Existing text for `str_replace` commands."
+            },
+            "new_str": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Replacement text or inserted text."
+            },
+            "insert_line": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Line after which to insert text."
+            },
+            "view_range": {
+              "anyOf": [
+                {
+                  "items": {},
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional `[start_line, end_line]` range to view."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "think",
+        "description": "Record a private reasoning step.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "thought": {
+              "type": "string",
+              "description": "The model's reasoning trace."
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "thought"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}
