@@ -26,4 +26,3 @@ server.
 
 `run.json` records the resolved tools, workspace mode, SDK events, and final status.
 `completion.json` records the latest logged LLM completion when one is available.
-

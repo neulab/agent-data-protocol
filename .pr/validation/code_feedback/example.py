@@ -46,9 +46,9 @@ except Exception:  # noqa: BLE001
     DockerWorkspace = None
 
 
-DATASET_NAME = 'code_feedback'
+DATASET_NAME = "code_feedback"
 RECORD_INDEX = 0
-RECORD_ID = '13461'
+RECORD_ID = "13461"
 MODEL = os.getenv("LLM_MODEL", "openhands/minimax-m2.7")
 MAX_VALIDATION_ITERATIONS = int(os.getenv("MAX_VALIDATION_ITERATIONS", "8"))
 BROWSER_BUILTIN_TOOL_NAMES = {
@@ -98,8 +98,7 @@ class MetadataToolObservation(Observation):
         return [
             TextContent(
                 text=(
-                    f"The metadata custom tool {self.tool_name!r} executed with "
-                    f"arguments: {args}."
+                    f"The metadata custom tool {self.tool_name!r} executed with arguments: {args}."
                 )
             )
         ]
@@ -110,7 +109,9 @@ class MetadataToolExecutor(ToolExecutor):
         self.tool_name = tool_name
 
     def __call__(
-        self, action: Action, conversation: Conversation | None = None  # noqa: ARG002
+        self,
+        action: Action,
+        conversation: Conversation | None = None,  # noqa: ARG002
     ) -> MetadataToolObservation:
         return MetadataToolObservation(
             tool_name=self.tool_name,
@@ -153,9 +154,7 @@ def load_dataset_inputs() -> tuple[dict[str, Any], dict[str, Any]]:
     rows = json.loads(sample_path.read_text())
     row = rows[RECORD_INDEX]
     if row.get("id") != RECORD_ID:
-        raise RuntimeError(
-            f"Expected {RECORD_ID!r} at index {RECORD_INDEX}, got {row.get('id')!r}"
-        )
+        raise RuntimeError(f"Expected {RECORD_ID!r} at index {RECORD_INDEX}, got {row.get('id')!r}")
     return metadata, row
 
 
@@ -182,9 +181,7 @@ def metadata_custom_tool_specs(metadata: dict[str, Any]) -> dict[str, dict[str, 
     return specs
 
 
-def available_custom_tool_names(
-    metadata: dict[str, Any], row: dict[str, Any]
-) -> list[str]:
+def available_custom_tool_names(metadata: dict[str, Any], row: dict[str, Any]) -> list[str]:
     tool_specs = metadata_custom_tool_specs(metadata)
     names = row.get("available_custom_tools")
     if names is None:
@@ -202,9 +199,7 @@ def normalize_parameters(function: dict[str, Any]) -> dict[str, Any]:
     return parameters
 
 
-def make_metadata_tool(
-    name: str, function: dict[str, Any]
-) -> type[ToolDefinition]:
+def make_metadata_tool(name: str, function: dict[str, Any]) -> type[ToolDefinition]:
     parameters = normalize_parameters(function)
     action_type = Action.from_mcp_schema(f"{class_name(name)}Action", parameters)
     description = function.get("description") or f"Dataset metadata tool {name}."
@@ -262,7 +257,9 @@ def register_metadata_tools(
 
     if browser_enabled:
         if BrowserToolSet is None:
-            raise RuntimeError("metadata.browser_enabled is true, but BrowserToolSet is unavailable")
+            raise RuntimeError(
+                "metadata.browser_enabled is true, but BrowserToolSet is unavailable"
+            )
         tools.append(Tool(name=BrowserToolSet.name))
         for name in BROWSER_BUILTIN_TOOL_NAMES:
             add_tool_name(name, "metadata.browser_enabled:true")
@@ -356,7 +353,11 @@ def validation_workspace() -> Iterator[tuple[Any, str, str | None]]:
         if os.getenv("VALIDATION_ALLOW_LOCAL_FALLBACK") != "1":
             raise
         with tempfile.TemporaryDirectory(prefix=f"{DATASET_NAME}-workspace-") as tmpdir:
-            yield Workspace(working_dir=tmpdir), "local_fallback", f"{exc.__class__.__name__}: {exc}"
+            yield (
+                Workspace(working_dir=tmpdir),
+                "local_fallback",
+                f"{exc.__class__.__name__}: {exc}",
+            )
 
 
 def latest_log(log_dir: Path) -> Path | None:
@@ -520,4 +521,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
