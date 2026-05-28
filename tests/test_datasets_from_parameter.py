@@ -7,8 +7,8 @@ import pytest
 FUNCTION_CALL_PATTERNS = ("<function=", "<function_calls>", "<invoke name=")
 
 
-def test_all_openhands_v0_datasets_function_call_from_parameter():
-    """Test that OpenHands v0 SFT samples use 'from': 'function_call' for function calls."""
+def test_all_openhands_v0_datasets_function_calls_are_assistant_messages():
+    """Test that OpenHands v0 SFT samples place function calls in assistant messages."""
     # Get all OpenHands v0 SFT sample files in the datasets directory.
     datasets_dir = os.path.join(os.path.dirname(__file__), "../datasets")
     sample_sft_files = glob.glob(f"{datasets_dir}/**/sample_sft/openhands_v0.json", recursive=True)
@@ -33,35 +33,36 @@ def test_all_openhands_v0_datasets_function_call_from_parameter():
 
             for message in item["conversations"]:
                 # Check if this is a function call by looking for function patterns
-                if "value" not in message:
+                if "content" not in message:
                     continue
 
-                value = message["value"]
+                value = message["content"]
                 is_function_call = any(pattern in value for pattern in FUNCTION_CALL_PATTERNS)
 
-                if is_function_call and message["from"] != "function_call":
+                if is_function_call and message.get("role") != "assistant":
                     # Add this dataset to the list of datasets that need to be fixed
                     relative_path = os.path.relpath(file_path, datasets_dir)
                     dataset_name = relative_path.split("/")[0]
-                    datasets_to_fix.add((dataset_name, message["from"]))
+                    datasets_to_fix.add((dataset_name, message.get("role")))
 
     # Print the datasets that need to be fixed and fail the test
     if datasets_to_fix:
         error_message = "\nDatasets that need to be fixed:\n"
         for dataset_name, from_value in sorted(datasets_to_fix):
             error_message += (
-                f"  - {dataset_name}: 'from': '{from_value}' should be 'from': 'function_call'\n"
+                f"  - {dataset_name}: 'role': '{from_value}' should be 'role': 'assistant'\n"
             )
 
         # Fail the test with a clear error message
         pytest.fail(
             f"{error_message}\nFound {len(datasets_to_fix)} datasets that need to be fixed. "
-            f"Please update the datasets or modify std_to_sft.py to ensure consistent use of 'from': 'function_call'."
+            "Please update the datasets or modify std_to_sft.py to ensure function-call "
+            "messages are assistant messages."
         )
 
 
-def test_all_datasets_function_call_role_contains_function_call():
-    """Test that 'from': 'function_call' is reserved for function-call messages."""
+def test_all_openhands_v0_assistant_messages_are_allowed_to_contain_function_calls():
+    """Test user messages do not contain raw function-call syntax."""
     datasets_dir = os.path.join(os.path.dirname(__file__), "../datasets")
     sample_sft_files = glob.glob(f"{datasets_dir}/**/sample_sft/openhands_v0.json", recursive=True)
 
@@ -81,10 +82,10 @@ def test_all_datasets_function_call_role_contains_function_call():
                 continue
 
             for message in item["conversations"]:
-                value = message.get("value", "")
+                value = message.get("content", "")
                 has_function_call = any(pattern in value for pattern in FUNCTION_CALL_PATTERNS)
 
-                if message.get("from") == "function_call" and not has_function_call:
+                if message.get("role") == "user" and has_function_call:
                     relative_path = os.path.relpath(file_path, datasets_dir)
                     dataset_name = relative_path.split("/")[0]
                     datasets_to_fix.add(dataset_name)
@@ -93,8 +94,7 @@ def test_all_datasets_function_call_role_contains_function_call():
         error_message = "\nDatasets that need to be fixed:\n"
         for dataset_name in sorted(datasets_to_fix):
             error_message += (
-                f"  - {dataset_name}: 'from': 'function_call' messages must contain "
-                "function-call syntax\n"
+                f"  - {dataset_name}: user messages must not contain raw function-call syntax\n"
             )
 
         pytest.fail(

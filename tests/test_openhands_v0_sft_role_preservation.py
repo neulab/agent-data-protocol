@@ -81,14 +81,14 @@ def test_openhands_v0_converter_preserves_tool_roles(monkeypatch):
     )
 
     conversations = result["conversations"]
-    assert [message["from"] for message in conversations] == [
-        "human",
-        "function_call",
-        "observation",
-        "gpt",
+    assert [message["role"] for message in conversations] == [
+        "user",
+        "assistant",
+        "user",
+        "assistant",
     ]
-    assert "<function=execute_bash>" in conversations[1]["value"]
-    assert conversations[2]["value"].startswith("EXECUTION RESULT of [execute_bash]:")
+    assert "<function=execute_bash>" in conversations[1]["content"]
+    assert conversations[2]["content"].startswith("EXECUTION RESULT of [execute_bash]:")
 
 
 def test_openhands_v0_converter_preserves_unresolved_xpath_for_web_api(monkeypatch):
@@ -127,7 +127,7 @@ def test_openhands_v0_converter_preserves_unresolved_xpath_for_web_api(monkeypat
         api_sigs={"type": {"required": ["bid", "value"], "optional": []}},
     )
 
-    browser_call = result["conversations"][1]["value"]
+    browser_call = result["conversations"][1]["content"]
     assert "<function=browser>" in browser_call
     assert "type(" in browser_call
     assert "bid=\"//input[@id='departure']\"" in browser_call
@@ -159,8 +159,8 @@ def test_openhands_v0_converter_escapes_function_examples_in_non_tool_messages(m
         api_sigs={},
     )
 
-    value = result["conversations"][0]["value"]
-    assert result["conversations"][0]["from"] == "human"
+    value = result["conversations"][0]["content"]
+    assert result["conversations"][0]["role"] == "user"
     assert "<function=" not in value
     assert "<function_calls>" not in value
     assert "<invoke name=" not in value
@@ -202,8 +202,8 @@ def test_openhands_v0_converter_preserves_embedded_function_call_role(monkeypatc
         api_sigs={},
     )
 
-    assert result["conversations"][1]["from"] == "function_call"
-    assert "<function=finish>" in result["conversations"][1]["value"]
+    assert result["conversations"][1]["role"] == "assistant"
+    assert "<function=finish>" in result["conversations"][1]["content"]
 
 
 def test_openhands_v0_converter_does_not_duplicate_execution_result_prefix(monkeypatch):
@@ -242,4 +242,4 @@ def test_openhands_v0_converter_does_not_duplicate_execution_result_prefix(monke
         api_sigs={},
     )
 
-    assert result["conversations"][2]["value"].count("EXECUTION RESULT of") == 1
+    assert result["conversations"][2]["content"].count("EXECUTION RESULT of") == 1
