@@ -65,6 +65,7 @@ BROWSER_TOOL_ALIASES = {
     "scroll": "browser_scroll",
     "type": "browser_type",
 }
+BROWSER_INDEX_KWARG_NAMES = {"bid", "element_id", "id", "index"}
 
 OPENHANDS_TOOL_ALIASES = {
     "bash": "terminal",
@@ -182,6 +183,11 @@ def available_custom_tools(trajectory: Trajectory, metadata: DatasetMetadata) ->
     return list(available)
 
 
+def custom_tool_uses_browser_index(tool_spec: OpenAIToolSpec) -> bool:
+    properties = (tool_spec.function.parameters or {}).get("properties", {})
+    return bool(BROWSER_INDEX_KWARG_NAMES & set(properties))
+
+
 def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[Tool]:
     specs: list[Tool] = []
     if "bash" in metadata.code_enabled:
@@ -200,7 +206,14 @@ def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[To
     registered_custom_tools = custom_tool_map(metadata)
     for source_name in available_custom_tools(trajectory, metadata):
         mapped_name = OPENHANDS_TOOL_ALIASES.get(source_name, source_name)
-        if metadata.browser_enabled and source_name in BROWSER_TOOL_ALIASES:
+        if (
+            metadata.browser_enabled
+            and source_name in BROWSER_TOOL_ALIASES
+            and (
+                source_name not in registered_custom_tools
+                or custom_tool_uses_browser_index(registered_custom_tools[source_name])
+            )
+        ):
             continue
         if mapped_name == "terminal":
             if "bash" not in metadata.code_enabled:
@@ -284,20 +297,23 @@ def coerce_browser_index(value: Any) -> int:
     return 0
 
 
+def browser_index_argument(kwargs: dict[str, Any]) -> Any | None:
+    for key in ("index", "bid", "id", "element_id"):
+        if key in kwargs:
+            return kwargs[key]
+    return None
+
+
 def map_browser_action(function_name: str, kwargs: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     if function_name == "goto":
         return "browser_navigate", {"url": kwargs.get("url", ""), "new_tab": False}
     if function_name in {"go_back", "back"}:
         return "browser_go_back", {}
     if function_name == "click":
-        index = kwargs.get("index", kwargs.get("bid", kwargs.get("id", kwargs.get("element_id"))))
-        if index is None:
-            index = kwargs.get("xpath", kwargs.get("element", ""))
+        index = browser_index_argument(kwargs)
         return "browser_click", {"index": coerce_browser_index(index), "new_tab": False}
     if function_name in {"type", "fill"}:
-        index = kwargs.get("index", kwargs.get("bid", kwargs.get("id", kwargs.get("element_id"))))
-        if index is None:
-            index = kwargs.get("xpath", kwargs.get("element", ""))
+        index = browser_index_argument(kwargs)
         text = kwargs.get("text", kwargs.get("value", ""))
         return "browser_type", {"index": coerce_browser_index(index), "text": text}
     if function_name == "scroll":
@@ -309,13 +325,20 @@ def map_browser_action(function_name: str, kwargs: dict[str, Any]) -> tuple[str,
     return BROWSER_TOOL_ALIASES[function_name], kwargs
 
 
+def should_map_to_browser_action(
+    function_name: str, kwargs: dict[str, Any], metadata: DatasetMetadata
+) -> bool:
+    if function_name not in BROWSER_TOOL_ALIASES:
+        return False
+    if function_name in custom_tool_map(metadata) and browser_index_argument(kwargs) is None:
+        return False
+    return is_browser_api_action(function_name, kwargs, browser_context=metadata.browser_enabled)
+
+
 def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, dict[str, Any]]:
     function_name = event.function
     kwargs = normalize_kwargs(event.kwargs)
-    if (
-        is_browser_api_action(function_name, kwargs, browser_context=metadata.browser_enabled)
-        and function_name in BROWSER_TOOL_ALIASES
-    ):
+    if should_map_to_browser_action(function_name, kwargs, metadata):
         return map_browser_action(function_name, kwargs)
     tool_name = OPENHANDS_TOOL_ALIASES.get(function_name, function_name)
     if function_name == "submit":

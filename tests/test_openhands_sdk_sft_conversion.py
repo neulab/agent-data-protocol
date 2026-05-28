@@ -104,6 +104,23 @@ def test_openhands_sdk_converter_uses_metadata_custom_tools():
     assert {"go", "take", "put"} <= set(tool_call_names(record))
 
 
+def test_openhands_sdk_converter_preserves_webshop_label_clicks():
+    records = json.loads(
+        (DATASET_PATH / "agenttuning_webshop" / "sample_sft" / "openhands_sdk.json").read_text()
+    )
+    click_arguments = [
+        json.loads(tool_call["function"]["arguments"])
+        for record in records
+        for message in record["messages"]
+        if message.get("role") == "assistant"
+        for tool_call in message.get("tool_calls", [])
+        if tool_call["function"]["name"] == "click"
+    ]
+
+    assert {"element": "Buy Now"} in click_arguments
+    assert all("index" not in arguments for arguments in click_arguments)
+
+
 def test_openhands_sdk_converter_regenerates_first_record():
     dataset = "agenttuning_os"
     source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[:1]
@@ -153,8 +170,16 @@ def test_openhands_sdk_converter_rejects_unsupported_legacy_cli_flags():
     assert "--is_web and --api_env are not supported" in proc.stderr
 
 
-def test_openhands_sdk_converter_rejects_conflicting_custom_tool_schemas():
+def test_openhands_sdk_converter_rejects_conflicting_custom_tool_schemas(monkeypatch):
     from agents.openhands_sdk import std_to_sft
+
+    monkeypatch.setattr(std_to_sft, "_REGISTERED_METADATA_TOOL_SPECS", {})
+    registered_tools = {}
+    monkeypatch.setattr(
+        std_to_sft,
+        "register_tool",
+        lambda name, tool_definition: registered_tools.setdefault(name, tool_definition),
+    )
 
     tool_name = "adp_conflict_test_tool"
     first_metadata = DatasetMetadata(
@@ -187,5 +212,6 @@ def test_openhands_sdk_converter_rejects_conflicting_custom_tool_schemas():
     )
 
     std_to_sft.register_metadata_tools(first_metadata)
+    assert tool_name in registered_tools
     with pytest.raises(ValueError, match="different schema"):
         std_to_sft.register_metadata_tools(second_metadata)
