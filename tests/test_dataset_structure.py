@@ -52,6 +52,7 @@ def test_dataset_structure(subdir):
 
     # Check for other JSON files that shouldn't be there
     allowed_jsons = [
+        "metadata.json",
         "sample_raw.json",
         "sample_std.json",
         "generated_thoughts.json",
