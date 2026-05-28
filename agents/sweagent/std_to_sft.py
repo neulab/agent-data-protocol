@@ -23,6 +23,22 @@ sweagent_default_tools = {
         "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"],
     },
 }
+HF_ROLE_MAP = {
+    "human": "user",
+    "observation": "user",
+    "gpt": "assistant",
+    "function_call": "assistant",
+}
+
+
+def to_hf_messages(conversations: list[dict]) -> list[dict]:
+    messages = []
+    for message in conversations:
+        role = HF_ROLE_MAP.get(message["from"])
+        if role is None:
+            raise ValueError(f"Cannot convert SFT role to Hugging Face role: {message['from']}")
+        messages.append({"role": role, "content": message["value"]})
+    return messages
 
 
 def get_system_message(api_tool_description) -> str:
@@ -181,7 +197,7 @@ def process_row(line, api_tool_description, api_sigs):
             message["from"] = "human"
     return {
         "id": trajectory.id,
-        "conversations": conversations,
+        "conversations": to_hf_messages(conversations),
         "system": get_system_message(api_tool_description),
     }
 
