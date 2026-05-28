@@ -8,11 +8,11 @@ HF_TEMPLATE_MODEL = "Qwen/Qwen3-8B"
 
 
 def get_sample_sft_paths():
-    return sorted(
-        path
-        for path in DATASET_PATH.glob("*/sample_sft/*.json")
-        if path.name != "openhands_sdk.json"
-    )
+    return sorted(DATASET_PATH.glob("*/sample_sft/*.json"))
+
+
+def record_messages(record):
+    return record.get("messages") or record.get("conversations")
 
 
 @pytest.fixture(scope="session")
@@ -31,16 +31,16 @@ def test_sample_sft_records_apply_qwen3_chat_template(sample_path, qwen3_tokeniz
         pytest.skip(f"No SFT records in {sample_path}")
 
     for record_index, record in enumerate(records):
-        conversations = record.get("conversations")
+        conversations = record_messages(record)
         assert isinstance(conversations, list), (
-            f"{sample_path} record {record_index} must contain a conversations list"
+            f"{sample_path} record {record_index} must contain a messages or conversations list"
         )
         for message_index, message in enumerate(conversations):
             assert set(message) >= {"role", "content"}, (
                 f"{sample_path} record {record_index} message {message_index} must use "
                 "Hugging Face role/content fields"
             )
-            assert message["role"] in {"system", "user", "assistant"}, (
+            assert message["role"] in {"system", "user", "assistant", "tool"}, (
                 f"{sample_path} record {record_index} message {message_index} has "
                 f"unsupported role {message['role']!r}"
             )
@@ -51,6 +51,7 @@ def test_sample_sft_records_apply_qwen3_chat_template(sample_path, qwen3_tokeniz
 
         rendered = qwen3_tokenizer.apply_chat_template(
             conversations,
+            tools=record.get("tools"),
             tokenize=False,
             add_generation_prompt=False,
         )

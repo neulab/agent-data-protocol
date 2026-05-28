@@ -1,0 +1,155 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "argmax",
+        "description": "Return the entity with the maximum value of the given attribute.\n\nUse this function to find the entity with the highest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmax(\"#2\", \"age\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "variable": {
+              "type": "string"
+            },
+            "attribute": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "variable",
+            "attribute"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "argmin",
+        "description": "Return the entity with the minimum value of the given attribute.\n\nUse this function to find the entity with the lowest value for the\nspecified attribute within a variable. Requires attributes to be known.\n\nExample: argmin(\"#2\", \"age\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "variable": {
+              "type": "string"
+            },
+            "attribute": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "variable",
+            "attribute"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "count",
+        "description": "Count the number of entities in a variable.\n\nReturns the number of distinct entities represented by the variable.\n\nExample: count(\"#4\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "variable": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "variable"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_attributes",
+        "description": "Get all numerical attributes of a variable.\n\nThis function helps to identify which attributes can be used in a\nsuperlative query (e.g., max/min age). Only use this when a question\ninvolves ranking or finding extremums.\n\nExample: get_attributes(\"#3\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "variable": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "variable"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_neighbors",
+        "description": "Get all entities connected to a variable via a specific relation.\n\nThis function retrieves a new variable containing all entities that are\nconnected to the input variable by the given relation. This is typically\nused after get_relations to determine which relation to follow.\n\nExample: get_neighbors(\"Barack Obama\", \"people.person.profession\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "variable": {
+              "type": "string"
+            },
+            "relation": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "variable",
+            "relation"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_relations",
+        "description": "Get all relations connected to an entity or variable in the knowledge base.\n\nThis function helps to explore the knowledge graph by retrieving all relations\n(i.e., edges) that are associated with the given variable, which can be either\na concrete entity (e.g., \"Barack Obama\") or a variable placeholder (e.g., \"#0\").\n\nExample: get_relations(\"Barack Obama\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "variable": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "variable"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "intersection",
+        "description": "Compute the intersection of two variables.\n\nThis function returns a new variable that includes only the entities\nshared between the two input variables. The input variables must be\nof the same type.\n\nExample: intersection(\"#1\", \"#2\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "variable1": {
+              "type": "string"
+            },
+            "variable2": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "variable1",
+            "variable2"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [],
+  "browser_enabled": false
+}

@@ -1,6 +1,6 @@
 """Regression test for #213: OpenHands tool imports must tolerate a missing browsergym.
 
-`agents/openhands/system_prompt/tools/__init__.py` wraps the `BrowserTool`
+`agents/openhands_v0/system_prompt/tools/__init__.py` wraps the `BrowserTool`
 re-export in `try/except ModuleNotFoundError` so that converters for
 non-web datasets work on environments that have not installed
 `browsergym`. We exercise that path by running a subprocess with a
@@ -83,7 +83,7 @@ def test_tools_init_handles_missing_browsergym():
             except ModuleNotFoundError:
                 pass
 
-            from agents.openhands.system_prompt import tools
+            from agents.openhands_v0.system_prompt import tools
 
             assert tools.BrowserTool is None, (
                 f"BrowserTool should be None when browsergym is unavailable, "
@@ -105,7 +105,7 @@ def test_get_system_message_without_browsing_omits_browser_tools():
         _BLOCK_BROWSERGYM_PREAMBLE
         + textwrap.dedent(
             """
-            from agents.openhands.system_prompt.system import get_system_message
+            from agents.openhands_v0.system_prompt.system import get_system_message
 
             message = get_system_message(codeact_enable_browsing=False)
             assert "BrowserTool" not in message, (
