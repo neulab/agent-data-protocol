@@ -54,8 +54,7 @@ try:
 except Exception:  # noqa: BLE001
     BrowserToolSet = None
 
-dataset = os.getenv("MY_DATASET")
-_REGISTERED_METADATA_TOOL_NAMES: set[str] = set()
+_REGISTERED_METADATA_TOOL_SPECS: dict[str, dict[str, Any]] = {}
 
 BROWSER_TOOL_ALIASES = {
     "back": "browser_go_back",
@@ -154,12 +153,24 @@ def make_metadata_tool(name: str, tool_spec: OpenAIToolSpec) -> type[ToolDefinit
     )
 
 
+def serializable_metadata_tool_spec(tool_spec: OpenAIToolSpec) -> dict[str, Any]:
+    return tool_spec.model_dump(mode="json")
+
+
 def register_metadata_tools(metadata: DatasetMetadata) -> None:
     for name, tool_spec in custom_tool_map(metadata).items():
-        if name in _REGISTERED_METADATA_TOOL_NAMES:
+        serialized_spec = serializable_metadata_tool_spec(tool_spec)
+        registered_spec = _REGISTERED_METADATA_TOOL_SPECS.get(name)
+        if registered_spec is not None:
+            if registered_spec != serialized_spec:
+                raise ValueError(
+                    f"Metadata custom tool {name!r} was already registered with a "
+                    "different schema. Run one dataset per converter process or use "
+                    "unique custom tool names."
+                )
             continue
         register_tool(name, make_metadata_tool(name, tool_spec))
-        _REGISTERED_METADATA_TOOL_NAMES.add(name)
+        _REGISTERED_METADATA_TOOL_SPECS[name] = serialized_spec
 
 
 def available_custom_tools(trajectory: Trajectory, metadata: DatasetMetadata) -> list[str]:
@@ -548,9 +559,10 @@ def normalize_message_content(messages: list[dict[str, Any]]) -> list[dict[str, 
     return normalized
 
 
-def process_row(line: str, model: str) -> dict[str, Any]:
+def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[str, Any]:
     trajectory = Trajectory(**json.loads(line))
-    metadata = load_dataset_metadata(dataset, required=True)
+    dataset_name = dataset_name or os.getenv("MY_DATASET")
+    metadata = load_dataset_metadata(dataset_name, required=True)
     register_metadata_tools(metadata)
     first_event = trajectory.content[0] if trajectory.content else None
     if not isinstance(first_event, TextObservation) or first_event.source != "user":
@@ -586,7 +598,7 @@ def process_row(line: str, model: str) -> dict[str, Any]:
         "metadata": {
             "agent": "openhands_sdk",
             "format": "openai_chat_completions",
-            "source_dataset": dataset,
+            "source_dataset": dataset_name,
             "generation": "openhands_sdk_events",
         },
     }
@@ -597,9 +609,19 @@ def main() -> None:
         description="Convert standardized data to OpenHands SDK SFT format"
     )
     parser.add_argument("--model", default=os.getenv("LLM_MODEL", "gpt-4o-mini"))
-    parser.add_argument("--is_web", choices=["yes", "no"], default=None)
-    parser.add_argument("--api_env", default=None)
+    parser.add_argument(
+        "--is_web",
+        choices=["yes", "no"],
+        default=None,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument("--api_env", default=None, help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.is_web is not None or args.api_env is not None:
+        raise NotImplementedError(
+            "agents/openhands_sdk/std_to_sft.py reads tool configuration from "
+            "datasets/$MY_DATASET/metadata.json; --is_web and --api_env are not supported."
+        )
     for line in sys.stdin:
         line = line.strip()
         if not line:

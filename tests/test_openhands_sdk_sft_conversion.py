@@ -4,7 +4,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-from schema.dataset_metadata import custom_tool_names, load_dataset_metadata
+import pytest
+
+from schema.dataset_metadata import (
+    DatasetMetadata,
+    OpenAIFunctionSpec,
+    OpenAIToolSpec,
+    custom_tool_names,
+    load_dataset_metadata,
+)
 
 ROOT = Path(__file__).parent.parent
 DATASET_PATH = ROOT / "datasets"
@@ -57,17 +65,17 @@ def assert_sdk_chat_record(record):
     assert not pending_tool_call_ids
 
 
-def run_converter(dataset: str, rows: list[dict]):
+def run_converter(dataset: str, rows: list[dict], args: list[str] | None = None, check=True):
     env = os.environ.copy()
     env["OPENHANDS_SUPPRESS_BANNER"] = "1"
     env["PYTHONPATH"] = f"{ROOT}:{env.get('PYTHONPATH', '')}"
     env["MY_DATASET"] = dataset
     proc = subprocess.run(
-        [sys.executable, str(ROOT / "agents/openhands_sdk/std_to_sft.py")],
+        [sys.executable, str(ROOT / "agents/openhands_sdk/std_to_sft.py"), *(args or [])],
         input="\n".join(json.dumps(row) for row in rows),
         text=True,
         capture_output=True,
-        check=True,
+        check=check,
         env=env,
     )
     return [json.loads(line) for line in proc.stdout.splitlines() if line]
@@ -105,3 +113,79 @@ def test_openhands_sdk_converter_regenerates_first_record():
     )[:1]
     assert generated == fixture
     assert tool_call_names(generated[0])[:2] == ["terminal", "terminal"]
+
+
+def test_openhands_sdk_converter_reads_dataset_at_call_time(monkeypatch):
+    from agents.openhands_sdk import std_to_sft
+
+    dataset = "agenttuning_os"
+    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
+    monkeypatch.setenv("MY_DATASET", dataset)
+
+    generated = std_to_sft.process_row(json.dumps(source), "gpt-4o-mini")
+
+    assert generated["metadata"]["source_dataset"] == dataset
+
+
+def test_openhands_sdk_converter_rejects_unsupported_legacy_cli_flags():
+    dataset = "agenttuning_os"
+    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[:1]
+
+    env = os.environ.copy()
+    env["OPENHANDS_SUPPRESS_BANNER"] = "1"
+    env["PYTHONPATH"] = f"{ROOT}:{env.get('PYTHONPATH', '')}"
+    env["MY_DATASET"] = dataset
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "agents/openhands_sdk/std_to_sft.py"),
+            "--is_web",
+            "no",
+        ],
+        input="\n".join(json.dumps(row) for row in source),
+        text=True,
+        capture_output=True,
+        check=False,
+        env=env,
+    )
+
+    assert proc.returncode != 0
+    assert "--is_web and --api_env are not supported" in proc.stderr
+
+
+def test_openhands_sdk_converter_rejects_conflicting_custom_tool_schemas():
+    from agents.openhands_sdk import std_to_sft
+
+    tool_name = "adp_conflict_test_tool"
+    first_metadata = DatasetMetadata(
+        custom_tools=[
+            OpenAIToolSpec(
+                function=OpenAIFunctionSpec(
+                    name=tool_name,
+                    parameters={
+                        "type": "object",
+                        "properties": {"value": {"type": "string"}},
+                        "required": ["value"],
+                    },
+                )
+            )
+        ]
+    )
+    second_metadata = DatasetMetadata(
+        custom_tools=[
+            OpenAIToolSpec(
+                function=OpenAIFunctionSpec(
+                    name=tool_name,
+                    parameters={
+                        "type": "object",
+                        "properties": {"value": {"type": "integer"}},
+                        "required": ["value"],
+                    },
+                )
+            )
+        ]
+    )
+
+    std_to_sft.register_metadata_tools(first_metadata)
+    with pytest.raises(ValueError, match="different schema"):
+        std_to_sft.register_metadata_tools(second_metadata)
