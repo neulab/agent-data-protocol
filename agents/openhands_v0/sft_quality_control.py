@@ -29,6 +29,14 @@ VALID_TOOLS = [
 ]
 
 
+def message_role_and_content(message: dict) -> tuple[str, str]:
+    if "from" in message:
+        return message.get("from", "unknown"), message.get("value", "")
+    role = message.get("role", "unknown")
+    legacy_role = {"user": "human", "assistant": "gpt"}.get(role, role)
+    return legacy_role, message.get("content", "")
+
+
 def analyze_dataset(file_path):
     """Analyze a single dataset file and return statistics."""
     with open(file_path, "r", encoding="utf-8") as f:
@@ -55,8 +63,7 @@ def analyze_dataset(file_path):
         if len(conversation.get("conversations", [])) == 2:
             len1_conversation_count += 1
         for i, message in enumerate(conversation.get("conversations", [])):
-            role = message.get("from", "unknown")
-            content = message.get("value", "")
+            role, content = message_role_and_content(message)
 
             # Count roles
             roles[role] += 1

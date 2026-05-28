@@ -27,27 +27,28 @@ def process_row(line):
     observation = ""
     ret = []
     for step in range(len(output_line["conversations"])):
+        message_content = output_line["conversations"][step]["content"]
         if step % 2 == 1:
             match = re.search(
                 # r"(<function=browser>\n<parameter=code>\n)(.*?)(\n</parameter>\n</function>)",
                 r"^(?P<thought>.*?)<function=browser>\s*<parameter=code>\s*(?P<action>.*?)\s*</parameter>",
-                output_line["conversations"][step]["value"],
+                message_content,
                 flags=re.DOTALL,
             )
             if not match:
                 match = re.search(
                     r"^(?P<thought>.*?)<function=finish>\s*<parameter=message>\s*(?P<action>.*?)\s*</parameter>",
-                    output_line["conversations"][step]["value"],
+                    message_content,
                     flags=re.DOTALL,
                 )
                 if match:
                     thought = match.group("thought").strip()
                     message = match.group("action").strip()
-                elif "<function=" not in output_line["conversations"][step]["value"]:
+                elif "<function=" not in message_content:
                     thought = ""
-                    message = output_line["conversations"][step]["value"]
+                    message = message_content
                 else:
-                    raise ValueError(f"no match: {output_line['conversations'][step]['value']}")
+                    raise ValueError(f"no match: {message_content}")
                 action = f'send_msg_to_user(text="{message}")'
 
             else:
@@ -65,11 +66,11 @@ def process_row(line):
                     }
                 )
             else:
-                raise ValueError(f"no observation: {output_line['conversations'][step]['value']}")
+                raise ValueError(f"no observation: {message_content}")
         else:
             match = re.search(
                 r"(============== BEGIN accessibility tree ==============)(.*?)(============== END accessibility tree ==============)",
-                output_line["conversations"][step]["value"],
+                message_content,
                 flags=re.DOTALL,
             )
             if not match:

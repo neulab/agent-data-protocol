@@ -9,6 +9,14 @@ THINK_TOKEN_RE = re.compile(r"</?think\b", re.IGNORECASE)
 ASSISTANT_SFT_ROLES = {"assistant", "function_call", "gpt"}
 
 
+def message_role(message: dict) -> str | None:
+    return message.get("role") or message.get("from")
+
+
+def message_content(message: dict) -> str:
+    return message.get("content") or message.get("value") or ""
+
+
 def get_sample_std_paths():
     return sorted(DATASET_PATH.glob("*/sample_std.json"))
 
@@ -49,10 +57,10 @@ def test_openhands_v0_sft_assistant_messages_do_not_include_think_tokens(sample_
     samples = load_json(sample_path)
     for sample_index, sample in enumerate(samples):
         for message_index, message in enumerate(sample.get("conversations", [])):
-            if message.get("from") not in ASSISTANT_SFT_ROLES:
+            if message_role(message) not in ASSISTANT_SFT_ROLES:
                 continue
 
-            value = message.get("value") or ""
+            value = message_content(message)
             assert not THINK_TOKEN_RE.search(value), (
                 f"SFT assistant message value in {sample_path} sample {sample_index} "
                 f"message {message_index} contains <think> tags"

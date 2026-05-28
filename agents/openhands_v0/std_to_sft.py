@@ -38,6 +38,12 @@ def get_generate_axtree():
 action_function = {"python": "execute_ipython_cell", "bash": "execute_bash", "web": "browser"}
 function_args = {"execute_ipython_cell": "code", "execute_bash": "command", "browser": "code"}
 function_call_patterns = ("<function=", "<function_calls>", "<invoke name=")
+HF_ROLE_MAP = {
+    "human": "user",
+    "observation": "user",
+    "gpt": "assistant",
+    "function_call": "assistant",
+}
 
 
 def contains_function_call_pattern(content: str) -> bool:
@@ -56,6 +62,16 @@ def ensure_execution_result_prefix(content: str, function_name: str) -> str:
     if content.startswith("EXECUTION RESULT of ["):
         return content
     return f"EXECUTION RESULT of [{function_name}]:\n{content}"
+
+
+def to_hf_messages(conversations: list[dict]) -> list[dict]:
+    messages = []
+    for message in conversations:
+        role = HF_ROLE_MAP.get(message["from"])
+        if role is None:
+            raise ValueError(f"Cannot convert SFT role to Hugging Face role: {message['from']}")
+        messages.append({"role": role, "content": message["value"]})
+    return messages
 
 
 def action_text_prefix(event) -> str:
@@ -364,7 +380,7 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
         conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
     return {
         "id": trajectory.id,
-        "conversations": conversations,
+        "conversations": to_hf_messages(conversations),
         "system": get_system_message(codeact_enable_browsing=is_web),
     }
 
