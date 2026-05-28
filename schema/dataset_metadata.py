@@ -35,9 +35,7 @@ class OpenAIFunctionSpec(BaseModel):
 
     name: str
     description: str | None = None
-    parameters: dict[str, Any] = Field(
-        default_factory=lambda: {"type": "object", "properties": {}}
-    )
+    parameters: dict[str, Any] = Field(default_factory=lambda: {"type": "object", "properties": {}})
 
 
 class OpenAIToolSpec(BaseModel):
@@ -64,9 +62,7 @@ class DatasetMetadata(BaseModel):
         return self
 
 
-def metadata_path_for_dataset(
-    dataset_name: str, dataset_root: Path = DATASET_ROOT
-) -> Path:
+def metadata_path_for_dataset(dataset_name: str, dataset_root: Path = DATASET_ROOT) -> Path:
     return dataset_root / dataset_name / "metadata.json"
 
 

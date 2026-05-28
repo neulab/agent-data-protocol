@@ -204,9 +204,7 @@ def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[To
         if mapped_name in {"finish", "think"}:
             continue
         if source_name not in registered_custom_tools:
-            raise ValueError(
-                f"available tool {source_name!r} is not declared in metadata.json"
-            )
+            raise ValueError(f"available tool {source_name!r} is not declared in metadata.json")
         specs.append(Tool(name=source_name))
     return dedupe_tools(specs)
 
@@ -300,14 +298,13 @@ def map_browser_action(function_name: str, kwargs: dict[str, Any]) -> tuple[str,
     return BROWSER_TOOL_ALIASES[function_name], kwargs
 
 
-def map_api_action(
-    event: ApiAction, metadata: DatasetMetadata
-) -> tuple[str, dict[str, Any]]:
+def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, dict[str, Any]]:
     function_name = event.function
     kwargs = normalize_kwargs(event.kwargs)
-    if is_browser_api_action(
-        function_name, kwargs, browser_context=metadata.browser_enabled
-    ) and function_name in BROWSER_TOOL_ALIASES:
+    if (
+        is_browser_api_action(function_name, kwargs, browser_context=metadata.browser_enabled)
+        and function_name in BROWSER_TOOL_ALIASES
+    ):
         return map_browser_action(function_name, kwargs)
     tool_name = OPENHANDS_TOOL_ALIASES.get(function_name, function_name)
     if function_name == "submit":
@@ -411,7 +408,9 @@ class SDKEventBuilder:
             self.last_action_event = action_event
             self.append(action_event)
 
-    def append_observation(self, event: TextObservation | WebObservation | ImageObservation) -> None:
+    def append_observation(
+        self, event: TextObservation | WebObservation | ImageObservation
+    ) -> None:
         content = observation_content(event)
         if event.tool_call_id is None:
             source = getattr(event, "source", "environment")
@@ -481,9 +480,7 @@ def append_message_action(builder: SDKEventBuilder, event: MessageAction) -> Non
         api_action = ApiAction(function=function_name, kwargs=kwargs, description=thought)
         builder.append_action_batch([api_action], batch_number=builder.call_index + 1)
         return
-    content = "\n\n".join(
-        part for part in [event_description(event), event.content] if part
-    )
+    content = "\n\n".join(part for part in [event_description(event), event.content] if part)
     builder.append(
         MessageEvent(
             source="agent",
@@ -557,7 +554,9 @@ def process_row(line: str, model: str) -> dict[str, Any]:
     register_metadata_tools(metadata)
     first_event = trajectory.content[0] if trajectory.content else None
     if not isinstance(first_event, TextObservation) or first_event.source != "user":
-        raise ValueError("OpenHands SDK conversion expects the first event to be a user TextObservation")
+        raise ValueError(
+            "OpenHands SDK conversion expects the first event to be a user TextObservation"
+        )
 
     llm = LLM(
         usage_id="openhands-sdk-sft-converter",

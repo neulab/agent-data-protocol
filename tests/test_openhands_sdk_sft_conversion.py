@@ -4,7 +4,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from schema.dataset_metadata import custom_tool_names, load_dataset_metadata
+
+pytest.importorskip("openhands.sdk")
 
 ROOT = Path(__file__).parent.parent
 DATASET_PATH = ROOT / "datasets"
