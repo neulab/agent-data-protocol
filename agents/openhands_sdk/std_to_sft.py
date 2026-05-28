@@ -530,6 +530,27 @@ def serializable_tool(tool: ToolDefinition) -> dict[str, Any]:
     return json.loads(json.dumps(tool.to_openai_tool(), ensure_ascii=False))
 
 
+def text_content(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "\n".join(
+            part.get("text", "")
+            for part in content
+            if isinstance(part, dict) and part.get("type") == "text"
+        )
+    return ""
+
+
+def normalize_message_content(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    normalized = []
+    for message in messages:
+        normalized_message = dict(message)
+        normalized_message["content"] = text_content(normalized_message.get("content", ""))
+        normalized.append(normalized_message)
+    return normalized
+
+
 def process_row(line: str, model: str) -> dict[str, Any]:
     trajectory = Trajectory(**json.loads(line))
     metadata = load_dataset_metadata(dataset, required=True)
@@ -555,7 +576,7 @@ def process_row(line: str, model: str) -> dict[str, Any]:
                 if isinstance(event, LLMConvertibleEvent)
             ]
             messages = LLMConvertibleEvent.events_to_messages(convertible_events)
-            formatted_messages = llm.format_messages_for_llm(messages)
+            formatted_messages = normalize_message_content(llm.format_messages_for_llm(messages))
             tools = [serializable_tool(tool) for tool in agent.tools_map.values()]
         finally:
             conversation.close()
