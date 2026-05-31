@@ -215,3 +215,89 @@ def test_openhands_sdk_converter_rejects_conflicting_custom_tool_schemas(monkeyp
     assert tool_name in registered_tools
     with pytest.raises(ValueError, match="different schema"):
         std_to_sft.register_metadata_tools(second_metadata)
+
+
+def test_openhands_sdk_condensation_utility_emits_prompts_after_trajectories():
+    from agents.openhands_sdk import condensation_sft
+
+    dataset = "agenttuning_os"
+    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
+
+    records = condensation_sft.process_row(
+        json.dumps(source),
+        max_tokens=2000,
+        model="gpt-4o-mini",
+        dataset_name=dataset,
+    )
+
+    trajectory_records = [
+        record for record in records if record["metadata"].get("record_type") == "trajectory"
+    ]
+    prompt_records = [
+        record
+        for record in records
+        if record["metadata"]["generation"] == "openhands_sdk_condensation_prompt"
+    ]
+
+    assert prompt_records
+    assert len(trajectory_records) == len(prompt_records) + 1
+    assert records[:3] == [
+        trajectory_records[0],
+        prompt_records[0],
+        trajectory_records[1],
+    ]
+    assert trajectory_records[0]["id"] == f"{source['id']}__trajectory_0001"
+    assert prompt_records[0]["id"] == f"{source['id']}__condensation_0001"
+    assert trajectory_records[1]["id"] == f"{source['id']}__trajectory_0002"
+    assert prompt_records[0]["messages"] == [
+        {
+            "role": "user",
+            "content": prompt_records[0]["messages"][0]["content"],
+        }
+    ]
+    assert prompt_records[0]["messages"][0]["content"].startswith(
+        "You are maintaining a context-aware state summary"
+    )
+    assert "<EVENT>" in prompt_records[0]["messages"][0]["content"]
+    assert prompt_records[0]["metadata"]["prompt_token_count_before_condensation"] > 2000
+    assert prompt_records[0]["metadata"]["forgotten_event_count"] > 0
+
+
+def test_openhands_sdk_condensation_utility_can_include_placeholder_output():
+    from agents.openhands_sdk import condensation_sft
+
+    dataset = "agenttuning_os"
+    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
+
+    records = condensation_sft.process_row(
+        json.dumps(source),
+        max_tokens=2000,
+        model="gpt-4o-mini",
+        dataset_name=dataset,
+        include_trajectories=False,
+        condensation_output="placeholder",
+    )
+
+    assert records
+    assert records[0]["messages"][-1] == {
+        "role": "assistant",
+        "content": "[ADP condensation placeholder #1]",
+    }
+    assert records[0]["metadata"]["condensation_output"] == "placeholder"
+
+
+def test_openhands_sdk_condensation_utility_skips_short_trajectories():
+    from agents.openhands_sdk import condensation_sft
+
+    dataset = "agenttuning_os"
+    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
+
+    records = condensation_sft.process_row(
+        json.dumps(source),
+        max_tokens=100_000,
+        model="gpt-4o-mini",
+        dataset_name=dataset,
+        include_trajectories=False,
+    )
+
+    assert records == []
