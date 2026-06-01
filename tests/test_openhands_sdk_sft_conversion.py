@@ -81,6 +81,55 @@ def run_converter(dataset: str, rows: list[dict], args: list[str] | None = None,
     return [json.loads(line) for line in proc.stdout.splitlines() if line]
 
 
+def patch_condensation_llm(monkeypatch, summary="[ADP condensation test summary]"):
+    from litellm.types.utils import Choices, ModelResponse
+    from litellm.types.utils import Message as LiteLLMMessage
+    from openhands.sdk import Message, TextContent
+    from openhands.sdk.llm.llm_response import LLMResponse
+    from openhands.sdk.llm.utils.metrics import MetricsSnapshot, TokenUsage
+
+    from agents.openhands_sdk import condensation_sft
+
+    def fake_completion(
+        self,
+        messages,
+        tools=None,
+        _return_metrics=False,
+        add_security_risk_prediction=False,
+        on_token=None,
+        **kwargs,
+    ):
+        self._captured_messages.append(messages)
+        return LLMResponse(
+            message=Message(role="assistant", content=[TextContent(text=summary)]),
+            metrics=MetricsSnapshot(
+                model_name=self.model,
+                accumulated_cost=0.0,
+                max_budget_per_task=None,
+                accumulated_token_usage=TokenUsage(
+                    model=self.model,
+                    prompt_tokens=0,
+                    completion_tokens=0,
+                ),
+            ),
+            raw_response=ModelResponse(
+                id="adp-condensation-test-response",
+                choices=[
+                    Choices(
+                        message=LiteLLMMessage(role="assistant", content=summary),
+                        index=0,
+                        finish_reason="stop",
+                    )
+                ],
+                created=0,
+                model="test-model",
+                object="chat.completion",
+            ),
+        )
+
+    monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "completion", fake_completion)
+
+
 def test_openhands_sdk_generated_samples_are_sdk_chat_records():
     for dataset in SDK_SAMPLE_DATASETS:
         records = json.loads(
@@ -217,9 +266,12 @@ def test_openhands_sdk_converter_rejects_conflicting_custom_tool_schemas(monkeyp
         std_to_sft.register_metadata_tools(second_metadata)
 
 
-def test_openhands_sdk_condensation_utility_emits_prompts_after_trajectories():
+def test_openhands_sdk_condensation_utility_emits_llm_summaries_after_trajectories(
+    monkeypatch,
+):
     from agents.openhands_sdk import condensation_sft
 
+    patch_condensation_llm(monkeypatch)
     dataset = "agenttuning_os"
     source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
 
@@ -253,7 +305,8 @@ def test_openhands_sdk_condensation_utility_emits_prompts_after_trajectories():
         {
             "role": "user",
             "content": prompt_records[0]["messages"][0]["content"],
-        }
+        },
+        {"role": "assistant", "content": "[ADP condensation test summary]"},
     ]
     assert prompt_records[0]["messages"][0]["content"].startswith(
         "You are maintaining a context-aware state summary"
@@ -261,29 +314,35 @@ def test_openhands_sdk_condensation_utility_emits_prompts_after_trajectories():
     assert "<EVENT>" in prompt_records[0]["messages"][0]["content"]
     assert prompt_records[0]["metadata"]["prompt_token_count_before_condensation"] > 2000
     assert prompt_records[0]["metadata"]["forgotten_event_count"] > 0
+    assert prompt_records[0]["metadata"]["condensation_output"] == "llm"
 
 
-def test_openhands_sdk_condensation_utility_can_include_placeholder_output():
-    from agents.openhands_sdk import condensation_sft
-
+def test_openhands_sdk_condensation_utility_rejects_non_llm_output_modes():
     dataset = "agenttuning_os"
-    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
+    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[:1]
 
-    records = condensation_sft.process_row(
-        json.dumps(source),
-        max_tokens=2000,
-        model="gpt-4o-mini",
-        dataset_name=dataset,
-        include_trajectories=False,
-        condensation_output="placeholder",
+    env = os.environ.copy()
+    env["OPENHANDS_SUPPRESS_BANNER"] = "1"
+    env["PYTHONPATH"] = f"{ROOT}:{env.get('PYTHONPATH', '')}"
+    env["MY_DATASET"] = dataset
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "agents/openhands_sdk/condensation_sft.py"),
+            "--max-tokens",
+            "2000",
+            "--condensation-output",
+            "placeholder",
+        ],
+        input="\n".join(json.dumps(row) for row in source),
+        text=True,
+        capture_output=True,
+        check=False,
+        env=env,
     )
 
-    assert records
-    assert records[0]["messages"][-1] == {
-        "role": "assistant",
-        "content": "[ADP condensation placeholder #1]",
-    }
-    assert records[0]["metadata"]["condensation_output"] == "placeholder"
+    assert proc.returncode != 0
+    assert "unrecognized arguments: --condensation-output" in proc.stderr
 
 
 def test_openhands_sdk_condensation_utility_skips_short_trajectories():
@@ -301,3 +360,54 @@ def test_openhands_sdk_condensation_utility_skips_short_trajectories():
     )
 
     assert records == []
+
+
+def test_openhands_sdk_condensation_loader_backfills_legacy_tool_call_links():
+    from agents.openhands_sdk import condensation_sft
+    from schema.trajectory import Trajectory
+
+    row = {
+        "id": "legacy_missing_tool_call_ids",
+        "content": [
+            {"class_": "text_observation", "content": "do something", "source": "user"},
+            {
+                "class_": "code_action",
+                "language": "bash",
+                "content": "pwd",
+                "description": "check current directory",
+            },
+            {"class_": "text_observation", "content": "/workspace", "source": "user"},
+        ],
+    }
+
+    with pytest.raises(ValueError, match="tool_call_id"):
+        Trajectory(**row)
+
+    trajectory = condensation_sft.load_trajectory(json.dumps(row))
+
+    action = trajectory.content[1]
+    observation = trajectory.content[2]
+    assert action.tool_call_id == "call_000001"
+    assert observation.tool_call_id == "call_000001"
+    assert observation.source == "environment"
+
+
+def test_openhands_sdk_converter_preserves_file_editor_string_arguments():
+    from agents.openhands_sdk import std_to_sft
+    from schema.action.api import ApiAction
+
+    action = ApiAction(
+        function="str_replace_editor",
+        kwargs={
+            "command": "str_replace",
+            "path": "/workspace/file.py",
+            "old_str": "24",
+            "new_str": 25,
+        },
+    )
+
+    tool_name, arguments = std_to_sft.map_api_action(action, DatasetMetadata())
+
+    assert tool_name == "file_editor"
+    assert arguments["old_str"] == "24"
+    assert arguments["new_str"] == "25"

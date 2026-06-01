@@ -11,17 +11,14 @@ from typing import Any
 os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
 os.environ.setdefault("LOG_LEVEL", "ERROR")
 
-from litellm.types.utils import Choices, ModelResponse
-from litellm.types.utils import Message as LiteLLMMessage
 from openhands.sdk import LLM, Agent, Conversation, LLMConvertibleEvent, Message, TextContent
 from openhands.sdk.context.condenser import LLMSummarizingCondenser
 from openhands.sdk.context.condenser.utils import get_total_token_count
 from openhands.sdk.context.view import View
 from openhands.sdk.event.condenser import Condensation
 from openhands.sdk.llm.llm_response import LLMResponse
-from openhands.sdk.llm.utils.metrics import MetricsSnapshot, TokenUsage
 from openhands.sdk.tool import ToolDefinition
-from pydantic import PrivateAttr, SecretStr
+from pydantic import PrivateAttr, SecretStr, TypeAdapter, ValidationError
 
 from agents.openhands_sdk.std_to_sft import (
     SDKEventBuilder,
@@ -38,24 +35,25 @@ from schema.dataset_metadata import load_dataset_metadata
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
+from schema.tool_call_links import backfill_adjacent_tool_call_links
 from schema.trajectory import Trajectory
 
-DEFAULT_CONDENSATION_SUMMARY_TEMPLATE = "[ADP condensation placeholder #{index}]"
+TRAJECTORY_CONTENT_ADAPTER = TypeAdapter(
+    list[
+        ApiAction | CodeAction | MessageAction | TextObservation | WebObservation | ImageObservation
+    ]
+)
+
 DEFAULT_MAX_SIZE = 1_000_000
-CONDENSATION_OUTPUT_MODES = {"none", "placeholder", "llm"}
 
 
 class PromptCapturingLLM(LLM):
-    """LLM that records condenser prompts and optionally delegates to LiteLLM."""
+    """LLM that records condenser prompts before delegating to LiteLLM."""
 
-    _summary_template: str = PrivateAttr(default=DEFAULT_CONDENSATION_SUMMARY_TEMPLATE)
-    _output_mode: str = PrivateAttr(default="none")
     _captured_messages: list[list[Message]] = PrivateAttr(default_factory=list)
 
-    def __init__(self, *, summary_template: str, output_mode: str, **data: Any) -> None:
+    def __init__(self, **data: Any) -> None:
         super().__init__(**data)
-        self._summary_template = summary_template
-        self._output_mode = output_mode
         self._captured_messages = []
 
     @property
@@ -65,51 +63,35 @@ class PromptCapturingLLM(LLM):
     def completion(
         self,
         messages: list[Message],
-        tools: Sequence[ToolDefinition] | None = None,  # noqa: ARG002
-        _return_metrics: bool = False,  # noqa: ARG002
-        add_security_risk_prediction: bool = False,  # noqa: ARG002
-        on_token: Any | None = None,  # noqa: ARG002
-        **kwargs: Any,  # noqa: ARG002
+        tools: Sequence[ToolDefinition] | None = None,
+        _return_metrics: bool = False,
+        add_security_risk_prediction: bool = False,
+        on_token: Any | None = None,
+        **kwargs: Any,
     ) -> LLMResponse:
         self._captured_messages.append(messages)
-        if self._output_mode == "llm":
-            return super().completion(
-                messages=messages,
-                tools=tools,
-                _return_metrics=_return_metrics,
-                add_security_risk_prediction=add_security_risk_prediction,
-                on_token=on_token,
-                **kwargs,
-            )
+        return super().completion(
+            messages=messages,
+            tools=tools,
+            _return_metrics=_return_metrics,
+            add_security_risk_prediction=add_security_risk_prediction,
+            on_token=on_token,
+            **kwargs,
+        )
 
-        index = len(self._captured_messages)
-        summary = self._summary_template.format(index=index)
-        response_message = Message(
-            role="assistant",
-            content=[TextContent(text=summary)],
+
+def load_trajectory(line: str) -> Trajectory:
+    data = json.loads(line)
+    try:
+        return Trajectory(**data)
+    except ValidationError:
+        content = data.get("content")
+        if not isinstance(content, list):
+            raise
+        data["content"] = backfill_adjacent_tool_call_links(
+            TRAJECTORY_CONTENT_ADAPTER.validate_python(content)
         )
-        raw_message = LiteLLMMessage(role="assistant", content=summary)
-        raw_response = ModelResponse(
-            id=f"adp-condensation-placeholder-{index:06d}",
-            choices=[Choices(message=raw_message, index=0, finish_reason="stop")],
-            created=0,
-            model=self.model,
-            object="chat.completion",
-        )
-        return LLMResponse(
-            message=response_message,
-            metrics=MetricsSnapshot(
-                model_name=self.model,
-                accumulated_cost=0.0,
-                max_budget_per_task=None,
-                accumulated_token_usage=TokenUsage(
-                    model=self.model,
-                    prompt_tokens=0,
-                    completion_tokens=0,
-                ),
-            ),
-            raw_response=raw_response,
-        )
+        return Trajectory(**data)
 
 
 def format_messages(llm: LLM, messages: list[Message]) -> list[dict[str, Any]]:
@@ -130,11 +112,13 @@ def make_condensation_prompt_record(
     condensation_index: int,
     max_tokens: int,
     prompt_token_count: int,
-    output_mode: str,
 ) -> dict[str, Any]:
-    messages = list(prompt_messages)
-    if output_mode != "none" and condensation.summary is not None:
-        messages.append(Message(role="assistant", content=[TextContent(text=condensation.summary)]))
+    if condensation.summary is None:
+        raise RuntimeError("Condenser LLM did not return a summary")
+    messages = [
+        *prompt_messages,
+        Message(role="assistant", content=[TextContent(text=condensation.summary)]),
+    ]
     return {
         "id": f"{trajectory_id}__condensation_{condensation_index:04d}",
         "messages": format_messages(formatting_llm, messages),
@@ -150,7 +134,7 @@ def make_condensation_prompt_record(
             "prompt_token_count_before_condensation": prompt_token_count,
             "forgotten_event_count": len(condensation.forgotten_event_ids),
             "summary_offset": condensation.summary_offset,
-            "condensation_output": output_mode,
+            "condensation_output": "llm",
         },
     }
 
@@ -192,7 +176,6 @@ def condensation_prompt_record_if_needed(
     dataset_name: str | None,
     max_tokens: int,
     condensation_index: int,
-    condensation_output: str,
 ) -> tuple[Condensation, dict[str, Any]] | None:
     view = View.from_events(conversation.state.events)
     prompt_token_count = token_count(view, condenser.llm)
@@ -213,7 +196,6 @@ def condensation_prompt_record_if_needed(
         condensation_index=condensation_index,
         max_tokens=max_tokens,
         prompt_token_count=prompt_token_count,
-        output_mode=condensation_output,
     )
     return condensation_result, prompt_record
 
@@ -227,8 +209,6 @@ def append_standardized_events_with_condensation(
     model: str,
     max_size: int,
     keep_first: int,
-    summary_template: str,
-    condensation_output: str,
     start_index: int,
     include_trajectories: bool,
 ) -> list[dict[str, Any]]:
@@ -239,8 +219,6 @@ def append_standardized_events_with_condensation(
         model=model,
         api_key=SecretStr(os.getenv("LLM_API_KEY") or "not-used"),
         base_url=os.getenv("LLM_BASE_URL"),
-        summary_template=summary_template,
-        output_mode=condensation_output,
     )
     condenser = LLMSummarizingCondenser(
         llm=condenser_llm,
@@ -272,7 +250,6 @@ def append_standardized_events_with_condensation(
             dataset_name=dataset_name,
             max_tokens=max_tokens,
             condensation_index=condensation_index,
-            condensation_output=condensation_output,
         )
         if result is None:
             return
@@ -343,12 +320,8 @@ def process_row(
     include_trajectories: bool = True,
     max_size: int = DEFAULT_MAX_SIZE,
     keep_first: int = 2,
-    summary_template: str = DEFAULT_CONDENSATION_SUMMARY_TEMPLATE,
-    condensation_output: str = "none",
 ) -> list[dict[str, Any]]:
-    if condensation_output not in CONDENSATION_OUTPUT_MODES:
-        raise ValueError(f"condensation_output must be one of {sorted(CONDENSATION_OUTPUT_MODES)}")
-    trajectory = Trajectory(**json.loads(line))
+    trajectory = load_trajectory(line)
     dataset_name = dataset_name or os.getenv("MY_DATASET")
     metadata = load_dataset_metadata(dataset_name, required=True)
     register_metadata_tools(metadata)
@@ -378,8 +351,6 @@ def process_row(
                 model=model,
                 max_size=max_size,
                 keep_first=keep_first,
-                summary_template=summary_template,
-                condensation_output=condensation_output,
                 start_index=1,
                 include_trajectories=include_trajectories,
             )
@@ -390,30 +361,19 @@ def process_row(
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Emit OpenHands SDK trajectory SFT records plus condenser prompt records "
-            "whenever replayed ADP trajectories exceed a token threshold."
+            "Emit OpenHands SDK trajectory SFT records plus LLM-generated condenser "
+            "summary records whenever replayed ADP trajectories exceed a token threshold."
         )
     )
     parser.add_argument("--max-tokens", type=int, required=True)
     parser.add_argument("--model", default=os.getenv("LLM_MODEL", "gpt-4o-mini"))
     parser.add_argument("--max-size", type=int, default=DEFAULT_MAX_SIZE)
     parser.add_argument("--keep-first", type=int, default=2)
-    parser.add_argument("--summary-template", default=DEFAULT_CONDENSATION_SUMMARY_TEMPLATE)
-    parser.add_argument(
-        "--condensation-output",
-        choices=sorted(CONDENSATION_OUTPUT_MODES),
-        default="none",
-        help=(
-            "Whether condensation prompt records contain no assistant output, a "
-            "deterministic placeholder output, or a real LLM output generated via "
-            "LLM_MODEL/LLM_API_KEY/LLM_BASE_URL."
-        ),
-    )
     parser.add_argument(
         "--include-trajectories",
         choices=["yes", "no"],
         default="yes",
-        help="Whether to emit the original OpenHands SDK trajectory record before prompts.",
+        help="Whether to emit the original OpenHands SDK trajectory record before summaries.",
     )
     args = parser.parse_args()
     for line in sys.stdin:
@@ -427,8 +387,6 @@ def main() -> None:
             include_trajectories=args.include_trajectories == "yes",
             max_size=args.max_size,
             keep_first=args.keep_first,
-            summary_template=args.summary_template,
-            condensation_output=args.condensation_output,
         )
         for record in records:
             print(json.dumps(record, ensure_ascii=False))

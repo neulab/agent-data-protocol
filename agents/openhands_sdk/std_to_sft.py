@@ -110,6 +110,27 @@ def normalize_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return {key: parse_scalar(value) for key, value in kwargs.items()}
 
 
+FILE_EDITOR_STRING_FIELDS = {"command", "path", "file_text", "old_str", "new_str"}
+
+
+def stringify_value(value: Any, default: str = "") -> str:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def normalize_file_editor_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    normalized: dict[str, Any] = {}
+    for key, value in kwargs.items():
+        if key in FILE_EDITOR_STRING_FIELDS:
+            normalized[key] = stringify_value(value)
+        else:
+            normalized[key] = parse_scalar(value)
+    return normalized
+
+
 def class_name(name: str) -> str:
     parts = re.split(r"[^A-Za-z0-9]+", name)
     text = "".join(part[:1].upper() + part[1:] for part in parts if part)
@@ -337,7 +358,11 @@ def should_map_to_browser_action(
 
 def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, dict[str, Any]]:
     function_name = event.function
-    kwargs = normalize_kwargs(event.kwargs)
+    kwargs = (
+        normalize_file_editor_kwargs(event.kwargs)
+        if function_name == "str_replace_editor"
+        else normalize_kwargs(event.kwargs)
+    )
     if should_map_to_browser_action(function_name, kwargs, metadata):
         return map_browser_action(function_name, kwargs)
     tool_name = OPENHANDS_TOOL_ALIASES.get(function_name, function_name)
@@ -350,9 +375,9 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
     if function_name == "edit_file":
         return "file_editor", {
             "command": "str_replace",
-            "path": kwargs.get("path", ""),
-            "old_str": kwargs.get("old_str", ""),
-            "new_str": kwargs.get("content", kwargs.get("new_str", "")),
+            "path": stringify_value(kwargs.get("path")),
+            "old_str": stringify_value(kwargs.get("old_str")),
+            "new_str": stringify_value(kwargs.get("content", kwargs.get("new_str"))),
         }
     return tool_name, kwargs
 
