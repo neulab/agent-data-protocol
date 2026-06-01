@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import os
 import re
@@ -382,12 +383,44 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
     return tool_name, kwargs
 
 
+SHELL_CODE_LANGUAGES = {"bash", "sh", "shell"}
+HEREDOC_INTERPRETERS = {
+    "python": "python",
+    "python3": "python",
+    "py": "python",
+    "mysql": "mysql",
+    "javascript": "node",
+    "js": "node",
+    "node": "node",
+    "ruby": "ruby",
+    "perl": "perl",
+    "php": "php",
+    "lua": "lua",
+    "r": "Rscript --vanilla",
+}
+
+
+def heredoc_command(interpreter: str, language: str, content: str) -> str:
+    digest = hashlib.sha1(content.encode()).hexdigest()[:12]
+    delimiter = f"ADP_{re.sub(r'[^A-Za-z0-9]+', '_', language).upper()}_{digest}"
+    return f"{interpreter} <<'{delimiter}'\n{content}\n{delimiter}"
+
+
 def map_code_action(event: CodeAction) -> tuple[str, dict[str, Any]]:
-    if event.language == "bash":
+    language = event.language.lower()
+    if language in SHELL_CODE_LANGUAGES:
         return "terminal", {"command": event.content}
+    if language in HEREDOC_INTERPRETERS:
+        return "terminal", {
+            "command": heredoc_command(
+                HEREDOC_INTERPRETERS[language],
+                language,
+                event.content,
+            )
+        }
     raise ValueError(
-        "OpenHands SDK conversion only supports bash CodeAction entries. "
-        f"Encountered language {event.language!r}."
+        "OpenHands SDK conversion only supports shell-like or directly executable "
+        f"CodeAction entries. Encountered language {event.language!r}."
     )
 
 

@@ -411,3 +411,29 @@ def test_openhands_sdk_converter_preserves_file_editor_string_arguments():
     assert tool_name == "file_editor"
     assert arguments["old_str"] == "24"
     assert arguments["new_str"] == "25"
+
+
+def test_openhands_sdk_converter_maps_python_code_action_to_terminal_heredoc():
+    from agents.openhands_sdk import std_to_sft
+    from schema.action.code import CodeAction
+
+    action = CodeAction(language="python", content="print('hello')", description="run python")
+
+    tool_name, arguments = std_to_sft.map_code_action(action)
+
+    assert tool_name == "terminal"
+    assert arguments["command"].startswith("python <<'ADP_PYTHON_")
+    assert "\nprint('hello')\n" in arguments["command"]
+
+
+def test_openhands_sdk_converter_maps_mysql_code_action_to_terminal_heredoc():
+    from agents.openhands_sdk import std_to_sft
+    from schema.action.code import CodeAction
+
+    action = CodeAction(language="mysql", content="SELECT 1;", description="run mysql")
+
+    tool_name, arguments = std_to_sft.map_code_action(action)
+
+    assert tool_name == "terminal"
+    assert arguments["command"].startswith("mysql <<'ADP_MYSQL_")
+    assert "\nSELECT 1;\n" in arguments["command"]
