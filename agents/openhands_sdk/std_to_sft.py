@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import os
 import re
@@ -110,6 +111,36 @@ def normalize_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return {key: parse_scalar(value) for key, value in kwargs.items()}
 
 
+FILE_EDITOR_STRING_FIELDS = {"command", "path", "file_text", "old_str", "new_str"}
+
+
+def stringify_value(value: Any, default: str = "") -> str:
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def normalize_file_editor_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    normalized: dict[str, Any] = {}
+    for key, value in kwargs.items():
+        if key in FILE_EDITOR_STRING_FIELDS:
+            normalized[key] = stringify_value(value)
+        else:
+            normalized[key] = parse_scalar(value)
+    return normalized
+
+
+SHELL_CODE_LANGUAGES = {"bash", "sh", "shell"}
+HEREDOC_INTERPRETERS = {
+    "python": "python",
+    "python3": "python",
+    "py": "python",
+}
+SUPPORTED_TERMINAL_CODE_LANGUAGES = SHELL_CODE_LANGUAGES | set(HEREDOC_INTERPRETERS)
+
+
 def class_name(name: str) -> str:
     parts = re.split(r"[^A-Za-z0-9]+", name)
     text = "".join(part[:1].upper() + part[1:] for part in parts if part)
@@ -190,13 +221,14 @@ def custom_tool_uses_browser_index(tool_spec: OpenAIToolSpec) -> bool:
 
 def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[Tool]:
     specs: list[Tool] = []
-    if "bash" in metadata.code_enabled:
+    code_languages = {language.lower() for language in metadata.code_enabled}
+    if code_languages & SUPPORTED_TERMINAL_CODE_LANGUAGES:
         specs.append(Tool(name=TerminalTool.name))
-    unsupported_code = sorted(set(metadata.code_enabled) - {"bash"})
+    unsupported_code = sorted(code_languages - SUPPORTED_TERMINAL_CODE_LANGUAGES)
     if unsupported_code:
         raise ValueError(
-            "OpenHands SDK conversion only supports bash CodeAction entries. "
-            f"Unsupported code languages: {unsupported_code}"
+            "OpenHands SDK conversion only supports shell-like or directly executable "
+            f"CodeAction entries. Unsupported code languages: {unsupported_code}"
         )
     if metadata.browser_enabled:
         if BrowserToolSet is None:
@@ -337,7 +369,11 @@ def should_map_to_browser_action(
 
 def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, dict[str, Any]]:
     function_name = event.function
-    kwargs = normalize_kwargs(event.kwargs)
+    kwargs = (
+        normalize_file_editor_kwargs(event.kwargs)
+        if function_name == "str_replace_editor"
+        else normalize_kwargs(event.kwargs)
+    )
     if should_map_to_browser_action(function_name, kwargs, metadata):
         return map_browser_action(function_name, kwargs)
     tool_name = OPENHANDS_TOOL_ALIASES.get(function_name, function_name)
@@ -350,19 +386,34 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
     if function_name == "edit_file":
         return "file_editor", {
             "command": "str_replace",
-            "path": kwargs.get("path", ""),
-            "old_str": kwargs.get("old_str", ""),
-            "new_str": kwargs.get("content", kwargs.get("new_str", "")),
+            "path": stringify_value(kwargs.get("path")),
+            "old_str": stringify_value(kwargs.get("old_str")),
+            "new_str": stringify_value(kwargs.get("content", kwargs.get("new_str"))),
         }
     return tool_name, kwargs
 
 
+def heredoc_command(interpreter: str, language: str, content: str) -> str:
+    digest = hashlib.sha1(content.encode()).hexdigest()[:12]
+    delimiter = f"ADP_{re.sub(r'[^A-Za-z0-9]+', '_', language).upper()}_{digest}"
+    return f"{interpreter} <<'{delimiter}'\n{content}\n{delimiter}"
+
+
 def map_code_action(event: CodeAction) -> tuple[str, dict[str, Any]]:
-    if event.language == "bash":
+    language = event.language.lower()
+    if language in SHELL_CODE_LANGUAGES:
         return "terminal", {"command": event.content}
+    if language in HEREDOC_INTERPRETERS:
+        return "terminal", {
+            "command": heredoc_command(
+                HEREDOC_INTERPRETERS[language],
+                language,
+                event.content,
+            )
+        }
     raise ValueError(
-        "OpenHands SDK conversion only supports bash CodeAction entries. "
-        f"Encountered language {event.language!r}."
+        "OpenHands SDK conversion only supports shell-like or directly executable "
+        f"CodeAction entries. Encountered language {event.language!r}."
     )
 
 
