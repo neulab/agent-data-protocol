@@ -77,3 +77,15 @@ def test_hybrid_gym_preserves_think_editor_and_finish_actions():
     assert assistant_events[2].kwargs["view_range"] == [1, 5]
     assert isinstance(assistant_events[3], MessageAction)
     assert assistant_events[3].content == "<finish> Done </finish>"
+
+
+def test_hybrid_gym_warns_on_execute_bash_without_command(capsys):
+    converter = load_converter()
+
+    assistant_events = converter.convert_assistant_message(
+        "<function=execute_bash>\n<parameter=cmd>pwd</parameter>\n</function>"
+    )
+
+    assert isinstance(assistant_events[0], MessageAction)
+    assert "<function=execute_bash>" in assistant_events[0].content
+    assert "WARNING: execute_bash missing command parameter" in capsys.readouterr().err

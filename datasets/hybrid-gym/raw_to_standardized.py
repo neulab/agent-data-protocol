@@ -47,12 +47,15 @@ def parse_function_parameters(function_body: str) -> dict[str, Any]:
 
 
 def function_call_to_event(function_name: str, parameters: dict[str, Any], description: str | None):
-    if function_name == "execute_bash" and "command" in parameters:
-        return CodeAction(
-            language="bash",
-            content=str(parameters["command"]),
-            description=description,
-        )
+    if function_name == "execute_bash":
+        if "command" not in parameters:
+            print("WARNING: execute_bash missing command parameter", file=sys.stderr)
+        else:
+            return CodeAction(
+                language="bash",
+                content=str(parameters["command"]),
+                description=description,
+            )
     if function_name == "finish":
         message = str(parameters.get("message") or parameters.get("content") or "").strip()
         return MessageAction(content=f"<finish> {message} </finish>", description=description)
