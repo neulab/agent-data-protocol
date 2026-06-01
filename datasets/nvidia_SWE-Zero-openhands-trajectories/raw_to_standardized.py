@@ -19,9 +19,12 @@ def parse_arguments(arguments: str | dict[str, Any] | None) -> dict[str, Any]:
     return json.loads(arguments)
 
 
+OBSERVATION_PREFIX = "OBSERVATION:\n"
+
+
 def normalize_tool_observation(content: str) -> str:
-    if "OBSERVATION:\n" in content:
-        return "\n".join(content.split("OBSERVATION:\n")[1:])
+    if content.startswith(OBSERVATION_PREFIX):
+        return content[len(OBSERVATION_PREFIX) :]
     return content
 
 
