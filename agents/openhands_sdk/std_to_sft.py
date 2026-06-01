@@ -137,15 +137,6 @@ HEREDOC_INTERPRETERS = {
     "python": "python",
     "python3": "python",
     "py": "python",
-    "mysql": "mysql",
-    "javascript": "node",
-    "js": "node",
-    "node": "node",
-    "ruby": "ruby",
-    "perl": "perl",
-    "php": "php",
-    "lua": "lua",
-    "r": "Rscript --vanilla",
 }
 SUPPORTED_TERMINAL_CODE_LANGUAGES = SHELL_CODE_LANGUAGES | set(HEREDOC_INTERPRETERS)
 

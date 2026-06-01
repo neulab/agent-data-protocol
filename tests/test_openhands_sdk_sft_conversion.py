@@ -426,14 +426,11 @@ def test_openhands_sdk_converter_maps_python_code_action_to_terminal_heredoc():
     assert "\nprint('hello')\n" in arguments["command"]
 
 
-def test_openhands_sdk_converter_maps_mysql_code_action_to_terminal_heredoc():
+def test_openhands_sdk_converter_rejects_mysql_code_action():
     from agents.openhands_sdk import std_to_sft
     from schema.action.code import CodeAction
 
     action = CodeAction(language="mysql", content="SELECT 1;", description="run mysql")
 
-    tool_name, arguments = std_to_sft.map_code_action(action)
-
-    assert tool_name == "terminal"
-    assert arguments["command"].startswith("mysql <<'ADP_MYSQL_")
-    assert "\nSELECT 1;\n" in arguments["command"]
+    with pytest.raises(ValueError, match="mysql"):
+        std_to_sft.map_code_action(action)
