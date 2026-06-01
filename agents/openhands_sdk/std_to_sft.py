@@ -132,6 +132,24 @@ def normalize_file_editor_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+SHELL_CODE_LANGUAGES = {"bash", "sh", "shell"}
+HEREDOC_INTERPRETERS = {
+    "python": "python",
+    "python3": "python",
+    "py": "python",
+    "mysql": "mysql",
+    "javascript": "node",
+    "js": "node",
+    "node": "node",
+    "ruby": "ruby",
+    "perl": "perl",
+    "php": "php",
+    "lua": "lua",
+    "r": "Rscript --vanilla",
+}
+SUPPORTED_TERMINAL_CODE_LANGUAGES = SHELL_CODE_LANGUAGES | set(HEREDOC_INTERPRETERS)
+
+
 def class_name(name: str) -> str:
     parts = re.split(r"[^A-Za-z0-9]+", name)
     text = "".join(part[:1].upper() + part[1:] for part in parts if part)
@@ -212,13 +230,14 @@ def custom_tool_uses_browser_index(tool_spec: OpenAIToolSpec) -> bool:
 
 def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[Tool]:
     specs: list[Tool] = []
-    if "bash" in metadata.code_enabled:
+    code_languages = {language.lower() for language in metadata.code_enabled}
+    if code_languages & SUPPORTED_TERMINAL_CODE_LANGUAGES:
         specs.append(Tool(name=TerminalTool.name))
-    unsupported_code = sorted(set(metadata.code_enabled) - {"bash"})
+    unsupported_code = sorted(code_languages - SUPPORTED_TERMINAL_CODE_LANGUAGES)
     if unsupported_code:
         raise ValueError(
-            "OpenHands SDK conversion only supports bash CodeAction entries. "
-            f"Unsupported code languages: {unsupported_code}"
+            "OpenHands SDK conversion only supports shell-like or directly executable "
+            f"CodeAction entries. Unsupported code languages: {unsupported_code}"
         )
     if metadata.browser_enabled:
         if BrowserToolSet is None:
@@ -381,23 +400,6 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
             "new_str": stringify_value(kwargs.get("content", kwargs.get("new_str"))),
         }
     return tool_name, kwargs
-
-
-SHELL_CODE_LANGUAGES = {"bash", "sh", "shell"}
-HEREDOC_INTERPRETERS = {
-    "python": "python",
-    "python3": "python",
-    "py": "python",
-    "mysql": "mysql",
-    "javascript": "node",
-    "js": "node",
-    "node": "node",
-    "ruby": "ruby",
-    "perl": "perl",
-    "php": "php",
-    "lua": "lua",
-    "r": "Rscript --vanilla",
-}
 
 
 def heredoc_command(interpreter: str, language: str, content: str) -> str:
