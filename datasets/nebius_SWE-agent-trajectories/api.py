@@ -1,3 +1,28 @@
+def str_replace_editor(
+    command: str,
+    path: str,
+    file_text: str = None,
+    old_str: str = None,
+    new_str: str = None,
+    insert_line: int = None,
+    view_range: list = None,
+) -> None:
+    """View, create, and edit files with this custom editing tool.
+
+    Args:
+    ----
+        command (str): The command to run: view, create, str_replace, insert, or undo_edit.
+        path (str): Path to a file or directory.
+        file_text (str, optional): File contents for create commands.
+        old_str (str, optional): Text to replace for str_replace commands.
+        new_str (str, optional): Replacement or inserted text.
+        insert_line (int, optional): Line number after which to insert.
+        view_range (list, optional): Optional [start, end] line range for view commands.
+
+    """
+    pass
+
+
 def open(path: str, line_number: int = None):
     """Open the file at the given path in the editor. If line_number is provided, the window will be moved to include that line.
 
