@@ -297,7 +297,7 @@ def append_standardized_events_with_condensation(
         index += 1
 
     emit_condensation_boundary_if_needed()
-    if include_trajectories:
+    if include_trajectories or not records:
         records.append(
             make_trajectory_record_from_conversation(
                 conversation=conversation,
