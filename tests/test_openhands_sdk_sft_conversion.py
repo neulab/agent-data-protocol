@@ -345,7 +345,7 @@ def test_openhands_sdk_condensation_utility_rejects_non_llm_output_modes():
     assert "unrecognized arguments: --condensation-output" in proc.stderr
 
 
-def test_openhands_sdk_condensation_utility_skips_short_trajectories():
+def test_openhands_sdk_condensation_utility_identity_maps_short_trajectories():
     from agents.openhands_sdk import condensation_sft
 
     dataset = "agenttuning_os"
@@ -359,7 +359,10 @@ def test_openhands_sdk_condensation_utility_skips_short_trajectories():
         include_trajectories=False,
     )
 
-    assert records == []
+    assert len(records) == 1
+    assert records[0]["id"] == f"{source['id']}__trajectory_0001"
+    assert records[0]["metadata"]["generation"] == "openhands_sdk_events"
+    assert records[0]["metadata"]["record_type"] == "trajectory"
 
 
 def test_openhands_sdk_condensation_loader_backfills_legacy_tool_call_links():
