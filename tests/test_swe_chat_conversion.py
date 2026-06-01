@@ -102,6 +102,62 @@ def test_swe_chat_tool_rows_convert_to_adp_actions():
     assert "content" not in trajectory.content[5].kwargs
 
 
+def test_swe_chat_preserves_non_adjacent_raw_tool_call_ids():
+    converter = load_converter_module()
+    raw = converter.SchemaRaw(
+        session_id="tool-id-session",
+        repo_id="owner/repo",
+        turns=[
+            {
+                "turn_number": 0,
+                "role": "user",
+                "turn_type": "user_prompt",
+                "is_conversational": True,
+                "content": "Inspect the code and run tests.",
+            },
+            {
+                "turn_number": 1,
+                "role": "tool_use",
+                "turn_type": "tool_use",
+                "tool_name": "Read",
+                "tool_call_id": "source-call-read",
+                "tool_input_json": '{"file_path": "/workspace/app.py"}',
+            },
+            {
+                "turn_number": 2,
+                "role": "tool_use",
+                "turn_type": "tool_use",
+                "tool_name": "Bash",
+                "tool_call_id": "source-call-test",
+                "tool_input_json": '{"command": "pytest -q"}',
+            },
+            {
+                "turn_number": 3,
+                "role": "tool_result",
+                "turn_type": "tool_result",
+                "tool_call_id": "source-call-read",
+                "content": "print('hello')",
+            },
+            {
+                "turn_number": 4,
+                "role": "tool_result",
+                "turn_type": "tool_result",
+                "tool_call_id": "source-call-test",
+                "content": "1 passed",
+            },
+        ],
+    )
+
+    trajectory = converter.process_data(raw)
+
+    assert [event.tool_call_id for event in trajectory.content[1:5]] == [
+        "source-call-read",
+        "source-call-test",
+        "source-call-read",
+        "source-call-test",
+    ]
+
+
 def test_swe_chat_metadata_preserves_native_numeric_types():
     converter = load_converter_module()
     raw = converter.SchemaRaw(
@@ -111,7 +167,7 @@ def test_swe_chat_metadata_preserves_native_numeric_types():
         turn_count=7,
         prompt_count=2,
         agent_percentage=87.5,
-        session_success="100",
+        session_success=100,
         turns=[
             {
                 "turn_number": 0,

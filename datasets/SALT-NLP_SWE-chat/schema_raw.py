@@ -60,5 +60,5 @@ class SchemaRaw(BaseModel):
     prompt_count: int | None = None
     agent_percentage: float | None = None
     user_persona: str | None = None
-    session_success: str | None = None
+    session_success: int | float | str | None = None
     turns: list[ConversationTurn]

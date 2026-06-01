@@ -1,7 +1,7 @@
 import json
 import re
 import sys
-from typing import Any
+from typing import Any, TypeVar
 
 from schema_raw import ConversationTurn, SchemaRaw
 
@@ -17,6 +17,68 @@ READ_TOOL_NAMES = {"read", "read_file"}
 WRITE_TOOL_NAMES = {"write", "write_file"}
 EDIT_TOOL_NAMES = {"edit", "edit_file"}
 THINK_TOOL_NAMES = {"think", "thinking"}
+ToolEvent = TypeVar("ToolEvent", CodeAction, ApiAction, TextObservation)
+
+
+def ordered_turns(data: SchemaRaw) -> list[ConversationTurn]:
+    return sorted(
+        data.turns,
+        key=lambda item: item.turn_number if item.turn_number is not None else float("inf"),
+    )
+
+
+def turn_type(turn: ConversationTurn) -> str:
+    return (turn.turn_type or "").lower()
+
+
+def role(turn: ConversationTurn) -> str:
+    return turn.role.lower()
+
+
+def is_user_prompt_turn(turn: ConversationTurn) -> bool:
+    return turn_type(turn) == "user_prompt" or (role(turn) == "user" and turn.is_conversational)
+
+
+def is_tool_use_turn(turn: ConversationTurn) -> bool:
+    return turn_type(turn) == "tool_use" or role(turn) == "tool_use"
+
+
+def is_tool_result_turn(turn: ConversationTurn) -> bool:
+    return turn_type(turn) == "tool_result" or role(turn) == "tool_result"
+
+
+def linkable_raw_tool_call_ids(turns: list[ConversationTurn]) -> set[str]:
+    action_indices: dict[str, list[int]] = {}
+    result_indices: dict[str, list[int]] = {}
+    first_user_index = next(
+        (index for index, turn in enumerate(turns) if is_user_prompt_turn(turn)), len(turns)
+    )
+    for index, turn in enumerate(turns[first_user_index:], start=first_user_index):
+        tool_call_id = optional_str(turn.tool_call_id)
+        if not tool_call_id:
+            continue
+        if is_tool_use_turn(turn):
+            action_indices.setdefault(tool_call_id, []).append(index)
+        elif is_tool_result_turn(turn):
+            result_indices.setdefault(tool_call_id, []).append(index)
+
+    linkable_ids = set()
+    for tool_call_id, actions in action_indices.items():
+        results = result_indices.get(tool_call_id, [])
+        if len(actions) == 1 and len(results) == 1 and actions[0] < results[0]:
+            linkable_ids.add(tool_call_id)
+    return linkable_ids
+
+
+def attach_raw_tool_call_id(
+    event: ToolEvent,
+    turn: ConversationTurn,
+    linkable_tool_call_ids: set[str],
+) -> ToolEvent:
+    tool_call_id = optional_str(turn.tool_call_id)
+    if tool_call_id in linkable_tool_call_ids:
+        event.tool_call_id = tool_call_id
+    return event
 
 
 def parse_json_maybe(value: Any) -> Any:
@@ -101,35 +163,51 @@ def as_str_replace_editor(
     return None
 
 
-def convert_tool_use(turn: ConversationTurn) -> CodeAction | ApiAction | None:
+def convert_tool_use(
+    turn: ConversationTurn, linkable_tool_call_ids: set[str]
+) -> CodeAction | ApiAction | None:
     name = (turn.tool_name or "generic_tool").strip() or "generic_tool"
     lower_name = name.lower()
     params = tool_input(turn)
 
     if lower_name in SHELL_TOOL_NAMES:
         command = params.get("command") or turn.command or turn.content or ""
-        return CodeAction(language="bash", content=str(command), description=name)
+        return attach_raw_tool_call_id(
+            CodeAction(language="bash", content=str(command), description=name),
+            turn,
+            linkable_tool_call_ids,
+        )
 
     if lower_name in THINK_TOOL_NAMES:
         thought = params.get("thought") or turn.content or ""
-        return ApiAction(function="think", kwargs={"thought": str(thought)}, description=name)
+        return attach_raw_tool_call_id(
+            ApiAction(function="think", kwargs={"thought": str(thought)}, description=name),
+            turn,
+            linkable_tool_call_ids,
+        )
 
     editor_action = as_str_replace_editor(turn, lower_name, params)
     if editor_action:
         editor_action.description = name
-        return editor_action
+        return attach_raw_tool_call_id(editor_action, turn, linkable_tool_call_ids)
 
     kwargs: dict[str, Any] = {"tool_name": name, "tool_input": params}
     if not params:
         kwargs["content"] = turn.content
-    return ApiAction(
-        function="generic_tool",
-        kwargs=kwargs,
-        description=clean_function_name(name),
+    return attach_raw_tool_call_id(
+        ApiAction(
+            function="generic_tool",
+            kwargs=kwargs,
+            description=clean_function_name(name),
+        ),
+        turn,
+        linkable_tool_call_ids,
     )
 
 
-def convert_turn(turn: ConversationTurn, seen_user_prompt: bool) -> list[Any]:
+def convert_turn(
+    turn: ConversationTurn, seen_user_prompt: bool, linkable_tool_call_ids: set[str]
+) -> list[Any]:
     content = turn.content or ""
     turn_type = (turn.turn_type or "").lower()
     role = turn.role.lower()
@@ -149,14 +227,15 @@ def convert_turn(turn: ConversationTurn, seen_user_prompt: bool) -> list[Any]:
             return []
         return [ApiAction(function="think", kwargs={"thought": content})]
 
-    if turn_type == "tool_use" or role == "tool_use":
-        action = convert_tool_use(turn)
+    if is_tool_use_turn(turn):
+        action = convert_tool_use(turn, linkable_tool_call_ids)
         return [action] if action else []
 
-    if turn_type == "tool_result" or role == "tool_result":
+    if is_tool_result_turn(turn):
         if not content:
             return []
-        return [TextObservation(content=content, source="environment")]
+        observation = TextObservation(content=content, source="environment")
+        return [attach_raw_tool_call_id(observation, turn, linkable_tool_call_ids)]
 
     if not seen_user_prompt:
         return []
@@ -213,12 +292,11 @@ def details_from_raw(data: SchemaRaw) -> dict[str, Any]:
 def process_data(data: SchemaRaw) -> Trajectory | None:
     content = []
     seen_user_prompt = False
+    turns = ordered_turns(data)
+    linkable_tool_call_ids = linkable_raw_tool_call_ids(turns)
 
-    for turn in sorted(
-        data.turns,
-        key=lambda item: item.turn_number if item.turn_number is not None else float("inf"),
-    ):
-        events = convert_turn(turn, seen_user_prompt)
+    for turn in turns:
+        events = convert_turn(turn, seen_user_prompt, linkable_tool_call_ids)
         has_user_prompt = any(
             isinstance(event, TextObservation) and event.source == "user" for event in events
         )
