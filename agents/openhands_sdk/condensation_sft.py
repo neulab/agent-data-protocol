@@ -442,12 +442,15 @@ async def process_stream(args: argparse.Namespace) -> None:
     )
     try:
         for chunk in iter_input_chunks(args.chunk_size):
-            tasks = [process_line(line, args=args, semaphore=semaphore) for line in chunk]
-            chunk_records = await asyncio.gather(*tasks)
-            for records in chunk_records:
+            tasks = [
+                asyncio.create_task(process_line(line, args=args, semaphore=semaphore))
+                for line in chunk
+            ]
+            for task in asyncio.as_completed(tasks):
+                records = await task
                 for record in records:
-                    print(json.dumps(record, ensure_ascii=False), flush=False)
-            progress.update(len(chunk))
+                    print(json.dumps(record, ensure_ascii=False), flush=True)
+                progress.update(1)
     finally:
         progress.close()
 
