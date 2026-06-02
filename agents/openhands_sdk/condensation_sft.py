@@ -418,16 +418,38 @@ async def process_line(
     args: argparse.Namespace,
     semaphore: asyncio.Semaphore,
 ) -> list[dict[str, Any]]:
-    async with semaphore:
-        return await asyncio.to_thread(
-            process_row,
-            line,
-            max_tokens=args.max_tokens,
-            model=args.model,
-            include_trajectories=args.include_trajectories == "yes",
-            max_size=args.max_size,
-            keep_first=args.keep_first,
+    try:
+        async with semaphore:
+            return await asyncio.to_thread(
+                process_row,
+                line,
+                max_tokens=args.max_tokens,
+                model=args.model,
+                include_trajectories=args.include_trajectories == "yes",
+                max_size=args.max_size,
+                keep_first=args.keep_first,
+            )
+    except Exception as exc:
+        if not args.continue_on_error:
+            raise
+        row_id = None
+        try:
+            row_id = json.loads(line).get("id")
+        except Exception:
+            pass
+        print(
+            json.dumps(
+                {
+                    "id": row_id,
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                },
+                ensure_ascii=False,
+            ),
+            file=sys.stderr,
+            flush=True,
         )
+        return []
 
 
 async def process_stream(args: argparse.Namespace) -> None:
@@ -488,6 +510,11 @@ def main() -> None:
         "--no-progress",
         action="store_true",
         help="Disable tqdm progress output on stderr.",
+    )
+    parser.add_argument(
+        "--continue-on-error",
+        action="store_true",
+        help="Log per-row conversion errors to stderr and continue processing remaining rows.",
     )
     args = parser.parse_args()
     if args.concurrency < 1:
