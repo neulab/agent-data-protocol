@@ -120,6 +120,12 @@ def token_count(view: View, llm: LLM) -> int:
     return get_total_token_count(view.events, llm)
 
 
+def formatted_token_count(events: Sequence[SDKEvent], llm: LLM) -> int:
+    view = View.from_events(events)
+    messages = LLMConvertibleEvent.events_to_messages(view.events)
+    return llm.get_token_count(messages)
+
+
 def make_condensation_prompt_record(
     *,
     trajectory_id: str,
@@ -274,8 +280,7 @@ def append_standardized_events_with_condensation(
 
     def update_last_safe_events() -> None:
         nonlocal last_safe_events
-        view = View.from_events(event_history)
-        if token_count(view, conversation.agent.llm) <= max_tokens:
+        if formatted_token_count(event_history, conversation.agent.llm) <= max_tokens:
             last_safe_events = list(event_history)
 
     def emit_condensation_boundary_if_needed() -> None:
