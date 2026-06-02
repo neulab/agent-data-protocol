@@ -15,6 +15,8 @@ from openhands.sdk import LLM, Agent, Conversation, LLMConvertibleEvent, Message
 from openhands.sdk.context.condenser import LLMSummarizingCondenser
 from openhands.sdk.context.condenser.utils import get_total_token_count
 from openhands.sdk.context.view import View
+from openhands.sdk.event import LLMConvertibleEvent as SDKEvent
+from openhands.sdk.event import MessageEvent, SystemPromptEvent
 from openhands.sdk.event.condenser import Condensation
 from openhands.sdk.llm.llm_response import LLMResponse
 from openhands.sdk.tool import ToolDefinition
@@ -98,6 +100,21 @@ def format_messages(llm: LLM, messages: list[Message]) -> list[dict[str, Any]]:
     return normalize_message_content(llm.format_messages_for_llm(messages))
 
 
+class TrackingSDKEventBuilder(SDKEventBuilder):
+    def __init__(
+        self,
+        conversation: Conversation,
+        metadata: Any,
+        event_history: list[SDKEvent],
+    ) -> None:
+        super().__init__(conversation, metadata)
+        self.event_history = event_history
+
+    def append(self, event: SDKEvent) -> None:
+        self.event_history.append(event)
+        super().append(event)
+
+
 def token_count(view: View, llm: LLM) -> int:
     return get_total_token_count(view.events, llm)
 
@@ -168,7 +185,7 @@ def make_trajectory_record_from_conversation(
 
 def condensation_prompt_record_if_needed(
     *,
-    conversation: Conversation,
+    events: list[SDKEvent],
     condenser: LLMSummarizingCondenser,
     agent_llm: LLM,
     condenser_llm: PromptCapturingLLM,
@@ -177,7 +194,7 @@ def condensation_prompt_record_if_needed(
     max_tokens: int,
     condensation_index: int,
 ) -> tuple[Condensation, dict[str, Any]] | None:
-    view = View.from_events(conversation.state.events)
+    view = View.from_events(events)
     prompt_token_count = token_count(view, condenser.llm)
     before_prompt_count = len(condenser_llm.captured_messages)
     condensation_result = condenser.condense(view, agent_llm=agent_llm)
@@ -213,7 +230,28 @@ def append_standardized_events_with_condensation(
     include_trajectories: bool,
 ) -> list[dict[str, Any]]:
     metadata = load_dataset_metadata(dataset_name, required=True)
-    builder = SDKEventBuilder(conversation, metadata)
+    event_history: list[SDKEvent] = [
+        SystemPromptEvent(
+            system_prompt=TextContent(text=conversation.agent.static_system_message),
+            tools=list(conversation.agent.tools_map.values()),
+        )
+    ]
+    builder = TrackingSDKEventBuilder(conversation, metadata, event_history)
+    first_event = trajectory.content[0]
+    if not isinstance(first_event, TextObservation) or first_event.source != "user":
+        raise ValueError(
+            "OpenHands SDK condensation conversion expects the first event to be a "
+            "user TextObservation"
+        )
+    builder.append(
+        MessageEvent(
+            source="user",
+            llm_message=Message(
+                role="user",
+                content=[TextContent(text=first_event.content)],
+            ),
+        )
+    )
     condenser_llm = PromptCapturingLLM(
         usage_id="openhands-sdk-condensation-sft-condenser",
         model=model,
@@ -231,18 +269,18 @@ def append_standardized_events_with_condensation(
     condensation_index = 1
     index = start_index
     batch_number = 0
-    last_safe_events = list(conversation.state.events)
+    last_safe_events = list(event_history)
 
     def update_last_safe_events() -> None:
         nonlocal last_safe_events
-        view = View.from_events(conversation.state.events)
+        view = View.from_events(event_history)
         if token_count(view, conversation.agent.llm) <= max_tokens:
-            last_safe_events = list(conversation.state.events)
+            last_safe_events = list(event_history)
 
     def emit_condensation_boundary_if_needed() -> None:
         nonlocal segment_index, condensation_index, last_safe_events
         result = condensation_prompt_record_if_needed(
-            conversation=conversation,
+            events=event_history,
             condenser=condenser,
             agent_llm=conversation.agent.llm,
             condenser_llm=condenser_llm,
@@ -266,8 +304,9 @@ def append_standardized_events_with_condensation(
             )
             segment_index += 1
         records.append(prompt_record)
+        event_history.append(condensation)
         conversation.state.events.append(condensation)
-        last_safe_events = list(conversation.state.events)
+        last_safe_events = list(event_history)
         condensation_index += 1
 
     while index < len(trajectory.content):
@@ -342,7 +381,7 @@ def process_row(
     with tempfile.TemporaryDirectory(prefix="openhands-sdk-condensation-sft-") as tmpdir:
         conversation = Conversation(agent=agent, workspace=tmpdir, visualizer=None)
         try:
-            conversation.send_message(first_event.content)
+            conversation._ensure_agent_ready()
             return append_standardized_events_with_condensation(
                 conversation=conversation,
                 trajectory=trajectory,
