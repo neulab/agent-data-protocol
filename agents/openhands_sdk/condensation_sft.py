@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import os
 import sys
 import tempfile
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import Any
 
 os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
@@ -397,6 +398,60 @@ def process_row(
             conversation.close()
 
 
+def iter_input_chunks(chunk_size: int) -> Iterator[list[str]]:
+    chunk: list[str] = []
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        chunk.append(line)
+        if len(chunk) >= chunk_size:
+            yield chunk
+            chunk = []
+    if chunk:
+        yield chunk
+
+
+async def process_line(
+    line: str,
+    *,
+    args: argparse.Namespace,
+    semaphore: asyncio.Semaphore,
+) -> list[dict[str, Any]]:
+    async with semaphore:
+        return await asyncio.to_thread(
+            process_row,
+            line,
+            max_tokens=args.max_tokens,
+            model=args.model,
+            include_trajectories=args.include_trajectories == "yes",
+            max_size=args.max_size,
+            keep_first=args.keep_first,
+        )
+
+
+async def process_stream(args: argparse.Namespace) -> None:
+    from tqdm import tqdm
+
+    semaphore = asyncio.Semaphore(args.concurrency)
+    progress = tqdm(
+        desc="condensation_sft",
+        unit="row",
+        dynamic_ncols=True,
+        disable=args.no_progress,
+    )
+    try:
+        for chunk in iter_input_chunks(args.chunk_size):
+            tasks = [process_line(line, args=args, semaphore=semaphore) for line in chunk]
+            chunk_records = await asyncio.gather(*tasks)
+            for records in chunk_records:
+                for record in records:
+                    print(json.dumps(record, ensure_ascii=False), flush=False)
+            progress.update(len(chunk))
+    finally:
+        progress.close()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
@@ -414,21 +469,29 @@ def main() -> None:
         default="yes",
         help="Whether to emit the original OpenHands SDK trajectory record before summaries.",
     )
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=1,
+        help="Number of input trajectories to process concurrently.",
+    )
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=100,
+        help="Number of input rows to schedule per async batch.",
+    )
+    parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="Disable tqdm progress output on stderr.",
+    )
     args = parser.parse_args()
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            continue
-        records = process_row(
-            line,
-            max_tokens=args.max_tokens,
-            model=args.model,
-            include_trajectories=args.include_trajectories == "yes",
-            max_size=args.max_size,
-            keep_first=args.keep_first,
-        )
-        for record in records:
-            print(json.dumps(record, ensure_ascii=False))
+    if args.concurrency < 1:
+        raise ValueError("--concurrency must be at least 1")
+    if args.chunk_size < 1:
+        raise ValueError("--chunk-size must be at least 1")
+    asyncio.run(process_stream(args))
 
 
 if __name__ == "__main__":
