@@ -1,7 +1,10 @@
+import json
 import os
 from pathlib import Path
 
 import pytest
+
+from schema.dataset_metadata import DatasetMetadata
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
 
@@ -25,6 +28,20 @@ def test_dataset_structure(subdir):
         f"Dataset-local std_to_sft.py is not allowed in {subdir_path}; "
         "use a shared converter under agents/ instead"
     )
+
+    dataset_api_path = os.path.join(subdir_path, "api.py")
+    assert not os.path.exists(dataset_api_path), (
+        f"Dataset-local api.py is not allowed in {subdir_path}; "
+        "define custom tools in metadata.json instead"
+    )
+
+    metadata_path = Path(subdir_path) / "metadata.json"
+    assert metadata_path.exists(), f"metadata.json not found in {subdir_path}"
+    metadata_data = json.loads(metadata_path.read_text())
+    DatasetMetadata.model_validate(metadata_data)
+    assert (
+        metadata_path.read_text() == json.dumps(metadata_data, indent=2, ensure_ascii=False) + "\n"
+    ), f"metadata.json is not formatted with 2-space indentation: {metadata_path}"
 
     # All datasets should have sample_raw.json
     sample_raw_path = os.path.join(subdir_path, "sample_raw.json")

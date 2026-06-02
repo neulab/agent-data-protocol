@@ -1,0 +1,207 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "click",
+        "description": "Click an element.\n\nArgs:\n----\n    bid (str): Element ID to click.\n    button (str, optional): Mouse button to use.\n    modifiers (list, optional): List of modifier keys.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string"
+            },
+            "button": {
+              "type": "string",
+              "enum": [
+                "left",
+                "middle",
+                "right"
+              ]
+            },
+            "modifiers": {
+              "type": "array"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "crawl",
+        "description": "Crawl a webpage.\n\nArgs:\n----\n    link (str): The link to crawl.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "link": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "link"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_to_CrawlAgent",
+        "description": "Delegate the task to the CrawlAgent.\n\nArgs:\n----\n    task (str): task description.\n    link (str): the link to crawl.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "link": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "task",
+            "link"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_to_RagAgent",
+        "description": "Delegate the task to the RagAgent.\n\nArgs:\n----\n    task (str): task description.\n    query (str): the query to search.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "task",
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_to_agent",
+        "description": "Delegate the task to the BrowsingAgent.\n\nArgs:\n----\n    agent (str): The agent to delegate the task to.\n    task (str): task description.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "agent": {
+              "type": "string"
+            },
+            "task": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "agent",
+            "task"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "goto",
+        "description": "Navigate to a URL.\n\nArgs:\n----\n    url (str): The target URL to visit.\n\nExample: goto('http://www.example.com')",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "rag_search",
+        "description": "Search using the RAG model.\n\nArgs:\n----\n    query (str): The query to search.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "scroll",
+        "description": "Scroll horizontally and/or vertically in pixels.\n\nArgs:\n----\n    delta_x (float): Horizontal scroll in pixels.\n    delta_y (float): Vertical scroll in pixels.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "delta_x": {
+              "type": "number"
+            },
+            "delta_y": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "delta_x",
+            "delta_y"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_msg_to_user",
+        "description": "Send a message to the user.\n\nArgs:\n----\n    msg (str): The message content to send.\n\nExample: send_msg_to_user('The number of stars for the React repository on GitHub is 225k.')",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "msg": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "msg"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash",
+    "python"
+  ],
+  "browser_enabled": true
+}

@@ -1,0 +1,65 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files with this custom editing tool.\n\nArgs:\n----\n    command (str): The commands to run. Allowed options are: `view`, `create`, `str_replace`, `insert`, `undo_edit`.\n    path (str): Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`.\n    file_text (str): Required parameter of `create` command, with the content of the file to be created.\n    old_str (str): Required parameter of `str_replace` command containing the string in `path` to replace.\n    new_str (str): Optional parameter of `str_replace` command containing the new string. Required parameter of `insert` command containing the string to insert.\n    insert_line (int): Required parameter of `insert` command. The `new_str` will be inserted after this line.\n    view_range (list): Optional `[start_line, end_line]` range to view.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "file_text": {
+              "type": "string"
+            },
+            "old_str": {
+              "type": "string"
+            },
+            "new_str": {
+              "type": "string"
+            },
+            "insert_line": {
+              "type": "integer"
+            },
+            "view_range": {
+              "type": "array"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "think",
+        "description": "Record a private reasoning step.\n\nArgs:\n----\n    thought (str): The thought or reasoning to record.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "thought": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "thought"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

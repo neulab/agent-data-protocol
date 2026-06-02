@@ -1,6 +1,4 @@
-import importlib.util
 import inspect
-import os
 import textwrap
 from typing import (
     Any,
@@ -9,6 +7,8 @@ from typing import (
 )
 
 from pydantic import TypeAdapter
+
+from schema.dataset_metadata import custom_tool_map, load_dataset_metadata
 
 
 def json_type_from_py(py_t: Any) -> dict:
@@ -121,18 +121,10 @@ def tool_from_function(
 
 
 def get_api_tools(dataset) -> dict:
-    api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
-    if os.path.exists(api_file_path):
-        api_tools = {}
-        spec = importlib.util.spec_from_file_location("api", api_file_path)
-        api_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(api_module)
-        functions = inspect.getmembers(api_module, inspect.isfunction)
-        for name, func in functions:
-            api_tools[name] = tool_from_function(func)
-        return api_tools
-    else:
-        return {}
+    metadata = load_dataset_metadata(dataset)
+    return {
+        name: tool.model_dump(exclude_none=True) for name, tool in custom_tool_map(metadata).items()
+    }
 
 
 def language_tool_placeholder(code: str):

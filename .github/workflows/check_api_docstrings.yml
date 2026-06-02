@@ -1,4 +1,4 @@
-name: Check Docstrings
+name: Check Dataset Metadata
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  check_docstrings:
+  check_dataset_metadata:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,10 +21,12 @@ jobs:
       with:
         python-version: '3.12'
 
-    - name: Install ruff
+    - name: Install dependencies
       run: |
-        python -m pip install ruff
+        python -m pip install --upgrade pip
+        pip install pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    - name: Check for docstrings
+    - name: Check dataset metadata
       run: |
-        ruff check datasets/*/api.py --select D  --ignore D100,D203,D213
+        pytest tests/test_dataset_structure.py

@@ -1,6 +1,4 @@
-import importlib.util
-import inspect
-import os
+from schema.dataset_metadata import custom_tool_map, load_dataset_metadata
 
 openhands_v0_default_tools = {
     "execute_bash": {"required": ["command"], "optional": ["is_input"]},
@@ -77,6 +75,20 @@ def check_exclude_tools(name: str, required: list, optional: list, exclude_apis:
     return True
 
 
+def _schema_signature(tool) -> tuple[str, list[str], list[str]]:
+    parameters = tool.function.parameters or {}
+    properties = parameters.get("properties", {}) or {}
+    required = list(parameters.get("required", []) or [])
+    optional = [name for name in properties if name not in required]
+    args = [*required, *(f"{name}=None" for name in optional)]
+    return f"({', '.join(args)})", required, optional
+
+
+def _tool_docstring(tool) -> str:
+    description = tool.function.description or ""
+    return "\n" + description
+
+
 def get_api_tool_description(
     dataset, exclude_apis=None, env="execute_ipython_cell", include_apis=None
 ):
@@ -91,71 +103,48 @@ def get_api_tool_description(
     else:
         include_api_names = None
 
-    api_file_path = os.path.expanduser(f"datasets/{dataset}/api.py")
-    API_TOOL_DESCRIPTION = ""
-    if os.path.exists(api_file_path):
-        spec = importlib.util.spec_from_file_location("api", api_file_path)
-        api_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(api_module)
-        functions = inspect.getmembers(api_module, inspect.isfunction)
-        if include_api_names is not None:
-            api_names = {name for name, _ in functions}
-            missing_api_names = sorted(include_api_names - api_names)
-            if missing_api_names:
-                raise ValueError(
-                    f"available_apis contains functions not found in {api_file_path}: "
-                    f"{missing_api_names}"
-                )
-        sigs = {}
-        for name, func in functions:
-            if include_api_names is not None and name not in include_api_names:
-                continue
-            docstring = "\n" + (inspect.getdoc(func) or "")
-            sig = inspect.signature(func)
-            required = []
-            optional = []
-            for arg_name, param in sig.parameters.items():
-                if param.default is inspect.Parameter.empty:
-                    if arg_name == "xpath" or arg_name == "element_id":
-                        arg_name = "bid"
-                    if arg_name not in required:
-                        required.append(arg_name)
-                else:
-                    optional.append(arg_name)
-            if name in openhands_v0_default_tools and check_exclude_openhands_v0_default_tools(
-                name, sig, required, optional
-            ):
-                # print(f"excluded {name}", file=sys.stderr)
-                continue
-            if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
-                # print(f"excluded {name}", file=sys.stderr)
-                continue
-            docstring = f"{name}{sig}" + docstring.replace("\n", "\n    ") + "\n\n"
-            API_TOOL_DESCRIPTION += docstring
-            sigs[name] = {"required": required, "optional": optional}
-        if not API_TOOL_DESCRIPTION:
-            return "", {}
-        if exclude_apis:
-            also = "also "
-        else:
-            also = ""
-        prefixes = [
-            f"The following pre-defined functions are {also}available in {env}. ",
-            f"The environment {env} {also}provides the following pre-defined functions: ",
-            f"In {env}, you can {also}use the following pre-defined functions: ",
-            f"Available functions in {env}: ",
-            f"The following functions are {also}defined and ready for use in {env}: ",
-            f"Note that {env} {also}supports the following pre-defined functions: ",
-            f"Below is a list of functions you can {also}use in the {env} environment. ",
-            f"The toolkit for {env} {also}contains the following functions. ",
-        ]
-        API_TOOL_DESCRIPTION = prefixes[0] + "\n\n" + API_TOOL_DESCRIPTION
-        API_TOOL_DESCRIPTION = API_TOOL_DESCRIPTION.replace("xpath", "bid").replace(
-            "element_id", "bid"
-        )
-        return API_TOOL_DESCRIPTION, sigs
-    else:
+    metadata = load_dataset_metadata(dataset)
+    tools = custom_tool_map(metadata)
+    if include_api_names is not None:
+        missing_api_names = sorted(include_api_names - set(tools))
+        if missing_api_names:
+            raise ValueError(
+                f"available_apis contains functions not found in metadata.json for "
+                f"{dataset}: {missing_api_names}"
+            )
+
+    api_tool_description = ""
+    sigs = {}
+    for name, tool in sorted(tools.items()):
+        if include_api_names is not None and name not in include_api_names:
+            continue
+        sig, required, optional = _schema_signature(tool)
+        if name in openhands_v0_default_tools and check_exclude_openhands_v0_default_tools(
+            name, sig, required, optional
+        ):
+            continue
+        if name in exclude_apis and check_exclude_tools(name, required, optional, exclude_apis):
+            continue
+        docstring = f"{name}{sig}" + _tool_docstring(tool).replace("\n", "\n    ") + "\n\n"
+        api_tool_description += docstring
+        sigs[name] = {"required": required, "optional": optional}
+
+    if not api_tool_description:
         return "", {}
+    also = "also " if exclude_apis else ""
+    prefixes = [
+        f"The following pre-defined functions are {also}available in {env}. ",
+        f"The environment {env} {also}provides the following pre-defined functions: ",
+        f"In {env}, you can {also}use the following pre-defined functions: ",
+        f"Available functions in {env}: ",
+        f"The following functions are {also}defined and ready for use in {env}: ",
+        f"Note that {env} {also}supports the following pre-defined functions: ",
+        f"Below is a list of functions you can {also}use in the {env} environment. ",
+        f"The toolkit for {env} {also}contains the following functions. ",
+    ]
+    api_tool_description = prefixes[0] + "\n\n" + api_tool_description
+    api_tool_description = api_tool_description.replace("xpath", "bid").replace("element_id", "bid")
+    return api_tool_description, sigs
 
 
 def get_language_descriptions(languages):

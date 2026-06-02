@@ -1,0 +1,97 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "click",
+        "description": "Click an element.\n\nArgs:\n----\n    bid (str): The browser ID of the element to click.\n    button (Literal[\"left\", \"middle\", \"right\"]): The mouse button to use. Defaults to \"left\".\n    modifiers (List[Literal[\"Alt\", \"Control\", \"ControlOrMeta\", \"Meta\", \"Shift\"]]):\n        List of modifier keys to hold while clicking. Defaults to None.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string"
+            },
+            "button": {
+              "type": "string",
+              "enum": [
+                "left",
+                "middle",
+                "right"
+              ]
+            },
+            "modifiers": {
+              "type": "array"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "go_back",
+        "description": "Navigate to the previous page in history.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "scroll",
+        "description": "Scroll horizontally and vertically.\n\nAmounts in pixels, positive for right or down scrolling,\nnegative for left or up scrolling. Dispatches a wheel event.\n\nArgs:\n----\n    delta_x (float): The distance to scroll horizontally in pixels.\n    delta_y (float): The distance to scroll vertically in pixels.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "delta_x": {
+              "type": "number"
+            },
+            "delta_y": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "delta_x",
+            "delta_y"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "type",
+        "description": "Type the given text into an element with the given id.\n\nArgs:\n----\n    bid (str): The browser ID of the element to type into.\n    text (str): The text to type.\n    press_enter_after (int): Whether to press enter after typing the text. Defaults to 1. 0 means, do not press enter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "press_enter_after": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "text"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [],
+  "browser_enabled": true
+}
