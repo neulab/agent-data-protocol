@@ -67,38 +67,6 @@ def test_adapt_record_converts_openai_tool_calls_to_function_messages():
     assert adapted["metadata"] == {"source_dataset": "unit"}
 
 
-def test_adapt_record_merges_adjacent_user_messages():
-    record = {
-        "id": "post-condensation",
-        "messages": [
-            {"role": "system", "content": "system"},
-            {"role": "user", "content": "original request"},
-            {"role": "user", "content": "condensation summary"},
-            {
-                "role": "assistant",
-                "tool_calls": [
-                    {
-                        "function": {
-                            "name": "terminal",
-                            "arguments": json.dumps({"command": "pwd"}),
-                        }
-                    }
-                ],
-            },
-            {"role": "tool", "content": "/workspace"},
-        ],
-    }
-
-    adapted = adapt_record(record)
-
-    assert [message["role"] for message in adapted["messages"]] == [
-        "system",
-        "user",
-        "function_call",
-        "tool",
-    ]
-    assert adapted["messages"][1]["content"] == "original request\n\ncondensation summary"
-
 
 def test_adapt_record_rejects_non_object_arguments():
     record = {

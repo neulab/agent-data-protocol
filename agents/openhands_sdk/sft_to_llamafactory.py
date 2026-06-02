@@ -12,10 +12,6 @@ training adapter conversion:
 * assistant messages with ``tool_calls`` become ``role="function_call"``
   messages whose ``content`` is a JSON string containing a list of functions;
 * every function in that JSON has parsed object ``arguments``;
-* adjacent ``user`` messages are merged because LLaMA-Factory's OpenAI
-  converter assumes strict user/function-or-assistant alternation, while SDK
-  post-condensation trajectory segments can contain ``user`` followed by a
-  condensation-summary ``user`` message;
 * nonessential OpenAI fields such as ``tool_call_id`` are dropped from messages
   to keep the Hugging Face Arrow schema stable;
 * the top-level ``tools`` field is stringified so heterogeneous tool schemas do
@@ -126,23 +122,6 @@ def adapt_message(record_id: str, message: dict[str, Any], message_index: int) -
     }
 
 
-def merge_adjacent_user_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
-    """Merge adjacent user messages for LLaMA-Factory role alternation.
-
-    SDK post-condensation trajectory segments can contain an original user message
-    followed by a user-role condensation summary. LLaMA-Factory's OpenAI converter
-    treats consecutive user messages as abnormal, so combine them without changing
-    non-user role boundaries.
-    """
-    merged: list[dict[str, str]] = []
-    for message in messages:
-        if merged and message["role"] == "user" and merged[-1]["role"] == "user":
-            merged[-1]["content"] = f"{merged[-1]['content']}\n\n{message['content']}"
-        else:
-            merged.append(dict(message))
-    return merged
-
-
 def adapt_record(record: dict[str, Any]) -> dict[str, Any]:
     """Adapt a single OpenHands SDK OpenAI SFT record for LLaMA-Factory."""
     record_id = str(record.get("id", "<unknown>"))
@@ -160,7 +139,7 @@ def adapt_record(record: dict[str, Any]) -> dict[str, Any]:
 
     adapted: dict[str, Any] = {
         "id": record.get("id"),
-        "messages": merge_adjacent_user_messages(adapted_messages),
+        "messages": adapted_messages,
     }
 
     tools = record.get("tools", "")
