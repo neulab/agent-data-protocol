@@ -33,6 +33,7 @@ from openhands.sdk.tool import Tool, ToolExecutor, register_tool
 from openhands.tools.file_editor import FileEditorTool
 from openhands.tools.task_tracker import TaskTrackerTool
 from openhands.tools.terminal import TerminalTool
+from openhands.tools.terminal.definition import MAX_CMD_OUTPUT_SIZE, maybe_truncate
 from pydantic import SecretStr
 
 from schema.action.api import ApiAction
@@ -86,7 +87,12 @@ class DatasetToolObservation(SDKObservation):
 
     @property
     def to_llm_content(self) -> Sequence[TextContent | ImageContent]:
-        return [TextContent(text=self.output)]
+        output = maybe_truncate(
+            content=self.output,
+            truncate_after=MAX_CMD_OUTPUT_SIZE,
+            tool_prefix="dataset_tool",
+        )
+        return [TextContent(text=output)]
 
 
 class DatasetToolExecutor(ToolExecutor):

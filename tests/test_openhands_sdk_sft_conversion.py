@@ -437,3 +437,15 @@ def test_openhands_sdk_converter_rejects_mysql_code_action():
 
     with pytest.raises(ValueError, match="mysql"):
         std_to_sft.map_code_action(action)
+
+
+def test_openhands_sdk_dataset_tool_observation_truncates_large_outputs():
+    from openhands.tools.terminal.definition import MAX_CMD_OUTPUT_SIZE
+
+    from agents.openhands_sdk.std_to_sft import DatasetToolObservation
+
+    observation = DatasetToolObservation(output="A" * (MAX_CMD_OUTPUT_SIZE + 1000))
+    [content] = observation.to_llm_content
+
+    assert len(content.text) == MAX_CMD_OUTPUT_SIZE
+    assert "response clipped" in content.text
