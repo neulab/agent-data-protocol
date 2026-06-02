@@ -15,7 +15,13 @@ training adapter conversion:
 * nonessential OpenAI fields such as ``tool_call_id`` are dropped from messages
   to keep the Hugging Face Arrow schema stable;
 * the top-level ``tools`` field is stringified so heterogeneous tool schemas do
-  not become nested Arrow columns.
+  not become nested Arrow columns;
+* adjacent prompt-side messages (``user`` and ``tool``), which are valid
+  OpenAI chat history but not accepted by LLaMA-Factory's paired-turn converter,
+  are merged;
+* when requested, OpenAI-valid conversation prefixes are converted into
+  trainable prefixes by trimming trailing prompt-side messages (for example a
+  final tool response) so the adapted record ends on an assistant/function turn.
 
 The output is intended for LLaMA-Factory with ``formatting: openai`` and tags
 matching the defaults emitted by ``write_dataset_info``.
@@ -29,6 +35,12 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_DATASET_NAME = "openhands_sdk_llamafactory"
+PROMPT_ROLES = {"user", "tool"}
+RESPONSE_ROLES = {"assistant", "function_call"}
+
+
+class UntrainableRecordError(ValueError):
+    """Raised when a record has no assistant/function response to train on."""
 
 
 def text_content(content: Any) -> str:
@@ -122,7 +134,45 @@ def adapt_message(record_id: str, message: dict[str, Any], message_index: int) -
     }
 
 
-def adapt_record(record: dict[str, Any]) -> dict[str, Any]:
+def is_prompt_side(message: dict[str, str]) -> bool:
+    return message["role"] in PROMPT_ROLES
+
+
+def merge_adjacent_prompt_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Merge adjacent user/tool messages for LLaMA-Factory paired-turn conversion."""
+    merged: list[dict[str, str]] = []
+    for message in messages:
+        if merged and is_prompt_side(message) and is_prompt_side(merged[-1]):
+            merged[-1]["content"] = f"{merged[-1]['content']}\n\n{message['content']}"
+        else:
+            merged.append(dict(message))
+    return merged
+
+
+def trainable_prefix(messages: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Trim a LLaMA-Factory record to the latest trainable assistant/function turn.
+
+    Many OpenAI Chat Completions histories are valid prefixes ending in ``tool``
+    or ``user``. They are useful context, but the single-record SFT format needs
+    the final message to be a response-side message that can become the label.
+    """
+    if not messages:
+        raise UntrainableRecordError("record contains no messages")
+
+    prefix = [dict(messages[0])] if messages[0]["role"] == "system" else []
+    body = messages[1:] if prefix else messages
+    last_response_index: int | None = None
+    for index, message in enumerate(body):
+        if message["role"] in RESPONSE_ROLES:
+            last_response_index = index
+
+    if last_response_index is None:
+        raise UntrainableRecordError("record contains no trainable assistant/function response")
+
+    return prefix + [dict(message) for message in body[: last_response_index + 1]]
+
+
+def adapt_record(record: dict[str, Any], *, trim_to_trainable: bool = False) -> dict[str, Any]:
     """Adapt a single OpenHands SDK OpenAI SFT record for LLaMA-Factory."""
     record_id = str(record.get("id", "<unknown>"))
     messages = record.get("messages")
@@ -137,9 +187,10 @@ def adapt_record(record: dict[str, Any]) -> dict[str, Any]:
     if len(adapted_messages) != len(messages):
         raise ValueError(f"record {record_id} contains a non-object message")
 
+    merged_messages = merge_adjacent_prompt_messages(adapted_messages)
     adapted: dict[str, Any] = {
         "id": record.get("id"),
-        "messages": adapted_messages,
+        "messages": trainable_prefix(merged_messages) if trim_to_trainable else merged_messages,
     }
 
     tools = record.get("tools", "")
@@ -155,9 +206,15 @@ def adapt_record(record: dict[str, Any]) -> dict[str, Any]:
     return adapted
 
 
-def convert_jsonl(input_path: Path, output_path: Path) -> int:
+def convert_jsonl(
+    input_path: Path,
+    output_path: Path,
+    *,
+    trim_to_trainable: bool = False,
+    skip_untrainable: bool = False,
+) -> dict[str, int]:
     """Convert an OpenHands SDK OpenAI SFT JSONL file."""
-    count = 0
+    stats = {"read": 0, "written": 0, "skipped_untrainable": 0}
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with (
         input_path.open(encoding="utf-8") as in_handle,
@@ -166,14 +223,20 @@ def convert_jsonl(input_path: Path, output_path: Path) -> int:
         for line_number, line in enumerate(in_handle, 1):
             if not line.strip():
                 continue
+            stats["read"] += 1
             try:
                 record = json.loads(line)
-                adapted = adapt_record(record)
+                adapted = adapt_record(record, trim_to_trainable=trim_to_trainable)
+            except UntrainableRecordError:
+                if skip_untrainable:
+                    stats["skipped_untrainable"] += 1
+                    continue
+                raise
             except Exception as exc:
                 raise ValueError(f"Failed to adapt {input_path}:{line_number}") from exc
             out_handle.write(json.dumps(adapted, ensure_ascii=False) + "\n")
-            count += 1
-    return count
+            stats["written"] += 1
+    return stats
 
 
 def dataset_info(dataset_name: str, file_name: str) -> dict[str, Any]:
@@ -216,16 +279,31 @@ def main() -> None:
         default=DEFAULT_DATASET_NAME,
         help="Dataset key to write when --dataset-info is provided.",
     )
+    parser.add_argument(
+        "--trim-to-trainable",
+        action="store_true",
+        help="Trim OpenAI conversation prefixes so each output record ends on an assistant/function turn.",
+    )
+    parser.add_argument(
+        "--skip-untrainable",
+        action="store_true",
+        help="Skip records that still have no assistant/function turn after trimming.",
+    )
     args = parser.parse_args()
 
-    count = convert_jsonl(args.input, args.output)
+    stats = convert_jsonl(
+        args.input,
+        args.output,
+        trim_to_trainable=args.trim_to_trainable,
+        skip_untrainable=args.skip_untrainable,
+    )
     if args.dataset_info:
         write_dataset_info(
             args.dataset_info,
             dataset_name=args.dataset_name,
             file_name=args.output.name,
         )
-    print(json.dumps({"input": str(args.input), "output": str(args.output), "records": count}))
+    print(json.dumps({"input": str(args.input), "output": str(args.output), **stats}))
 
 
 if __name__ == "__main__":

@@ -4,7 +4,11 @@ import sys
 
 import pytest
 
-from agents.openhands_sdk.sft_to_llamafactory import adapt_record, dataset_info
+from agents.openhands_sdk.sft_to_llamafactory import (
+    UntrainableRecordError,
+    adapt_record,
+    dataset_info,
+)
 
 
 def test_adapt_record_converts_openai_tool_calls_to_function_messages():
@@ -66,6 +70,121 @@ def test_adapt_record_converts_openai_tool_calls_to_function_messages():
     assert json.loads(adapted["tools"])[0]["function"]["name"] == "terminal"
     assert adapted["metadata"] == {"source_dataset": "unit"}
 
+
+def test_adapt_record_merges_adjacent_user_messages():
+    record = {
+        "id": "post-condensation",
+        "messages": [
+            {"role": "system", "content": "system"},
+            {"role": "user", "content": "original request"},
+            {"role": "user", "content": "condensation summary"},
+            {
+                "role": "assistant",
+                "tool_calls": [
+                    {
+                        "function": {
+                            "name": "terminal",
+                            "arguments": json.dumps({"command": "pwd"}),
+                        }
+                    }
+                ],
+            },
+        ],
+    }
+
+    adapted = adapt_record(record)
+
+    assert [message["role"] for message in adapted["messages"]] == [
+        "system",
+        "user",
+        "function_call",
+    ]
+    assert adapted["messages"][1]["content"] == "original request\n\ncondensation summary"
+
+
+def test_adapt_record_merges_tool_then_user_prompt_messages():
+    record = {
+        "id": "tool-user",
+        "messages": [
+            {"role": "user", "content": "request"},
+            {
+                "role": "assistant",
+                "tool_calls": [
+                    {
+                        "id": "call_1",
+                        "function": {
+                            "name": "terminal",
+                            "arguments": json.dumps({"command": "pwd"}),
+                        },
+                    }
+                ],
+            },
+            {"role": "tool", "tool_call_id": "call_1", "content": "/workspace"},
+            {"role": "user", "content": "continue with that result"},
+            {
+                "role": "assistant",
+                "tool_calls": [
+                    {
+                        "id": "call_2",
+                        "function": {
+                            "name": "terminal",
+                            "arguments": json.dumps({"command": "ls"}),
+                        },
+                    }
+                ],
+            },
+        ],
+    }
+
+    adapted = adapt_record(record)
+
+    assert [message["role"] for message in adapted["messages"]] == [
+        "user",
+        "function_call",
+        "tool",
+        "function_call",
+    ]
+    assert adapted["messages"][2]["content"] == "/workspace\n\ncontinue with that result"
+
+
+def test_adapt_record_can_trim_trailing_tool_response_for_training():
+    record = {
+        "id": "tool-tail",
+        "messages": [
+            {"role": "user", "content": "Run pwd"},
+            {
+                "role": "assistant",
+                "tool_calls": [
+                    {
+                        "id": "call_1",
+                        "function": {
+                            "name": "terminal",
+                            "arguments": json.dumps({"command": "pwd"}),
+                        },
+                    }
+                ],
+            },
+            {"role": "tool", "tool_call_id": "call_1", "content": "/workspace"},
+        ],
+    }
+
+    adapted = adapt_record(record, trim_to_trainable=True)
+
+    assert [message["role"] for message in adapted["messages"]] == ["user", "function_call"]
+    assert json.loads(adapted["messages"][-1]["content"])[0] == {
+        "name": "terminal",
+        "arguments": {"command": "pwd"},
+    }
+
+
+def test_adapt_record_rejects_prompt_only_record_when_trimming():
+    record = {
+        "id": "prompt-only",
+        "messages": [{"role": "user", "content": "No response follows"}],
+    }
+
+    with pytest.raises(UntrainableRecordError, match="no trainable"):
+        adapt_record(record, trim_to_trainable=True)
 
 
 def test_adapt_record_rejects_non_object_arguments():
@@ -154,7 +273,7 @@ def test_cli_converts_jsonl_and_writes_dataset_info(tmp_path):
         capture_output=True,
     )
 
-    assert json.loads(result.stdout)["records"] == 1
+    assert json.loads(result.stdout)["written"] == 1
     [adapted] = [json.loads(line) for line in output_path.read_text().splitlines()]
     assert adapted["messages"][1]["role"] == "function_call"
     assert json.loads(adapted["messages"][1]["content"])[0] == {
