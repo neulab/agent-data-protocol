@@ -1,3 +1,10 @@
+"""Normalize ATIF JSONL records while keeping ATIF as both input and output.
+
+Despite the historical script name, this does not emit ADP ``sample_std``
+records. It standardizes ATIF tool names/arguments before downstream SFT
+converters consume the ATIF trajectory.
+"""
+
 import json
 import sys
 from pathlib import Path

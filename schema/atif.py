@@ -508,7 +508,7 @@ def atif_trajectory_to_adp(trajectory: ATIFTrajectory) -> ADPTrajectory:
 
 
 def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
-    normalized = trajectory.model_copy(deep=True)
+    normalized = cast(ATIFTrajectory, trajectory.model_copy(deep=True))
     for step in normalized.steps:
         for tool_call in step.tool_calls or []:
             function_name = tool_call.function_name
@@ -531,4 +531,4 @@ def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
                     tool_call.function_name = "execute_ipython_cell"
                     arguments = {"code": arguments.get("content") or arguments.get("command") or ""}
             tool_call.arguments = arguments
-    return ATIFTrajectory(**normalized.model_dump(exclude_none=True))
+    return normalized

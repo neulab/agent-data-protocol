@@ -102,9 +102,10 @@ The repository currently supports datasets from various domains (we welcome more
 The ADP follows a four-stage pipeline with ATIF as an interchange layer:
 
 ```
-Raw Dataset      →  ATIF Format       →  Normalized ATIF/STD  →  Agent Specific SFT Format
+Raw Dataset      →  ATIF Format       →  ATIF normalization    →  Agent Specific SFT Format
       ↓                   ↓                       ↓                       ↓
-sample_raw.json  →  sample_atif.json  →  sample_std.json      →  sample_sft/<agent_name>.json
+sample_raw.json  →  sample_atif.json  →  scripts/atif_to_std.py → sample_sft/<agent_name>.json
+                                      ↘  sample_std.json (ADP compatibility artifact)
 ```
 
 ### 1. Raw Data
@@ -113,8 +114,8 @@ Original format from various sources (research papers, datasets, etc.)
 ### 2. ATIF Format
 Dataset-specific raw-to-ATIF conversion using Harbor's Agent Trajectory Interchange Format. This layer preserves the raw tool/action shape with minimal normalization and is validated by `ATIFTrajectory`.
 
-### 3. Standardized Format
-Normalized representation used by downstream converters. It remains ATIF-compatible while also supporting ADP's historical action/observation view:
+### 3. ATIF Normalization and Standardized Format
+`scripts/atif_to_std.py` normalizes ATIF tool names/arguments and emits ATIF JSONL, not ADP `sample_std` records. The repository also keeps ADP `sample_std.json` compatibility artifacts with ADP's historical action/observation view:
 - **Actions**: `MessageAction`, `CodeAction`, `ApiAction`
 - **Observations**: `TextObservation`, `WebObservation`
 - **Trajectory**: Container for complete interaction sequences
