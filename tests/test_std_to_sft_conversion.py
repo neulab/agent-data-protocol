@@ -67,7 +67,7 @@ def test_sample_std_and_openhands_v0_sft_records_align(subdir):
 @pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
 def test_std_to_sft_conversion(subdir):
     """
-    Test that sample_sft/openhands_v0.json is correctly generated from sample_std.json.
+    Test that sample_sft/openhands_v0.json aligns with standardized records.
 
     Checks:
     1. Both files exist
