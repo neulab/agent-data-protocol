@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from schema.action.code import CodeAction
 from schema.atif import (
     ATIF_SCHEMA_VERSION,
     ATIFObservation,
@@ -213,6 +214,7 @@ def test_atif_to_std_script_normalizes_tool_names():
                         "tool_call_id": "call_1",
                         "function_name": "shell",
                         "arguments": {"code": "ls"},
+                        "extra": {"adp_class": "code_action", "language": "shell"},
                     }
                 ],
                 "observation": {"results": [{"source_call_id": "call_1", "content": "file"}]},
@@ -230,6 +232,14 @@ def test_atif_to_std_script_normalizes_tool_names():
     normalized = ATIFTrajectory(**json.loads(process.stdout))
     assert normalized.steps[0].tool_calls[0].function_name == "execute_bash"
     assert normalized.steps[0].tool_calls[0].arguments == {"command": "ls"}
+    assert normalized.steps[0].tool_calls[0].extra == {
+        "adp_class": "code_action",
+        "language": "bash",
+    }
+    adp = atif_trajectory_to_adp(normalized)
+    assert isinstance(adp.content[0], CodeAction)
+    assert adp.content[0].language == "bash"
+    assert adp.content[0].content == "ls"
 
 
 def test_openhands_v0_std_to_sft_accepts_atif_input():

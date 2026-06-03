@@ -526,21 +526,28 @@ def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
             function_name = tool_call.function_name
             arguments = dict(tool_call.arguments)
             lower_name = function_name.lower()
+            normalized_language = None
             if lower_name in {"bash", "shell", "sh"}:
+                normalized_language = "bash"
                 tool_call.function_name = "execute_bash"
                 if "command" not in arguments:
                     arguments = {"command": arguments.get("code") or arguments.get("content") or ""}
             elif lower_name in {"python", "py", "python3", "ipython"}:
+                normalized_language = "python"
                 tool_call.function_name = "execute_ipython_cell"
                 if "code" not in arguments:
                     arguments = {"code": arguments.get("command") or arguments.get("content") or ""}
             elif lower_name == "execute_code":
                 language = str(arguments.get("language", "")).lower()
                 if language in {"bash", "sh", "shell"}:
+                    normalized_language = "bash"
                     tool_call.function_name = "execute_bash"
                     arguments = {"command": arguments.get("content") or arguments.get("code") or ""}
                 elif language in {"python", "py", "python3"}:
+                    normalized_language = "python"
                     tool_call.function_name = "execute_ipython_cell"
                     arguments = {"code": arguments.get("content") or arguments.get("command") or ""}
+            if normalized_language and tool_call.extra and "language" in tool_call.extra:
+                tool_call.extra = {**tool_call.extra, "language": normalized_language}
             tool_call.arguments = arguments
     return normalized
