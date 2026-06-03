@@ -209,6 +209,82 @@ def test_adapt_record_rejects_non_object_arguments():
         adapt_record(record)
 
 
+def test_cli_escapes_literal_media_tags(tmp_path):
+    input_path = tmp_path / "input_media.jsonl"
+    output_path = tmp_path / "output_media.jsonl"
+    input_record = {
+        "id": "media-tags",
+        "messages": [
+            {"role": "user", "content": "XML: <image><url>x</url></image>"},
+            {"role": "assistant", "content": "Use <audio> literally, not as media."},
+        ],
+    }
+    input_path.write_text(json.dumps(input_record) + "\n")
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "agents.openhands_sdk.sft_to_llamafactory",
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    [adapted] = [json.loads(line) for line in output_path.read_text().splitlines()]
+    assert adapted["messages"][0]["content"] == "XML: &lt;image&gt;<url>x</url>&lt;/image&gt;"
+    assert adapted["messages"][1]["content"] == "Use &lt;audio&gt; literally, not as media."
+
+
+def test_cli_escapes_literal_media_tags_inside_tool_arguments(tmp_path):
+    input_path = tmp_path / "input_media_args.jsonl"
+    output_path = tmp_path / "output_media_args.jsonl"
+    input_record = {
+        "id": "media-args",
+        "messages": [
+            {"role": "user", "content": "Run script"},
+            {
+                "role": "assistant",
+                "tool_calls": [
+                    {
+                        "function": {
+                            "name": "terminal",
+                            "arguments": json.dumps(
+                                {"command": "cat <<'EOF'\n<image>x</image>\nEOF"}
+                            ),
+                        }
+                    }
+                ],
+            },
+        ],
+    }
+    input_path.write_text(json.dumps(input_record) + "\n")
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "agents.openhands_sdk.sft_to_llamafactory",
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    [adapted] = [json.loads(line) for line in output_path.read_text().splitlines()]
+    function_call = json.loads(adapted["messages"][1]["content"])[0]
+    assert function_call["arguments"]["command"] == "cat <<'EOF'\n&lt;image&gt;x&lt;/image&gt;\nEOF"
+
+
 def test_dataset_info_uses_llamafactory_openai_tags():
     info = dataset_info("demo", "demo.jsonl")
 

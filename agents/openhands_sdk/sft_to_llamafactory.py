@@ -21,7 +21,9 @@ training adapter conversion:
   are merged;
 * when requested, OpenAI-valid conversation prefixes are converted into
   trainable prefixes by trimming trailing prompt-side messages (for example a
-  final tool response) so the adapted record ends on an assistant/function turn.
+  final tool response) so the adapted record ends on an assistant/function turn;
+* literal media tags are escaped so Qwen-VL/LLaMA-Factory does not treat source
+  text such as XML ``<image>`` blocks as multimodal placeholders.
 
 The output is intended for LLaMA-Factory with ``formatting: openai`` and tags
 matching the defaults emitted by ``write_dataset_info``.
@@ -37,10 +39,36 @@ from typing import Any
 DEFAULT_DATASET_NAME = "openhands_sdk_llamafactory"
 PROMPT_ROLES = {"user", "tool"}
 RESPONSE_ROLES = {"assistant", "function_call"}
+MEDIA_TAG_REPLACEMENTS = {
+    "<image>": "&lt;image&gt;",
+    "</image>": "&lt;/image&gt;",
+    "<video>": "&lt;video&gt;",
+    "</video>": "&lt;/video&gt;",
+    "<audio>": "&lt;audio&gt;",
+    "</audio>": "&lt;/audio&gt;",
+}
 
 
 class UntrainableRecordError(ValueError):
     """Raised when a record has no assistant/function response to train on."""
+
+
+def escape_media_tags(text: str) -> str:
+    """Escape literal media tags reserved by multimodal chat templates."""
+    for old, new in MEDIA_TAG_REPLACEMENTS.items():
+        text = text.replace(old, new)
+    return text
+
+
+def escape_media_tags_in_json(value: Any) -> Any:
+    """Recursively escape reserved media tags inside JSON-compatible values."""
+    if isinstance(value, str):
+        return escape_media_tags(value)
+    if isinstance(value, list):
+        return [escape_media_tags_in_json(item) for item in value]
+    if isinstance(value, dict):
+        return {key: escape_media_tags_in_json(item) for key, item in value.items()}
+    return value
 
 
 def text_content(content: Any) -> str:
@@ -48,7 +76,7 @@ def text_content(content: Any) -> str:
     if content is None:
         return ""
     if isinstance(content, str):
-        return content
+        return escape_media_tags(content)
     if isinstance(content, list):
         parts: list[str] = []
         for item in content:
@@ -61,8 +89,8 @@ def text_content(content: Any) -> str:
                     parts.append(json.dumps(item, ensure_ascii=False))
             else:
                 parts.append(str(item))
-        return "\n".join(parts)
-    return str(content)
+        return escape_media_tags("\n".join(parts))
+    return escape_media_tags(str(content))
 
 
 def parse_arguments(
@@ -82,7 +110,7 @@ def parse_arguments(
             f"function.arguments must decode to an object in {record_id} "
             f"message {message_index} tool call {call_index}: {type(arguments).__name__}"
         )
-    return arguments
+    return escape_media_tags_in_json(arguments)
 
 
 def adapt_tool_calls(
@@ -195,11 +223,11 @@ def adapt_record(record: dict[str, Any], *, trim_to_trainable: bool = False) -> 
 
     tools = record.get("tools", "")
     if isinstance(tools, str):
-        adapted["tools"] = tools
+        adapted["tools"] = escape_media_tags(tools)
     elif tools is None:
         adapted["tools"] = ""
     else:
-        adapted["tools"] = json.dumps(tools, ensure_ascii=False)
+        adapted["tools"] = escape_media_tags(json.dumps(tools, ensure_ascii=False))
 
     if "metadata" in record:
         adapted["metadata"] = record["metadata"]
