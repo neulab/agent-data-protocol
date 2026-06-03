@@ -1,0 +1,62 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files.\n\nArgs:\n    command (str): The command to execute. One of: view, create, str_replace, insert, undo_edit.\n    path (str): The absolute path to the file or directory.\n    file_text (str, optional): Required for 'create' command. The content of the file to create.\n    old_str (str, optional): Required for 'str_replace' command. The string to replace.\n    new_str (str, optional): Required for 'str_replace' command. The new string to insert.\n    insert_line (int, optional): Required for 'insert' command. Line number to insert at.\n    view_range (list, optional): Optional for 'view' command. [start_line, end_line] to view.\n\nReturns:\n    str: The result of the operation.\n\nExample:\n    str_replace_editor(command=\"view\", path=\"/workspace/file.py\")\n    str_replace_editor(command=\"create\", path=\"/workspace/new.py\", file_text=\"print('hello')\")\n    str_replace_editor(command=\"str_replace\", path=\"/workspace/file.py\", old_str=\"old\", new_str=\"new\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {},
+            "path": {
+              "type": "string"
+            },
+            "file_text": {
+              "type": "string"
+            },
+            "old_str": {
+              "type": "string"
+            },
+            "new_str": {
+              "type": "string"
+            },
+            "insert_line": {
+              "type": "integer"
+            },
+            "view_range": {}
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "think",
+        "description": "Use this tool to think through a problem step by step.\n\nArgs:\n    thought (str): The thought or reasoning to record.\n\nExample:\n    think(\"I need to first understand the existing code structure before making changes.\")",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "thought": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "thought"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash",
+    "python"
+  ],
+  "browser_enabled": false
+}

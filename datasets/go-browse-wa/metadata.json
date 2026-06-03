@@ -1,0 +1,96 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "click",
+        "description": "Click an element.\n\nArgs:\n----\n    bid (str): The browser ID of the element to click.\n    button (Literal[\"left\", \"middle\", \"right\"]): The mouse button to use. Defaults to \"left\".\n    modifiers (List[Literal[\"Alt\", \"Control\", \"ControlOrMeta\", \"Meta\", \"Shift\"]]):\n        List of modifier keys to hold while clicking. Defaults to None.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string"
+            },
+            "button": {
+              "type": "string",
+              "enum": [
+                "left",
+                "middle",
+                "right"
+              ]
+            },
+            "modifiers": {
+              "type": "array"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "fill",
+        "description": "Fill out a form field.\n\nIt focuses the element and triggers an input event with the entered text.\nWorks for <input>, <textarea> and [contenteditable] elements.\n\nArgs:\n----\n    bid (str): The browser ID of the element to fill.\n    value (str): The text to enter into the field.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "value"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "noop",
+        "description": "Do nothing, and optionally wait for the given time (in milliseconds).\n\nArgs:\n----\n    wait_ms (float): Time to wait in milliseconds. Defaults to 1000ms.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "wait_ms": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "select_option",
+        "description": "Select one or multiple options in a <select> element.\n\nArgs:\n----\n    bid (str): The browser ID of the select element.\n    options (Union[str, List[str]]): The option value(s) or label(s) to select.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "bid": {
+              "type": "string"
+            },
+            "options": {}
+          },
+          "additionalProperties": false,
+          "required": [
+            "bid",
+            "options"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [],
+  "browser_enabled": true
+}

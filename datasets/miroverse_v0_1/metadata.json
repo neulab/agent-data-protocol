@@ -1,0 +1,321 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "browsing_agent__search_and_browse",
+        "description": "[browsing-agent/search_and_browse] This tool is an agent that performs the subtask of searching and browsing the web for specific missing information and generating the desired answer. The subtask should be clearly defined, include relevant background, and focus on factual gaps. It does not perform vague or speculative subtasks.\n\nArgs:\n        subtask: the subtask to be performed.\n\nReturns:\n        the result of the subtask.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subtask": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "subtask"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_google_search__google_search",
+        "description": "[tool-google-search/google_search] Tool to perform web searches via Serper API and retrieve rich results. It is able to retrieve organic search results, people also ask, related searches, and knowledge graph.\n\nArgs:\n    q: Search query string\n    gl: Optional region code for search results in ISO 3166-1 alpha-2 format (e.g., 'us')\n    hl: Optional language code for search results in ISO 639-1 format (e.g., 'en')\n    location: Optional location for search results (e.g., 'SoHo, New York, United States', 'California, United States')\n    num: Number of results to return (default: 10)\n    tbs: Time-based search filter ('qdr:h' for past hour, 'qdr:d' for past day, 'qdr:w' for past week, 'qdr:m' for past month, 'qdr:y' for past year)\n    page: Page number of results to return (default: 1)\n    autocorrect: Whether to autocorrect spelling in query",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string"
+            },
+            "gl": {},
+            "hl": {},
+            "location": {},
+            "num": {},
+            "tbs": {},
+            "page": {},
+            "autocorrect": {}
+          },
+          "additionalProperties": false,
+          "required": [
+            "q"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_google_search__scrape",
+        "description": "[tool-google-search/scrape] Tool to scrape a webpage and retrieve the text and, optionally, the markdown content. It will retrieve also the JSON-LD metadata and the head metadata.\n\nArgs:\n    url: The URL of the webpage to scrape.\n    includeMarkdown: Whether to include markdown content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "includeMarkdown": {}
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_serper_search__google_search",
+        "description": "[tool-serper-search/google_search] Tool to perform web searches via Serper API and retrieve rich results. It is able to retrieve organic search results, people also ask, related searches, and knowledge graph.\n\nArgs:\n    q: Search query string\n    gl: Optional region code for search results in ISO 3166-1 alpha-2 format (e.g., 'us')\n    hl: Optional language code for search results in ISO 639-1 format (e.g., 'en')\n    location: Optional location for search results (e.g., 'SoHo, New York, United States', 'California, United States')\n    num: Number of results to return (default: 10)\n    tbs: Time-based search filter ('qdr:h' for past hour, 'qdr:d' for past day, 'qdr:w' for past week, 'qdr:m' for past month, 'qdr:y' for past year)\n    page: Page number of results to return (default: 1)\n    autocorrect: Whether to autocorrect spelling in query",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "q": {
+              "type": "string"
+            },
+            "gl": {},
+            "hl": {},
+            "location": {},
+            "num": {},
+            "tbs": {},
+            "page": {},
+            "autocorrect": {}
+          },
+          "additionalProperties": false,
+          "required": [
+            "q"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_serper_search__scrape",
+        "description": "[tool-serper-search/scrape] Tool to scrape a webpage and retrieve the text and, optionally, the markdown content. It will retrieve also the JSON-LD metadata and the head metadata.\n\nArgs:\n    url: The URL of the webpage to scrape.\n    includeMarkdown: Whether to include markdown content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "includeMarkdown": {}
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__create_sandbox",
+        "description": "Dataset tool tool_code__create_sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__download_internet_file_to_sandbox",
+        "description": "Dataset tool tool_code__download_internet_file_to_sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__run_command",
+        "description": "Dataset tool tool_code__run_command.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__run_python_code",
+        "description": "Dataset tool tool_code__run_python_code.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_code__upload_local_file_to_sandbox",
+        "description": "Dataset tool tool_code__upload_local_file_to_sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__create_sandbox",
+        "description": "Dataset tool tool_python__create_sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__download_internet_file_to_python_interpreter",
+        "description": "Dataset tool tool_python__download_internet_file_to_python_interpreter.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__download_internet_file_to_sandbox",
+        "description": "Dataset tool tool_python__download_internet_file_to_sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__run_command",
+        "description": "Dataset tool tool_python__run_command.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__run_python_code",
+        "description": "Dataset tool tool_python__run_python_code.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__upload_local_file_to_python_interpreter",
+        "description": "Dataset tool tool_python__upload_local_file_to_python_interpreter.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_python__upload_local_file_to_sandbox",
+        "description": "Dataset tool tool_python__upload_local_file_to_sandbox.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_reader__convert_to_markdown",
+        "description": "Dataset tool tool_reader__convert_to_markdown.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_reading__convert_to_markdown",
+        "description": "Dataset tool tool_reading__convert_to_markdown.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_reasoning__reasoning",
+        "description": "Dataset tool tool_reasoning__reasoning.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_transcribe__audio_transcription",
+        "description": "Dataset tool tool_transcribe__audio_transcription.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "tool_vqa__visual_question_answering",
+        "description": "Dataset tool tool_vqa__visual_question_answering.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      }
+    }
+  ],
+  "code_enabled": [],
+  "browser_enabled": false
+}

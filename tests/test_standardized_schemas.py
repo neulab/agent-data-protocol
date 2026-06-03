@@ -1,5 +1,3 @@
-import importlib.util
-import inspect
 import json
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
@@ -9,6 +7,7 @@ from pydantic import ValidationError
 
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
+from schema.dataset_metadata import custom_tool_names, is_browser_api_action, load_dataset_metadata
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
@@ -392,22 +391,10 @@ def test_sample_standardized_against_schema(sample_path):
     assert isinstance(samples, list), "sample_std.json should be a list"
     assert len(samples) > 0, "sample_std.json should have at least one sample"
 
-    # dynamically load api.py in the same directory as sample_std.json
-    dataset_api = None
-    api_function_names = None
-
-    def load_dataset_api():
-        nonlocal dataset_api, api_function_names
-        if dataset_api is None:
-            api_path = os.path.join(os.path.dirname(sample_path), "api.py")
-            assert os.path.exists(api_path)
-            spec = importlib.util.spec_from_file_location("dataset_api", api_path)
-            dataset_api = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(dataset_api)
-            api_function_names = {
-                name for name, _ in inspect.getmembers(dataset_api, inspect.isfunction)
-            }
-        return dataset_api, api_function_names
+    dataset_name = Path(sample_path).parent.name
+    metadata = load_dataset_metadata(dataset_name, required=True)
+    api_function_names = custom_tool_names(metadata)
+    built_in_api_names = {"finish", "stop", "submit", "str_replace_editor", "think", "task_tracker"}
 
     for sample_id, sample in enumerate(samples):
         try:
@@ -431,11 +418,16 @@ def test_sample_standardized_against_schema(sample_path):
             )
             if traj.available_apis is not None:
                 available_apis = traj.available_apis
-                _, api_function_names = load_dataset_api()
-                missing_available_apis = sorted(set(available_apis) - api_function_names)
-                assert not missing_available_apis, (
-                    f"available_apis contains functions not found in api.py in "
-                    f"{os.path.dirname(sample_path)}: {missing_available_apis}"
+                unsupported_available_apis = sorted(
+                    name
+                    for name in set(available_apis)
+                    if name not in api_function_names
+                    and name not in built_in_api_names
+                    and not is_browser_api_action(name, browser_context=metadata.browser_enabled)
+                )
+                assert not unsupported_available_apis, (
+                    f"available_apis contains functions not found in metadata.json in "
+                    f"{os.path.dirname(sample_path)}: {unsupported_available_apis}"
                 )
                 used_apis = {
                     content.function for content in traj.content if isinstance(content, ApiAction)
@@ -455,14 +447,19 @@ def test_sample_standardized_against_schema(sample_path):
                         f"content {content_id}: {content.content}"
                     )
                 if isinstance(content, ApiAction):
-                    # Make sure that content.function exists in api.py
-                    dataset_api, _ = load_dataset_api()
-                    assert hasattr(dataset_api, content.function), (
-                        f"{content.function} not found in api.py in {os.path.dirname(sample_path)}"
+                    supported_by_metadata = (
+                        content.function in api_function_names
+                        or content.function in built_in_api_names
+                        or is_browser_api_action(
+                            content.function,
+                            content.kwargs,
+                            browser_context=metadata.browser_enabled,
+                        )
                     )
-                    # Validate content.kwargs against the function signature
-                    function = getattr(dataset_api, content.function)
-                    function(**content.kwargs)
+                    assert supported_by_metadata, (
+                        f"{content.function} not found in metadata.json in "
+                        f"{os.path.dirname(sample_path)}"
+                    )
 
         except ValidationError as e:
             pytest.fail(f"Validation failed for {sample_path}: {str(e)}")

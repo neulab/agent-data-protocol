@@ -1,0 +1,67 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "finish",
+        "description": "Finish the task.\n\nArgs:\n----\n    message: Final response to the user.\n    task_completed: Whether the task was completed successfully.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "task_completed": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "message",
+            "task_completed"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "View, create, and edit files with the OpenHands string replacement editor.\n\nArgs:\n----\n    command: Editor command such as view, create, str_replace, insert, or undo_edit.\n    path: Absolute path to the file or directory to operate on.\n    file_text: Content to write when creating a file.\n    old_str: Existing text to replace.\n    new_str: Replacement text or text to insert.\n    insert_line: Line number after which to insert new_str.\n    view_range: Optional 1-indexed inclusive line range for view commands.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "file_text": {
+              "type": "string"
+            },
+            "old_str": {
+              "type": "string"
+            },
+            "new_str": {
+              "type": "string"
+            },
+            "insert_line": {
+              "type": "integer"
+            },
+            "view_range": {}
+          },
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "path"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [
+    "bash"
+  ],
+  "browser_enabled": false
+}

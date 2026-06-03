@@ -5,15 +5,15 @@ import sys
 from datasets import load_dataset
 
 DATASET_NAME = "GAIR/daVinci-Dev"
-CONFIG_NAME = "env_native"
+DATA_FILE = "hf://datasets/GAIR/daVinci-Dev/env-native.jsonl"
 SPLIT = "train"
 
 
 def main():
     token = os.getenv("HF_TOKEN") or None
     dataset = load_dataset(
-        DATASET_NAME,
-        CONFIG_NAME,
+        "json",
+        data_files=DATA_FILE,
         split=SPLIT,
         streaming=True,
         token=token,
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         main()
     except Exception as exc:
         print(
-            f"Failed to stream {DATASET_NAME}/{CONFIG_NAME}. The dataset is gated; "
+            f"Failed to stream {DATA_FILE}. The dataset is gated; "
             "authenticate with Hugging Face and ensure access has been granted.",
             file=sys.stderr,
         )
