@@ -1,3 +1,13 @@
+"""Transitional raw-to-ATIF scaffold shared by dataset wrappers.
+
+This is not a native raw→ATIF implementation. It intentionally delegates to each
+existing ``raw_to_standardized.py`` converter and then adapts the ADP trajectory
+to ATIF so every dataset can expose ATIF samples during the unification work.
+As a result, generated ATIF records inherit the ADP conversion's normalization,
+filtering, and field-mapping choices; dataset-specific raw→ATIF converters may
+replace this wrapper when higher-fidelity ATIF extraction is needed.
+"""
+
 import json
 import os
 import subprocess

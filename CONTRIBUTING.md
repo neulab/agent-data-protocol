@@ -22,9 +22,9 @@ This repository contains:
 
 ### Data Flow
 ```
-Raw Dataset      →  ATIF Format       →  ATIF normalization    →  Agent Specific SFT Format
-      ↓                   ↓                       ↓                       ↓
-sample_raw.json  →  sample_atif.json  →  scripts/atif_to_std.py → sample_sft/<agent_name>.json
+Raw Dataset      →  ATIF Format       →  ATIF normalization    →  SFT conversion             →  Agent Specific SFT Format
+      ↓                   ↓                       ↓                         ↓                                ↓
+sample_raw.json  →  sample_atif.json  →  scripts/atif_to_std.py → agents/*/std_to_sft.py      →  sample_sft/<agent_name>.json
                                       ↘  sample_std.json (ADP compatibility artifact)
 ```
 

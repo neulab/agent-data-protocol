@@ -193,6 +193,11 @@ def test_openhands_v0_std_to_sft_accepts_atif_input():
         check=True,
     )
     converted = json.loads(process.stdout)
+    conversations = converted["conversations"]
     assert converted["id"] == atif_sample["trajectory_id"]
-    assert converted["conversations"]
-    assert all(set(message) == {"role", "content"} for message in converted["conversations"])
+    assert len(conversations) >= 3
+    assert all(set(message) == {"role", "content"} for message in conversations)
+    assert any(
+        message["role"] == "assistant" and "<function=execute_ipython_cell>" in message["content"]
+        for message in conversations
+    )
