@@ -10,7 +10,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from scripts.atif_input import load_trajectory
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -156,9 +156,7 @@ def standardized_event_to_swe_message(
 
 
 def process_row(line, api_tool_description, api_sigs):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     if trajectory.available_apis is not None:

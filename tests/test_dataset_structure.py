@@ -50,12 +50,16 @@ def test_dataset_structure(subdir):
     # If raw_to_standardized.py exists, the dataset should have standardized and ATIF samples.
     raw_to_std_path = os.path.join(subdir_path, "raw_to_standardized.py")
     raw_to_atif_path = os.path.join(subdir_path, "raw_to_atif.py")
+    atif_to_std_path = os.path.join(subdir_path, "atif_to_std.py")
     sample_std_path = os.path.join(subdir_path, "sample_std.json")
     sample_atif_path = os.path.join(subdir_path, "sample_atif.json")
 
     if os.path.exists(raw_to_std_path):
         assert os.path.exists(raw_to_atif_path), (
             f"raw_to_standardized.py exists but raw_to_atif.py not found in {subdir_path}"
+        )
+        assert os.path.exists(atif_to_std_path), (
+            f"raw_to_standardized.py exists but atif_to_std.py not found in {subdir_path}"
         )
         assert os.path.exists(sample_std_path), (
             f"raw_to_standardized.py exists but sample_std.json not found in {subdir_path}"

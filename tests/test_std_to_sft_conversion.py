@@ -33,41 +33,41 @@ def get_subdirectories(directory):
 
 
 @pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
-def test_sample_std_and_openhands_v0_sft_records_align(subdir):
-    """OpenHands v0 SFT samples should preserve standardized sample records and ids."""
+def test_sample_atif_and_openhands_v0_sft_records_align(subdir):
+    """OpenHands v0 SFT samples should preserve normalized ATIF record ids."""
     subdir_path = os.path.join(DATASET_PATH, subdir)
-    sample_std_path = os.path.join(subdir_path, "sample_std.json")
+    sample_atif_path = os.path.join(subdir_path, "sample_atif.json")
     sample_sft_path = os.path.join(subdir_path, "sample_sft", "openhands_v0.json")
 
-    if not os.path.exists(sample_std_path):
-        pytest.skip(f"sample_std.json not found in {subdir_path}")
+    if not os.path.exists(sample_atif_path):
+        pytest.skip(f"sample_atif.json not found in {subdir_path}")
 
     assert os.path.exists(sample_sft_path), (
         f"sample_sft/openhands_v0.json not found in {subdir_path}"
     )
 
-    with open(sample_std_path, "r") as f:
-        std_data = json.load(f)
+    with open(sample_atif_path, "r") as f:
+        atif_data = json.load(f)
 
     with open(sample_sft_path, "r") as f:
         sft_data = json.load(f)
 
-    assert len(std_data) == len(sft_data), (
-        f"Number of samples in std ({len(std_data)}) and root sft ({len(sft_data)}) "
+    assert len(atif_data) == len(sft_data), (
+        f"Number of samples in ATIF ({len(atif_data)}) and root sft ({len(sft_data)}) "
         f"don't match in {subdir}"
     )
 
-    std_ids = [sample["id"] for sample in std_data]
+    atif_ids = [sample["trajectory_id"] for sample in atif_data]
     sft_ids = [sample["id"] for sample in sft_data]
     # This test verifies stage alignment only. Some datasets intentionally remain
     # in the broader #218 follow-up for duplicate source IDs within a stage.
-    assert std_ids == sft_ids, f"Sample ids don't match in {subdir}: {std_ids} vs {sft_ids}"
+    assert atif_ids == sft_ids, f"Sample ids don't match in {subdir}: {atif_ids} vs {sft_ids}"
 
 
 @pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
 def test_std_to_sft_conversion(subdir):
     """
-    Test that sample_sft/openhands_v0.json aligns with standardized records.
+    Test that sample_sft/openhands_v0.json aligns with ATIF records.
 
     Checks:
     1. Both files exist
@@ -82,33 +82,34 @@ def test_std_to_sft_conversion(subdir):
     subdir_path = os.path.join(DATASET_PATH, subdir)
 
     # Check if both files exist
-    sample_std_path = os.path.join(subdir_path, "sample_std.json")
+    sample_atif_path = os.path.join(subdir_path, "sample_atif.json")
     sample_sft_path = os.path.join(subdir_path, "sample_sft", "openhands_v0.json")
 
-    if not os.path.exists(sample_std_path):
-        pytest.skip(f"sample_std.json not found in {subdir_path}")
+    if not os.path.exists(sample_atif_path):
+        pytest.skip(f"sample_atif.json not found in {subdir_path}")
 
     assert os.path.exists(sample_sft_path), (
         f"sample_sft/openhands_v0.json not found in {subdir_path}"
     )
 
     # Load the files
-    with open(sample_std_path, "r") as f:
-        std_data = json.load(f)
+    with open(sample_atif_path, "r") as f:
+        atif_data = json.load(f)
 
     with open(sample_sft_path, "r") as f:
         sft_data = json.load(f)
 
     # Check if the number of samples is the same
-    assert len(std_data) == len(sft_data), (
-        f"Number of samples in std ({len(std_data)}) and sft ({len(sft_data)}) don't match in {subdir}"
+    assert len(atif_data) == len(sft_data), (
+        f"Number of samples in ATIF ({len(atif_data)}) and sft ({len(sft_data)}) don't match in {subdir}"
     )
 
     # Check each sample
-    for i, (std_sample, sft_sample) in enumerate(zip(std_data, sft_data)):
+    for i, (atif_sample, sft_sample) in enumerate(zip(atif_data, sft_data)):
         # Check if IDs match
-        assert std_sample["id"] == sft_sample["id"], (
-            f"Sample {i} IDs don't match in {subdir}: {std_sample['id']} vs {sft_sample['id']}"
+        assert atif_sample["trajectory_id"] == sft_sample["id"], (
+            f"Sample {i} IDs don't match in {subdir}: "
+            f"{atif_sample['trajectory_id']} vs {sft_sample['id']}"
         )
 
         # Check if the SFT sample has the expected structure
@@ -118,30 +119,26 @@ def test_std_to_sft_conversion(subdir):
         assert "system" in sft_sample, f"Sample {i} in {subdir} SFT data missing 'system' field"
 
         # Check if the number of turns is similar
-        # In STD format, each turn is an item in the "content" array
-        std_turns = len(std_sample["content"])
+        # In ATIF format, each turn is an item in the "steps" array
+        atif_turns = len(atif_sample["steps"])
 
         # In SFT format, each turn is an item in the "conversations" array
         sft_turns = len(sft_sample["conversations"])
 
-        # The number of turns might not be exactly the same due to how std_to_sft.py processes the data
-        # For example, system messages might be handled differently
-        # But they should be reasonably close
-        # We'll allow for some flexibility but ensure they're not drastically different
+        # The number of turns might not be exactly the same due to how std_to_sft.py processes the data.
+        # For example, system messages might be handled differently. We'll allow some flexibility but
+        # ensure the counts are not drastically different.
+        if atif_turns > 0 and atif_sample["steps"][0].get("source") == "system":
+            atif_turns -= 1
 
-        # Skip system message in std_turns count if it exists
-        if (
-            std_turns > 0
-            and "source" in std_sample["content"][0]
-            and std_sample["content"][0]["source"] == "system"
-        ):
-            std_turns -= 1
-
-        # Check if the number of turns is within a reasonable range
-        # Allow for some difference but not too much
-        max_diff = max(2, std_turns * 0.3)  # Allow either 2 turns difference or 30% difference
-
-        assert abs(std_turns - sft_turns) <= max_diff, (
-            f"Sample {i} in {subdir} has too different number of turns: "
-            f"STD has {std_turns} turns, SFT has {sft_turns} turns"
+        # ATIF groups an assistant tool call and its observation into one step, while SFT
+        # often expands them into separate assistant/user messages. Keep this as a broad
+        # sanity check rather than requiring ADP-style one-event-per-turn counts.
+        assert sft_turns >= max(1, atif_turns // 2), (
+            f"Sample {i} in {subdir} has unexpectedly few SFT turns: "
+            f"ATIF has {atif_turns} turns, SFT has {sft_turns} turns"
+        )
+        assert sft_turns <= max(4, atif_turns * 3), (
+            f"Sample {i} in {subdir} has unexpectedly many SFT turns: "
+            f"ATIF has {atif_turns} turns, SFT has {sft_turns} turns"
         )

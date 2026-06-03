@@ -532,7 +532,7 @@ def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
                 tool_call.function_name = "execute_bash"
                 if "command" not in arguments:
                     arguments = {"command": arguments.get("code") or arguments.get("content") or ""}
-            elif lower_name in {"python", "py", "python3", "ipython"}:
+            elif lower_name in {"execute", "python", "py", "python3", "ipython"}:
                 normalized_language = "python"
                 tool_call.function_name = "execute_ipython_cell"
                 if "code" not in arguments:

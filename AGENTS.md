@@ -27,14 +27,14 @@ agent-data-protocol/
 ## Data Flow Pipeline
 
 ```
-Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → scripts/atif_to_std.py → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
+Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → atif_to_std.py → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
             └→ raw_to_standardized.py  → sample_std.json (ADP compatibility artifact)
 ```
 
 ## Key Requirements
 
 ### Dataset File Naming and Structure
-- Every dataset directory must include `README.md`, `extract_raw.py`, `raw_to_atif.py`, `raw_to_standardized.py`, `schema_raw.py`, `sample_raw.json`, `sample_atif.json`, `sample_std.json`, and `sample_sft/openhands_v0.json` unless there is a documented reason that the dataset is intentionally incomplete.
+- Every dataset directory must include `README.md`, `extract_raw.py`, `raw_to_atif.py`, `atif_to_std.py`, `raw_to_standardized.py`, `schema_raw.py`, `sample_raw.json`, `sample_atif.json`, `sample_std.json`, and `sample_sft/openhands_v0.json` unless there is a documented reason that the dataset is intentionally incomplete.
 - If `sample_std.json` exists, `sample_sft/openhands_v0.json` is required. Additional agent-specific files may live under `sample_sft/` using the exact agent identifier as the filename, such as `sample_sft/sweagent.json`.
 - Only these top-level JSON files are allowed in dataset directories:
   - `sample_raw.json`
@@ -46,7 +46,7 @@ Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → scripts/atif
 
 ### Generated Samples Must Come From the Pipeline
 - Treat `sample_raw.json`, `sample_atif.json`, `sample_std.json`, and files under `sample_sft/` as generated artifacts from the dataset scripts, not hand-edited fixtures.
-- If a sample fails validation, fix `extract_raw.py`, `raw_to_atif.py`, `raw_to_standardized.py`, `schema_raw.py`, `api.py`, or the relevant agent converter, then regenerate the sample files.
+- If a sample fails validation, fix `extract_raw.py`, `raw_to_atif.py`, `atif_to_std.py`, `raw_to_standardized.py`, `schema_raw.py`, `api.py`, or the relevant agent converter, then regenerate the sample files.
 - Do not directly patch sample JSON just to satisfy a failing test unless the same logic is also encoded in the generator that produced it.
 - Keep the same records and order across `sample_raw.json`, `sample_atif.json`, `sample_std.json`, and each `sample_sft/<agent_name>.json`; the samples should represent the same tasks at each stage, with matching IDs between standardized and SFT files.
 - Use small representative samples, normally 3-5 trajectories, that include important edge cases such as tool calls, command output, final answers, and any dataset-specific action types.
@@ -143,7 +143,7 @@ cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | pyt
 
 # Convert the exact ATIF samples to the required OpenHands v0 SFT sample
 mkdir -p datasets/$MY_DATASET/sample_sft
-cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python scripts/atif_to_std.py | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/atif_to_std.py | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
 ```
 
 ### Run tests

@@ -50,6 +50,7 @@ from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
+from scripts.atif_input import load_trajectory
 
 try:
     from openhands.tools.browser_use import BrowserToolSet
@@ -640,7 +641,7 @@ def normalize_message_content(messages: list[dict[str, Any]]) -> list[dict[str, 
 
 
 def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[str, Any]:
-    trajectory = Trajectory(**json.loads(line))
+    trajectory = load_trajectory(line)
     dataset_name = dataset_name or os.getenv("MY_DATASET")
     metadata = load_dataset_metadata(dataset_name, required=True)
     register_metadata_tools(metadata)

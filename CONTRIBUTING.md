@@ -22,7 +22,7 @@ This repository contains:
 
 ### Data Flow
 ```
-Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → scripts/atif_to_std.py → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
+Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → atif_to_std.py → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
             └→ raw_to_standardized.py  → sample_std.json (ADP compatibility artifact)
 ```
 
@@ -81,6 +81,7 @@ datasets/$YOUR_DATASET_NAME/
 ├── schema_raw.py               # Raw data schema (optional)
 ├── extract_raw.py              # Script to extract raw data
 ├── raw_to_atif.py              # Raw-to-ATIF conversion script
+├── atif_to_std.py              # ATIF-to-ATIF tool normalization script
 ├── raw_to_standardized.py      # Conversion script
 ├── api.py                      # API definitions (optional)
 ├── sample_raw.json             # 5 raw samples
@@ -368,7 +369,7 @@ Each agent implementation should follow this structure:
 agents/YOUR_AGENT_NAME/
 ├── __init__.py                # Agent module initialization
 ├── api.py                     # Agent-specific API definitions
-├── std_to_sft.py              # Standardized to SFT conversion
+├── std_to_sft.py              # ATIF to SFT conversion
 ├── system_prompt/             # System prompts and templates
 └── README.md                  # Agent documentation
 ```
@@ -428,7 +429,7 @@ When responding, always:
 
 #### Step 4: Create SFT Conversion Script
 
-Create `std_to_sft.py` for converting standardized format to your agent's SFT format.
+Create `std_to_sft.py` for converting normalized ATIF format to your agent's SFT format.
 The output data should ideally be directly usable for training using [LLaMA Factory](https://github.com/hiyouga/LLaMA-Factory).
 
 ```python
@@ -483,14 +484,14 @@ if __name__ == "__main__":
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
-cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/YOUR_AGENT_NAME/std_to_sft.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/YOUR_AGENT_NAME.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/atif_to_std.py | python agents/YOUR_AGENT_NAME/std_to_sft.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/YOUR_AGENT_NAME.json
 ```
 
 For example, OpenHands v0 consumes normalized ATIF:
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
-cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python scripts/atif_to_std.py | python agents/openhands_v0/std_to_sft.py --is_web=yes --api_env=browser | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/atif_to_std.py | python agents/openhands_v0/std_to_sft.py --is_web=yes --api_env=browser | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
 ```
 
 #### Step 6: Create Agent README

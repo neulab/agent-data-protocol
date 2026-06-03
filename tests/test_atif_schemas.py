@@ -200,7 +200,33 @@ def test_atif_to_adp_preserves_message_and_standalone_observation():
     assert getattr(adp.content[1], "source") == "environment"
 
 
-def test_atif_to_std_script_normalizes_tool_names():
+def test_raw_to_atif_common_does_not_depend_on_adp_standardization():
+    source = (REPO_ROOT / "scripts" / "raw_to_atif_common.py").read_text()
+    assert "raw_to_standardized" not in source
+    assert "adp_trajectory_to_atif" not in source
+    assert "schema.trajectory" not in source
+
+
+def test_raw_to_atif_preserves_raw_tool_name_before_normalization():
+    raw_sample = json.loads((DATASET_PATH / "codeactinstruct" / "sample_raw.json").read_text())[0]
+    process = subprocess.run(
+        [sys.executable, str(DATASET_PATH / "codeactinstruct" / "raw_to_atif.py")],
+        input=json.dumps(raw_sample) + "\n",
+        text=True,
+        capture_output=True,
+        cwd=REPO_ROOT,
+        check=True,
+    )
+    atif = ATIFTrajectory(**json.loads(process.stdout))
+    raw_tool_names = [
+        tool_call.function_name for step in atif.steps for tool_call in (step.tool_calls or [])
+    ]
+    assert "execute" in raw_tool_names
+    assert "execute_ipython_cell" not in raw_tool_names
+
+
+@pytest.mark.parametrize("dataset_name", ["codeactinstruct", "coderforge_preview"])
+def test_dataset_atif_to_std_script_normalizes_tool_names(dataset_name):
     atif = ATIFTrajectory(
         trajectory_id="normalize-shell",
         agent={"name": "test", "version": "0"},
@@ -222,7 +248,7 @@ def test_atif_to_std_script_normalizes_tool_names():
         ],
     )
     process = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "scripts" / "atif_to_std.py")],
+        [sys.executable, str(DATASET_PATH / dataset_name / "atif_to_std.py")],
         input=atif.model_dump_json(exclude_none=True) + "\n",
         text=True,
         capture_output=True,

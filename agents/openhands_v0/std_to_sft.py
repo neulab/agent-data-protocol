@@ -9,8 +9,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from pydantic import ValidationError
-
 from agents.openhands_v0.api import (
     browser_default_apis,
     get_api_tool_description,
@@ -22,15 +20,9 @@ from agents.openhands_v0.system_prompt.user import get_web_user_message
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
-from schema.atif import (
-    ATIF_SCHEMA_VERSION,
-    ATIFTrajectory,
-    atif_trajectory_to_adp,
-    normalize_atif_trajectory,
-)
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from scripts.atif_input import load_trajectory
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -330,26 +322,8 @@ def standardized_event_to_openhands_v0_message(
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
 
 
-def load_input_trajectory(line: str) -> Trajectory:
-    data = json.loads(line)
-    if data.get("schema_version") == ATIF_SCHEMA_VERSION:
-        atif_trajectory = normalize_atif_trajectory(ATIFTrajectory(**data))
-        return atif_trajectory_to_adp(atif_trajectory)
-    if data.get("schema_version") is not None:
-        return Trajectory(**data)
-
-    try:
-        return Trajectory(**data)
-    except ValidationError as adp_error:
-        try:
-            atif_trajectory = normalize_atif_trajectory(ATIFTrajectory(**data))
-        except ValidationError:
-            raise adp_error
-        return atif_trajectory_to_adp(atif_trajectory)
-
-
 def process_row(line, is_web, api_env, api_tool_description, api_sigs):
-    trajectory = load_input_trajectory(line)
+    trajectory = load_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     if trajectory.available_apis is not None:

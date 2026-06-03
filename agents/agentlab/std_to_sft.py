@@ -4,7 +4,7 @@ import re
 import sys
 
 from agents.openhands_v0.std_to_sft import main_with_args as main_openhands_v0
-from schema.trajectory import Trajectory
+from scripts.atif_input import load_trajectory
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -17,9 +17,7 @@ with open("agents/agentlab/suffix.txt") as f:
 
 
 def process_row(line):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_trajectory(line)
     events = trajectory.content
     output_line = json.loads(main_openhands_v0(line, is_web=True, api_env="browser"))
     goal = "# Goal\n" + events[0].content + "\n\n"
