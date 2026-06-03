@@ -46,9 +46,9 @@ class SchemaRaw(BaseModel):
 
     messages: Union[str, List[Message]]
     instance_id: str
-    rollout_patch: str = ""
-    func_name: str = ""
-    func_path: str = ""
-    problem_statement: str = ""
-    target_patch: str = ""
-    docker_image: str = ""
+    rollout_patch: Optional[str] = ""
+    func_name: Optional[str] = ""
+    func_path: Optional[str] = ""
+    problem_statement: Optional[str] = ""
+    target_patch: Optional[str] = ""
+    docker_image: Optional[str] = ""
