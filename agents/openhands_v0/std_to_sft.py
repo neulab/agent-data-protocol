@@ -5,6 +5,9 @@ import os
 import re
 import sys
 import traceback
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from agents.openhands_v0.api import (
     browser_default_apis,
@@ -17,6 +20,12 @@ from agents.openhands_v0.system_prompt.user import get_web_user_message
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.action.message import MessageAction
+from schema.atif import (
+    ATIF_SCHEMA_VERSION,
+    ATIFTrajectory,
+    atif_trajectory_to_adp,
+    normalize_atif_trajectory,
+)
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.trajectory import Trajectory
@@ -319,10 +328,16 @@ def standardized_event_to_openhands_v0_message(
         raise ValueError(f"Unknown event type: {type(event)}\n{event}")
 
 
+def load_input_trajectory(line: str) -> Trajectory:
+    data = json.loads(line)
+    if data.get("schema_version") == ATIF_SCHEMA_VERSION or "steps" in data:
+        atif_trajectory = normalize_atif_trajectory(ATIFTrajectory(**data))
+        return atif_trajectory_to_adp(atif_trajectory)
+    return Trajectory(**data)
+
+
 def process_row(line, is_web, api_env, api_tool_description, api_sigs):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_input_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     if trajectory.available_apis is not None:

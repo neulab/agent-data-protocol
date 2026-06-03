@@ -5,6 +5,9 @@ echo RAW
 python datasets/$MY_DATASET/extract_raw.py > datasets/$MY_DATASET/full_raw.jsonl
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
+echo ATIF
+cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_atif.py > datasets/$MY_DATASET/full_atif.jsonl
+
 echo STD
 cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_standardized.py > datasets/$MY_DATASET/full_std.jsonl
 

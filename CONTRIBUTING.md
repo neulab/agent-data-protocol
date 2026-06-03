@@ -22,9 +22,9 @@ This repository contains:
 
 ### Data Flow
 ```
-Raw Dataset      →  Standardized Format  →  Agent Specific SFT Format
-      ↓                   ↓                       ↓
-sample_raw.json  →  sample_std.json      →  sample_sft/<agent_name>.json
+Raw Dataset      →  ATIF Format       →  Normalized ATIF/STD  →  Agent Specific SFT Format
+      ↓                   ↓                       ↓                       ↓
+sample_raw.json  →  sample_atif.json  →  sample_std.json      →  sample_sft/<agent_name>.json
 ```
 
 ### Standardized Schema Components
@@ -81,9 +81,11 @@ datasets/$YOUR_DATASET_NAME/
 ├── requirements.txt            # Dataset-specific dependencies (optional)
 ├── schema_raw.py               # Raw data schema (optional)
 ├── extract_raw.py              # Script to extract raw data
+├── raw_to_atif.py              # Raw-to-ATIF conversion script
 ├── raw_to_standardized.py      # Conversion script
 ├── api.py                      # API definitions (optional)
 ├── sample_raw.json             # 5 raw samples
+├── sample_atif.json            # 5 ATIF samples
 ├── sample_std.json             # 5 standardized samples
 └── sample_sft                  # SFT format samples
   ├── openhands_v0.json         # 5 OpenHands v0 SFT samples (if applicable)
@@ -328,9 +330,10 @@ if __name__ == "__main__":
    ```
 
 
-3. Generate standardized samples:
+3. Generate ATIF and standardized samples:
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
+cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_atif.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_atif.json
 cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
 ```
 
@@ -535,6 +538,7 @@ pytest tests/test_dataset_structure.py
 Before submitting your contribution:
 
 - [ ] Raw data extraction script works correctly
+- [ ] ATIF conversion produces `sample_atif.json` and passes ATIF schema validation
 - [ ] Standardized format conversion passes validation
 - [ ] SFT format conversion produces valid output
 - [ ] `sample_std.json` files include the current root-level `schema_version`
