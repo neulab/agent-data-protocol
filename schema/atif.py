@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Union
+from typing import Any, Literal, Union, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -497,10 +497,13 @@ def atif_trajectory_to_adp(trajectory: ATIFTrajectory) -> ADPTrajectory:
             )
         )
 
-    return create_trajectory_with_tool_call_links(
-        id=trajectory.trajectory_id or trajectory.session_id or "atif-trajectory",
-        content=content,
-        details=details,
+    return cast(
+        ADPTrajectory,
+        create_trajectory_with_tool_call_links(
+            id=trajectory.trajectory_id or trajectory.session_id or "atif-trajectory",
+            content=content,
+            details=details,
+        ),
     )
 
 
