@@ -64,20 +64,21 @@ mkdir -p datasets/$MY_DATASET/full_sft
 echo "Extracting raw data..."
 python datasets/$MY_DATASET/extract_raw.py > datasets/$MY_DATASET/full_raw.jsonl
 
-# Step 2: Convert to standardized format
-echo "Converting to standardized format..."
+# Step 2: Convert to ATIF and ADP standardized formats
 export PYTHONPATH=`pwd`:$PYTHONPATH
+echo "Converting to ATIF format..."
+cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_atif.py > datasets/$MY_DATASET/full_atif.jsonl
+echo "Converting to ADP standardized format..."
 cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_standardized.py > datasets/$MY_DATASET/full_std.jsonl
 
 # Step 3: Convert to agent-specific SFT format
 echo "Converting to SFT format..."
-export PYTHONPATH=`pwd`:$PYTHONPATH
 
-# For OpenHands v0, there are dataset specific arguments to pass in
+# OpenHands v0 consumes normalized ATIF; there are dataset specific arguments to pass in
 export MY_AGENT=openhands_v0
-cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py --is_web=no --api_env=execute_bash > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
+cat datasets/$MY_DATASET/full_atif.jsonl | python scripts/atif_to_std.py | python agents/$MY_AGENT/std_to_sft.py --is_web=no --api_env=execute_bash > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
 
-# For SWE-agent
+# SWE-agent still consumes ADP standardized records
 export MY_AGENT=sweagent
 cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
 ```

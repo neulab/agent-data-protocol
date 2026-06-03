@@ -9,7 +9,10 @@ from pydantic import ValidationError
 
 from schema.atif import (
     ATIF_SCHEMA_VERSION,
+    ATIFObservation,
     ATIFTrajectory,
+    ObservationResult,
+    Step,
     adp_trajectory_to_atif,
     atif_trajectory_to_adp,
     normalize_atif_trajectory,
@@ -173,6 +176,27 @@ def test_adp_atif_roundtrip_preserves_core_events(trajectory):
         getattr(item, "source", None) for item in adp.content
     ]
     assert roundtripped.available_apis == adp.available_apis
+
+
+def test_atif_to_adp_preserves_message_and_standalone_observation():
+    atif = ATIFTrajectory(
+        trajectory_id="message-with-observation",
+        steps=[
+            Step(
+                step_id=1,
+                source="agent",
+                message="I inspected the environment.",
+                observation=ATIFObservation(results=[ObservationResult(content="env output")]),
+            )
+        ],
+    )
+
+    adp = atif_trajectory_to_adp(atif)
+
+    assert [item.class_ for item in adp.content] == ["message_action", "text_observation"]
+    assert adp.content[0].content == "I inspected the environment."
+    assert adp.content[1].content == "env output"
+    assert getattr(adp.content[1], "source") == "environment"
 
 
 def test_atif_to_std_script_normalizes_tool_names():

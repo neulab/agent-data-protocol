@@ -483,14 +483,24 @@ def atif_trajectory_to_adp(trajectory: ATIFTrajectory) -> ADPTrajectory:
                     content.append(_observation_from_atif_result(result))
             continue
 
-        if step.observation and step.observation.results and not content_to_text(step.message):
+        message = content_to_text(step.message)
+        if step.observation and step.observation.results:
+            if message:
+                content.append(
+                    MessageAction(
+                        content=message,
+                        description=(step.extra or {}).get("description"),
+                        reasoning_content=step.reasoning_content,
+                        reward=(step.extra or {}).get("reward"),
+                    )
+                )
             for result in step.observation.results:
                 content.append(_observation_from_atif_result(result))
             continue
 
         content.append(
             MessageAction(
-                content=content_to_text(step.message),
+                content=message,
                 description=(step.extra or {}).get("description"),
                 reasoning_content=step.reasoning_content,
                 reward=(step.extra or {}).get("reward"),
