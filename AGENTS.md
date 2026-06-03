@@ -141,9 +141,9 @@ cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | pyt
 # Convert the exact raw samples to standardized format
 cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
 
-# Convert the exact standardized samples to the required OpenHands v0 SFT sample
+# Convert the exact ATIF samples to the required OpenHands v0 SFT sample
 mkdir -p datasets/$MY_DATASET/sample_sft
-cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python scripts/atif_to_std.py | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
 ```
 
 ### Run tests

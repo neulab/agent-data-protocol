@@ -486,11 +486,11 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/YOUR_AGENT_NAME/std_to_sft.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/YOUR_AGENT_NAME.json
 ```
 
-For example, for OpenHands v0:
+For example, OpenHands v0 consumes normalized ATIF:
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
-cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands_v0/std_to_sft.py --is_web=yes --api_env=browser | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python scripts/atif_to_std.py | python agents/openhands_v0/std_to_sft.py --is_web=yes --api_env=browser | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
 ```
 
 #### Step 6: Create Agent README
