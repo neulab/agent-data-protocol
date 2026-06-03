@@ -9,6 +9,7 @@ from schema.observation.text import TextObservation
 from schema.tool_call_links import create_trajectory_with_tool_call_links
 from schema.trajectory import Trajectory
 
+# Intentionally broad: terminal prompts in this dataset are only reliably marked by "# ".
 PROMPT_LINE_RE = re.compile(r"(?m)^[^\n]*# .*$")
 
 
@@ -49,7 +50,8 @@ def assistant_actions(content: str) -> list[CodeAction | MessageAction]:
 
     description = data.get("analysis") or data.get("plan")
     actions: list[CodeAction | MessageAction] = []
-    for index, command in enumerate(data.get("commands") or []):
+    description_assigned = False
+    for command in data.get("commands") or []:
         if isinstance(command, dict):
             keystrokes = command.get("keystrokes", "")
         elif isinstance(command, str):
@@ -63,9 +65,10 @@ def assistant_actions(content: str) -> list[CodeAction | MessageAction]:
             CodeAction(
                 language="bash",
                 content=keystrokes,
-                description=description if index == 0 else None,
+                description=None if description_assigned else description,
             )
         )
+        description_assigned = True
 
     if data.get("task_complete"):
         message = data.get("analysis") or "Task completed successfully."
