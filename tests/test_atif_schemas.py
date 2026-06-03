@@ -126,6 +126,17 @@ def test_sample_atif_and_standardized_records_align(sample_path):
                 },
             ],
         },
+        {
+            "id": "roundtrip-env-obs",
+            "content": [
+                {
+                    "class_": "text_observation",
+                    "content": "System prompt",
+                    "source": "environment",
+                },
+                {"class_": "message_action", "content": "Done"},
+            ],
+        },
     ],
 )
 def test_adp_atif_roundtrip_preserves_core_events(trajectory):
@@ -137,6 +148,9 @@ def test_adp_atif_roundtrip_preserves_core_events(trajectory):
     assert roundtripped.id == adp.id
     assert len(roundtripped.content) == len(adp.content)
     assert [item.class_ for item in roundtripped.content] == [item.class_ for item in adp.content]
+    assert [getattr(item, "source", None) for item in roundtripped.content] == [
+        getattr(item, "source", None) for item in adp.content
+    ]
 
 
 def test_atif_to_std_script_normalizes_tool_names():

@@ -273,7 +273,7 @@ def adp_trajectory_to_atif(trajectory: ADPTrajectory) -> ATIFTrajectory:
                 continue
             source = item.source if item.source in {"user", "agent"} else "agent"
             observation = None
-            message = item.content if source in {"user", "agent"} else ""
+            message = item.content if item.source in {"user", "agent"} else ""
             llm_call_count = None
             extra = {"adp_class": item.class_, "adp_source": item.source}
             if item.source == "environment":

@@ -102,10 +102,8 @@ The repository currently supports datasets from various domains (we welcome more
 The ADP follows a staged pipeline with ATIF as an interchange layer:
 
 ```
-Raw Dataset      →  ATIF Format       →  ATIF normalization    →  SFT conversion             →  Agent Specific SFT Format
-      ↓                   ↓                       ↓                         ↓                                ↓
-sample_raw.json  →  sample_atif.json  →  scripts/atif_to_std.py → agents/*/std_to_sft.py      →  sample_sft/<agent_name>.json
-                                      ↘  sample_std.json (ADP compatibility artifact)
+Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → scripts/atif_to_std.py → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
+            └→ raw_to_standardized.py  → sample_std.json (ADP compatibility artifact)
 ```
 
 ### 1. Raw Data
