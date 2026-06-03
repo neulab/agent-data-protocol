@@ -41,7 +41,7 @@ Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → scripts/atif
   - `sample_atif.json`
   - `sample_std.json`
   - `generated_thoughts.json`
-- Do not commit `full_raw.json`, `full_std.json`, `full_sft.json`, temporary chunks, downloaded corpora, scratch JSON, or alternate sample files such as `sample_fixed.json`.
+- Do not commit `full_raw.json`, `full_atif.json`, `full_std.json`, `full_sft.json`, `full_raw.jsonl`, `full_atif.jsonl`, `full_std.jsonl`, `full_sft.jsonl`, temporary chunks, downloaded corpora, scratch JSON, or alternate sample files such as `sample_fixed.json`.
 - All JSON files MUST be valid JSON and MUST have a trailing newline.
 
 ### Generated Samples Must Come From the Pipeline
