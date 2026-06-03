@@ -27,9 +27,8 @@ agent-data-protocol/
 ## Data Flow Pipeline
 
 ```
-Raw Dataset      →  ATIF Format       →  Normalized ADP/ATIF  →  Agent Specific SFT Format
-     ↓                   ↓                       ↓                       ↓
-sample_raw.json  →  sample_atif.json  →  sample_std.json      →  sample_sft/<agent_name>.json
+Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → scripts/atif_to_std.py → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
+            └→ raw_to_standardized.py  → sample_std.json (ADP compatibility artifact)
 ```
 
 ## Key Requirements

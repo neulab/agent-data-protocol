@@ -497,11 +497,13 @@ def atif_trajectory_to_adp(trajectory: ATIFTrajectory) -> ADPTrajectory:
             )
         )
 
+    available_apis = (trajectory.extra or {}).get("adp_available_apis")
     return cast(
         ADPTrajectory,
         create_trajectory_with_tool_call_links(
             id=trajectory.trajectory_id or trajectory.session_id or "atif-trajectory",
             content=content,
+            available_apis=available_apis,
             details=details,
         ),
     )

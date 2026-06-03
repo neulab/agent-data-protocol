@@ -88,6 +88,27 @@ def test_sample_atif_and_standardized_records_align(sample_path):
     "trajectory",
     [
         {
+            "id": "roundtrip-available-apis",
+            "available_apis": ["search"],
+            "content": [
+                {"class_": "text_observation", "content": "Find the answer", "source": "user"},
+                {
+                    "class_": "api_action",
+                    "tool_call_id": "call_1",
+                    "function": "search",
+                    "kwargs": {"query": "agent data protocol"},
+                    "description": "Search first",
+                },
+                {
+                    "class_": "text_observation",
+                    "tool_call_id": "call_1",
+                    "content": "Result",
+                    "source": "environment",
+                },
+                {"class_": "message_action", "content": "Done"},
+            ],
+        },
+        {
             "id": "roundtrip-tool",
             "content": [
                 {"class_": "text_observation", "content": "Find the answer", "source": "user"},
@@ -151,6 +172,7 @@ def test_adp_atif_roundtrip_preserves_core_events(trajectory):
     assert [getattr(item, "source", None) for item in roundtripped.content] == [
         getattr(item, "source", None) for item in adp.content
     ]
+    assert roundtripped.available_apis == adp.available_apis
 
 
 def test_atif_to_std_script_normalizes_tool_names():
