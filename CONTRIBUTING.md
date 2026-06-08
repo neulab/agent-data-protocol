@@ -17,7 +17,7 @@ This repository serves as a standardized collection of agent training data from 
 This repository contains:
 - **Datasets**: Agent training data in standardized format ([`datasets/`](datasets))
 - **Agents**: Agent-specific implementations and conversion scripts ([`agents/`](agents)])
-- **Schema**: ADP standardized format definitions ([`schema/`](schema))
+- **Schema**: ATIF and ADP schema definitions ([`schema/`](schema))
 - **Scripts**: General tility scripts ([`scripts/`](scripts))
 
 ### Data Flow
@@ -25,18 +25,21 @@ This repository contains:
 sample_raw.json → raw_to_atif.py → sample_atif.json → atif_to_std.py → sample_std.json → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
 ```
 
-### Standardized Schema Components
+### ATIF Standardized Schema Components
 
-Our standardized format uses these main components:
+Committed `sample_atif.json` and `sample_std.json` files are ATIF trajectories. `raw_to_atif.py` should preserve raw trajectory structure with minimal formatting changes. `atif_to_std.py` should keep ATIF in and ATIF out while standardizing tool-call names and arguments for downstream converters.
 
-#### Actions
-- **MessageAction**: Text-based communication
-- **CodeAction**: Code execution requests
-- **ApiAction**: API calls
+#### Steps
+- **source**: ATIF step source, one of `system`, `user`, or `agent`
+- **message**: Natural-language content for the step
+
+#### Tool Calls
+- **function_name**: Tool name, standardized by `atif_to_std.py`
+- **arguments**: Tool arguments matching a built-in or `metadata.json` schema
+- **tool_call_id**: Identifier used to link results
 
 #### Observations
-- **TextObservation**: Text-based responses
-- **WebObservation**: Web page content
+- **observation.results**: Tool/environment results linked to tool calls with `source_call_id`
 
 ## Development Setup
 
