@@ -82,18 +82,6 @@ OPENHANDS_TOOL_ALIASES = {
     "think": "think",
 }
 
-AGENTTUNING_OS_ANSWER_FORMAT = (
-    "If you think you have got the answer to the question, you should print like this:"
-    "\n\n<solution> Your solution here </solution>"
-)
-AGENTTUNING_OS_FIRST_USER = re.compile(
-    r"(You are an assistant.*\n\nNow, my problem is:)\n(.*)",
-    re.DOTALL,
-)
-OSC_SEQUENCE = re.compile(r"\x1b\][^\x07]*(?:\x07|\x1b\\)")
-ANSI_SEQUENCE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
-SHELL_PROMPT = re.compile(r"(?:\r?\n)?root@[A-Za-z0-9_.-]+:[^\r\n#]*# ?$")
-
 
 class DatasetToolObservation(SDKObservation):
     output: str = ""
@@ -656,42 +644,12 @@ def normalize_message_content(messages: list[dict[str, Any]]) -> list[dict[str, 
     return normalized
 
 
-def clean_terminal_output(content: str) -> str:
-    content = OSC_SEQUENCE.sub("", content)
-    content = ANSI_SEQUENCE.sub("", content)
-    content = content.replace("\x07", "")
-    content = SHELL_PROMPT.sub("", content)
-    content = content.replace("\r\n", "\n").replace("\r", "")
-    return content.strip()
-
-
-def prepare_trajectory_for_sft(trajectory: Trajectory, dataset_name: str | None) -> Trajectory:
-    prepared = trajectory.model_copy(deep=True)
-    if dataset_name != "agenttuning_os":
-        return prepared
-
-    for event in prepared.content:
-        if not isinstance(event, TextObservation):
-            continue
-        if event.source == "user":
-            first_user_match = AGENTTUNING_OS_FIRST_USER.match(event.content)
-            if first_user_match:
-                event.content = (
-                    first_user_match.group(2).strip().replace("?bash:`", "?")
-                    + "\n\n"
-                    + AGENTTUNING_OS_ANSWER_FORMAT
-                )
-        elif event.source == "environment":
-            os_output_match = re.match(r"The output of the OS:\n(.*)", event.content, re.DOTALL)
-            if os_output_match:
-                event.content = clean_terminal_output(os_output_match.group(1))
-    return prepared
-
-
-def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[str, Any]:
-    trajectory = load_trajectory(line)
+def process_trajectory(
+    trajectory: Trajectory,
+    model: str,
+    dataset_name: str | None = None,
+) -> dict[str, Any]:
     dataset_name = dataset_name or os.getenv("MY_DATASET")
-    trajectory = prepare_trajectory_for_sft(trajectory, dataset_name)
     metadata = load_dataset_metadata(dataset_name, required=True)
     register_metadata_tools(metadata)
     first_event = trajectory.content[0] if trajectory.content else None
@@ -732,6 +690,10 @@ def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[
             "generation": "openhands_sdk_events",
         },
     }
+
+
+def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[str, Any]:
+    return process_trajectory(load_trajectory(line), model, dataset_name)
 
 
 def main() -> None:

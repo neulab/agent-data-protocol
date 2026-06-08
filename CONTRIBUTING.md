@@ -22,8 +22,7 @@ This repository contains:
 
 ### Data Flow
 ```
-Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → atif_to_std.py → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
-            └→ raw_to_standardized.py  → sample_std.json (ADP compatibility artifact)
+sample_raw.json → raw_to_atif.py → sample_atif.json → atif_to_std.py → sample_std.json → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
 ```
 
 ### Standardized Schema Components
@@ -83,7 +82,7 @@ datasets/$YOUR_DATASET_NAME/
 ├── raw_to_atif.py              # Raw-to-ATIF conversion script
 ├── atif_to_std.py              # ATIF-to-ATIF tool normalization script
 ├── raw_to_standardized.py      # Conversion script
-├── api.py                      # API definitions (optional)
+├── metadata.json               # Tool and runtime metadata
 ├── sample_raw.json             # 5 raw samples
 ├── sample_atif.json            # 5 ATIF samples
 ├── sample_std.json             # 5 standardized samples
@@ -334,7 +333,7 @@ if __name__ == "__main__":
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
 cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_atif.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_atif.json
-cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/atif_to_std.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
 ```
 
 #### Step 3: Validate Standardized Format

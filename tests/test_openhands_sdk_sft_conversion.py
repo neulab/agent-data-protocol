@@ -74,8 +74,14 @@ def run_converter(dataset: str, rows: list[dict], args: list[str] | None = None,
     env["OPENHANDS_SUPPRESS_BANNER"] = "1"
     env["PYTHONPATH"] = f"{ROOT}:{env.get('PYTHONPATH', '')}"
     env["MY_DATASET"] = dataset
+    dataset_converter = DATASET_PATH / dataset / "std_to_sft.py"
+    converter = (
+        dataset_converter
+        if dataset_converter.exists()
+        else ROOT / "agents" / "openhands_sdk" / "std_to_sft.py"
+    )
     proc = subprocess.run(
-        [sys.executable, str(ROOT / "agents/openhands_sdk/std_to_sft.py"), *(args or [])],
+        [sys.executable, str(converter), *(args or [])],
         input="\n".join(json.dumps(row) for row in rows),
         text=True,
         capture_output=True,
@@ -188,7 +194,7 @@ def test_openhands_sdk_converter_regenerates_first_record():
 def test_openhands_sdk_converter_reads_dataset_at_call_time(monkeypatch):
     from agents.openhands_sdk import std_to_sft
 
-    dataset = "agenttuning_os"
+    dataset = "agenttuning_alfworld"
     source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
     monkeypatch.setenv("MY_DATASET", dataset)
 
@@ -198,7 +204,7 @@ def test_openhands_sdk_converter_reads_dataset_at_call_time(monkeypatch):
 
 
 def test_openhands_sdk_converter_rejects_unsupported_legacy_cli_flags():
-    dataset = "agenttuning_os"
+    dataset = "agenttuning_alfworld"
     source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[:1]
 
     env = os.environ.copy()

@@ -64,23 +64,23 @@ mkdir -p datasets/$MY_DATASET/full_sft
 echo "Extracting raw data..."
 python datasets/$MY_DATASET/extract_raw.py > datasets/$MY_DATASET/full_raw.jsonl
 
-# Step 2: Convert to ATIF and ADP standardized formats
+# Step 2: Convert to ATIF and ATIF std formats
 export PYTHONPATH=`pwd`:$PYTHONPATH
 echo "Converting to ATIF format..."
 cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_atif.py > datasets/$MY_DATASET/full_atif.jsonl
-echo "Converting to ADP standardized format..."
-cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_standardized.py > datasets/$MY_DATASET/full_std.jsonl
+echo "Normalizing ATIF tool calls..."
+cat datasets/$MY_DATASET/full_atif.jsonl | python datasets/$MY_DATASET/atif_to_std.py > datasets/$MY_DATASET/full_std.jsonl
 
 # Step 3: Convert to agent-specific SFT format
 echo "Converting to SFT format..."
 
 # OpenHands v0 consumes normalized ATIF; there are dataset specific arguments to pass in
 export MY_AGENT=openhands_v0
-cat datasets/$MY_DATASET/full_atif.jsonl | python datasets/$MY_DATASET/atif_to_std.py | python agents/$MY_AGENT/std_to_sft.py --is_web=no --api_env=execute_bash > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
+cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py --is_web=no --api_env=execute_bash > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
 
-# SWE-agent still consumes ADP standardized records
+# SWE-agent consumes normalized ATIF std records
 export MY_AGENT=sweagent
-cat datasets/$MY_DATASET/full_atif.jsonl | python datasets/$MY_DATASET/atif_to_std.py | python agents/$MY_AGENT/std_to_sft.py > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
+cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
 ```
 
 ### Available Datasets
@@ -103,8 +103,7 @@ The repository currently supports datasets from various domains (we welcome more
 The ADP follows a staged pipeline with ATIF as an interchange layer:
 
 ```
-Raw Dataset ┬→ raw_to_atif.py          → sample_atif.json → atif_to_std.py → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
-            └→ raw_to_standardized.py  → sample_std.json (ADP compatibility artifact)
+sample_raw.json → raw_to_atif.py → sample_atif.json → atif_to_std.py → sample_std.json → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
 ```
 
 ### 1. Raw Data
@@ -114,10 +113,10 @@ Original format from various sources (research papers, datasets, etc.)
 Dataset-specific raw-to-ATIF conversion using Harbor's Agent Trajectory Interchange Format. This layer preserves the raw tool/action shape with minimal normalization and is validated by `ATIFTrajectory`.
 
 ### 3. ATIF Normalization and Standardized Format
-`atif_to_std.py` normalizes ATIF tool names/arguments and emits ATIF JSONL, not ADP `sample_std` records. The repository also keeps ADP `sample_std.json` compatibility artifacts with ADP's historical action/observation view:
-- **Actions**: `MessageAction`, `CodeAction`, `ApiAction`
-- **Observations**: `TextObservation`, `WebObservation`
-- **Trajectory**: Container for complete interaction sequences
+`atif_to_std.py` normalizes ATIF tool names/arguments and emits ATIF JSONL, not ADP records. The repository keeps `raw_to_standardized.py` for ADP compatibility workflows, but committed `sample_std.json` fixtures are ATIF std data:
+- **Steps**: `system`, `user`, or `agent` turns with natural-language messages
+- **Tool calls**: `function_name`, `arguments`, and `tool_call_id`
+- **Observations**: Tool/environment results linked with `source_call_id`
 
 ### 4. SFT Format
 Agent-specific format ready for supervised fine-tuning. Shared `std_to_sft.py` converters accept ATIF input after dataset-specific `atif_to_std.py` normalization.
@@ -142,7 +141,7 @@ agent-data-protocol/
 │   │   ├── raw_to_atif.py
 │   │   ├── atif_to_std.py
 │   │   ├── raw_to_standardized.py
-│   │   ├── api.py
+│   │   ├── metadata.json
 │   │   ├── sample_raw.json
 │   │   ├── sample_atif.json
 │   │   ├── sample_std.json

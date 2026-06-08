@@ -7,6 +7,7 @@ import pytest
 from schema.dataset_metadata import DatasetMetadata
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
+ALLOWED_DATASET_LOCAL_SFT_CONVERTERS = {"agenttuning_os"}
 
 
 def get_subdirectories(directory):
@@ -24,10 +25,15 @@ def test_dataset_structure(subdir):
     subdir_path = os.path.join(DATASET_PATH, subdir)
 
     dataset_sft_converter_path = os.path.join(subdir_path, "std_to_sft.py")
-    assert not os.path.exists(dataset_sft_converter_path), (
-        f"Dataset-local std_to_sft.py is not allowed in {subdir_path}; "
-        "use a shared converter under agents/ instead"
-    )
+    if subdir in ALLOWED_DATASET_LOCAL_SFT_CONVERTERS:
+        assert os.path.exists(dataset_sft_converter_path), (
+            f"Dataset-local std_to_sft.py is expected in {subdir_path}"
+        )
+    else:
+        assert not os.path.exists(dataset_sft_converter_path), (
+            f"Dataset-local std_to_sft.py is not allowed in {subdir_path}; "
+            "use a shared converter under agents/ instead"
+        )
 
     dataset_api_path = os.path.join(subdir_path, "api.py")
     assert not os.path.exists(dataset_api_path), (
