@@ -2,6 +2,9 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from agents.openhands_v0.std_to_sft import main_with_args as main_openhands_v0
 from scripts.atif_input import load_trajectory

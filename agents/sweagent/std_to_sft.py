@@ -2,6 +2,9 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from agents.sweagent.api import get_api_tool_description
 from agents.sweagent.system_message import base_template
