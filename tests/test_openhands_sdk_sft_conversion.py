@@ -46,7 +46,7 @@ def tool_call_names(record):
 
 
 def trajectory_id(row: dict) -> str:
-    return row.get("trajectory_id") or row["id"]
+    return str(row.get("trajectory_id") or row["id"])
 
 
 def assert_sdk_chat_record(record):

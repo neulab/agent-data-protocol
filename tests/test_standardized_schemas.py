@@ -468,10 +468,10 @@ def test_sample_standardized_atif_against_schema(sample_path):
                         ]
                     for image_path in image_paths:
                         assert is_portable_or_external_image_reference(image_path), (
-                        f"ImageObservation.content must be a portable relative path or "
-                        f"external reference in {sample_path} sample {sample_id} "
-                        f"step {step_id} content {content_id}: {image_path}"
-                    )
+                            f"ImageObservation.content must be a portable relative path or "
+                            f"external reference in {sample_path} sample {sample_id} "
+                            f"step {step_id} content {content_id}: {image_path}"
+                        )
                 for tool_call in step.tool_calls or []:
                     content = tool_call
                     supported_by_metadata = (
