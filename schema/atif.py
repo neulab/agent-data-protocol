@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import re
 from typing import Any, Literal, Union, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -481,6 +483,14 @@ def atif_trajectory_to_adp(trajectory: ATIFTrajectory) -> ADPTrajectory:
                 result = results_by_call_id.get(tool_call.tool_call_id)
                 if result is not None:
                     content.append(_observation_from_atif_result(result))
+                else:
+                    content.append(
+                        TextObservation(
+                            tool_call_id=tool_call.tool_call_id,
+                            content="",
+                            source="environment",
+                        )
+                    )
             continue
 
         message = content_to_text(step.message)
@@ -521,22 +531,63 @@ def atif_trajectory_to_adp(trajectory: ATIFTrajectory) -> ADPTrajectory:
 
 def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
     normalized = cast(ATIFTrajectory, trajectory.model_copy(deep=True))
+    seen_tool_call_ids: set[str] = set()
+    next_tool_call_ordinal = 1
+
+    def unique_tool_call_id(tool_call_id: str) -> str:
+        nonlocal next_tool_call_ordinal
+        if tool_call_id not in seen_tool_call_ids:
+            seen_tool_call_ids.add(tool_call_id)
+            return tool_call_id
+        while True:
+            candidate = f"call_{next_tool_call_ordinal:06d}"
+            next_tool_call_ordinal += 1
+            if candidate not in seen_tool_call_ids:
+                seen_tool_call_ids.add(candidate)
+                return candidate
+
     for step in normalized.steps:
+        if step.source == "agent" and isinstance(step.message, str):
+            think_match = re.search(r"<think>(.*?)</think>", step.message, flags=re.DOTALL)
+            if think_match:
+                reasoning = think_match.group(1).strip()
+                remaining = (
+                    step.message[: think_match.start()] + step.message[think_match.end() :]
+                ).strip()
+                step.message = remaining
+                if reasoning and not step.reasoning_content:
+                    step.reasoning_content = reasoning
+
+        rewritten_call_ids: dict[str, str] = {}
         for tool_call in step.tool_calls or []:
+            original_tool_call_id = tool_call.tool_call_id
+            tool_call.tool_call_id = unique_tool_call_id(tool_call.tool_call_id)
+            if tool_call.tool_call_id != original_tool_call_id:
+                rewritten_call_ids[original_tool_call_id] = tool_call.tool_call_id
+
             function_name = tool_call.function_name
             arguments = dict(tool_call.arguments)
             lower_name = function_name.lower()
             normalized_language = None
-            if lower_name in {"bash", "shell", "sh"}:
+            if lower_name in {"bash", "shell", "sh", "terminal"}:
                 normalized_language = "bash"
                 tool_call.function_name = "execute_bash"
                 if "command" not in arguments:
                     arguments = {"command": arguments.get("code") or arguments.get("content") or ""}
-            elif lower_name in {"execute", "python", "py", "python3", "ipython"}:
+            elif lower_name in {
+                "add_and_execute_jupyter_code_cell",
+                "execute",
+                "python",
+                "py",
+                "python3",
+                "ipython",
+            }:
                 normalized_language = "python"
                 tool_call.function_name = "execute_ipython_cell"
                 if "code" not in arguments:
                     arguments = {"code": arguments.get("command") or arguments.get("content") or ""}
+                else:
+                    arguments = {"code": arguments.get("code") or ""}
             elif lower_name == "execute_code":
                 language = str(arguments.get("language", "")).lower()
                 if language in {"bash", "sh", "shell"}:
@@ -547,7 +598,23 @@ def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
                     normalized_language = "python"
                     tool_call.function_name = "execute_ipython_cell"
                     arguments = {"code": arguments.get("content") or arguments.get("command") or ""}
+            elif lower_name == "final_answer":
+                tool_call.function_name = "finish"
+                arguments = {
+                    "message": arguments.get("answer") or arguments.get("message") or "",
+                    "task_completed": "true",
+                }
+            elif lower_name == "localization_finish":
+                tool_call.function_name = "finish"
+                arguments = {
+                    "message": json.dumps(arguments.get("locations") or arguments),
+                    "task_completed": "true",
+                }
             if normalized_language and tool_call.extra and "language" in tool_call.extra:
                 tool_call.extra = {**tool_call.extra, "language": normalized_language}
             tool_call.arguments = arguments
+        if step.observation:
+            for result in step.observation.results:
+                if result.source_call_id in rewritten_call_ids:
+                    result.source_call_id = rewritten_call_ids[result.source_call_id]
     return normalized

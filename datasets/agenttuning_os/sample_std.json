@@ -4,18 +4,14 @@
     "session_id": "os_42",
     "trajectory_id": "os_42",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_os",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "tell me how many files are in the directory \"/etc\"?\n\nIf you think you have got the answer to the question, you should print like this:\n\n<solution> Your solution here </solution>",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "You are an assistant that will act like a person, I'will play the role of linux(ubuntu) operating system. Your goal is to implement the operations required by me or answer to the question proposed by me. For each of your turn, you should first think what you should do, and then take exact one of the three actions: \"bash\", \"finish\" or \"answer\". \n\n1. If you think you should execute some bash code, take bash action, and you should print like this:\n\nThink: put your thought here.\n\nAct: bash\n\n```bash\n# put your bash code here\n```\n\n2. If you think you have finished the task, take finish action, and you should print like this:\n\nThink: put your thought here.\n\nAct: finish\n\n3. If you think you have got the answer to the question, take answer action, and you should print like this:\n\nThink: put your thought here.\n\nAct: answer(Your answer to the question should be put in this pair of parentheses)\n\nIf the output is too long, I will truncate it. The truncated output is not complete. You have to deal with the truncating problem by yourself. Attention, your bash code should not contain any input operation. Once again, you should take only exact one of the three actions in each turn.\n\nNow, my problem is:\n\ntell me how many files are in the directory \"/etc\"?"
       },
       {
         "step_id": 2,
@@ -23,32 +19,20 @@
         "message": "To count the files in /etc, I need to print all the files in it.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls /etc"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "cpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "The output of the OS:\ncpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "To count the files in /etc, I need to print all the files in it."
         }
       },
       {
@@ -57,14 +41,42 @@
         "message": "The output has been truncated because it is too long, so I need to count files by script directly.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls -1 /etc | wc -l"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_000001",
+              "content": "The output of the OS:\n220"
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "agent",
+        "message": "Now I get the answer, it is 220.\n\n<finish> 220 </finish>"
+      },
+      {
+        "step_id": 5,
+        "source": "user",
+        "message": "Now, I will start a new problem in a new OS. My problem is:\n\nHow many files and directories in your home directory were last modified on 21st December of last year, including those in subdirectories?"
+      },
+      {
+        "step_id": 6,
+        "source": "agent",
+        "message": "In order to solve the problem, I need to first check today's date.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000002",
+            "function_name": "execute_bash",
+            "arguments": {
+              "command": "date"
             }
           }
         ],
@@ -72,69 +84,9 @@
           "results": [
             {
               "source_call_id": "call_000002",
-              "content": "220",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "The output of the OS:\n\nSat Sep  9 09:41:55 UTC 2023\r\n\u001b]0;root@287e51facd12: /\u0007root@287e51facd12:/#"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "The output has been truncated because it is too long, so I need to count files by script directly."
-        }
-      },
-      {
-        "step_id": 4,
-        "source": "agent",
-        "message": "<solution> 220 </solution>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "Now I get the answer, it is 220."
-        }
-      },
-      {
-        "step_id": 5,
-        "source": "user",
-        "message": "Now, I will start a new problem in a new OS. My problem is:\n\nHow many files and directories in your home directory were last modified on 21st December of last year, including those in subdirectories?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
-      },
-      {
-        "step_id": 6,
-        "source": "agent",
-        "message": "In order to solve the problem, I need to first check today's date. ",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000003",
-            "function_name": "execute_bash",
-            "arguments": {
-              "command": "date"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000003",
-              "content": "Sat Sep  9 09:41:55 UTC 2023",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "In order to solve the problem, I need to first check today's date. "
         }
       },
       {
@@ -143,32 +95,20 @@
         "message": "As it is 2023, then I should check the files and directories that were last modified on 21st December 2022. To do this, I need to use the `find` command. I will find within the current directory ('.') as it represents the home directory, and then set the `-mtime` option to match the date. However, before doing this, I need to find out the exact mtime value for December 21, 2022.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "execute_bash",
             "arguments": {
               "command": "echo $(( ( $(date -d '2023-09-09' +%s) - $(date -d '2022-12-21' +%s) ) / 60 / 60 / 24 ))"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "262",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "The output of the OS:\n\n262\r\n\u001b]0;root@287e51facd12: /\u0007root@287e51facd12:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "As it is 2023, then I should check the files and directories that were last modified on 21st December 2022. To do this, I need to use the `find` command. I will find within the current directory ('.') as it represents the home directory, and then set the `-mtime` option to match the date. However, before doing this, I need to find out the exact mtime value for December 21, 2022."
         }
       },
       {
@@ -177,48 +117,33 @@
         "message": "The output indicates that 262 days have passed since December 21, 2022. Using this information, I can use the `find` command to list the files and directories that were last modified on that day.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000005",
+            "tool_call_id": "call_000004",
             "function_name": "execute_bash",
             "arguments": {
               "command": "find ~ -type f -mtime 262 -o -type d -mtime 262"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000005",
-              "content": "",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000004",
+              "content": "The output of the OS:\n\n\u001b]0;root@287e51facd12: /\u0007root@287e51facd12:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "The output indicates that 262 days have passed since December 21, 2022. Using this information, I can use the `find` command to list the files and directories that were last modified on that day."
         }
       },
       {
         "step_id": 9,
         "source": "agent",
-        "message": "<finish> <solution> 0 </solution> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "The output is empty, which means there are no files or directories in the home directory that were last modified on December 21, 2022. Therefore, the answer should be 0."
-        }
+        "message": "The output is empty, which means there are no files or directories in the home directory that were last modified on December 21, 2022. Therefore, the answer should be 0.\n\n<finish> 0 </finish>"
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "os_42"
+      },
+      "source_dataset": "agenttuning_os"
     }
   },
   {
@@ -226,18 +151,14 @@
     "session_id": "os_116",
     "trajectory_id": "os_116",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_os",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "tell me how many files are in the directory \"/etc\"?\n\nIf you think you have got the answer to the question, you should print like this:\n\n<solution> Your solution here </solution>",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "You are an assistant that will act like a person, I'will play the role of linux(ubuntu) operating system. Your goal is to implement the operations required by me or answer to the question proposed by me. For each of your turn, you should first think what you should do, and then take exact one of the three actions: \"bash\", \"finish\" or \"answer\". \n\n1. If you think you should execute some bash code, take bash action, and you should print like this:\n\nThink: put your thought here.\n\nAct: bash\n\n```bash\n# put your bash code here\n```\n\n2. If you think you have finished the task, take finish action, and you should print like this:\n\nThink: put your thought here.\n\nAct: finish\n\n3. If you think you have got the answer to the question, take answer action, and you should print like this:\n\nThink: put your thought here.\n\nAct: answer(Your answer to the question should be put in this pair of parentheses)\n\nIf the output is too long, I will truncate it. The truncated output is not complete. You have to deal with the truncating problem by yourself. Attention, your bash code should not contain any input operation. Once again, you should take only exact one of the three actions in each turn.\n\nNow, my problem is:\n\ntell me how many files are in the directory \"/etc\"?"
       },
       {
         "step_id": 2,
@@ -245,32 +166,20 @@
         "message": "To count the files in /etc, I need to print all the files in it.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls /etc"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "cpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "The output of the OS:\ncpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "To count the files in /etc, I need to print all the files in it."
         }
       },
       {
@@ -279,51 +188,31 @@
         "message": "The output has been truncated because it is too long, so I need to count files by script directly.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls -1 /etc | wc -l"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "220",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000001",
+              "content": "The output of the OS:\n220"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "The output has been truncated because it is too long, so I need to count files by script directly."
         }
       },
       {
         "step_id": 4,
         "source": "agent",
-        "message": "<solution> 220 </solution>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "Now I get the answer, it is 220."
-        }
+        "message": "Now I get the answer, it is 220.\n\n<finish> 220 </finish>"
       },
       {
         "step_id": 5,
         "source": "user",
-        "message": "Now, I will start a new problem in a new OS. My problem is:\n\nHow many .txt files are there in your home directory and all its sub-directories?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Now, I will start a new problem in a new OS. My problem is:\n\nHow many .txt files are there in your home directory and all its sub-directories?"
       },
       {
         "step_id": 6,
@@ -331,32 +220,20 @@
         "message": "To count how many .txt files in the home directory and all subdirectories, I need to use the find command to find all .txt files first.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_000002",
             "function_name": "execute_bash",
             "arguments": {
               "command": "find ~ -type f -name \"*.txt\""
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "/root/textfiles_directory/file1.txt\n/root/textfiles_directory/textfile_subdir2/file3.txt\n/root/textfiles_directory/textfile_subdir1/file2.txt",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000002",
+              "content": "The output of the OS:\n\n/root/textfiles_directory/file1.txt\r\n/root/textfiles_directory/textfile_subdir2/file3.txt\r\n/root/textfiles_directory/textfile_subdir1/file2.txt\r\n\u001b]0;root@708762f582f8: /\u0007root@708762f582f8:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "To count how many .txt files in the home directory and all subdirectories, I need to use the find command to find all .txt files first."
         }
       },
       {
@@ -365,48 +242,33 @@
         "message": "It returns the paths of the .txt files in home directory and subdirectory. Therefore, I will count the files using the same find command but pipe it into \"wc -l\" to count the number of lines, each line represents a file.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "execute_bash",
             "arguments": {
               "command": "find ~ -type f -name \"*.txt\" | wc -l"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "3",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "The output of the OS:\n\n3\r\n\u001b]0;root@708762f582f8: /\u0007root@708762f582f8:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "It returns the paths of the .txt files in home directory and subdirectory. Therefore, I will count the files using the same find command but pipe it into \"wc -l\" to count the number of lines, each line represents a file."
         }
       },
       {
         "step_id": 8,
         "source": "agent",
-        "message": "<finish> <solution> 3 </solution> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "Now I get the answer, it is 3."
-        }
+        "message": "Now I get the answer, it is 3.\n\n<finish> 3 </finish>"
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "os_116"
+      },
+      "source_dataset": "agenttuning_os"
     }
   },
   {
@@ -414,18 +276,14 @@
     "session_id": "os_20",
     "trajectory_id": "os_20",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_os",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "tell me how many files are in the directory \"/etc\"?\n\nIf you think you have got the answer to the question, you should print like this:\n\n<solution> Your solution here </solution>",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "You are an assistant that will act like a person, I'will play the role of linux(ubuntu) operating system. Your goal is to implement the operations required by me or answer to the question proposed by me. For each of your turn, you should first think what you should do, and then take exact one of the three actions: \"bash\", \"finish\" or \"answer\". \n\n1. If you think you should execute some bash code, take bash action, and you should print like this:\n\nThink: put your thought here.\n\nAct: bash\n\n```bash\n# put your bash code here\n```\n\n2. If you think you have finished the task, take finish action, and you should print like this:\n\nThink: put your thought here.\n\nAct: finish\n\n3. If you think you have got the answer to the question, take answer action, and you should print like this:\n\nThink: put your thought here.\n\nAct: answer(Your answer to the question should be put in this pair of parentheses)\n\nIf the output is too long, I will truncate it. The truncated output is not complete. You have to deal with the truncating problem by yourself. Attention, your bash code should not contain any input operation. Once again, you should take only exact one of the three actions in each turn.\n\nNow, my problem is:\n\ntell me how many files are in the directory \"/etc\"?"
       },
       {
         "step_id": 2,
@@ -433,32 +291,20 @@
         "message": "To count the files in /etc, I need to print all the files in it.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls /etc"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "cpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "The output of the OS:\ncpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "To count the files in /etc, I need to print all the files in it."
         }
       },
       {
@@ -467,51 +313,31 @@
         "message": "The output has been truncated because it is too long, so I need to count files by script directly.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls -1 /etc | wc -l"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "220",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000001",
+              "content": "The output of the OS:\n220"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "The output has been truncated because it is too long, so I need to count files by script directly."
         }
       },
       {
         "step_id": 4,
         "source": "agent",
-        "message": "<solution> 220 </solution>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "Now I get the answer, it is 220."
-        }
+        "message": "Now I get the answer, it is 220.\n\n<finish> 220 </finish>"
       },
       {
         "step_id": 5,
         "source": "user",
-        "message": "Now, I will start a new problem in a new OS. My problem is:\n\nCalculate the total size of all text (.txt) files within the current working directory, excluding subdirectories. The size should be output in bytes.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Now, I will start a new problem in a new OS. My problem is:\n\nCalculate the total size of all text (.txt) files within the current working directory, excluding subdirectories. The size should be output in bytes."
       },
       {
         "step_id": 6,
@@ -519,32 +345,20 @@
         "message": "First, I need to list files in the current directory with detail.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_000002",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls -ld *.txt"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "-rw-r--r-- 1 root root 13 Sep  9 09:39 file1.txt\n-rw-r--r-- 1 root root 17 Sep  9 09:39 file2.txt\n-rw-r--r-- 1 root root 25 Sep  9 09:39 file3.txt",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000002",
+              "content": "The output of the OS:\n\n-rw-r--r-- 1 root root 13 Sep  9 09:39 file1.txt\r\n-rw-r--r-- 1 root root 17 Sep  9 09:39 file2.txt\r\n-rw-r--r-- 1 root root 25 Sep  9 09:39 file3.txt\r\n\u001b]0;root@734db5516064: /\u0007root@734db5516064:/#"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "First, I need to list files in the current directory with detail."
         }
       },
       {
@@ -553,48 +367,33 @@
         "message": "Second, from this list, we'll now add the file sizes, which are in column 5 when we use `ls -l`.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls -ld *.txt | awk '{sum += $5} END {print sum}'"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "55",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "The output of the OS:\n\n55\r\n\u001b]0;root@734db5516064: /\u0007root@734db5516064:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "Second, from this list, we'll now add the file sizes, which are in column 5 when we use `ls -l`."
         }
       },
       {
         "step_id": 8,
         "source": "agent",
-        "message": "<finish> <solution> 55 </solution> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "Now, I have summed up the sizes of all .txt files in the current directory."
-        }
+        "message": "Now, I have summed up the sizes of all .txt files in the current directory.\n\n<finish> 55 </finish>"
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "os_20"
+      },
+      "source_dataset": "agenttuning_os"
     }
   },
   {
@@ -602,18 +401,14 @@
     "session_id": "os_76",
     "trajectory_id": "os_76",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_os",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "tell me how many files are in the directory \"/etc\"?\n\nIf you think you have got the answer to the question, you should print like this:\n\n<solution> Your solution here </solution>",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "You are an assistant that will act like a person, I'will play the role of linux(ubuntu) operating system. Your goal is to implement the operations required by me or answer to the question proposed by me. For each of your turn, you should first think what you should do, and then take exact one of the three actions: \"bash\", \"finish\" or \"answer\". \n\n1. If you think you should execute some bash code, take bash action, and you should print like this:\n\nThink: put your thought here.\n\nAct: bash\n\n```bash\n# put your bash code here\n```\n\n2. If you think you have finished the task, take finish action, and you should print like this:\n\nThink: put your thought here.\n\nAct: finish\n\n3. If you think you have got the answer to the question, take answer action, and you should print like this:\n\nThink: put your thought here.\n\nAct: answer(Your answer to the question should be put in this pair of parentheses)\n\nIf the output is too long, I will truncate it. The truncated output is not complete. You have to deal with the truncating problem by yourself. Attention, your bash code should not contain any input operation. Once again, you should take only exact one of the three actions in each turn.\n\nNow, my problem is:\n\ntell me how many files are in the directory \"/etc\"?"
       },
       {
         "step_id": 2,
@@ -621,32 +416,20 @@
         "message": "To count the files in /etc, I need to print all the files in it.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls /etc"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "cpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "The output of the OS:\ncpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "To count the files in /etc, I need to print all the files in it."
         }
       },
       {
@@ -655,51 +438,31 @@
         "message": "The output has been truncated because it is too long, so I need to count files by script directly.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls -1 /etc | wc -l"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "220",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000001",
+              "content": "The output of the OS:\n220"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "The output has been truncated because it is too long, so I need to count files by script directly."
         }
       },
       {
         "step_id": 4,
         "source": "agent",
-        "message": "<solution> 220 </solution>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "Now I get the answer, it is 220."
-        }
+        "message": "Now I get the answer, it is 220.\n\n<finish> 220 </finish>"
       },
       {
         "step_id": 5,
         "source": "user",
-        "message": "Now, I will start a new problem in a new OS. My problem is:\n\nFind the total number of processes running by a certain user on your Linux operating system.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Now, I will start a new problem in a new OS. My problem is:\n\nFind the total number of processes running by a certain user on your Linux operating system."
       },
       {
         "step_id": 6,
@@ -707,32 +470,20 @@
         "message": "First, I will list all the running processes.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_000002",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ps aux"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nroot           1  1.5  0.0   4116  3260 pts/0    Ss+  09:48   0:00 bash\nroot          13  1.0  0.0   4248  3544 pts/1    Ss   09:48   0:00 bash --login\nroot          33  0.0  0.0   5900  3004 pts/1    R+   09:48   0:00 ps aux",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000002",
+              "content": "The output of the OS:\n\nUSER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\r\nroot           1  1.5  0.0   4116  3260 pts/0    Ss+  09:48   0:00 bash\r\nroot          13  1.0  0.0   4248  3544 pts/1    Ss   09:48   0:00 bash --login\r\nroot          33  0.0  0.0   5900  3004 pts/1    R+   09:48   0:00 ps aux\r\n\u001b]0;root@16f05fb4ec8c: /\u0007root@16f05fb4ec8c:/#"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "First, I will list all the running processes."
         }
       },
       {
@@ -741,32 +492,20 @@
         "message": "Now I need to filter out the processes run by a certain user. Here I choose 'root' as the user.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ps aux | grep '^root'"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "root           1  0.7  0.0   4116  3260 pts/0    Ss+  09:48   0:00 bash\nroot          13  0.7  0.0   4248  3544 pts/1    Ss   09:48   0:00 bash --login\nroot          34  0.0  0.0   5900  2892 pts/1    R+   09:48   0:00 ps aux\nroot          35  0.0  0.0   3312   724 pts/1    S+   09:48   0:00 grep --color=auto ^root",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "The output of the OS:\n\n\u001b[01;31m\u001b[Kroot\u001b[m\u001b[K           1  0.7  0.0   4116  3260 pts/0    Ss+  09:48   0:00 bash\r\n\u001b[01;31m\u001b[Kroot\u001b[m\u001b[K          13  0.7  0.0   4248  3544 pts/1    Ss   09:48   0:00 bash --login\r\n\u001b[01;31m\u001b[Kroot\u001b[m\u001b[K          34  0.0  0.0   5900  2892 pts/1    R+   09:48   0:00 ps aux\r\n\u001b[01;31m\u001b[Kroot\u001b[m\u001b[K          35  0.0  0.0   3312   724 pts/1    S+   09:48   0:00 grep --color=auto ^root\r\n\u001b]0;root@16f05fb4ec8c: /\u0007root@16f05fb4ec8c:/#"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "Now I need to filter out the processes run by a certain user. Here I choose 'root' as the user."
         }
       },
       {
@@ -775,48 +514,33 @@
         "message": "Now we have filtered out the processes running by the user 'root'. We should count these entries now.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000005",
+            "tool_call_id": "call_000004",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ps aux | grep '^root' | wc -l"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000005",
-              "content": "5",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000004",
+              "content": "The output of the OS:\n\n5\r\n\u001b]0;root@16f05fb4ec8c: /\u0007root@16f05fb4ec8c:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "Now we have filtered out the processes running by the user 'root'. We should count these entries now."
         }
       },
       {
         "step_id": 9,
         "source": "agent",
-        "message": "<finish> <solution> 5 </solution> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "Now I get the answer, it is 5."
-        }
+        "message": "Now I get the answer, it is 5.\n\n<finish> 5 </finish>"
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "os_76"
+      },
+      "source_dataset": "agenttuning_os"
     }
   },
   {
@@ -824,18 +548,14 @@
     "session_id": "os_103",
     "trajectory_id": "os_103",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_os",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "tell me how many files are in the directory \"/etc\"?\n\nIf you think you have got the answer to the question, you should print like this:\n\n<solution> Your solution here </solution>",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "You are an assistant that will act like a person, I'will play the role of linux(ubuntu) operating system. Your goal is to implement the operations required by me or answer to the question proposed by me. For each of your turn, you should first think what you should do, and then take exact one of the three actions: \"bash\", \"finish\" or \"answer\". \n\n1. If you think you should execute some bash code, take bash action, and you should print like this:\n\nThink: put your thought here.\n\nAct: bash\n\n```bash\n# put your bash code here\n```\n\n2. If you think you have finished the task, take finish action, and you should print like this:\n\nThink: put your thought here.\n\nAct: finish\n\n3. If you think you have got the answer to the question, take answer action, and you should print like this:\n\nThink: put your thought here.\n\nAct: answer(Your answer to the question should be put in this pair of parentheses)\n\nIf the output is too long, I will truncate it. The truncated output is not complete. You have to deal with the truncating problem by yourself. Attention, your bash code should not contain any input operation. Once again, you should take only exact one of the three actions in each turn.\n\nNow, my problem is:\n\ntell me how many files are in the directory \"/etc\"?"
       },
       {
         "step_id": 2,
@@ -843,32 +563,20 @@
         "message": "To count the files in /etc, I need to print all the files in it.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls /etc"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "cpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "The output of the OS:\ncpi cron.hourly fuse.conf iproute2 lvm networkd-dispatcher protocols selinux tmpfiles.d [truncated because the output is too long]"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "To count the files in /etc, I need to print all the files in it."
         }
       },
       {
@@ -877,14 +585,42 @@
         "message": "The output has been truncated because it is too long, so I need to count files by script directly.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "execute_bash",
             "arguments": {
               "command": "ls -1 /etc | wc -l"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_000001",
+              "content": "The output of the OS:\n220"
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "agent",
+        "message": "Now I get the answer, it is 220.\n\n<finish> 220 </finish>"
+      },
+      {
+        "step_id": 5,
+        "source": "user",
+        "message": "Now, I will start a new problem in a new OS. My problem is:\n\n \n\nFind the total number of non-empty lines across all text files within your home directory, including its subdirectories."
+      },
+      {
+        "step_id": 6,
+        "source": "agent",
+        "message": "First, I need to find all the text files within the home directory and its subdirectories.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000002",
+            "function_name": "execute_bash",
+            "arguments": {
+              "command": "find ~ -name \"*.txt\""
             }
           }
         ],
@@ -892,69 +628,9 @@
           "results": [
             {
               "source_call_id": "call_000002",
-              "content": "220",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "The output of the OS:\n\n/root/homework_direct/demo2.txt\r\n/root/homework_direct/demo1.txt\r\n/root/example.txt\r\n\u001b]0;root@caa72c6137ae: /\u0007root@caa72c6137ae:/#"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "The output has been truncated because it is too long, so I need to count files by script directly."
-        }
-      },
-      {
-        "step_id": 4,
-        "source": "agent",
-        "message": "<solution> 220 </solution>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "Now I get the answer, it is 220."
-        }
-      },
-      {
-        "step_id": 5,
-        "source": "user",
-        "message": "Now, I will start a new problem in a new OS. My problem is:\n\n \n\nFind the total number of non-empty lines across all text files within your home directory, including its subdirectories.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
-      },
-      {
-        "step_id": 6,
-        "source": "agent",
-        "message": "First, I need to find all the text files within the home directory and its subdirectories. ",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000003",
-            "function_name": "execute_bash",
-            "arguments": {
-              "command": "find ~ -name \"*.txt\""
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000003",
-              "content": "/root/homework_direct/demo2.txt\n/root/homework_direct/demo1.txt\n/root/example.txt",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "First, I need to find all the text files within the home directory and its subdirectories. "
         }
       },
       {
@@ -963,32 +639,20 @@
         "message": "We have three text files: `demo2.txt`, `demo1.txt`, and `example.txt`. Now, I need to inspect these files one by one to count non-empty lines. I'll start with `demo2.txt`.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "execute_bash",
             "arguments": {
               "command": "grep -vc \"^$\" /root/homework_direct/demo2.txt"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "2",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "The output of the OS:\n\n2\r\n\u001b]0;root@caa72c6137ae: /\u0007root@caa72c6137ae:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "We have three text files: `demo2.txt`, `demo1.txt`, and `example.txt`. Now, I need to inspect these files one by one to count non-empty lines. I'll start with `demo2.txt`."
         }
       },
       {
@@ -997,32 +661,20 @@
         "message": "There are 2 non-empty lines in `demo2.txt`. Let's move on to `demo1.txt`.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000005",
+            "tool_call_id": "call_000004",
             "function_name": "execute_bash",
             "arguments": {
               "command": "grep -vc \"^$\" /root/homework_direct/demo1.txt"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000005",
-              "content": "2",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000004",
+              "content": "The output of the OS:\n\n2\r\n\u001b]0;root@caa72c6137ae: /\u0007root@caa72c6137ae:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "There are 2 non-empty lines in `demo2.txt`. Let's move on to `demo1.txt`."
         }
       },
       {
@@ -1031,48 +683,33 @@
         "message": "The `demo1.txt` file also has 2 non-empty lines. Now, we test the `example.txt` file.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000006",
+            "tool_call_id": "call_000005",
             "function_name": "execute_bash",
             "arguments": {
               "command": "grep -vc \"^$\" /root/example.txt"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000006",
-              "content": "2",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000005",
+              "content": "The output of the OS:\n\n2\r\n\u001b]0;root@caa72c6137ae: /\u0007root@caa72c6137ae:/# \u001b[K"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "The `demo1.txt` file also has 2 non-empty lines. Now, we test the `example.txt` file."
         }
       },
       {
         "step_id": 10,
         "source": "agent",
-        "message": "<finish> <solution> 6 </solution> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "`example.txt` also has 2 non-empty lines. Therefore, the total number of non-empty lines in all .txt files in the home directory and its subdirectories is 2+2+2=6."
-        }
+        "message": "`example.txt` also has 2 non-empty lines. Therefore, the total number of non-empty lines in all .txt files in the home directory and its subdirectories is 2+2+2=6.\n\n<finish> 6 </finish>"
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "os_103"
+      },
+      "source_dataset": "agenttuning_os"
     }
   }
 ]

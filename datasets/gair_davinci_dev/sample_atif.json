@@ -4,61 +4,52 @@
     "session_id": "davinci_env_sample_0",
     "trajectory_id": "davinci_env_sample_0",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "gair_davinci_dev",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "user",
-        "message": "We need fix a SyntaxError caused by `import . as cli` in `/testbed/plumbum/cli/image.py`. Please inspect and patch the repository.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "system",
+        "message": "You are a helpful assistant that can interact with a computer to solve tasks."
       },
       {
         "step_id": 2,
+        "source": "user",
+        "message": "We need fix a SyntaxError caused by `import . as cli` in `/testbed/plumbum/cli/image.py`. Please inspect and patch the repository."
+      },
+      {
+        "step_id": 3,
         "source": "agent",
         "message": "I'll list the top-level files first.",
-        "reasoning_content": "I should inspect the repository before editing.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
-            "function_name": "execute_bash",
+            "tool_call_id": "call_0001",
+            "function_name": "bash",
             "arguments": {
               "command": "ls -F /testbed"
             },
             "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
+              "raw_type": "function"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "CHANGELOG.rst\nLICENSE\nplumbum/\ntests/\n",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_0001",
+              "content": "CHANGELOG.rst\nLICENSE\nplumbum/\ntests/\n"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "I'll list the top-level files first."
         }
       },
       {
-        "step_id": 3,
+        "step_id": 4,
         "source": "agent",
         "message": "I'll open the file mentioned in the issue.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_0002",
             "function_name": "str_replace_editor",
             "arguments": {
               "command": "view",
@@ -69,34 +60,26 @@
               ]
             },
             "extra": {
-              "adp_class": "api_action"
+              "raw_type": "function"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "1\tfrom __future__ import annotations\n2\t\n3\timport . as cli\n4\tfrom plumbum import local\n",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_0002",
+              "content": "1\tfrom __future__ import annotations\n2\t\n3\timport . as cli\n4\tfrom plumbum import local\n"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "I'll open the file mentioned in the issue."
         }
       },
       {
-        "step_id": 4,
+        "step_id": 5,
         "source": "agent",
         "message": "The relative import is invalid. I'll replace it with an explicit package import.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_0003",
             "function_name": "str_replace_editor",
             "arguments": {
               "command": "str_replace",
@@ -105,44 +88,40 @@
               "new_str": "from plumbum import cli"
             },
             "extra": {
-              "adp_class": "api_action"
+              "raw_type": "function"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "The file /testbed/plumbum/cli/image.py has been edited.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_0003",
+              "content": "The file /testbed/plumbum/cli/image.py has been edited."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "The relative import is invalid. I'll replace it with an explicit package import."
         }
       },
       {
-        "step_id": 5,
+        "step_id": 6,
         "source": "agent",
-        "message": "<finish> The syntax error is fixed, so I'll submit the solution. </finish>",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "The syntax error is fixed, so I'll submit the solution.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_0004",
+            "function_name": "submit",
+            "arguments": {},
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ]
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {
-        "source": "GAIR/daVinci-Dev",
-        "config": "env_native",
+      "raw": {
         "sample_name": "davinci_env_sample_0"
-      }
+      },
+      "source_dataset": "gair_davinci_dev"
     }
   },
   {
@@ -150,89 +129,57 @@
     "session_id": "davinci_env_sample_1",
     "trajectory_id": "davinci_env_sample_1",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "gair_davinci_dev",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "user",
-        "message": "Run the focused tests for the package and report whether they pass.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "system",
+        "message": "You are a helpful assistant that can interact with a computer to solve tasks."
       },
       {
         "step_id": 2,
+        "source": "user",
+        "message": "Run the focused tests for the package and report whether they pass."
+      },
+      {
+        "step_id": 3,
         "source": "agent",
         "message": "I'll run the focused pytest target.",
-        "reasoning_content": "The request only asks for test execution, so a bash command is sufficient.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
-            "function_name": "execute_bash",
+            "tool_call_id": "call_1001",
+            "function_name": "bash",
             "arguments": {
-              "command": "pytest tests/test_cli.py -q"
+              "command": "pytest tests/test_cli.py -q",
+              "timeout": 120
             },
             "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
+              "raw_type": "function"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "........\n8 passed in 0.42s\n",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1001",
+              "content": "........\n8 passed in 0.42s\n"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "I'll run the focused pytest target."
-        }
-      },
-      {
-        "step_id": 3,
-        "source": "agent",
-        "message": "The focused tests passed: 8 tests completed successfully in 0.42 seconds.",
-        "extra": {
-          "adp_class": "message_action"
         }
       },
       {
         "step_id": 4,
-        "source": "user",
-        "message": "Task completed successfully.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
-      },
-      {
-        "step_id": 5,
         "source": "agent",
-        "message": "<finish> I have completed the task. </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": ""
-        }
+        "message": "The focused tests passed: 8 tests completed successfully in 0.42 seconds."
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {
-        "source": "GAIR/daVinci-Dev",
-        "config": "env_native",
+      "raw": {
         "sample_name": "davinci_env_sample_1"
-      }
+      },
+      "source_dataset": "gair_davinci_dev"
     }
   },
   {
@@ -240,26 +187,27 @@
     "session_id": "davinci_env_sample_2",
     "trajectory_id": "davinci_env_sample_2",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "gair_davinci_dev",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "user",
-        "message": "Create a small regression test file at `/testbed/tests/test_regression.py` that checks `normalize_title('Hello World') == 'hello-world'`.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "system",
+        "message": "You are a helpful assistant that can interact with a computer to solve tasks."
       },
       {
         "step_id": 2,
+        "source": "user",
+        "message": "Create a small regression test file at `/testbed/tests/test_regression.py` that checks `normalize_title('Hello World') == 'hello-world'`."
+      },
+      {
+        "step_id": 3,
         "source": "agent",
         "message": "I'll create the requested regression test file.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_2001",
             "function_name": "str_replace_editor",
             "arguments": {
               "command": "create",
@@ -267,79 +215,50 @@
               "file_text": "from app.text import normalize_title\n\n\ndef test_normalize_title_spaces():\n    assert normalize_title('Hello World') == 'hello-world'\n"
             },
             "extra": {
-              "adp_class": "api_action"
+              "raw_type": "function"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "File created successfully at /testbed/tests/test_regression.py.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_2001",
+              "content": "File created successfully at /testbed/tests/test_regression.py."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "I'll create the requested regression test file."
-        }
-      },
-      {
-        "step_id": 3,
-        "source": "agent",
-        "message": "I'll run the new test to verify it passes.",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000002",
-            "function_name": "execute_bash",
-            "arguments": {
-              "command": "pytest /testbed/tests/test_regression.py -q"
-            },
-            "extra": {
-              "adp_class": "code_action",
-              "language": "bash"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000002",
-              "content": ".\n1 passed in 0.05s\n",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "code_action",
-          "description": "I'll run the new test to verify it passes."
         }
       },
       {
         "step_id": 4,
         "source": "agent",
-        "message": "<finish> I have completed the task. </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": ""
+        "message": "I'll run the new test to verify it passes.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_2002",
+            "function_name": "bash",
+            "arguments": {
+              "command": "pytest /testbed/tests/test_regression.py -q"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_2002",
+              "content": ".\n1 passed in 0.05s\n"
+            }
+          ]
         }
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {
-        "source": "GAIR/daVinci-Dev",
-        "config": "env_native",
+      "raw": {
         "sample_name": "davinci_env_sample_2"
-      }
+      },
+      "source_dataset": "gair_davinci_dev"
     }
   }
 ]

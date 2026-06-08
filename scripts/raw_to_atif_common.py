@@ -118,6 +118,10 @@ def record_id(record: Any, index: int, dataset_name: str) -> str:
             return f"{record['task']}_{record['episode']}"
         if dataset_name == "litecoder-terminal-sft" and record.get("id") is not None:
             return f"litecoder-terminal-sft-{record['id']}"
+        if dataset_name == "openresearcher" and record.get("qid") is not None:
+            config = record.get("config") or "seed_42"
+            split = record.get("split") or "train"
+            return f"{config}_{split}_{record['qid']}"
         if dataset_name == "go-browse-wa" and isinstance(record.get("traj_data"), dict):
             return str(record["traj_data"].get("traj_num", index))
         for field in ID_FIELDS:
@@ -239,6 +243,9 @@ def xml_tool_calls(content: str) -> tuple[str, list[ToolCall]]:
         flags=re.DOTALL,
     )
     if function_match:
+        function_name = function_match.group(1)
+        if function_name == "example_function_name":
+            return message, tool_calls
         params = {
             param.group(1): param.group(2).strip()
             for param in re.finditer(
@@ -251,12 +258,116 @@ def xml_tool_calls(content: str) -> tuple[str, list[ToolCall]]:
         tool_calls.append(
             ToolCall(
                 tool_call_id="call_1",
-                function_name=function_match.group(1),
+                function_name=function_name,
                 arguments=params,
                 extra={"raw_format": "function_xml"},
             )
         )
     return message, tool_calls
+
+
+def alfworld_action_call(action: str) -> ToolCall | None:
+    action = action.strip().rstrip(".")
+    lower_action = action.lower()
+    function_name = None
+    arguments: dict[str, Any] = {}
+
+    if lower_action.startswith("go to "):
+        function_name = "go"
+        arguments = {"location": action[6:].strip()}
+    elif lower_action.startswith("take ") and " from " in lower_action:
+        match = re.match(r"take\s+(.*?)\s+from\s+(.*)", action, flags=re.IGNORECASE)
+        if match:
+            function_name = "take"
+            arguments = {"item": match.group(1).strip(), "source": match.group(2).strip()}
+    elif lower_action.startswith("put ") and re.search(r"\s+in/on\s+", lower_action):
+        match = re.match(r"put\s+(.*?)\s+in/on\s+(.*)", action, flags=re.IGNORECASE)
+        if match:
+            function_name = "put"
+            arguments = {"item": match.group(1).strip(), "target": match.group(2).strip()}
+    elif lower_action in {"inventory", "look"}:
+        function_name = lower_action
+    elif lower_action.startswith("open "):
+        function_name = "open"
+        arguments = {"obj": action[5:].strip()}
+    elif lower_action.startswith("close "):
+        function_name = "close"
+        arguments = {"obj": action[6:].strip()}
+    elif lower_action.startswith("examine "):
+        function_name = "examine"
+        arguments = {"obj": action[8:].strip()}
+    elif lower_action.startswith("use "):
+        function_name = "use"
+        arguments = {"obj": action[4:].strip()}
+
+    if function_name is None:
+        return None
+    return ToolCall(tool_call_id="call_1", function_name=function_name, arguments=arguments)
+
+
+def bracket_action_call(action: str) -> ToolCall | None:
+    match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_]*)\[(.*)\]", action.strip(), flags=re.DOTALL)
+    if not match:
+        return None
+    function_name = match.group(1)
+    value = match.group(2).strip()
+    if function_name == "search":
+        arguments = {"keywords": value}
+    elif function_name == "click":
+        arguments = {"element": value}
+    else:
+        arguments = {"value": value}
+    return ToolCall(tool_call_id="call_1", function_name=function_name, arguments=arguments)
+
+
+def os_action_call(text: str) -> tuple[str, list[ToolCall]] | None:
+    think_match = re.search(r"Think:\s*(.*?)(?:\n\nAct:|\nAct:)", text, flags=re.DOTALL)
+    thought = think_match.group(1).strip() if think_match else ""
+    bash_match = re.search(r"Act:\s*bash\s*```bash\s*(.*?)\s*```", text, flags=re.DOTALL)
+    if bash_match:
+        return thought, [
+            ToolCall(
+                tool_call_id="call_1",
+                function_name="bash",
+                arguments={"command": bash_match.group(1).strip()},
+            )
+        ]
+    answer_match = re.search(r"Act:\s*answer\((.*?)\)\s*$", text, flags=re.DOTALL)
+    if answer_match:
+        answer = answer_match.group(1).strip()
+        message = "\n\n".join(part for part in [thought, f"<finish> {answer} </finish>"] if part)
+        return message, []
+    finish_match = re.search(r"Act:\s*finish\s*$", text, flags=re.DOTALL)
+    if finish_match:
+        message = "\n\n".join(part for part in [thought, "<finish> done </finish>"] if part)
+        return message, []
+    return None
+
+
+def source_format_tool_calls(content: str) -> tuple[str, list[ToolCall]]:
+    os_call = os_action_call(content)
+    if os_call is not None:
+        return os_call
+
+    action_match = re.search(r"(?:^|\n)\s*ACTION:\s*(.*?)\s*$", content, flags=re.DOTALL)
+    if action_match:
+        action = action_match.group(1).strip()
+        thought = content[: action_match.start()].strip()
+        thought = re.sub(r"^THOUGHT:\s*", "", thought, flags=re.IGNORECASE).strip()
+        tool_call = alfworld_action_call(action) or bracket_action_call(action)
+        if tool_call is not None:
+            return thought, [tool_call]
+
+    webshop_match = re.search(r"(?:^|\n)\s*Action:\s*(.*?)\s*$", content, flags=re.DOTALL)
+    if webshop_match:
+        action = webshop_match.group(1).strip()
+        thought = content[: webshop_match.start()].strip()
+        thought = re.sub(r"^Thought:\s*", "", thought, flags=re.IGNORECASE).strip()
+        tool_call = bracket_action_call(action)
+        if tool_call is not None:
+            return thought, [tool_call]
+
+    return content, []
 
 
 def message_role(message: dict[str, Any]) -> str | None:
@@ -319,6 +430,9 @@ def append_message_step(steps: list[Step], message: dict[str, Any]) -> None:
     ):
         add_observation(steps, content, message.get("tool_call_id"))
         return
+    if role == "user" and steps and steps[-1].source == "agent" and steps[-1].tool_calls:
+        add_observation(steps, content, message.get("tool_call_id"))
+        return
     if role in {"system", "user"}:
         steps.append(Step(step_id=len(steps) + 1, source=role, message=atif_content(content)))
         return
@@ -327,6 +441,8 @@ def append_message_step(steps: list[Step], message: dict[str, Any]) -> None:
     tool_calls = openai_tool_calls(message)
     if not tool_calls and text:
         text, tool_calls = xml_tool_calls(text)
+    if not tool_calls and text:
+        text, tool_calls = source_format_tool_calls(text)
     steps.append(
         Step(
             step_id=len(steps) + 1,

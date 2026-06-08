@@ -4,103 +4,44 @@
     "session_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_179340",
     "trajectory_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_179340",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "dolci_instruct_sft_tool_use",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "user",
-        "message": "Can you compare the 5-day weather forecasts for Paris and Madrid, and tell me which city will be warmer overall?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "system",
+        "message": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions."
       },
       {
         "step_id": 2,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000001",
-            "function_name": "weather_forecast_weather_api",
-            "arguments": {
-              "q": "\"Paris\"",
-              "days": 5
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000001",
-              "content": "{\"results\": {\"forecast\": [{\"date\": \"2024-06-25\", \"day\": {\"maxtemp_c\": 27, \"mintemp_c\": 16}}, {\"date\": \"2024-06-26\", \"day\": {\"maxtemp_c\": 29, \"mintemp_c\": 18}}, {\"date\": \"2024-06-27\", \"day\": {\"maxtemp_c\": 31, \"mintemp_c\": 19}}, {\"date\": \"2024-06-28\", \"day\": {\"maxtemp_c\": 32, \"mintemp_c\": 20}}, {\"date\": \"2024-06-29\", \"day\": {\"maxtemp_c\": 30, \"mintemp_c\": 18}}]}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "Can you compare the 5-day weather forecasts for Paris and Madrid, and tell me which city will be warmer overall?"
       },
       {
         "step_id": 3,
         "source": "agent",
         "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000002",
-            "function_name": "weather_forecast_weather_api",
-            "arguments": {
-              "q": "\"Madrid\"",
-              "days": 5
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "{\"results\": {\"forecast\": [{\"date\": \"2024-06-25\", \"day\": {\"maxtemp_c\": 33, \"mintemp_c\": 22}}, {\"date\": \"2024-06-26\", \"day\": {\"maxtemp_c\": 35, \"mintemp_c\": 24}}, {\"date\": \"2024-06-27\", \"day\": {\"maxtemp_c\": 36, \"mintemp_c\": 25}}, {\"date\": \"2024-06-28\", \"day\": {\"maxtemp_c\": 34, \"mintemp_c\": 23}}, {\"date\": \"2024-06-29\", \"day\": {\"maxtemp_c\": 37, \"mintemp_c\": 26}}]}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "{\"results\": {\"forecast\": [{\"date\": \"2024-06-25\", \"day\": {\"maxtemp_c\": 27, \"mintemp_c\": 16}}, {\"date\": \"2024-06-26\", \"day\": {\"maxtemp_c\": 29, \"mintemp_c\": 18}}, {\"date\": \"2024-06-27\", \"day\": {\"maxtemp_c\": 31, \"mintemp_c\": 19}}, {\"date\": \"2024-06-28\", \"day\": {\"maxtemp_c\": 32, \"mintemp_c\": 20}}, {\"date\": \"2024-06-29\", \"day\": {\"maxtemp_c\": 30, \"mintemp_c\": 18}}]}}\n{\"results\": {\"forecast\": [{\"date\": \"2024-06-25\", \"day\": {\"maxtemp_c\": 33, \"mintemp_c\": 22}}, {\"date\": \"2024-06-26\", \"day\": {\"maxtemp_c\": 35, \"mintemp_c\": 24}}, {\"date\": \"2024-06-27\", \"day\": {\"maxtemp_c\": 36, \"mintemp_c\": 25}}, {\"date\": \"2024-06-28\", \"day\": {\"maxtemp_c\": 34, \"mintemp_c\": 23}}, {\"date\": \"2024-06-29\", \"day\": {\"maxtemp_c\": 37, \"mintemp_c\": 26}}]}}"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action"
         }
       },
       {
         "step_id": 4,
         "source": "agent",
-        "message": "<finish> I've compared the 5-day weather forecasts for both Paris and Madrid:\n\n- Paris: Highs range from 27°C to 32°C, lows from 16°C to 20°C.\n- Madrid: Highs range from 33°C to 37°C, lows from 22°C to 26°C.\n\nOverall, Madrid will be warmer than Paris over the next 5 days. </finish>",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "I've compared the 5-day weather forecasts for both Paris and Madrid:\n\n- Paris: Highs range from 27\u00b0C to 32\u00b0C, lows from 16\u00b0C to 20\u00b0C.\n- Madrid: Highs range from 33\u00b0C to 37\u00b0C, lows from 22\u00b0C to 26\u00b0C.\n\nOverall, Madrid will be warmer than Paris over the next 5 days."
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": [
-        "weather_forecast_weather_api",
-        "weather_getweatherforecast"
-      ],
-      "adp_details": {
-        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated"
-      }
+      "raw": {
+        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+        "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_179340"
+      },
+      "source_dataset": "dolci_instruct_sft_tool_use"
     }
   },
   {
@@ -108,109 +49,56 @@
     "session_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_351977",
     "trajectory_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_351977",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "dolci_instruct_sft_tool_use",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "user",
-        "message": "I’m planning a trip to New York! I’m staying at the Renaissance Hotel. My guest ID is NYR543, and I want to book a deluxe room at $350 per night from 2024-08-04 to 2024-08-09. Can you also check which city ZIP code 10001 refers to?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "system",
+        "message": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions."
       },
       {
         "step_id": 2,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000001",
-            "function_name": "reserve_hotel_room",
-            "arguments": {
-              "room_type": "\"deluxe\"",
-              "nightly_rate": 350,
-              "checkin_date": "\"2024-08-04\"",
-              "checkout_date": "\"2024-08-09\"",
-              "guest_id": "\"NYR543\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000001",
-              "content": "{\"results\": {\"reservation\": \"success\", \"confirmation\": \"RES123456\"}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "I\u2019m planning a trip to New York! I\u2019m staying at the Renaissance Hotel. My guest ID is NYR543, and I want to book a deluxe room at $350 per night from 2024-08-04 to 2024-08-09. Can you also check which city ZIP code 10001 refers to?"
       },
       {
         "step_id": 3,
         "source": "agent",
         "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000002",
-            "function_name": "get_city_from_zipcode",
-            "arguments": {
-              "zipcode": "\"10001\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "{\"results\": {\"city\": \"New York\"}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "{\"results\": {\"reservation\": \"success\", \"confirmation\": \"RES123456\"}}"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action"
         }
       },
       {
         "step_id": 4,
         "source": "agent",
-        "message": "<finish> Your deluxe room at the Renaissance Hotel has been reserved from August 4 to August 9, 2024, for $350 a night (confirmation: RES123456). ZIP code 10001 is for New York City. Enjoy your trip! </finish>",
-        "extra": {
-          "adp_class": "message_action"
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"results\": {\"city\": \"New York\"}}"
+            }
+          ]
         }
+      },
+      {
+        "step_id": 5,
+        "source": "agent",
+        "message": "Your deluxe room at the Renaissance Hotel has been reserved from August 4 to August 9, 2024, for $350 a night (confirmation: RES123456). ZIP code 10001 is for New York City. Enjoy your trip!"
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": [
-        "get_pokemon_move_info",
-        "get_ip_zipcode",
-        "calculate_calorie_intake",
-        "get_city_from_zipcode",
-        "predict_evolution_rate",
-        "reserve_hotel_room"
-      ],
-      "adp_details": {
-        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated"
-      }
+      "raw": {
+        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+        "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_351977"
+      },
+      "source_dataset": "dolci_instruct_sft_tool_use"
     }
   },
   {
@@ -218,168 +106,44 @@
     "session_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_905382",
     "trajectory_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_905382",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "dolci_instruct_sft_tool_use",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "user",
-        "message": "1) Check if 16384 and 25000 are both powers of two. 2) Calculate the cell densities for 2 samples: first has OD=0.12 with a dilution of 100, second has OD=0.095 with a dilution of 150. Show me the results for all.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "system",
+        "message": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions."
       },
       {
         "step_id": 2,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000001",
-            "function_name": "is_power_of_two",
-            "arguments": {
-              "num": 16384
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000001",
-              "content": "{\"result\": true}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "1) Check if 16384 and 25000 are both powers of two. 2) Calculate the cell densities for 2 samples: first has OD=0.12 with a dilution of 100, second has OD=0.095 with a dilution of 150. Show me the results for all."
       },
       {
         "step_id": 3,
         "source": "agent",
         "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000002",
-            "function_name": "is_power_of_two",
-            "arguments": {
-              "num": 25000
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "{\"result\": false}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "{\"result\": true}\n{\"result\": false}\n{\"cell_density\": 12000000.0}\n{\"cell_density\": 14250000.0}"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action"
         }
       },
       {
         "step_id": 4,
         "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000003",
-            "function_name": "cell_density",
-            "arguments": {
-              "od": 0.12,
-              "dilution": 100
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000003",
-              "content": "{\"cell_density\": 12000000.0}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
-      },
-      {
-        "step_id": 5,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000004",
-            "function_name": "cell_density",
-            "arguments": {
-              "od": 0.095,
-              "dilution": 150
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000004",
-              "content": "{\"cell_density\": 14250000.0}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
-      },
-      {
-        "step_id": 6,
-        "source": "agent",
-        "message": "<finish> Here are your results:\n\n1. 16384 is a power of two, but 25000 is not.\n2. The cell density for the first sample (OD=0.12, dilution=100) is 12,000,000. The cell density for the second sample (OD=0.095, dilution=150) is 14,250,000. </finish>",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "Here are your results:\n\n1. 16384 is a power of two, but 25000 is not.\n2. The cell density for the first sample (OD=0.12, dilution=100) is 12,000,000. The cell density for the second sample (OD=0.095, dilution=150) is 14,250,000."
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": [
-        "cell_density",
-        "can_attend_all_meetings",
-        "is_power_of_two"
-      ],
-      "adp_details": {
-        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated"
-      }
+      "raw": {
+        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+        "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_905382"
+      },
+      "source_dataset": "dolci_instruct_sft_tool_use"
     }
   },
   {
@@ -387,440 +151,132 @@
     "session_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_145768",
     "trajectory_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_145768",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "dolci_instruct_sft_tool_use",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "user",
-        "message": "Can you help with two things at once? 1) Calculate the final velocity of a car that starts at 20 m/s, accelerates at 2 m/s² for 15 seconds. 2) Also, find the number of ways 4 books can be arranged out of a set of 10.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "system",
+        "message": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions."
       },
       {
         "step_id": 2,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000001",
-            "function_name": "physics_final_velocity",
-            "arguments": {
-              "initial_velocity": 20,
-              "acceleration": 2,
-              "time": 15
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000001",
-              "content": "{\"result\": 50.0}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "Can you help with two things at once? 1) Calculate the final velocity of a car that starts at 20 m/s, accelerates at 2 m/s\u00b2 for 15 seconds. 2) Also, find the number of ways 4 books can be arranged out of a set of 10."
       },
       {
         "step_id": 3,
         "source": "agent",
         "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000002",
-            "function_name": "combinatorics_permutation_count",
-            "arguments": {
-              "n": 10,
-              "k": 4
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "{\"result\": 5040}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "{\"result\": 50.0}\n{\"result\": 5040}"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action"
         }
       },
       {
         "step_id": 4,
         "source": "agent",
-        "message": "Here are your results:\n\n1) The final velocity of the car is 50.0 m/s after accelerating for 15 seconds.\n2) There are 5,040 ways to arrange 4 books out of a set of 10.",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "Here are your results:\n\n1) The final velocity of the car is 50.0 m/s after accelerating for 15 seconds.\n2) There are 5,040 ways to arrange 4 books out of a set of 10."
       },
       {
         "step_id": 5,
         "source": "user",
-        "message": "Now, tell me the final velocity if the car starts at 0 m/s but the other values remain the same. And calculate the arrangements if we want to arrange all 10 books.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Now, tell me the final velocity if the car starts at 0 m/s but the other values remain the same. And calculate the arrangements if we want to arrange all 10 books."
       },
       {
         "step_id": 6,
         "source": "agent",
         "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000003",
-            "function_name": "physics_final_velocity",
-            "arguments": {
-              "initial_velocity": 0,
-              "acceleration": 2,
-              "time": 15
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "{\"result\": 30.0}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "{\"result\": 30.0}\n{\"result\": 3628800}"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action"
         }
       },
       {
         "step_id": 7,
         "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000004",
-            "function_name": "combinatorics_permutation_count",
-            "arguments": {
-              "n": 10,
-              "k": 10
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000004",
-              "content": "{\"result\": 3628800}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "message": "With an initial velocity of 0 m/s, the car's final velocity after 15 seconds at 2 m/s\u00b2 acceleration is 30.0 m/s.\nFor arranging all 10 books, there are 3,628,800 possible permutations."
       },
       {
         "step_id": 8,
-        "source": "agent",
-        "message": "With an initial velocity of 0 m/s, the car's final velocity after 15 seconds at 2 m/s² acceleration is 30.0 m/s.\nFor arranging all 10 books, there are 3,628,800 possible permutations.",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "source": "user",
+        "message": "What if we only had 6 books and wanted to arrange 6 of them? Also, what would the final velocity be if time was 5 seconds instead?"
       },
       {
         "step_id": 9,
-        "source": "user",
-        "message": "What if we only had 6 books and wanted to arrange 6 of them? Also, what would the final velocity be if time was 5 seconds instead?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
+        "source": "agent",
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"result\": 720}\n{\"result\": 10.0}"
+            }
+          ]
         }
       },
       {
         "step_id": 10,
         "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000005",
-            "function_name": "combinatorics_permutation_count",
-            "arguments": {
-              "n": 6,
-              "k": 6
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000005",
-              "content": "{\"result\": 720}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "message": "If you arrange all 6 books, there are 720 ways to do so. With an initial velocity of 0 m/s and acceleration of 2 m/s\u00b2 for 5 seconds, the final velocity is 10.0 m/s."
       },
       {
         "step_id": 11,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000006",
-            "function_name": "physics_final_velocity",
-            "arguments": {
-              "initial_velocity": 0,
-              "acceleration": 2,
-              "time": 5
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000006",
-              "content": "{\"result\": 10.0}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "How many ways can you arrange 3 of the 6 books? And what is the velocity if you accelerate for 30 seconds from 0 m/s?"
       },
       {
         "step_id": 12,
         "source": "agent",
-        "message": "If you arrange all 6 books, there are 720 ways to do so. With an initial velocity of 0 m/s and acceleration of 2 m/s² for 5 seconds, the final velocity is 10.0 m/s.",
-        "extra": {
-          "adp_class": "message_action"
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"result\": 120}\n{\"result\": 60.0}"
+            }
+          ]
         }
       },
       {
         "step_id": 13,
-        "source": "user",
-        "message": "How many ways can you arrange 3 of the 6 books? And what is the velocity if you accelerate for 30 seconds from 0 m/s?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "agent",
+        "message": "You can arrange 3 of the 6 books in 120 different ways. If you accelerate from 0 m/s for 30 seconds at 2 m/s\u00b2, the final velocity is 60.0 m/s."
       },
       {
         "step_id": 14,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000007",
-            "function_name": "combinatorics_permutation_count",
-            "arguments": {
-              "n": 6,
-              "k": 3
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000007",
-              "content": "{\"result\": 120}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "Try with 6 books, arranging only 1. And with the car scenario, what is the velocity after 1 second from the same initial conditions?"
       },
       {
         "step_id": 15,
         "source": "agent",
         "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000008",
-            "function_name": "physics_final_velocity",
-            "arguments": {
-              "initial_velocity": 0,
-              "acceleration": 2,
-              "time": 30
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000008",
-              "content": "{\"result\": 60.0}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "{\"result\": 6}\n{\"result\": 2.0}"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action"
         }
       },
       {
         "step_id": 16,
         "source": "agent",
-        "message": "You can arrange 3 of the 6 books in 120 different ways. If you accelerate from 0 m/s for 30 seconds at 2 m/s², the final velocity is 60.0 m/s.",
-        "extra": {
-          "adp_class": "message_action"
-        }
-      },
-      {
-        "step_id": 17,
-        "source": "user",
-        "message": "Try with 6 books, arranging only 1. And with the car scenario, what is the velocity after 1 second from the same initial conditions?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
-      },
-      {
-        "step_id": 18,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000009",
-            "function_name": "combinatorics_permutation_count",
-            "arguments": {
-              "n": 6,
-              "k": 1
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000009",
-              "content": "{\"result\": 6}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
-      },
-      {
-        "step_id": 19,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000010",
-            "function_name": "physics_final_velocity",
-            "arguments": {
-              "initial_velocity": 0,
-              "acceleration": 2,
-              "time": 1
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000010",
-              "content": "{\"result\": 2.0}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
-      },
-      {
-        "step_id": 20,
-        "source": "agent",
-        "message": "<finish> There are 6 ways to arrange just 1 book out of 6. After accelerating from 0 m/s for 1 second at 2 m/s², the car's final velocity is 2.0 m/s. </finish>",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "There are 6 ways to arrange just 1 book out of 6. After accelerating from 0 m/s for 1 second at 2 m/s\u00b2, the car's final velocity is 2.0 m/s."
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": [
-        "physics_final_velocity",
-        "combinatorics_permutation_count"
-      ],
-      "adp_details": {
-        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated"
-      }
+      "raw": {
+        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+        "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_145768"
+      },
+      "source_dataset": "dolci_instruct_sft_tool_use"
     }
   },
   {
@@ -828,354 +284,166 @@
     "session_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_736263",
     "trajectory_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_736263",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "dolci_instruct_sft_tool_use",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "user",
-        "message": "I'm in UTC+2; can you list the matches scheduled on 2023-08-12?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "system",
+        "message": "You are a helpful function-calling AI assistant. You are provided with function signatures within <functions></functions> XML tags. You may call one or more functions to assist with the user query. Output any function calls within <function_calls></function_calls> XML tags. Don't make assumptions about what values to plug into functions."
       },
       {
         "step_id": 2,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000001",
-            "function_name": "get_matches_on_a_specific_date",
-            "arguments": {
-              "date": "\"2023-08-12\"",
-              "utc_offset": 2
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000001",
-              "content": "{\"results\": {\"matches\": [{\"match_id\": \"2023-08-12-ARS–NEW\", \"home\": \"Arsenal\", \"away\": \"Newcastle\", \"kickoff\": \"14:00\"}, {\"match_id\": \"2023-08-12-MUNLIV\", \"home\": \"Manchester United\", \"away\": \"Liverpool\", \"kickoff\": \"16:30\"}, {\"match_id\": \"2023-08-12-VALBAR\", \"home\": \"Valencia\", \"away\": \"Barcelona\", \"kickoff\": \"19:00\"}]}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "I'm in UTC+2; can you list the matches scheduled on 2023-08-12?"
       },
       {
         "step_id": 3,
         "source": "agent",
-        "message": "Here are the matches for 2023-08-12 in your UTC+2 timezone:\n• Arsenal vs. Newcastle (14:00)\n• Manchester United vs. Liverpool (16:30) — Match ID: 2023-08-12-MUNLIV\n• Valencia vs. Barcelona (19:00)\nLet me know if you need details on any of them!",
-        "extra": {
-          "adp_class": "message_action"
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"results\": {\"matches\": [{\"match_id\": \"2023-08-12-ARS\u2013NEW\", \"home\": \"Arsenal\", \"away\": \"Newcastle\", \"kickoff\": \"14:00\"}, {\"match_id\": \"2023-08-12-MUNLIV\", \"home\": \"Manchester United\", \"away\": \"Liverpool\", \"kickoff\": \"16:30\"}, {\"match_id\": \"2023-08-12-VALBAR\", \"home\": \"Valencia\", \"away\": \"Barcelona\", \"kickoff\": \"19:00\"}]}}"
+            }
+          ]
         }
       },
       {
         "step_id": 4,
-        "source": "user",
-        "message": "Great, could you give me the details for match 2023-08-12-MUNLIV and also show the current power-ranking rounds for tournament 16 in season 41087?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "agent",
+        "message": "Here are the matches for 2023-08-12 in your UTC+2 timezone:\n\u2022 Arsenal vs. Newcastle (14:00)\n\u2022 Manchester United vs. Liverpool (16:30) \u2014 Match ID: 2023-08-12-MUNLIV\n\u2022 Valencia vs. Barcelona (19:00)\nLet me know if you need details on any of them!"
       },
       {
         "step_id": 5,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000002",
-            "function_name": "match_details_by_id",
-            "arguments": {
-              "match_id": "\"2023-08-12-MUNLIV\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000002",
-              "content": "{\"results\": {\"match_id\": \"2023-08-12-MUNLIV\", \"competition\": \"Premier League\", \"venue\": \"Old Trafford\", \"score\": {\"ht\": \"1-0\", \"ft\": \"2-2\"}, \"goals\": [{\"minute\": 23, \"team\": \"Manchester United\", \"scorer\": \"Rashford\"}, {\"minute\": 54, \"team\": \"Manchester United\", \"scorer\": \"Fernandes\"}, {\"minute\": 67, \"team\": \"Liverpool\", \"scorer\": \"Salah\"}, {\"minute\": 88, \"team\": \"Liverpool\", \"scorer\": \"Jota\"}]}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "Great, could you give me the details for match 2023-08-12-MUNLIV and also show the current power-ranking rounds for tournament 16 in season 41087?"
       },
       {
         "step_id": 6,
         "source": "agent",
         "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000003",
-            "function_name": "leaguepowerrankingrounds",
-            "arguments": {
-              "tournamentid": 16,
-              "seasonid": 41087
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "{\"results\": {\"tournamentid\": 16, \"seasonid\": 41087, \"rounds\": [{\"round\": 1, \"top_team\": \"Manchester City\"}, {\"round\": 2, \"top_team\": \"Arsenal\"}, {\"round\": 3, \"top_team\": \"Liverpool\"}]}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "content": "{\"results\": {\"match_id\": \"2023-08-12-MUNLIV\", \"competition\": \"Premier League\", \"venue\": \"Old Trafford\", \"score\": {\"ht\": \"1-0\", \"ft\": \"2-2\"}, \"goals\": [{\"minute\": 23, \"team\": \"Manchester United\", \"scorer\": \"Rashford\"}, {\"minute\": 54, \"team\": \"Manchester United\", \"scorer\": \"Fernandes\"}, {\"minute\": 67, \"team\": \"Liverpool\", \"scorer\": \"Salah\"}, {\"minute\": 88, \"team\": \"Liverpool\", \"scorer\": \"Jota\"}]}}"
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action"
         }
       },
       {
         "step_id": 7,
         "source": "agent",
-        "message": "Here are the details you requested:\nMatch 2023-08-12-MUNLIV (Premier League)\nVenue: Old Trafford\nHalf-time: 1-0 | Full-time: 2-2\nScorers: Rashford 23’, Fernandes 54’ — Salah 67’, Jota 88’\n\nCurrent Power-Ranking Rounds (Tournament 16, Season 41087):\n• Round 1 leader: Manchester City\n• Round 2 leader: Arsenal\n• Round 3 leader: Liverpool\nAnything else I can help you with?",
-        "extra": {
-          "adp_class": "message_action"
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"results\": {\"tournamentid\": 16, \"seasonid\": 41087, \"rounds\": [{\"round\": 1, \"top_team\": \"Manchester City\"}, {\"round\": 2, \"top_team\": \"Arsenal\"}, {\"round\": 3, \"top_team\": \"Liverpool\"}]}}"
+            }
+          ]
         }
       },
       {
         "step_id": 8,
-        "source": "user",
-        "message": "Thanks. Who is at the top of the LaLiga standings for the 2023 season?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "agent",
+        "message": "Here are the details you requested:\nMatch 2023-08-12-MUNLIV (Premier League)\nVenue: Old Trafford\nHalf-time: 1-0 | Full-time: 2-2\nScorers: Rashford 23\u2019, Fernandes 54\u2019 \u2014 Salah 67\u2019, Jota 88\u2019\n\nCurrent Power-Ranking Rounds (Tournament 16, Season 41087):\n\u2022 Round 1 leader: Manchester City\n\u2022 Round 2 leader: Arsenal\n\u2022 Round 3 leader: Liverpool\nAnything else I can help you with?"
       },
       {
         "step_id": 9,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000004",
-            "function_name": "laliga_standings",
-            "arguments": {
-              "season": "\"2023\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000004",
-              "content": "{\"results\": {\"season\": \"2023\", \"standings\": [{\"position\": 1, \"team\": \"Real Madrid\", \"points\": 82}, {\"position\": 2, \"team\": \"Barcelona\", \"points\": 78}, {\"position\": 3, \"team\": \"Atletico Madrid\", \"points\": 74}]}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "Thanks. Who is at the top of the LaLiga standings for the 2023 season?"
       },
       {
         "step_id": 10,
         "source": "agent",
-        "message": "After the latest round, Real Madrid are on top of LaLiga 2023 with 82 points, followed by Barcelona (78) and Atlético Madrid (74).",
-        "extra": {
-          "adp_class": "message_action"
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"results\": {\"season\": \"2023\", \"standings\": [{\"position\": 1, \"team\": \"Real Madrid\", \"points\": 82}, {\"position\": 2, \"team\": \"Barcelona\", \"points\": 78}, {\"position\": 3, \"team\": \"Atletico Madrid\", \"points\": 74}]}}"
+            }
+          ]
         }
       },
       {
         "step_id": 11,
-        "source": "user",
-        "message": "By the way, how many schools took part in the 2005 tournament?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "agent",
+        "message": "After the latest round, Real Madrid are on top of LaLiga 2023 with 82 points, followed by Barcelona (78) and Atl\u00e9tico Madrid (74)."
       },
       {
         "step_id": 12,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000005",
-            "function_name": "schools",
-            "arguments": {
-              "identifier": "\"2005\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000005",
-              "content": "{\"results\": {\"identifier\": \"2005\", \"num_schools\": 337}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "By the way, how many schools took part in the 2005 tournament?"
       },
       {
         "step_id": 13,
         "source": "agent",
-        "message": "There were 337 schools participating in the 2005 tournament.",
-        "extra": {
-          "adp_class": "message_action"
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"results\": {\"identifier\": \"2005\", \"num_schools\": 337}}"
+            }
+          ]
         }
       },
       {
         "step_id": 14,
-        "source": "user",
-        "message": "Could you fetch all available betting tips, sorted from oldest to newest?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "agent",
+        "message": "There were 337 schools participating in the 2005 tournament."
       },
       {
         "step_id": 15,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000006",
-            "function_name": "get_all_predictions",
-            "arguments": {
-              "sort": "\"id\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000006",
-              "content": "{\"results\": {\"predictions\": [{\"id\": 1, \"match\": \"Chelsea vs Spurs\", \"tip\": \"Over 2.5 goals\"}, {\"id\": 2, \"match\": \"PSG vs Lyon\", \"tip\": \"PSG to win\"}, {\"id\": 3, \"match\": \"Bayern vs Dortmund\", \"tip\": \"Both teams to score\"}]}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "Could you fetch all available betting tips, sorted from oldest to newest?"
       },
       {
         "step_id": 16,
         "source": "agent",
-        "message": "Here are the betting tips from oldest to newest:\n1. Chelsea vs Spurs — Over 2.5 goals\n2. PSG vs Lyon — PSG to win\n3. Bayern vs Dortmund — Both teams to score",
-        "extra": {
-          "adp_class": "message_action"
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"results\": {\"predictions\": [{\"id\": 1, \"match\": \"Chelsea vs Spurs\", \"tip\": \"Over 2.5 goals\"}, {\"id\": 2, \"match\": \"PSG vs Lyon\", \"tip\": \"PSG to win\"}, {\"id\": 3, \"match\": \"Bayern vs Dortmund\", \"tip\": \"Both teams to score\"}]}}"
+            }
+          ]
         }
       },
       {
         "step_id": 17,
-        "source": "user",
-        "message": "One last thing: what happened in Formula 1 race number 5 this season?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "source": "agent",
+        "message": "Here are the betting tips from oldest to newest:\n1. Chelsea vs Spurs \u2014 Over 2.5 goals\n2. PSG vs Lyon \u2014 PSG to win\n3. Bayern vs Dortmund \u2014 Both teams to score"
       },
       {
         "step_id": 18,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000007",
-            "function_name": "select_race_based_on_race_number",
-            "arguments": {
-              "race_no": "\"5\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000007",
-              "content": "{\"results\": {\"race_no\": 5, \"grand_prix\": \"Monaco GP\", \"winner\": \"Max Verstappen\", \"team\": \"Red Bull Racing\", \"time\": \"1:42:37.101\", \"podium\": [\"Max Verstappen\", \"Charles Leclerc\", \"Lewis Hamilton\"]}}",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action"
-        }
+        "source": "user",
+        "message": "One last thing: what happened in Formula 1 race number 5 this season?"
       },
       {
         "step_id": 19,
         "source": "agent",
-        "message": "<finish> Formula 1 Race 5 (Monaco GP):\n• Winner: Max Verstappen (Red Bull Racing) — 1:42:37.101\n• Podium: 1) Verstappen  2) Leclerc  3) Hamilton\nHope that covers everything! </finish>",
-        "extra": {
-          "adp_class": "message_action"
+        "message": "",
+        "observation": {
+          "results": [
+            {
+              "content": "{\"results\": {\"race_no\": 5, \"grand_prix\": \"Monaco GP\", \"winner\": \"Max Verstappen\", \"team\": \"Red Bull Racing\", \"time\": \"1:42:37.101\", \"podium\": [\"Max Verstappen\", \"Charles Leclerc\", \"Lewis Hamilton\"]}}"
+            }
+          ]
         }
+      },
+      {
+        "step_id": 20,
+        "source": "agent",
+        "message": "Formula 1 Race 5 (Monaco GP):\n\u2022 Winner: Max Verstappen (Red Bull Racing) \u2014 1:42:37.101\n\u2022 Podium: 1) Verstappen  2) Leclerc  3) Hamilton\nHope that covers everything!"
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": [
-        "get_all_predictions",
-        "daily_match_list_all",
-        "get_matches_on_a_specific_date",
-        "select_race_based_on_race_number",
-        "laliga_standings",
-        "schools",
-        "match_details_by_id",
-        "leaguepowerrankingrounds"
-      ],
-      "adp_details": {
-        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated"
-      }
+      "raw": {
+        "dataset_source": "allenai/olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated",
+        "id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_736263"
+      },
+      "source_dataset": "dolci_instruct_sft_tool_use"
     }
   }
 ]

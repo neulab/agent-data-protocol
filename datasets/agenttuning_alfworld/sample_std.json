@@ -4,35 +4,24 @@
     "session_id": "alfworld_155",
     "trajectory_id": "alfworld_155",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_alfworld",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn. You should choose from two actions: \"THOUGHT\" or \"ACTION\". If you choose \"THOUGHT\", you should first think about the current condition and plan for your future actions, and then output your action in this turn. Your output must strictly follow this format:\"THOUGHT: your thoughts.\n ACTION: your next action\n\"; If you choose \"ACTION\", you should directly output the action in this turn. Your output must strictly follow this format:\"ACTION: your next action\n\". After your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process."
       },
       {
         "step_id": 2,
         "source": "agent",
-        "message": "OK. I'll follow your instructions and try my best to solve the task.",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "OK. I'll follow your instructions and try my best to solve the task."
       },
       {
         "step_id": 3,
         "source": "user",
-        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bathtubbasin 1, a garbagecan 1, a handtowelholder 1, a shelf 3, a shelf 2, a shelf 1, a sinkbasin 1, a toilet 1, a toiletpaperhanger 1, and a towelholder 1.\nYour task is to: put two spraybottle in toilet.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bathtubbasin 1, a garbagecan 1, a handtowelholder 1, a shelf 3, a shelf 2, a shelf 1, a sinkbasin 1, a toilet 1, a toiletpaperhanger 1, and a towelholder 1.\nYour task is to: put two spraybottle in toilet."
       },
       {
         "step_id": 4,
@@ -40,31 +29,20 @@
         "message": "My task is to put two spraybottle in the toilet. I'll start by looking around to find the spraybottles.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "go",
             "arguments": {
-              "location": "\"shelf 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "shelf 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "On the shelf 1, you see a soapbottle 2, a spraybottle 2, and a spraybottle 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "On the shelf 1, you see a soapbottle 2, a spraybottle 2, and a spraybottle 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "My task is to put two spraybottle in the toilet. I'll start by looking around to find the spraybottles."
         }
       },
       {
@@ -73,32 +51,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "take",
             "arguments": {
-              "item": "\"spraybottle 1\"",
-              "source": "\"shelf 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "spraybottle 1",
+              "source": "shelf 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "You pick up the spraybottle 1 from the shelf 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000001",
+              "content": "You pick up the spraybottle 1 from the shelf 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -107,31 +74,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_000002",
             "function_name": "go",
             "arguments": {
-              "location": "\"toilet 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "toilet 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "On the toilet 1, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000002",
+              "content": "On the toilet 1, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -140,32 +96,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "put",
             "arguments": {
-              "item": "\"spraybottle 1\"",
-              "target": "\"toilet 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "spraybottle 1",
+              "target": "toilet 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "You put the spraybottle 1 in/on the toilet 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "You put the spraybottle 1 in/on the toilet 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -174,31 +119,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000005",
+            "tool_call_id": "call_000004",
             "function_name": "go",
             "arguments": {
-              "location": "\"shelf 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "shelf 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000005",
-              "content": "On the shelf 1, you see a soapbottle 2, and a spraybottle 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000004",
+              "content": "On the shelf 1, you see a soapbottle 2, and a spraybottle 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -207,32 +141,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000006",
+            "tool_call_id": "call_000005",
             "function_name": "take",
             "arguments": {
-              "item": "\"spraybottle 2\"",
-              "source": "\"shelf 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "spraybottle 2",
+              "source": "shelf 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000006",
-              "content": "You pick up the spraybottle 2 from the shelf 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000005",
+              "content": "You pick up the spraybottle 2 from the shelf 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -241,31 +164,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000007",
+            "tool_call_id": "call_000006",
             "function_name": "go",
             "arguments": {
-              "location": "\"toilet 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "toilet 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000007",
-              "content": "On the toilet 1, you see a spraybottle 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000006",
+              "content": "On the toilet 1, you see a spraybottle 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -274,48 +186,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000008",
+            "tool_call_id": "call_000007",
             "function_name": "put",
             "arguments": {
-              "item": "\"spraybottle 2\"",
-              "target": "\"toilet 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "spraybottle 2",
+              "target": "toilet 1"
             }
           }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000008",
-              "content": "Well done on successfully completing the task!",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
-        }
-      },
-      {
-        "step_id": 12,
-        "source": "agent",
-        "message": "<finish> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "I've wrapped up the task successfully."
-        }
+        ]
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "alfworld_155"
+      },
+      "source_dataset": "agenttuning_alfworld"
     }
   },
   {
@@ -323,35 +208,24 @@
     "session_id": "alfworld_219",
     "trajectory_id": "alfworld_219",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_alfworld",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn. You should choose from two actions: \"THOUGHT\" or \"ACTION\". If you choose \"THOUGHT\", you should first think about the current condition and plan for your future actions, and then output your action in this turn. Your output must strictly follow this format:\"THOUGHT: your thoughts.\n ACTION: your next action\n\"; If you choose \"ACTION\", you should directly output the action in this turn. Your output must strictly follow this format:\"ACTION: your next action\n\". After your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process."
       },
       {
         "step_id": 2,
         "source": "agent",
-        "message": "OK. I'll follow your instructions and try my best to solve the task.",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "OK. I'll follow your instructions and try my best to solve the task."
       },
       {
         "step_id": 3,
         "source": "user",
-        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 12, a cabinet 11, a cabinet 10, a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a diningtable 1, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: heat some potato and put it in fridge.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 12, a cabinet 11, a cabinet 10, a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a diningtable 1, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: heat some potato and put it in fridge."
       },
       {
         "step_id": 4,
@@ -359,31 +233,20 @@
         "message": "I need a potato to complete the task, I'll start looking in the cabinets because they're usually stored there.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "On the cabinet 1, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "On the cabinet 1, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "I need a potato to complete the task, I'll start looking in the cabinets because they're usually stored there."
         }
       },
       {
@@ -392,31 +255,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "On the cabinet 2, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000001",
+              "content": "On the cabinet 2, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -425,31 +277,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_000002",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 3\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 3"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "The cabinet 3 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000002",
+              "content": "The cabinet 3 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -458,31 +299,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 3\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 3"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "You open the cabinet 3. The cabinet 3 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "You open the cabinet 3. The cabinet 3 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -491,31 +321,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000005",
+            "tool_call_id": "call_000004",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 4\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 4"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000005",
-              "content": "The cabinet 4 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000004",
+              "content": "The cabinet 4 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -524,31 +343,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000006",
+            "tool_call_id": "call_000005",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 4\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 4"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000006",
-              "content": "You open the cabinet 4. The cabinet 4 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000005",
+              "content": "You open the cabinet 4. The cabinet 4 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -557,31 +365,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000007",
+            "tool_call_id": "call_000006",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 5\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 5"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000007",
-              "content": "The cabinet 5 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000006",
+              "content": "The cabinet 5 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -590,31 +387,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000008",
+            "tool_call_id": "call_000007",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 5\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 5"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000008",
-              "content": "You open the cabinet 5. The cabinet 5 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000007",
+              "content": "You open the cabinet 5. The cabinet 5 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -623,31 +409,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000009",
+            "tool_call_id": "call_000008",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 6\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 6"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000009",
-              "content": "The cabinet 6 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000008",
+              "content": "The cabinet 6 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -656,31 +431,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000010",
+            "tool_call_id": "call_000009",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 6\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 6"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000010",
-              "content": "You open the cabinet 6. The cabinet 6 is open. In it, you see a peppershaker 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000009",
+              "content": "You open the cabinet 6. The cabinet 6 is open. In it, you see a peppershaker 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -689,31 +453,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000011",
+            "tool_call_id": "call_000010",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 7\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 7"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000011",
-              "content": "On the cabinet 7, you see a bowl 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000010",
+              "content": "On the cabinet 7, you see a bowl 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -722,31 +475,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000012",
+            "tool_call_id": "call_000011",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 8\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 8"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000012",
-              "content": "The cabinet 8 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000011",
+              "content": "The cabinet 8 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -755,31 +497,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000013",
+            "tool_call_id": "call_000012",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 8\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 8"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000013",
-              "content": "You open the cabinet 8. The cabinet 8 is open. In it, you see a plate 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000012",
+              "content": "You open the cabinet 8. The cabinet 8 is open. In it, you see a plate 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -788,31 +519,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000014",
+            "tool_call_id": "call_000013",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 9\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 9"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000014",
-              "content": "The cabinet 9 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000013",
+              "content": "The cabinet 9 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -821,31 +541,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000015",
+            "tool_call_id": "call_000014",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 9\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 9"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000015",
-              "content": "You open the cabinet 9. The cabinet 9 is open. In it, you see a saltshaker 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000014",
+              "content": "You open the cabinet 9. The cabinet 9 is open. In it, you see a saltshaker 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -854,31 +563,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000016",
+            "tool_call_id": "call_000015",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 10\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 10"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000016",
-              "content": "The cabinet 10 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000015",
+              "content": "The cabinet 10 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -887,31 +585,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000017",
+            "tool_call_id": "call_000016",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 10\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 10"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000017",
-              "content": "You open the cabinet 10. The cabinet 10 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000016",
+              "content": "You open the cabinet 10. The cabinet 10 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -920,31 +607,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000018",
+            "tool_call_id": "call_000017",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 11\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 11"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000018",
-              "content": "The cabinet 11 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000017",
+              "content": "The cabinet 11 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -953,31 +629,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000019",
+            "tool_call_id": "call_000018",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 11\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 11"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000019",
-              "content": "You open the cabinet 11. The cabinet 11 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000018",
+              "content": "You open the cabinet 11. The cabinet 11 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -986,31 +651,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000020",
+            "tool_call_id": "call_000019",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 12\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 12"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000020",
-              "content": "The cabinet 12 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000019",
+              "content": "The cabinet 12 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1019,31 +673,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000021",
+            "tool_call_id": "call_000020",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 12\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 12"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000021",
-              "content": "You open the cabinet 12. The cabinet 12 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000020",
+              "content": "You open the cabinet 12. The cabinet 12 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1052,31 +695,20 @@
         "message": "There is no potato in cabinets, I should search elsewhere. Perhaps the countertop.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000022",
+            "tool_call_id": "call_000021",
             "function_name": "go",
             "arguments": {
-              "location": "\"countertop 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "countertop 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000022",
-              "content": "On the countertop 1, you see a butterknife 1, and a saltshaker 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000021",
+              "content": "On the countertop 1, you see a butterknife 1, and a saltshaker 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "There is no potato in cabinets, I should search elsewhere. Perhaps the countertop."
         }
       },
       {
@@ -1085,31 +717,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000023",
+            "tool_call_id": "call_000022",
             "function_name": "go",
             "arguments": {
-              "location": "\"countertop 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "countertop 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000023",
-              "content": "On the countertop 2, you see a dishsponge 3, a ladle 2, a lettuce 3, a lettuce 2, a pan 1, a potato 2, a soapbottle 1, and a winebottle 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000022",
+              "content": "On the countertop 2, you see a dishsponge 3, a ladle 2, a lettuce 3, a lettuce 2, a pan 1, a potato 2, a soapbottle 1, and a winebottle 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1118,32 +739,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000024",
+            "tool_call_id": "call_000023",
             "function_name": "take",
             "arguments": {
-              "item": "\"potato 2\"",
-              "source": "\"countertop 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "potato 2",
+              "source": "countertop 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000024",
-              "content": "You pick up the potato 2 from the countertop 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000023",
+              "content": "You pick up the potato 2 from the countertop 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1152,99 +762,31 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000025",
+            "tool_call_id": "call_000024",
             "function_name": "go",
             "arguments": {
-              "location": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "microwave 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000025",
-              "content": "The microwave 1 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000024",
+              "content": "The microwave 1 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
         "step_id": 29,
         "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000026",
-            "function_name": "heat",
-            "arguments": {
-              "item": "\"potato 2\"",
-              "appliance": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000026",
-              "content": "You heat the potato 2 using the microwave 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
-        }
+        "message": "ACTION: heat potato 2 with microwave 1"
       },
       {
         "step_id": 30,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000027",
-            "function_name": "go",
-            "arguments": {
-              "location": "\"fridge 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000027",
-              "content": "The fridge 1 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
-        }
+        "source": "user",
+        "message": "You heat the potato 2 using the microwave 1."
       },
       {
         "step_id": 31,
@@ -1252,31 +794,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000028",
-            "function_name": "open",
+            "tool_call_id": "call_000025",
+            "function_name": "go",
             "arguments": {
-              "obj": "\"fridge 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "fridge 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000028",
-              "content": "You open the fridge 1. The fridge 1 is open. In it, you see a egg 1, a lettuce 1, a mug 1, a potato 3, a potato 1, a tomato 2, and a tomato 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000025",
+              "content": "The fridge 1 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1285,48 +816,43 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000029",
-            "function_name": "put",
+            "tool_call_id": "call_000026",
+            "function_name": "open",
             "arguments": {
-              "item": "\"potato 2\"",
-              "target": "\"fridge 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "fridge 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000029",
-              "content": "Your implementation satisfies the task requirements.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000026",
+              "content": "You open the fridge 1. The fridge 1 is open. In it, you see a egg 1, a lettuce 1, a mug 1, a potato 3, a potato 1, a tomato 2, and a tomato 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
         "step_id": 33,
         "source": "agent",
-        "message": "<finish> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "I've wrapped up the task successfully."
-        }
+        "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000027",
+            "function_name": "put",
+            "arguments": {
+              "item": "potato 2",
+              "target": "fridge 1"
+            }
+          }
+        ]
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "alfworld_219"
+      },
+      "source_dataset": "agenttuning_alfworld"
     }
   },
   {
@@ -1334,35 +860,24 @@
     "session_id": "alfworld_56",
     "trajectory_id": "alfworld_56",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_alfworld",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn. You should choose from two actions: \"THOUGHT\" or \"ACTION\". If you choose \"THOUGHT\", you should first think about the current condition and plan for your future actions, and then output your action in this turn. Your output must strictly follow this format:\"THOUGHT: your thoughts.\n ACTION: your next action\n\"; If you choose \"ACTION\", you should directly output the action in this turn. Your output must strictly follow this format:\"ACTION: your next action\n\". After your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process."
       },
       {
         "step_id": 2,
         "source": "agent",
-        "message": "OK. I'll follow your instructions and try my best to solve the task.",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "OK. I'll follow your instructions and try my best to solve the task."
       },
       {
         "step_id": 3,
         "source": "user",
-        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 10, a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a diningtable 2, a diningtable 1, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: put two cup in microwave.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 10, a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a diningtable 2, a diningtable 1, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: put two cup in microwave."
       },
       {
         "step_id": 4,
@@ -1370,31 +885,20 @@
         "message": "The goal is to place two cups in the microwave. I should start by checking if there are any cups in the vicinity. The dining table might have cups so I will check there first.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "go",
             "arguments": {
-              "location": "\"diningtable 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "diningtable 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "On the diningtable 1, you see a bread 1, a cup 3, a dishsponge 1, a fork 3, a fork 1, a peppershaker 1, a plate 1, a potato 1, a soapbottle 1, a spatula 1, a spoon 2, a tomato 3, and a tomato 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "On the diningtable 1, you see a bread 1, a cup 3, a dishsponge 1, a fork 3, a fork 1, a peppershaker 1, a plate 1, a potato 1, a soapbottle 1, a spatula 1, a spoon 2, a tomato 3, and a tomato 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "The goal is to place two cups in the microwave. I should start by checking if there are any cups in the vicinity. The dining table might have cups so I will check there first."
         }
       },
       {
@@ -1403,32 +907,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "take",
             "arguments": {
-              "item": "\"cup 3\"",
-              "source": "\"diningtable 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "cup 3",
+              "source": "diningtable 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "You pick up the cup 3 from the diningtable 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000001",
+              "content": "You pick up the cup 3 from the diningtable 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1437,31 +930,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_000002",
             "function_name": "go",
             "arguments": {
-              "location": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "microwave 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "The microwave 1 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000002",
+              "content": "The microwave 1 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1470,31 +952,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "open",
             "arguments": {
-              "obj": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "microwave 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "You open the microwave 1. The microwave 1 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "You open the microwave 1. The microwave 1 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1503,32 +974,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000005",
+            "tool_call_id": "call_000004",
             "function_name": "put",
             "arguments": {
-              "item": "\"cup 3\"",
-              "target": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "cup 3",
+              "target": "microwave 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000005",
-              "content": "You put the cup 3 in/on the microwave 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000004",
+              "content": "You put the cup 3 in/on the microwave 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1537,31 +997,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000006",
+            "tool_call_id": "call_000005",
             "function_name": "go",
             "arguments": {
-              "location": "\"diningtable 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "diningtable 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000006",
-              "content": "On the diningtable 2, you see a apple 2, a bread 2, a egg 1, a pot 2, and a saltshaker 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000005",
+              "content": "On the diningtable 2, you see a apple 2, a bread 2, a egg 1, a pot 2, and a saltshaker 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1570,31 +1019,20 @@
         "message": "There is no additional cup at the diningtable 2. Checking the cabinets might be the next best action, as they're often used for storing cups.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000007",
+            "tool_call_id": "call_000006",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000007",
-              "content": "On the cabinet 1, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000006",
+              "content": "On the cabinet 1, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "There is no additional cup at the diningtable 2. Checking the cabinets might be the next best action, as they're often used for storing cups."
         }
       },
       {
@@ -1603,31 +1041,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000008",
+            "tool_call_id": "call_000007",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000008",
-              "content": "The cabinet 2 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000007",
+              "content": "The cabinet 2 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1636,31 +1063,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000009",
+            "tool_call_id": "call_000008",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000009",
-              "content": "You open the cabinet 2. The cabinet 2 is open. In it, you see a bowl 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000008",
+              "content": "You open the cabinet 2. The cabinet 2 is open. In it, you see a bowl 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1669,31 +1085,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000010",
+            "tool_call_id": "call_000009",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 3\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 3"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000010",
-              "content": "On the cabinet 3, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000009",
+              "content": "On the cabinet 3, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1702,31 +1107,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000011",
+            "tool_call_id": "call_000010",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 4\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 4"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000011",
-              "content": "On the cabinet 1, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000010",
+              "content": "On the cabinet 1, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1735,31 +1129,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000012",
+            "tool_call_id": "call_000011",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 5\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 5"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000012",
-              "content": "The cabinet 5 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000011",
+              "content": "The cabinet 5 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1768,31 +1151,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000013",
+            "tool_call_id": "call_000012",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 5\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 5"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000013",
-              "content": "You open the cabinet 5. The cabinet 5 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000012",
+              "content": "You open the cabinet 5. The cabinet 5 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1801,31 +1173,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000014",
+            "tool_call_id": "call_000013",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 6\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 6"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000014",
-              "content": "The cabinet 6 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000013",
+              "content": "The cabinet 6 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1834,31 +1195,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000015",
+            "tool_call_id": "call_000014",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 6\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 6"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000015",
-              "content": "You open the cabinet 6. The cabinet 6 is open. In it, you see a bowl 3.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000014",
+              "content": "You open the cabinet 6. The cabinet 6 is open. In it, you see a bowl 3."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1867,31 +1217,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000016",
+            "tool_call_id": "call_000015",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 7\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 7"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000016",
-              "content": "On the cabinet 7, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000015",
+              "content": "On the cabinet 7, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1900,31 +1239,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000017",
+            "tool_call_id": "call_000016",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 8\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 8"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000017",
-              "content": "On the cabinet 1, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000016",
+              "content": "On the cabinet 1, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1933,31 +1261,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000018",
+            "tool_call_id": "call_000017",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 9\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 9"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000018",
-              "content": "The cabinet 9 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000017",
+              "content": "The cabinet 9 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1966,31 +1283,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000019",
+            "tool_call_id": "call_000018",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 9\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 9"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000019",
-              "content": "You open the cabinet 9. The cabinet 9 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000018",
+              "content": "You open the cabinet 9. The cabinet 9 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -1999,31 +1305,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000020",
+            "tool_call_id": "call_000019",
             "function_name": "go",
             "arguments": {
-              "location": "\"cabinet 10\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "cabinet 10"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000020",
-              "content": "The cabinet 10 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000019",
+              "content": "The cabinet 10 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2032,31 +1327,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000021",
+            "tool_call_id": "call_000020",
             "function_name": "open",
             "arguments": {
-              "obj": "\"cabinet 10\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "cabinet 10"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000021",
-              "content": "You open the cabinet 10. The cabinet 10 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000020",
+              "content": "You open the cabinet 10. The cabinet 10 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2065,31 +1349,20 @@
         "message": "There is no cup in all cabinets. I will check the drawer now.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000022",
+            "tool_call_id": "call_000021",
             "function_name": "go",
             "arguments": {
-              "location": "\"drawer 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "drawer 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000022",
-              "content": "The drawer 1 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000021",
+              "content": "The drawer 1 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "There is no cup in all cabinets. I will check the drawer now."
         }
       },
       {
@@ -2098,31 +1371,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000023",
+            "tool_call_id": "call_000022",
             "function_name": "open",
             "arguments": {
-              "obj": "\"drawer 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "drawer 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000023",
-              "content": "You open the drawer 1. The drawer 1 is open. In it, you see a butterknife 1, and a knife 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000022",
+              "content": "You open the drawer 1. The drawer 1 is open. In it, you see a butterknife 1, and a knife 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2131,31 +1393,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000024",
+            "tool_call_id": "call_000023",
             "function_name": "go",
             "arguments": {
-              "location": "\"drawer 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "drawer 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000024",
-              "content": "The drawer 2 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000023",
+              "content": "The drawer 2 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2164,31 +1415,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000025",
+            "tool_call_id": "call_000024",
             "function_name": "open",
             "arguments": {
-              "obj": "\"drawer 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "drawer 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000025",
-              "content": "You open the drawer 2. The drawer 2 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000024",
+              "content": "You open the drawer 2. The drawer 2 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2197,31 +1437,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000026",
+            "tool_call_id": "call_000025",
             "function_name": "go",
             "arguments": {
-              "location": "\"drawer 3\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "drawer 3"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000026",
-              "content": "The drawer 3 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000025",
+              "content": "The drawer 3 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2230,31 +1459,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000027",
+            "tool_call_id": "call_000026",
             "function_name": "open",
             "arguments": {
-              "obj": "\"drawer 3\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "obj": "drawer 3"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000027",
-              "content": "You open the drawer 3. The drawer 3 is open. In it, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000026",
+              "content": "You open the drawer 3. The drawer 3 is open. In it, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2263,31 +1481,20 @@
         "message": "Most of the places have been checked and I've been unable to find a second cup. Maybe by re-examining the initial location, I might find the missing cup.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000028",
+            "tool_call_id": "call_000027",
             "function_name": "go",
             "arguments": {
-              "location": "\"diningtable 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "diningtable 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000028",
-              "content": "On the diningtable 1, you see a bread 1, a dishsponge 1, a fork 3, a fork 1, a peppershaker 1, a plate 1, a potato 1, a soapbottle 1, a spatula 1, a spoon 2, a tomato 3, and a tomato 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000027",
+              "content": "On the diningtable 1, you see a bread 1, a dishsponge 1, a fork 3, a fork 1, a peppershaker 1, a plate 1, a potato 1, a soapbottle 1, a spatula 1, a spoon 2, a tomato 3, and a tomato 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "Most of the places have been checked and I've been unable to find a second cup. Maybe by re-examining the initial location, I might find the missing cup."
         }
       },
       {
@@ -2296,31 +1503,20 @@
         "message": "Still no cup here. Maybe there is a cup on the countertop.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000029",
+            "tool_call_id": "call_000028",
             "function_name": "go",
             "arguments": {
-              "location": "\"countertop 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "countertop 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000029",
-              "content": "On the countertop 1, you see a cup 2, a fork 2, a knife 1, a soapbottle 3, a spoon 1, and a tomato 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000028",
+              "content": "On the countertop 1, you see a cup 2, a fork 2, a knife 1, a soapbottle 3, a spoon 1, and a tomato 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "Still no cup here. Maybe there is a cup on the countertop."
         }
       },
       {
@@ -2329,32 +1525,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000030",
+            "tool_call_id": "call_000029",
             "function_name": "take",
             "arguments": {
-              "item": "\"cup 2\"",
-              "source": "\"countertop 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "cup 2",
+              "source": "countertop 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000030",
-              "content": "You pick up the cup 2 from the countertop 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000029",
+              "content": "You pick up the cup 2 from the countertop 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2363,31 +1548,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000031",
+            "tool_call_id": "call_000030",
             "function_name": "go",
             "arguments": {
-              "location": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "microwave 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000031",
-              "content": "The microwave 1 is open. In it, you see a cup 3.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000030",
+              "content": "The microwave 1 is open. In it, you see a cup 3."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2396,48 +1570,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000032",
+            "tool_call_id": "call_000031",
             "function_name": "put",
             "arguments": {
-              "item": "\"cup 2\"",
-              "target": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "cup 2",
+              "target": "microwave 1"
             }
           }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000032",
-              "content": "Your solution has been verified as correct. ",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
-        }
-      },
-      {
-        "step_id": 36,
-        "source": "agent",
-        "message": "<finish> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "The objective has been achieved with no outstanding issues."
-        }
+        ]
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "alfworld_56"
+      },
+      "source_dataset": "agenttuning_alfworld"
     }
   },
   {
@@ -2445,35 +1592,24 @@
     "session_id": "alfworld_58",
     "trajectory_id": "alfworld_58",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_alfworld",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn. You should choose from two actions: \"THOUGHT\" or \"ACTION\". If you choose \"THOUGHT\", you should first think about the current condition and plan for your future actions, and then output your action in this turn. Your output must strictly follow this format:\"THOUGHT: your thoughts.\n ACTION: your next action\n\"; If you choose \"ACTION\", you should directly output the action in this turn. Your output must strictly follow this format:\"ACTION: your next action\n\". After your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process."
       },
       {
         "step_id": 2,
         "source": "agent",
-        "message": "OK. I'll follow your instructions and try my best to solve the task.",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "OK. I'll follow your instructions and try my best to solve the task."
       },
       {
         "step_id": 3,
         "source": "user",
-        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a drawer 13, a drawer 12, a drawer 11, a drawer 10, a drawer 9, a drawer 8, a drawer 7, a drawer 6, a drawer 5, a drawer 4, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 6, a stoveburner 5, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: put a hot apple in garbagecan.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a cabinet 9, a cabinet 8, a cabinet 7, a cabinet 6, a cabinet 5, a cabinet 4, a cabinet 3, a cabinet 2, a cabinet 1, a coffeemachine 1, a countertop 2, a countertop 1, a drawer 13, a drawer 12, a drawer 11, a drawer 10, a drawer 9, a drawer 8, a drawer 7, a drawer 6, a drawer 5, a drawer 4, a drawer 3, a drawer 2, a drawer 1, a fridge 1, a garbagecan 1, a microwave 1, a sinkbasin 1, a stoveburner 6, a stoveburner 5, a stoveburner 4, a stoveburner 3, a stoveburner 2, a stoveburner 1, and a toaster 1.\nYour task is to: put a hot apple in garbagecan."
       },
       {
         "step_id": 4,
@@ -2481,31 +1617,20 @@
         "message": "The task is to put a hot apple in garbagecan. First, I need to find an apple, heat it up, and then put it into the garbagecan. I'll start by searching for the apple.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "go",
             "arguments": {
-              "location": "\"countertop 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "countertop 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "On the countertop 1, you see a apple 1, a bread 1, a cellphone 1, a cup 2, a dishsponge 1, a fork 2, a kettle 3, a ladle 1, a mug 2, a pan 2, a pan 1, a potato 1, a soapbottle 2, a soapbottle 1, a tomato 1, a window 3, and a window 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "On the countertop 1, you see a apple 1, a bread 1, a cellphone 1, a cup 2, a dishsponge 1, a fork 2, a kettle 3, a ladle 1, a mug 2, a pan 2, a pan 1, a potato 1, a soapbottle 2, a soapbottle 1, a tomato 1, a window 3, and a window 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "The task is to put a hot apple in garbagecan. First, I need to find an apple, heat it up, and then put it into the garbagecan. I'll start by searching for the apple."
         }
       },
       {
@@ -2514,32 +1639,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "take",
             "arguments": {
-              "item": "\"apple 1\"",
-              "source": "\"countertop 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "apple 1",
+              "source": "countertop 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "You pick up the apple 1 from the countertop 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000001",
+              "content": "You pick up the apple 1 from the countertop 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2548,99 +1662,31 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_000002",
             "function_name": "go",
             "arguments": {
-              "location": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "microwave 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "The microwave 1 is closed.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000002",
+              "content": "The microwave 1 is closed."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
         "step_id": 7,
         "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000004",
-            "function_name": "heat",
-            "arguments": {
-              "item": "\"apple 1\"",
-              "appliance": "\"microwave 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000004",
-              "content": "You heat the apple 1 using the microwave 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
-        }
+        "message": "ACTION: heat apple 1 with microwave 1"
       },
       {
         "step_id": 8,
-        "source": "agent",
-        "message": "",
-        "tool_calls": [
-          {
-            "tool_call_id": "call_000005",
-            "function_name": "go",
-            "arguments": {
-              "location": "\"garbagecan 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
-            }
-          }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000005",
-              "content": "On the garbagecan 1, you see nothing.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
-        }
+        "source": "user",
+        "message": "You heat the apple 1 using the microwave 1."
       },
       {
         "step_id": 9,
@@ -2648,48 +1694,43 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000006",
-            "function_name": "put",
+            "tool_call_id": "call_000003",
+            "function_name": "go",
             "arguments": {
-              "item": "\"apple 1\"",
-              "target": "\"garbagecan 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "garbagecan 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000006",
-              "content": "Your implementation satisfies the task requirements.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "On the garbagecan 1, you see nothing."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
         "step_id": 10,
         "source": "agent",
-        "message": "<finish> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "I have fulfilled all the requirements of the task."
-        }
+        "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000004",
+            "function_name": "put",
+            "arguments": {
+              "item": "apple 1",
+              "target": "garbagecan 1"
+            }
+          }
+        ]
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "alfworld_58"
+      },
+      "source_dataset": "agenttuning_alfworld"
     }
   },
   {
@@ -2697,35 +1738,24 @@
     "session_id": "alfworld_149",
     "trajectory_id": "alfworld_149",
     "agent": {
-      "name": "adp",
-      "version": "1.3.2"
+      "name": "agenttuning_alfworld",
+      "version": "raw"
     },
     "steps": [
       {
         "step_id": 1,
         "source": "user",
-        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn.\nAfter your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process.\n\nOk? Understood?",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Interact with a household to solve a task. Imagine you are an intelligent agent in a household environment and your target is to perform actions to complete the task goal. At the beginning of your interactions, you will be given the detailed description of the current environment and your goal to accomplish. For each of your turn, you will be given a list of actions which you can choose one to perform in this turn. You should choose from two actions: \"THOUGHT\" or \"ACTION\". If you choose \"THOUGHT\", you should first think about the current condition and plan for your future actions, and then output your action in this turn. Your output must strictly follow this format:\"THOUGHT: your thoughts.\n ACTION: your next action\n\"; If you choose \"ACTION\", you should directly output the action in this turn. Your output must strictly follow this format:\"ACTION: your next action\n\". After your each turn, the environment will give you immediate feedback based on which you plan your next few steps. if the envrionment output \"Nothing happened\", that means the previous action is invalid and you should try more options.\n Reminder: \n1. the action must be chosen from the given available actions. Any actions except provided available actions will be regarded as illegal. \n2. Think when necessary, try to act directly more in the process."
       },
       {
         "step_id": 2,
         "source": "agent",
-        "message": "OK. I'll follow your instructions and try my best to solve the task.",
-        "extra": {
-          "adp_class": "message_action"
-        }
+        "message": "OK. I'll follow your instructions and try my best to solve the task."
       },
       {
         "step_id": 3,
         "source": "user",
-        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bed 1, a desk 2, a desk 1, a garbagecan 1, a shelf 5, a shelf 4, a shelf 3, a shelf 2, and a shelf 1.\nYour task is to: put two cellphone in shelf.",
-        "extra": {
-          "adp_class": "text_observation",
-          "adp_source": "user"
-        }
+        "message": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bed 1, a desk 2, a desk 1, a garbagecan 1, a shelf 5, a shelf 4, a shelf 3, a shelf 2, and a shelf 1.\nYour task is to: put two cellphone in shelf."
       },
       {
         "step_id": 4,
@@ -2733,31 +1763,20 @@
         "message": "Firstly, I need to locate the cellphones. Let's try to check the desks for any cellphones.",
         "tool_calls": [
           {
-            "tool_call_id": "call_000001",
+            "tool_call_id": "call_1",
             "function_name": "go",
             "arguments": {
-              "location": "\"desk 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "desk 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000001",
-              "content": "On the desk 1, you see a alarmclock 2, a alarmclock 1, a creditcard 1, a keychain 1, a pen 1, a pencil 2, and a pencil 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_1",
+              "content": "On the desk 1, you see a alarmclock 2, a alarmclock 1, a creditcard 1, a keychain 1, a pen 1, a pencil 2, and a pencil 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": "Firstly, I need to locate the cellphones. Let's try to check the desks for any cellphones."
         }
       },
       {
@@ -2766,31 +1785,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000002",
+            "tool_call_id": "call_000001",
             "function_name": "go",
             "arguments": {
-              "location": "\"desk 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "desk 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000002",
-              "content": "On the desk 2, you see a alarmclock 3, a book 1, a cd 1, a cellphone 2, and a cellphone 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000001",
+              "content": "On the desk 2, you see a alarmclock 3, a book 1, a cd 1, a cellphone 2, and a cellphone 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2799,32 +1807,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000003",
+            "tool_call_id": "call_000002",
             "function_name": "take",
             "arguments": {
-              "item": "\"cellphone 1\"",
-              "source": "\"desk 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "cellphone 1",
+              "source": "desk 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000003",
-              "content": "You pick up the cellphone 1 from the desk 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000002",
+              "content": "You pick up the cellphone 1 from the desk 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2833,31 +1830,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000004",
+            "tool_call_id": "call_000003",
             "function_name": "go",
             "arguments": {
-              "location": "\"shelf 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "shelf 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000004",
-              "content": "On the shelf 1, you see a pen 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000003",
+              "content": "On the shelf 1, you see a pen 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2866,32 +1852,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000005",
+            "tool_call_id": "call_000004",
             "function_name": "put",
             "arguments": {
-              "item": "\"cellphone 1\"",
-              "target": "\"shelf 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "cellphone 1",
+              "target": "shelf 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000005",
-              "content": "You put the cellphone 1 in/on the shelf 1.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000004",
+              "content": "You put the cellphone 1 in/on the shelf 1."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2900,31 +1875,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000006",
+            "tool_call_id": "call_000005",
             "function_name": "go",
             "arguments": {
-              "location": "\"desk 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "desk 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000006",
-              "content": "On the desk 2, you see a alarmclock 3, a book 1, a cd 1, and a cellphone 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000005",
+              "content": "On the desk 2, you see a alarmclock 3, a book 1, a cd 1, and a cellphone 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2933,32 +1897,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000007",
+            "tool_call_id": "call_000006",
             "function_name": "take",
             "arguments": {
-              "item": "\"cellphone 2\"",
-              "source": "\"desk 2\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "cellphone 2",
+              "source": "desk 2"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000007",
-              "content": "You pick up the cellphone 2 from the desk 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000006",
+              "content": "You pick up the cellphone 2 from the desk 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -2967,31 +1920,20 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000008",
+            "tool_call_id": "call_000007",
             "function_name": "go",
             "arguments": {
-              "location": "\"shelf 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "location": "shelf 1"
             }
           }
         ],
         "observation": {
           "results": [
             {
-              "source_call_id": "call_000008",
-              "content": "On the shelf 1, you see a cellphone 1, and a pen 2.",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
+              "source_call_id": "call_000007",
+              "content": "On the shelf 1, you see a cellphone 1, and a pen 2."
             }
           ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
         }
       },
       {
@@ -3000,48 +1942,21 @@
         "message": "",
         "tool_calls": [
           {
-            "tool_call_id": "call_000009",
+            "tool_call_id": "call_000008",
             "function_name": "put",
             "arguments": {
-              "item": "\"cellphone 2\"",
-              "target": "\"shelf 1\""
-            },
-            "extra": {
-              "adp_class": "api_action"
+              "item": "cellphone 2",
+              "target": "shelf 1"
             }
           }
-        ],
-        "observation": {
-          "results": [
-            {
-              "source_call_id": "call_000009",
-              "content": "Your solution has been verified as correct. ",
-              "extra": {
-                "adp_class": "text_observation",
-                "adp_source": "environment"
-              }
-            }
-          ]
-        },
-        "extra": {
-          "adp_class": "api_action",
-          "description": ""
-        }
-      },
-      {
-        "step_id": 13,
-        "source": "agent",
-        "message": "<finish> </finish>",
-        "extra": {
-          "adp_class": "message_action",
-          "description": "I did it! The task is now complete."
-        }
+        ]
       }
     ],
     "extra": {
-      "adp_schema_version": "1.3.2",
-      "adp_available_apis": null,
-      "adp_details": {}
+      "raw": {
+        "id": "alfworld_149"
+      },
+      "source_dataset": "agenttuning_alfworld"
     }
   }
 ]

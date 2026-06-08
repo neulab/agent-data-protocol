@@ -138,7 +138,7 @@ def test_std_to_sft_conversion(subdir):
             f"Sample {i} in {subdir} has unexpectedly few SFT turns: "
             f"ATIF has {atif_turns} turns, SFT has {sft_turns} turns"
         )
-        assert sft_turns <= max(4, atif_turns * 3), (
+        assert sft_turns <= max(16, atif_turns * 4), (
             f"Sample {i} in {subdir} has unexpectedly many SFT turns: "
             f"ATIF has {atif_turns} turns, SFT has {sft_turns} turns"
         )

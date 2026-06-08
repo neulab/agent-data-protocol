@@ -6,7 +6,7 @@ openhands_v0_default_tools = {
     "finish": {"required": ["message", "task_completed"], "optional": []},
     "web_read": {"required": ["url"], "optional": []},
     "browser": {"required": ["code"], "optional": []},
-    "execute_ipython_cell": {"code": ["command"], "optional": []},
+    "execute_ipython_cell": {"required": ["code"], "optional": []},
     "str_replace_editor": {
         "required": ["command", "path"],
         "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"],
