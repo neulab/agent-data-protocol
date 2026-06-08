@@ -15,8 +15,9 @@ REPO_ROOT = DATASET_DIR.parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(DATASET_DIR))
 
-from agents.openhands_sdk import std_to_sft as openhands_sdk_std_to_sft
 from raw_to_standardized import clean_terminal_output
+
+from agents.openhands_sdk import std_to_sft as openhands_sdk_std_to_sft
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
 from scripts.atif_input import load_trajectory
