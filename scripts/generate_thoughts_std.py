@@ -9,6 +9,7 @@ from schema.action.api import ApiAction
 from schema.action.code import CodeAction
 from schema.observation.text import TextObservation
 from schema.trajectory import Trajectory
+from scripts.atif_input import load_trajectory
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -166,9 +167,7 @@ def generate_thought(context, action_class, action_function, action_kwargs):
 
 
 def generate_thoughts_for_line(line):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     if id not in GENERATED_THOUGHTS:
@@ -197,9 +196,7 @@ def generate_thoughts_for_line(line):
 
 
 def process_line(line):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     for idx, m in enumerate(events):

@@ -116,6 +116,8 @@ def record_id(record: Any, index: int, dataset_name: str) -> str:
             and record.get("episode")
         ):
             return f"{record['task']}_{record['episode']}"
+        if dataset_name == "litecoder-terminal-sft" and record.get("id") is not None:
+            return f"litecoder-terminal-sft-{record['id']}"
         if dataset_name == "go-browse-wa" and isinstance(record.get("traj_data"), dict):
             return str(record["traj_data"].get("traj_num", index))
         for field in ID_FIELDS:

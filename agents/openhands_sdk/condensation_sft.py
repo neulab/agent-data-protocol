@@ -40,6 +40,7 @@ from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
 from schema.tool_call_links import backfill_adjacent_tool_call_links
 from schema.trajectory import Trajectory
+from scripts.atif_input import load_trajectory as load_atif_aware_trajectory
 
 TRAJECTORY_CONTENT_ADAPTER = TypeAdapter(
     list[
@@ -84,10 +85,10 @@ class PromptCapturingLLM(LLM):
 
 
 def load_trajectory(line: str) -> Trajectory:
-    data = json.loads(line)
     try:
-        return Trajectory(**data)
+        return load_atif_aware_trajectory(line)
     except ValidationError:
+        data = json.loads(line)
         content = data.get("content")
         if not isinstance(content, list):
             raise

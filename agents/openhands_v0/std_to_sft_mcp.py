@@ -18,7 +18,7 @@ from schema.action.code import CodeAction
 from schema.action.message import MessageAction
 from schema.observation.text import TextObservation
 from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from scripts.atif_input import load_trajectory
 from scripts.html_to_axtree import HTMLToAXTree
 
 dataset = os.getenv("MY_DATASET")
@@ -300,9 +300,7 @@ def standardized_event_to_openhands_v0_message(
 
 
 def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, api_tools):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     row_api_tool_description = api_tool_description

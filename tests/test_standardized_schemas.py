@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from schema.action.api import ApiAction
 from schema.action.code import CodeAction
+from schema.atif import ATIFTrajectory
 from schema.dataset_metadata import custom_tool_names, is_browser_api_action, load_dataset_metadata
 from schema.observation.image import ImageObservation
 from schema.observation.text import TextObservation
@@ -386,7 +387,7 @@ def test_standardized_schema_rejects_user_source_tool_result():
 
 
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))
-def test_sample_standardized_against_schema(sample_path):
+def test_sample_standardized_atif_against_schema(sample_path):
     samples = load_json(sample_path)
     assert isinstance(samples, list), "sample_std.json should be a list"
     assert len(samples) > 0, "sample_std.json should have at least one sample"
@@ -394,30 +395,42 @@ def test_sample_standardized_against_schema(sample_path):
     dataset_name = Path(sample_path).parent.name
     metadata = load_dataset_metadata(dataset_name, required=True)
     api_function_names = custom_tool_names(metadata)
-    built_in_api_names = {"finish", "stop", "submit", "str_replace_editor", "think", "task_tracker"}
+    built_in_api_names = {
+        "execute_bash",
+        "execute_code",
+        "execute_ipython_cell",
+        "finish",
+        "stop",
+        "submit",
+        "str_replace_editor",
+        "think",
+        "task_tracker",
+    }
 
     for sample_id, sample in enumerate(samples):
         try:
-            traj = Trajectory(**sample)
-            assert "available_apis" not in traj.details, (
-                f"available_apis must be a top-level Trajectory field, not details metadata, "
+            traj = ATIFTrajectory(**sample)
+            extra = traj.extra or {}
+            assert "available_apis" not in extra.get("adp_details", {}), (
+                f"available_apis must be kept as ATIF metadata, not details metadata, "
                 f"in {sample_path} sample {sample_id}"
             )
-            assert "system_prompt" not in traj.details, (
+            assert "system_prompt" not in extra.get("adp_details", {}), (
                 f"system_prompt should not be stored in details metadata in "
                 f"{sample_path} sample {sample_id}"
             )
+            details = extra.get("adp_details", {})
             stringified_numeric_details = {
                 key: value
-                for key, value in traj.details.items()
+                for key, value in details.items()
                 if is_numeric_detail_key(key) and isinstance(value, str)
             }
             assert not stringified_numeric_details, (
                 f"Numeric details must be stored as native JSON numbers in {sample_path} "
                 f"sample {sample_id}: {stringified_numeric_details}"
             )
-            if traj.available_apis is not None:
-                available_apis = traj.available_apis
+            available_apis = extra.get("adp_available_apis")
+            if available_apis is not None:
                 unsupported_available_apis = sorted(
                     name
                     for name in set(available_apis)
@@ -430,34 +443,48 @@ def test_sample_standardized_against_schema(sample_path):
                     f"{os.path.dirname(sample_path)}: {unsupported_available_apis}"
                 )
                 used_apis = {
-                    content.function for content in traj.content if isinstance(content, ApiAction)
+                    tool_call.function_name
+                    for step in traj.steps
+                    for tool_call in (step.tool_calls or [])
+                    if tool_call.function_name not in {"execute_bash", "execute_ipython_cell"}
                 }
                 missing_used_apis = sorted(used_apis - set(available_apis))
                 assert not missing_used_apis, (
-                    f"ApiAction functions are missing from available_apis in {sample_path} "
+                    f"ATIF tool calls are missing from available_apis in {sample_path} "
                     f"sample {sample_id}: {missing_used_apis}"
                 )
 
-            for content_id, content in enumerate(traj.content):
-                print(f"{sample_id=}, {content_id=}, {type(content)=}")
-                if isinstance(content, ImageObservation):
-                    assert is_portable_or_external_image_reference(content.content), (
+            for step_id, step in enumerate(traj.steps):
+                step_contents = [step.message]
+                if step.observation:
+                    step_contents.extend(result.content for result in step.observation.results)
+                for content_id, content in enumerate(step_contents):
+                    image_paths = []
+                    if not isinstance(content, str):
+                        image_paths = [
+                            part.source.path
+                            for part in content
+                            if part.type == "image" and part.source is not None
+                        ]
+                    for image_path in image_paths:
+                        assert is_portable_or_external_image_reference(image_path), (
                         f"ImageObservation.content must be a portable relative path or "
                         f"external reference in {sample_path} sample {sample_id} "
-                        f"content {content_id}: {content.content}"
+                        f"step {step_id} content {content_id}: {image_path}"
                     )
-                if isinstance(content, ApiAction):
+                for tool_call in step.tool_calls or []:
+                    content = tool_call
                     supported_by_metadata = (
-                        content.function in api_function_names
-                        or content.function in built_in_api_names
+                        content.function_name in api_function_names
+                        or content.function_name in built_in_api_names
                         or is_browser_api_action(
-                            content.function,
-                            content.kwargs,
+                            content.function_name,
+                            content.arguments,
                             browser_context=metadata.browser_enabled,
                         )
                     )
                     assert supported_by_metadata, (
-                        f"{content.function} not found in metadata.json in "
+                        f"{content.function_name} not found in metadata.json in "
                         f"{os.path.dirname(sample_path)}"
                     )
 

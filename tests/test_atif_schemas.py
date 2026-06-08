@@ -31,6 +31,13 @@ def get_sample_atif_jsons(directory):
             yield sample_path
 
 
+def get_sample_std_jsons(directory):
+    for subdir in os.listdir(directory):
+        sample_path = Path(directory) / subdir / "sample_std.json"
+        if sample_path.exists():
+            yield sample_path
+
+
 def test_atif_schema_rejects_unknown_fields_and_bad_links():
     with pytest.raises(ValidationError):
         ATIFTrajectory(
@@ -76,6 +83,15 @@ def test_sample_atif_schema(sample_path):
         assert parsed.schema_version == ATIF_SCHEMA_VERSION
 
 
+@pytest.mark.parametrize("sample_path", get_sample_std_jsons(DATASET_PATH))
+def test_sample_std_schema(sample_path):
+    data = json.loads(sample_path.read_text())
+    assert data, f"{sample_path} should contain at least one trajectory"
+    for trajectory in data:
+        parsed = ATIFTrajectory(**trajectory)
+        assert parsed.schema_version == ATIF_SCHEMA_VERSION
+
+
 @pytest.mark.parametrize("sample_path", get_sample_atif_jsons(DATASET_PATH))
 def test_sample_atif_and_standardized_records_align(sample_path):
     sample_std_path = sample_path.with_name("sample_std.json")
@@ -85,7 +101,9 @@ def test_sample_atif_and_standardized_records_align(sample_path):
     atif_data = json.loads(sample_path.read_text())
     std_data = json.loads(sample_std_path.read_text())
 
-    assert [item["trajectory_id"] for item in atif_data] == [item["id"] for item in std_data]
+    assert [item["trajectory_id"] for item in atif_data] == [
+        item["trajectory_id"] for item in std_data
+    ]
 
 
 @pytest.mark.parametrize(

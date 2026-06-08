@@ -1,261 +1,466 @@
 [
   {
-    "schema_version": "1.3.2",
-    "id": "swe-chat-sample-001",
-    "content": [
+    "schema_version": "ATIF-v1.7",
+    "session_id": "swe-chat-sample-001",
+    "trajectory_id": "swe-chat-sample-001",
+    "agent": {
+      "name": "adp",
+      "version": "1.3.2"
+    },
+    "steps": [
       {
-        "class_": "text_observation",
-        "content": "I heard SF sourdough is great.. can you write a COLM paper for me so I can go visit?",
-        "name": null,
-        "source": "user"
+        "step_id": 1,
+        "source": "user",
+        "message": "I heard SF sourdough is great.. can you write a COLM paper for me so I can go visit?",
+        "extra": {
+          "adp_class": "text_observation",
+          "adp_source": "user"
+        }
       },
       {
-        "class_": "message_action",
-        "content": "I'll inspect the references and draft the paper.",
-        "description": null
+        "step_id": 2,
+        "source": "agent",
+        "message": "I'll inspect the references and draft the paper.",
+        "extra": {
+          "adp_class": "message_action"
+        }
       },
       {
-        "tool_call_id": "call_000001",
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "view",
-          "path": "/workspace/references.bib"
-        },
-        "description": "Read"
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "text_observation",
-        "content": "@inproceedings{sample2026swechat, title={SWE-chat}, author={Baumann et al.}}",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "create",
-          "path": "/workspace/SWE-chat.tex",
-          "file_text": "\\documentclass{article}\n\\title{SWE-chat}\n\\begin{document}\nA paper about coding agents.\n\\end{document}\n"
-        },
-        "description": "Write"
-      },
-      {
-        "tool_call_id": "call_000002",
-        "class_": "code_action",
-        "language": "bash",
-        "content": "pdflatex SWE-chat.tex",
-        "description": "Bash"
-      },
-      {
-        "tool_call_id": "call_000002",
-        "class_": "text_observation",
-        "content": "Output written on SWE-chat.pdf (1 page).",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "message_action",
-        "content": "Created SWE-chat.tex and built the PDF. Should I submit this?",
-        "description": null
-      },
-      {
-        "class_": "text_observation",
-        "content": "Looks great, commit and submit",
-        "name": null,
-        "source": "user"
-      },
-      {
-        "tool_call_id": "call_000003",
-        "class_": "code_action",
-        "language": "bash",
-        "content": "git add SWE-chat.tex && git commit -m 'Add SWE-chat paper' && git push",
-        "description": "Bash"
-      },
-      {
-        "tool_call_id": "call_000003",
-        "class_": "text_observation",
-        "content": "[main 1234567] Add SWE-chat paper\n 1 file changed, 5 insertions(+)",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "message_action",
-        "content": "Submitted. Enjoy the sourdough!",
-        "description": null
-      }
-    ],
-    "details": {
-      "source": "SALT-NLP/SWE-chat",
-      "source_config": "conversations",
-      "repo_id": "stanford-salt/swe-chat-demo",
-      "checkpoint_pk": "checkpoint-swe-chat-sample-001",
-      "user_id": "sample-user",
-      "agent": "Claude Code",
-      "strategy": "auto",
-      "branch": "entire/checkpoints/v1",
-      "created_at": "2026-04-22T12:00:00Z",
-      "transcript_path": "transcripts/swe-chat-sample-001.jsonl",
-      "tool_call_count": 4,
-      "turn_count": 4,
-      "prompt_count": 2,
-      "agent_percentage": 100.0,
-      "user_persona": "Vague Requester",
-      "session_success": 100
-    }
-  },
-  {
-    "schema_version": "1.3.2",
-    "id": "swe-chat-sample-002",
-    "content": [
-      {
-        "class_": "text_observation",
-        "content": "Fix the slow appearance of history list card blocks. The animation feels sluggish when scrolling.",
-        "name": null,
-        "source": "user"
-      },
-      {
-        "class_": "message_action",
-        "content": "I'll adjust the animation performance in the history list view.",
-        "description": null
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "str_replace",
-          "path": "/workspace/HistoryListView.swift",
-          "old_str": ".delay(Double(index) * 0.08)",
-          "new_str": ".delay(Double(index) * 0.02)"
-        },
-        "description": "Edit"
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "text_observation",
-        "content": "Updated HistoryListView.swift",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "text_observation",
-        "content": "That's the wrong parameter—the container animation is the slow part, not the individual card stagger.",
-        "name": null,
-        "source": "user"
-      },
-      {
-        "class_": "message_action",
-        "content": "You're right; I changed the stagger delay instead of the container animation. I'll revisit the container transition next.",
-        "description": null
-      }
-    ],
-    "details": {
-      "source": "SALT-NLP/SWE-chat",
-      "source_config": "conversations",
-      "repo_id": "nuttycc/LuminTime",
-      "checkpoint_pk": "checkpoint-swe-chat-sample-002",
-      "user_id": "sample-user-2",
-      "agent": "Claude Code",
-      "strategy": "manual",
-      "branch": "entire/checkpoints/v1",
-      "created_at": "2026-04-23T09:30:00Z",
-      "transcript_path": "transcripts/swe-chat-sample-002.jsonl",
-      "tool_call_count": 1,
-      "turn_count": 3,
-      "prompt_count": 2,
-      "agent_percentage": 0.0,
-      "user_persona": "Expert Nitpicker",
-      "session_success": 10
-    }
-  },
-  {
-    "schema_version": "1.3.2",
-    "id": "swe-chat-sample-003",
-    "content": [
-      {
-        "class_": "text_observation",
-        "content": "Instead of arg hash for the name, let's just get short uuid.",
-        "name": null,
-        "source": "user"
-      },
-      {
-        "class_": "api_action",
-        "function": "think",
-        "kwargs": {
-          "thought": "Need to inspect the remote job naming code and replace the hash-based name with a short UUID."
-        },
-        "description": null
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "view",
-          "path": "/workspace/src/marin/remote.py"
-        },
-        "description": "read_file"
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "text_observation",
-        "content": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\"",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "str_replace",
-          "path": "/workspace/src/marin/remote.py",
-          "old_str": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\"",
-          "new_str": "DEFAULT_JOB_NAME = f\"remote_{uuid.uuid4().hex[:8]}\""
-        },
-        "description": "edit_file"
-      },
-      {
-        "class_": "api_action",
-        "function": "generic_tool",
-        "kwargs": {
-          "tool_name": "WebSearch",
-          "tool_input": {
-            "query": "uuid job name python best practices"
+        "step_id": 3,
+        "source": "agent",
+        "message": "Read",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000001",
+            "function_name": "str_replace_editor",
+            "arguments": {
+              "command": "view",
+              "path": "/workspace/references.bib"
+            },
+            "extra": {
+              "adp_class": "api_action"
+            }
           }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_000001",
+              "content": "@inproceedings{sample2026swechat, title={SWE-chat}, author={Baumann et al.}}",
+              "extra": {
+                "adp_class": "text_observation",
+                "adp_source": "environment"
+              }
+            }
+          ]
         },
-        "description": "WebSearch"
+        "extra": {
+          "adp_class": "api_action",
+          "description": "Read"
+        }
       },
       {
-        "class_": "message_action",
-        "content": "I replaced the hash-derived job name with a short UUID expression in remote.py.",
-        "description": null
+        "step_id": 4,
+        "source": "agent",
+        "message": "Write",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000004",
+            "function_name": "str_replace_editor",
+            "arguments": {
+              "command": "create",
+              "path": "/workspace/SWE-chat.tex",
+              "file_text": "\\documentclass{article}\n\\title{SWE-chat}\n\\begin{document}\nA paper about coding agents.\n\\end{document}\n"
+            },
+            "extra": {
+              "adp_class": "api_action"
+            }
+          }
+        ],
+        "extra": {
+          "adp_class": "api_action",
+          "description": "Write"
+        }
       },
       {
-        "class_": "text_observation",
-        "content": "Don't create a separate helper function for short_uuid; inline it.",
-        "name": null,
-        "source": "user"
+        "step_id": 5,
+        "source": "agent",
+        "message": "Bash",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000002",
+            "function_name": "execute_bash",
+            "arguments": {
+              "command": "pdflatex SWE-chat.tex"
+            },
+            "extra": {
+              "adp_class": "code_action",
+              "language": "bash"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_000002",
+              "content": "Output written on SWE-chat.pdf (1 page).",
+              "extra": {
+                "adp_class": "text_observation",
+                "adp_source": "environment"
+              }
+            }
+          ]
+        },
+        "extra": {
+          "adp_class": "code_action",
+          "description": "Bash"
+        }
+      },
+      {
+        "step_id": 6,
+        "source": "agent",
+        "message": "Created SWE-chat.tex and built the PDF. Should I submit this?",
+        "extra": {
+          "adp_class": "message_action"
+        }
+      },
+      {
+        "step_id": 7,
+        "source": "user",
+        "message": "Looks great, commit and submit",
+        "extra": {
+          "adp_class": "text_observation",
+          "adp_source": "user"
+        }
+      },
+      {
+        "step_id": 8,
+        "source": "agent",
+        "message": "Bash",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000003",
+            "function_name": "execute_bash",
+            "arguments": {
+              "command": "git add SWE-chat.tex && git commit -m 'Add SWE-chat paper' && git push"
+            },
+            "extra": {
+              "adp_class": "code_action",
+              "language": "bash"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_000003",
+              "content": "[main 1234567] Add SWE-chat paper\n 1 file changed, 5 insertions(+)",
+              "extra": {
+                "adp_class": "text_observation",
+                "adp_source": "environment"
+              }
+            }
+          ]
+        },
+        "extra": {
+          "adp_class": "code_action",
+          "description": "Bash"
+        }
+      },
+      {
+        "step_id": 9,
+        "source": "agent",
+        "message": "Submitted. Enjoy the sourdough!",
+        "extra": {
+          "adp_class": "message_action"
+        }
       }
     ],
-    "details": {
-      "source": "SALT-NLP/SWE-chat",
-      "source_config": "conversations",
-      "repo_id": "marin-community/marin",
-      "checkpoint_pk": "checkpoint-swe-chat-sample-003",
-      "user_id": "sample-user-3",
-      "agent": "Gemini CLI",
-      "strategy": "auto",
-      "branch": "entire/checkpoints/v1",
-      "created_at": "2026-04-24T15:00:00Z",
-      "transcript_path": "transcripts/swe-chat-sample-003.jsonl",
-      "tool_call_count": 3,
-      "turn_count": 3,
-      "prompt_count": 2,
-      "agent_percentage": 45.0,
-      "user_persona": "Mind Changer",
-      "session_success": 75
+    "extra": {
+      "adp_schema_version": "1.3.2",
+      "adp_available_apis": null,
+      "adp_details": {
+        "source": "SALT-NLP/SWE-chat",
+        "source_config": "conversations",
+        "repo_id": "stanford-salt/swe-chat-demo",
+        "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+        "user_id": "sample-user",
+        "agent": "Claude Code",
+        "strategy": "auto",
+        "branch": "entire/checkpoints/v1",
+        "created_at": "2026-04-22T12:00:00Z",
+        "transcript_path": "transcripts/swe-chat-sample-001.jsonl",
+        "tool_call_count": 4,
+        "turn_count": 4,
+        "prompt_count": 2,
+        "agent_percentage": 100.0,
+        "user_persona": "Vague Requester",
+        "session_success": 100
+      }
+    }
+  },
+  {
+    "schema_version": "ATIF-v1.7",
+    "session_id": "swe-chat-sample-002",
+    "trajectory_id": "swe-chat-sample-002",
+    "agent": {
+      "name": "adp",
+      "version": "1.3.2"
+    },
+    "steps": [
+      {
+        "step_id": 1,
+        "source": "user",
+        "message": "Fix the slow appearance of history list card blocks. The animation feels sluggish when scrolling.",
+        "extra": {
+          "adp_class": "text_observation",
+          "adp_source": "user"
+        }
+      },
+      {
+        "step_id": 2,
+        "source": "agent",
+        "message": "I'll adjust the animation performance in the history list view.",
+        "extra": {
+          "adp_class": "message_action"
+        }
+      },
+      {
+        "step_id": 3,
+        "source": "agent",
+        "message": "Edit",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000001",
+            "function_name": "str_replace_editor",
+            "arguments": {
+              "command": "str_replace",
+              "path": "/workspace/HistoryListView.swift",
+              "old_str": ".delay(Double(index) * 0.08)",
+              "new_str": ".delay(Double(index) * 0.02)"
+            },
+            "extra": {
+              "adp_class": "api_action"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_000001",
+              "content": "Updated HistoryListView.swift",
+              "extra": {
+                "adp_class": "text_observation",
+                "adp_source": "environment"
+              }
+            }
+          ]
+        },
+        "extra": {
+          "adp_class": "api_action",
+          "description": "Edit"
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "user",
+        "message": "That's the wrong parameter\u2014the container animation is the slow part, not the individual card stagger.",
+        "extra": {
+          "adp_class": "text_observation",
+          "adp_source": "user"
+        }
+      },
+      {
+        "step_id": 5,
+        "source": "agent",
+        "message": "You're right; I changed the stagger delay instead of the container animation. I'll revisit the container transition next.",
+        "extra": {
+          "adp_class": "message_action"
+        }
+      }
+    ],
+    "extra": {
+      "adp_schema_version": "1.3.2",
+      "adp_available_apis": null,
+      "adp_details": {
+        "source": "SALT-NLP/SWE-chat",
+        "source_config": "conversations",
+        "repo_id": "nuttycc/LuminTime",
+        "checkpoint_pk": "checkpoint-swe-chat-sample-002",
+        "user_id": "sample-user-2",
+        "agent": "Claude Code",
+        "strategy": "manual",
+        "branch": "entire/checkpoints/v1",
+        "created_at": "2026-04-23T09:30:00Z",
+        "transcript_path": "transcripts/swe-chat-sample-002.jsonl",
+        "tool_call_count": 1,
+        "turn_count": 3,
+        "prompt_count": 2,
+        "agent_percentage": 0.0,
+        "user_persona": "Expert Nitpicker",
+        "session_success": 10
+      }
+    }
+  },
+  {
+    "schema_version": "ATIF-v1.7",
+    "session_id": "swe-chat-sample-003",
+    "trajectory_id": "swe-chat-sample-003",
+    "agent": {
+      "name": "adp",
+      "version": "1.3.2"
+    },
+    "steps": [
+      {
+        "step_id": 1,
+        "source": "user",
+        "message": "Instead of arg hash for the name, let's just get short uuid.",
+        "extra": {
+          "adp_class": "text_observation",
+          "adp_source": "user"
+        }
+      },
+      {
+        "step_id": 2,
+        "source": "agent",
+        "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000002",
+            "function_name": "think",
+            "arguments": {
+              "thought": "Need to inspect the remote job naming code and replace the hash-based name with a short UUID."
+            },
+            "extra": {
+              "adp_class": "api_action"
+            }
+          }
+        ],
+        "extra": {
+          "adp_class": "api_action"
+        }
+      },
+      {
+        "step_id": 3,
+        "source": "agent",
+        "message": "read_file",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000001",
+            "function_name": "str_replace_editor",
+            "arguments": {
+              "command": "view",
+              "path": "/workspace/src/marin/remote.py"
+            },
+            "extra": {
+              "adp_class": "api_action"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_000001",
+              "content": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\"",
+              "extra": {
+                "adp_class": "text_observation",
+                "adp_source": "environment"
+              }
+            }
+          ]
+        },
+        "extra": {
+          "adp_class": "api_action",
+          "description": "read_file"
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "agent",
+        "message": "edit_file",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000004",
+            "function_name": "str_replace_editor",
+            "arguments": {
+              "command": "str_replace",
+              "path": "/workspace/src/marin/remote.py",
+              "old_str": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\"",
+              "new_str": "DEFAULT_JOB_NAME = f\"remote_{uuid.uuid4().hex[:8]}\""
+            },
+            "extra": {
+              "adp_class": "api_action"
+            }
+          }
+        ],
+        "extra": {
+          "adp_class": "api_action",
+          "description": "edit_file"
+        }
+      },
+      {
+        "step_id": 5,
+        "source": "agent",
+        "message": "WebSearch",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_000005",
+            "function_name": "generic_tool",
+            "arguments": {
+              "tool_name": "WebSearch",
+              "tool_input": {
+                "query": "uuid job name python best practices"
+              }
+            },
+            "extra": {
+              "adp_class": "api_action"
+            }
+          }
+        ],
+        "extra": {
+          "adp_class": "api_action",
+          "description": "WebSearch"
+        }
+      },
+      {
+        "step_id": 6,
+        "source": "agent",
+        "message": "I replaced the hash-derived job name with a short UUID expression in remote.py.",
+        "extra": {
+          "adp_class": "message_action"
+        }
+      },
+      {
+        "step_id": 7,
+        "source": "user",
+        "message": "Don't create a separate helper function for short_uuid; inline it.",
+        "extra": {
+          "adp_class": "text_observation",
+          "adp_source": "user"
+        }
+      }
+    ],
+    "extra": {
+      "adp_schema_version": "1.3.2",
+      "adp_available_apis": null,
+      "adp_details": {
+        "source": "SALT-NLP/SWE-chat",
+        "source_config": "conversations",
+        "repo_id": "marin-community/marin",
+        "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+        "user_id": "sample-user-3",
+        "agent": "Gemini CLI",
+        "strategy": "auto",
+        "branch": "entire/checkpoints/v1",
+        "created_at": "2026-04-24T15:00:00Z",
+        "transcript_path": "transcripts/swe-chat-sample-003.jsonl",
+        "tool_call_count": 3,
+        "turn_count": 3,
+        "prompt_count": 2,
+        "agent_percentage": 45.0,
+        "user_persona": "Mind Changer",
+        "session_success": 75
+      }
     }
   }
 ]

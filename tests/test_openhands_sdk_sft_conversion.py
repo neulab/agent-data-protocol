@@ -45,6 +45,10 @@ def tool_call_names(record):
     ]
 
 
+def trajectory_id(row: dict) -> str:
+    return row.get("trajectory_id") or row["id"]
+
+
 def assert_sdk_chat_record(record):
     assert record["messages"][0]["role"] == "system"
     assert content_text(record["messages"][0]).startswith("You are OpenHands agent")
@@ -137,7 +141,7 @@ def test_openhands_sdk_generated_samples_are_sdk_chat_records():
         )
         std_rows = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())
         metadata = load_dataset_metadata(dataset, required=True)
-        assert [record["id"] for record in records] == [row["id"] for row in std_rows]
+        assert [record["id"] for record in records] == [trajectory_id(row) for row in std_rows]
         assert metadata.custom_tools or metadata.code_enabled or metadata.browser_enabled
         for record in records:
             assert_sdk_chat_record(record)
@@ -298,9 +302,10 @@ def test_openhands_sdk_condensation_utility_emits_llm_summaries_after_trajectori
         prompt_records[0],
         trajectory_records[1],
     ]
-    assert trajectory_records[0]["id"] == f"{source['id']}__trajectory_0001"
-    assert prompt_records[0]["id"] == f"{source['id']}__condensation_0001"
-    assert trajectory_records[1]["id"] == f"{source['id']}__trajectory_0002"
+    source_id = trajectory_id(source)
+    assert trajectory_records[0]["id"] == f"{source_id}__trajectory_0001"
+    assert prompt_records[0]["id"] == f"{source_id}__condensation_0001"
+    assert trajectory_records[1]["id"] == f"{source_id}__trajectory_0002"
     assert prompt_records[0]["messages"] == [
         {
             "role": "user",
@@ -360,7 +365,7 @@ def test_openhands_sdk_condensation_utility_identity_maps_short_trajectories():
     )
 
     assert len(records) == 1
-    assert records[0]["id"] == f"{source['id']}__trajectory_0001"
+    assert records[0]["id"] == f"{trajectory_id(source)}__trajectory_0001"
     assert records[0]["metadata"]["generation"] == "openhands_sdk_events"
     assert records[0]["metadata"]["record_type"] == "trajectory"
 

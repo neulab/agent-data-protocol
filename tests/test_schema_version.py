@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from schema.atif import ATIF_SCHEMA_VERSION, ATIFTrajectory
 from schema.trajectory import Trajectory
 from schema.version import SCHEMA_VERSION, SUPPORTED_SCHEMA_VERSIONS
 from scripts.check_schema_version_bump import (
@@ -59,13 +60,14 @@ def test_schema_impacting_file_detection():
 
 
 @pytest.mark.parametrize("sample_path", sample_std_paths())
-def test_sample_std_files_include_current_schema_version(sample_path):
+def test_sample_std_files_include_atif_schema_version(sample_path):
     samples = json.loads(sample_path.read_text())
     assert isinstance(samples, list), f"{sample_path} should contain a list"
 
     for index, sample in enumerate(samples):
-        assert sample.get("schema_version") == SCHEMA_VERSION, (
-            f"{sample_path}[{index}] must include 'schema_version': {SCHEMA_VERSION!r}"
+        trajectory = ATIFTrajectory(**sample)
+        assert trajectory.schema_version == ATIF_SCHEMA_VERSION, (
+            f"{sample_path}[{index}] must include 'schema_version': {ATIF_SCHEMA_VERSION!r}"
         )
 
 
