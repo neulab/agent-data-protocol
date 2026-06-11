@@ -179,7 +179,7 @@ def standardized_event_to_openhands_v0_message(
         if function_name in openhands_v0_default_tools and function_name not in api_sigs:
             tool_args = openhands_v0_default_tools[function_name]
             if not verify_args(tool_args["required"], tool_args["optional"], arguments):
-                raise ValueError(f"Function call with wrong argument: {event}")
+                return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
             function_call = format_function(function_name, arguments)
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
@@ -221,6 +221,8 @@ def standardized_event_to_openhands_v0_message(
             if not verify_args(
                 api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
             ):
+                if thought:
+                    return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
                 raise ValueError(f"Function call with wrong argument: {event}")
             api_action = format_python_call(function_name, arguments)
             function_call = format_function(
@@ -229,6 +231,10 @@ def standardized_event_to_openhands_v0_message(
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         api_env = "browser"
+        if not browsergym_id:
+            if thought:
+                return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
+            raise ValueError(f"Undefined API or missing browser element identifier: {event}")
         if not browsergym_id[0] == browsergym_id[-1] == '"':
             browsergym_id = f'"{browsergym_id[0]}"'
         PREV_BID = browsergym_id
@@ -240,6 +246,8 @@ def standardized_event_to_openhands_v0_message(
             if not verify_args(
                 api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
             ):
+                if thought:
+                    return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
                 raise ValueError(f"Function call with wrong argument: {event}")
             api_action = format_python_call(function_name, arguments)
             function_call = format_function(

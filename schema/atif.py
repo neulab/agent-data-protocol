@@ -229,11 +229,19 @@ def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
                     normalized_language = "python"
                     tool_call.function_name = "execute_ipython_cell"
                     arguments = {"code": arguments.get("content") or arguments.get("command") or ""}
-            elif lower_name == "final_answer":
+            elif lower_name in {"final_answer", "finish", "stop", "submit", "end"}:
                 tool_call.function_name = "finish"
+                if "succeeds" in arguments:
+                    task_completed = "true" if arguments.get("succeeds") else "false"
+                else:
+                    task_completed = str(arguments.get("task_completed") or "true").lower()
                 arguments = {
-                    "message": arguments.get("answer") or arguments.get("message") or "",
-                    "task_completed": "true",
+                    "message": arguments.get("answer")
+                    or arguments.get("message")
+                    or arguments.get("value")
+                    or arguments.get("content")
+                    or "",
+                    "task_completed": task_completed,
                 }
             elif lower_name == "localization_finish":
                 tool_call.function_name = "finish"

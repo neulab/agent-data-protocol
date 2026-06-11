@@ -39,9 +39,10 @@ ROLE_MAP = {
     "human": "user",
     "instructor": "user",
     "user": "user",
+    "tool_use": "agent",
 }
-OBSERVATION_ROLES = {"environment", "observation", "tool", "function"}
-MESSAGE_FIELDS = ("messages", "conversations", "trajectory")
+OBSERVATION_ROLES = {"environment", "observation", "tool", "function", "tool_result"}
+MESSAGE_FIELDS = ("messages", "conversations", "trajectory", "turns")
 STRINGIFIED_MESSAGE_FIELDS = ("messages", "trajectory", "stitched", "full")
 ID_FIELDS = (
     "id",
@@ -217,6 +218,58 @@ def openai_tool_calls(message: dict[str, Any]) -> list[ToolCall]:
             )
         )
     return tool_calls
+
+
+def source_tool_call(message: dict[str, Any]) -> list[ToolCall]:
+    name = message.get("tool_name") or message.get("function_name")
+    if not name:
+        return []
+    raw_args = (
+        message.get("tool_input")
+        or message.get("tool_input_json")
+        or message.get("arguments")
+        or message.get("content")
+    )
+    args = parse_arguments(raw_args)
+    original_name = str(name)
+    lower_name = original_name.lower()
+    if lower_name in {"bash", "shell", "execute_bash"}:
+        function_name = "bash"
+        arguments = {
+            "command": args.get("command") or message.get("command") or args.get("value") or ""
+        }
+    elif lower_name in {"read", "read_file"}:
+        function_name = "str_replace_editor"
+        arguments = {
+            "command": "view",
+            "path": args.get("path") or args.get("file_path") or message.get("file_path") or "",
+        }
+    elif lower_name == "write":
+        function_name = "str_replace_editor"
+        arguments = {
+            "command": "create",
+            "path": args.get("path") or args.get("file_path") or message.get("file_path") or "",
+            "file_text": args.get("content") or args.get("file_text") or "",
+        }
+    elif lower_name == "edit_file":
+        function_name = "str_replace_editor"
+        arguments = {
+            "command": "str_replace",
+            "path": args.get("path") or args.get("file_path") or message.get("file_path") or "",
+            "old_str": args.get("old_str") or args.get("old_string") or "",
+            "new_str": args.get("new_str") or args.get("new_string") or "",
+        }
+    else:
+        function_name = "generic_tool"
+        arguments = {"tool_name": original_name, "tool_input": args}
+    return [
+        ToolCall(
+            tool_call_id=str(message.get("tool_call_id") or message.get("id") or "call_1"),
+            function_name=function_name,
+            arguments=arguments,
+            extra={"raw_tool_name": original_name},
+        )
+    ]
 
 
 def xml_tool_calls(content: str) -> tuple[str, list[ToolCall]]:
@@ -439,6 +492,19 @@ def append_message_step(steps: list[Step], message: dict[str, Any]) -> None:
 
     text = text_from_content(content)
     tool_calls = openai_tool_calls(message)
+    if not tool_calls:
+        tool_calls = source_tool_call(message)
+        if tool_calls and message.get("tool_name"):
+            text = str(message["tool_name"])
+    if not tool_calls and message.get("turn_type") == "assistant_thinking" and text:
+        tool_calls = [
+            ToolCall(
+                tool_call_id=str(message.get("tool_call_id") or "call_1"),
+                function_name="think",
+                arguments={"thought": text},
+            )
+        ]
+        text = ""
     if not tool_calls and text:
         text, tool_calls = xml_tool_calls(text)
     if not tool_calls and text:

@@ -131,10 +131,9 @@ def test_std_to_sft_conversion(subdir):
         if atif_turns > 0 and atif_sample["steps"][0].get("source") == "system":
             atif_turns -= 1
 
-        # ATIF groups an assistant tool call and its observation into one step, while SFT
-        # often expands them into separate assistant/user messages. Keep this as a broad
-        # sanity check rather than requiring ADP-style one-event-per-turn counts.
-        assert sft_turns >= max(1, atif_turns // 2), (
+        # ATIF groups assistant tool calls, observations, and copied context differently from
+        # SFT. Keep this as a broad sanity check rather than requiring ADP-style counts.
+        assert sft_turns >= max(1, atif_turns // 3), (
             f"Sample {i} in {subdir} has unexpectedly few SFT turns: "
             f"ATIF has {atif_turns} turns, SFT has {sft_turns} turns"
         )

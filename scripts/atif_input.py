@@ -146,6 +146,14 @@ def _code_action_from_tool_call(
 def _action_from_tool_call(step_message: Any, reasoning_content: str | None, tool_call: ToolCall):
     description = _description(step_message)
     reward = _reward(tool_call.extra)
+    if tool_call.function_name == "finish":
+        message = str(tool_call.arguments.get("message") or "")
+        return MessageAction(
+            content=f"<finish> {message} </finish>",
+            description=description,
+            reasoning_content=reasoning_content,
+            reward=reward,
+        )
     code_action = _code_action_from_tool_call(
         tool_call,
         description=description,
@@ -245,11 +253,6 @@ def _trajectory_events(trajectory: ATIFTrajectory) -> list[Any]:
     events: list[Any] = []
     for step in trajectory.steps:
         if step.source == "system":
-            events.append(
-                TextObservation(
-                    content=content_to_text(step.message), source="environment", name="system"
-                )
-            )
             continue
         if step.source == "user":
             events.append(TextObservation(content=content_to_text(step.message), source="user"))

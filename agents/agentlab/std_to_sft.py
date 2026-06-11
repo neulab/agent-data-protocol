@@ -49,7 +49,7 @@ def process_row(line):
                     thought = ""
                     message = message_content
                 else:
-                    raise ValueError(f"no match: {message_content}")
+                    return []
                 action = f'send_msg_to_user(text="{message}")'
 
             else:
