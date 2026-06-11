@@ -7,18 +7,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from schema.action.code import CodeAction
 from schema.atif import (
     ATIF_SCHEMA_VERSION,
-    ATIFObservation,
     ATIFTrajectory,
-    ObservationResult,
-    Step,
-    adp_trajectory_to_atif,
-    atif_trajectory_to_adp,
-    normalize_atif_trajectory,
 )
-from schema.trajectory import Trajectory
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
 REPO_ROOT = Path(__file__).parent.parent
@@ -106,122 +98,9 @@ def test_sample_atif_and_standardized_records_align(sample_path):
     ]
 
 
-@pytest.mark.parametrize(
-    "trajectory",
-    [
-        {
-            "id": "roundtrip-available-apis",
-            "available_apis": ["search"],
-            "content": [
-                {"class_": "text_observation", "content": "Find the answer", "source": "user"},
-                {
-                    "class_": "api_action",
-                    "tool_call_id": "call_1",
-                    "function": "search",
-                    "kwargs": {"query": "agent data protocol"},
-                    "description": "Search first",
-                },
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_1",
-                    "content": "Result",
-                    "source": "environment",
-                },
-                {"class_": "message_action", "content": "Done"},
-            ],
-        },
-        {
-            "id": "roundtrip-tool",
-            "content": [
-                {"class_": "text_observation", "content": "Find the answer", "source": "user"},
-                {
-                    "class_": "api_action",
-                    "tool_call_id": "call_1",
-                    "function": "search",
-                    "kwargs": {"query": "agent data protocol"},
-                    "description": "Search first",
-                },
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_1",
-                    "content": "Result",
-                    "source": "environment",
-                },
-                {"class_": "message_action", "content": "Done"},
-            ],
-        },
-        {
-            "id": "roundtrip-code",
-            "content": [
-                {"class_": "text_observation", "content": "Run pwd", "source": "user"},
-                {
-                    "class_": "code_action",
-                    "tool_call_id": "call_1",
-                    "language": "bash",
-                    "content": "pwd",
-                    "description": None,
-                },
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_1",
-                    "content": "/workspace",
-                    "source": "environment",
-                },
-            ],
-        },
-        {
-            "id": "roundtrip-env-obs",
-            "content": [
-                {
-                    "class_": "text_observation",
-                    "content": "System prompt",
-                    "source": "environment",
-                },
-                {"class_": "message_action", "content": "Done"},
-            ],
-        },
-    ],
-)
-def test_adp_atif_roundtrip_preserves_core_events(trajectory):
-    adp = Trajectory(**trajectory)
-    atif = adp_trajectory_to_atif(adp)
-    normalized_atif = normalize_atif_trajectory(atif)
-    roundtripped = atif_trajectory_to_adp(normalized_atif)
-
-    assert roundtripped.id == adp.id
-    assert len(roundtripped.content) == len(adp.content)
-    assert [item.class_ for item in roundtripped.content] == [item.class_ for item in adp.content]
-    assert [getattr(item, "source", None) for item in roundtripped.content] == [
-        getattr(item, "source", None) for item in adp.content
-    ]
-    assert roundtripped.available_apis == adp.available_apis
-
-
-def test_atif_to_adp_preserves_message_and_standalone_observation():
-    atif = ATIFTrajectory(
-        trajectory_id="message-with-observation",
-        steps=[
-            Step(
-                step_id=1,
-                source="agent",
-                message="I inspected the environment.",
-                observation=ATIFObservation(results=[ObservationResult(content="env output")]),
-            )
-        ],
-    )
-
-    adp = atif_trajectory_to_adp(atif)
-
-    assert [item.class_ for item in adp.content] == ["message_action", "text_observation"]
-    assert adp.content[0].content == "I inspected the environment."
-    assert adp.content[1].content == "env output"
-    assert getattr(adp.content[1], "source") == "environment"
-
-
 def test_raw_to_atif_common_does_not_depend_on_adp_standardization():
     source = (REPO_ROOT / "scripts" / "raw_to_atif_common.py").read_text()
     assert "raw_to_standardized" not in source
-    assert "adp_trajectory_to_atif" not in source
     assert "schema.trajectory" not in source
 
 
@@ -280,10 +159,6 @@ def test_dataset_atif_to_std_script_normalizes_tool_names(dataset_name):
         "adp_class": "code_action",
         "language": "bash",
     }
-    adp = atif_trajectory_to_adp(normalized)
-    assert isinstance(adp.content[0], CodeAction)
-    assert adp.content[0].language == "bash"
-    assert adp.content[0].content == "ls"
 
 
 def test_openhands_v0_std_to_sft_accepts_atif_input():

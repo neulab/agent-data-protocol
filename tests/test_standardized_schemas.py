@@ -5,15 +5,8 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 import pytest
 from pydantic import ValidationError
 
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
 from schema.atif import ATIFTrajectory
 from schema.dataset_metadata import custom_tool_names, is_browser_api_action, load_dataset_metadata
-from schema.observation.image import ImageObservation
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.tool_call_links import create_trajectory_with_tool_call_links
-from schema.trajectory import Trajectory
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
 NUMERIC_DETAIL_KEYS = {"reward", "score", "step"}
@@ -56,16 +49,13 @@ def is_portable_or_external_image_reference(value):
 
 
 def get_sample_jsons(directory):
-    # get DATASET_PATH/*/sample_std.json files
     for subdir in os.listdir(directory):
-        subdir_path = os.path.join(directory, subdir)
-        sample_path = os.path.join(subdir_path, "sample_std.json")
+        sample_path = os.path.join(directory, subdir, "sample_std.json")
         if os.path.exists(sample_path):
             yield sample_path
 
 
 def load_json(file_path):
-    """Load JSON file, handling both indented and non-indented formats."""
     with open(file_path, "r") as file:
         return json.load(file)
 
@@ -96,294 +86,13 @@ def test_image_reference_portability_detection():
     assert not is_portable_or_external_image_reference("file:///Users/alice/screenshot.png")
 
 
-@pytest.mark.parametrize(
-    "sample",
-    [
-        {
-            "id": "extra-root",
-            "content": [],
-            "unexpected_root_field": True,
-        },
-        {
-            "id": "extra-action",
-            "content": [
-                {
-                    "class_": "message_action",
-                    "content": "hello",
-                    "unexpected_action_field": True,
-                }
-            ],
-        },
-        {
-            "id": "extra-observation",
-            "content": [
-                {
-                    "class_": "text_observation",
-                    "content": "hello",
-                    "source": "environment",
-                    "unexpected_observation_field": True,
-                }
-            ],
-        },
-    ],
-)
-def test_standardized_schema_rejects_extra_fields(sample):
+def test_standardized_atif_schema_rejects_extra_fields():
     with pytest.raises(ValidationError) as exc_info:
-        Trajectory(**sample)
-
-    # Pydantic v2 inlines branch errors from union fields into the top-level
-    # error list, so extra_forbidden errors on nested Action/Observation models
-    # surface here even though they originate inside the `content` union.
+        ATIFTrajectory(
+            trajectory_id="extra-step",
+            steps=[{"step_id": 1, "source": "user", "message": "hello", "extra_field": True}],
+        )
     assert any(error["type"] == "extra_forbidden" for error in exc_info.value.errors())
-
-
-def test_standardized_schema_accepts_matched_tool_call_result():
-    trajectory = Trajectory(
-        id="matched-tool-result",
-        content=[
-            {
-                "class_": "api_action",
-                "tool_call_id": "call_000001",
-                "function": "search",
-                "kwargs": {"query": "agent data protocol"},
-            },
-            {
-                "class_": "text_observation",
-                "tool_call_id": "call_000001",
-                "content": "Search result text",
-                "source": "environment",
-            },
-        ],
-    )
-
-    action, observation = trajectory.content
-    assert action.tool_call_id == "call_000001"
-    assert observation.tool_call_id == "call_000001"
-
-
-@pytest.mark.parametrize(
-    ("action", "observation", "expected_tool_call_id"),
-    [
-        (
-            ApiAction(function="search", kwargs={"query": "agent data protocol"}),
-            TextObservation(content="Search result text", source="user"),
-            "call_000001",
-        ),
-        (
-            CodeAction(language="bash", content="pwd", description=None),
-            TextObservation(content="/workspace/project", source="environment"),
-            "call_000001",
-        ),
-        (
-            ApiAction(function="screenshot", kwargs={}),
-            ImageObservation(content="screen.png", source="user", annotations=None),
-            "call_000001",
-        ),
-        (
-            ApiAction(function="observe", kwargs={}),
-            WebObservation(
-                html="<html></html>",
-                axtree=None,
-                url="https://example.com",
-                image_observation=None,
-                viewport_size=None,
-            ),
-            "call_000001",
-        ),
-        (
-            ApiAction(
-                tool_call_id="call_from_both",
-                function="search",
-                kwargs={"query": "agent data protocol"},
-            ),
-            TextObservation.model_construct(
-                tool_call_id="call_from_both",
-                content="Search result text",
-                source="user",
-            ),
-            "call_from_both",
-        ),
-        (
-            ApiAction(
-                tool_call_id="call_from_action",
-                function="search",
-                kwargs={"query": "agent data protocol"},
-            ),
-            TextObservation(content="Search result text", source="environment"),
-            "call_from_action",
-        ),
-        (
-            ApiAction(function="search", kwargs={"query": "agent data protocol"}),
-            TextObservation(
-                tool_call_id="call_from_observation",
-                content="Search result text",
-                source="environment",
-            ),
-            "call_from_observation",
-        ),
-    ],
-)
-def test_raw_converter_helper_backfills_adjacent_tool_call_result(
-    action, observation, expected_tool_call_id
-):
-    trajectory = create_trajectory_with_tool_call_links(
-        id="backfilled-tool-result",
-        content=[action, observation],
-    )
-
-    action, observation = trajectory.content
-    assert action.tool_call_id == expected_tool_call_id
-    assert observation.tool_call_id == expected_tool_call_id
-    if isinstance(observation, (TextObservation, ImageObservation)):
-        assert observation.source == "environment"
-
-
-def test_standardized_schema_rejects_tool_call_id_on_message_action():
-    with pytest.raises(ValidationError, match="MessageAction.tool_call_id"):
-        Trajectory(
-            id="message-action-tool-call-id",
-            content=[
-                {
-                    "class_": "message_action",
-                    "tool_call_id": "call_message",
-                    "content": "Done.",
-                }
-            ],
-        )
-
-
-def test_standardized_schema_rejects_missing_tool_call_id_for_tool_result():
-    with pytest.raises(ValidationError, match="does not include tool_call_id"):
-        Trajectory(
-            id="missing-tool-call-id",
-            content=[
-                {
-                    "class_": "api_action",
-                    "function": "search",
-                    "kwargs": {"query": "agent data protocol"},
-                },
-                {
-                    "class_": "text_observation",
-                    "content": "Search result text",
-                    "source": "environment",
-                },
-            ],
-        )
-
-
-def test_standardized_schema_rejects_unmatched_tool_result():
-    with pytest.raises(ValidationError, match="does not match any preceding Action"):
-        Trajectory(
-            id="unmatched-tool-result",
-            content=[
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_missing",
-                    "content": "orphaned result",
-                    "source": "environment",
-                }
-            ],
-        )
-
-
-@pytest.mark.parametrize(
-    "content",
-    [
-        [
-            {
-                "class_": "api_action",
-                "tool_call_id": "call_without_result",
-                "function": "search",
-                "kwargs": {"query": "agent data protocol"},
-            }
-        ],
-        [
-            {
-                "class_": "api_action",
-                "tool_call_id": "call_without_result",
-                "function": "search",
-                "kwargs": {"query": "agent data protocol"},
-            },
-            {
-                "class_": "text_observation",
-                "content": "Search result text",
-                "source": "environment",
-            },
-        ],
-    ],
-)
-def test_standardized_schema_rejects_unmatched_tool_call(content):
-    with pytest.raises(ValidationError, match="does not have a matching Observation"):
-        Trajectory(id="unmatched-tool-call", content=content)
-
-
-def test_standardized_schema_rejects_duplicate_tool_call_ids():
-    with pytest.raises(ValidationError, match="Duplicate Action.tool_call_id"):
-        Trajectory(
-            id="duplicate-tool-call-id",
-            content=[
-                {
-                    "class_": "api_action",
-                    "tool_call_id": "call_duplicate",
-                    "function": "search",
-                    "kwargs": {"query": "first"},
-                },
-                {
-                    "class_": "api_action",
-                    "tool_call_id": "call_duplicate",
-                    "function": "search",
-                    "kwargs": {"query": "second"},
-                },
-            ],
-        )
-
-
-def test_standardized_schema_rejects_duplicate_tool_results():
-    with pytest.raises(ValidationError, match="Duplicate observation result"):
-        Trajectory(
-            id="duplicate-tool-result",
-            content=[
-                {
-                    "class_": "api_action",
-                    "tool_call_id": "call_000001",
-                    "function": "search",
-                    "kwargs": {"query": "agent data protocol"},
-                },
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_000001",
-                    "content": "first result",
-                    "source": "environment",
-                },
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_000001",
-                    "content": "second result",
-                    "source": "environment",
-                },
-            ],
-        )
-
-
-def test_standardized_schema_rejects_user_source_tool_result():
-    with pytest.raises(ValidationError, match="must not use source='user'"):
-        Trajectory(
-            id="user-source-tool-result",
-            content=[
-                {
-                    "class_": "api_action",
-                    "tool_call_id": "call_000001",
-                    "function": "search",
-                    "kwargs": {"query": "agent data protocol"},
-                },
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_000001",
-                    "content": "Search result text",
-                    "source": "user",
-                },
-            ],
-        )
 
 
 @pytest.mark.parametrize("sample_path", get_sample_jsons(DATASET_PATH))
@@ -473,20 +182,18 @@ def test_sample_standardized_atif_against_schema(sample_path):
                             f"step {step_id} content {content_id}: {image_path}"
                         )
                 for tool_call in step.tool_calls or []:
-                    content = tool_call
                     supported_by_metadata = (
-                        content.function_name in api_function_names
-                        or content.function_name in built_in_api_names
+                        tool_call.function_name in api_function_names
+                        or tool_call.function_name in built_in_api_names
                         or is_browser_api_action(
-                            content.function_name,
-                            content.arguments,
+                            tool_call.function_name,
+                            tool_call.arguments,
                             browser_context=metadata.browser_enabled,
                         )
                     )
                     assert supported_by_metadata, (
-                        f"{content.function_name} not found in metadata.json in "
+                        f"{tool_call.function_name} not found in metadata.json in "
                         f"{os.path.dirname(sample_path)}"
                     )
-
         except ValidationError as e:
             pytest.fail(f"Validation failed for {sample_path}: {str(e)}")

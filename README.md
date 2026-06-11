@@ -113,7 +113,7 @@ Original format from various sources (research papers, datasets, etc.)
 Dataset-specific raw-to-ATIF conversion using Harbor's Agent Trajectory Interchange Format. This layer preserves the raw tool/action shape with minimal normalization and is validated by `ATIFTrajectory`.
 
 ### 3. ATIF Normalization and Standardized Format
-`atif_to_std.py` normalizes ATIF tool names/arguments and emits ATIF JSONL, not ADP records. The repository keeps `raw_to_standardized.py` for ADP compatibility workflows, but committed `sample_std.json` fixtures are ATIF std data:
+`atif_to_std.py` normalizes ATIF tool names/arguments and emits ATIF JSONL. `raw_to_standardized.py` is retained as a compatibility command name that also emits normalized ATIF. Committed `sample_std.json` fixtures are ATIF std data:
 - **Steps**: `system`, `user`, or `agent` turns with natural-language messages
 - **Tool calls**: `function_name`, `arguments`, and `tool_call_id`
 - **Observations**: Tool/environment results linked with `source_call_id`
@@ -124,8 +124,7 @@ Agent-specific format ready for supervised fine-tuning. Shared `std_to_sft.py` c
 ## Documentation
 
 ### Schema Documentation
-For detailed information about ADP schemas, data structures, and validation:
-- **[SCHEMA.md](schema/SCHEMA.md)** - Complete schema documentation with examples
+The canonical standardized schema is the ATIF model in [`schema/atif.py`](schema/atif.py).
 
 ### Contributing Guidelines
 To contribute new datasets or agent implementations:
@@ -157,11 +156,8 @@ agent-data-protocol/
 │   ├── sweagent/      # SWE-agent
 │   ├── agentlab/      # AgentLab
 │   └── ...
-├── schema/            # ADP schema definitions
-│   ├── SCHEMA.md      # Schema documentation
-│   ├── action/        # Action schemas
-│   ├── observation/   # Observation schemas
-│   └── trajectory.py  # Trajectory container
+├── schema/            # ATIF schema definitions
+│   └── atif.py        # ATIF trajectory, step, tool-call, and observation models
 ├── scripts/           # Utility scripts
 └── tests/            # Validation tests
 ```
@@ -171,7 +167,7 @@ agent-data-protocol/
 ### Converting a Single Dataset
 
 ```bash
-# Example: Convert swe-smith dataset -> ADP -> OpenHands v0 SFT
+# Example: Convert swe-smith dataset -> ATIF -> OpenHands v0 SFT
 export MY_DATASET=swe-smith
 export PYTHONPATH=`pwd`:$PYTHONPATH
 

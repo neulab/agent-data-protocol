@@ -22,7 +22,7 @@ agent-data-protocol/
 │           ├── openhands_v0.json
 │           └── $AGENT_NAME.json
 ├── agents/             # Agent-specific SFT converters
-├── schema/             # ATIF and ADP schema definitions
+├── schema/             # ATIF schema definitions
 ├── scripts/            # Utility scripts
 └── tests/              # Validation tests
 ```
@@ -84,7 +84,6 @@ Committed `sample_atif.json` and `sample_std.json` files are ATIF trajectories. 
 **Versioning:**
 - The canonical ATIF schema version lives in `schema/atif.py` as `ATIF_SCHEMA_VERSION`.
 - `ATIFTrajectory` includes a root-level `schema_version`; committed `sample_atif.json` and `sample_std.json` files must include the current value explicitly.
-- Any schema-impacting Python change under `schema/` must bump `SCHEMA_VERSION`; CI checks this with `scripts/check_schema_version_bump.py`.
 
 ### Tool and Schema Validity
 - Every `ToolCall.function_name` used in `sample_std.json` must be a built-in standardized tool, a browser action, or a custom tool declared in `metadata.json`.

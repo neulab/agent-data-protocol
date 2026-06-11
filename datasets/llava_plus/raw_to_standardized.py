@@ -1,74 +1,11 @@
-import json
-import os
+# ruff: noqa: E402, I001
 import sys
+from pathlib import Path
 
-from schema.action.action import Action
-from schema.action.api import ApiAction
-from schema.action.message import MessageAction
-from schema.observation.image import ImageObservation
-from schema.observation.observation import Observation
-from schema.observation.text import TextObservation
-from schema.tool_call_links import create_trajectory_with_tool_call_links
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from scripts.raw_to_standardized_common import main
 
 
-def convert_step(step: dict[str, str], metadata) -> list[Action | Observation]:
-    if step["from"] == "human":
-        if step["value"].startswith("<image>\n"):
-            return [
-                ImageObservation(
-                    content=os.path.join("images/", metadata["data_source"], metadata["image"]),
-                    annotations=None,
-                    source="environment",
-                ),
-                TextObservation(content=step["value"][len("<image>\n") :], source="user"),
-            ]
-        else:
-            return [TextObservation(content=step["value"], source="user")]
-    elif step["from"] == "gpt":
-        if len(step["actions"]) > 0:
-            content = [
-                MessageAction(
-                    content=step["value"],
-                    description=step["thoughts"],
-                )
-            ]
-
-            for act in step["actions"]:
-                content.extend(
-                    [
-                        ApiAction(
-                            function=act["API_name"],
-                            kwargs=act["API_params"],
-                            description=None,
-                        )
-                    ]
-                )
-
-            return content
-        else:
-            return [
-                MessageAction(
-                    content=step["value"],
-                    description=step["thoughts"],
-                )
-            ]
-    else:
-        raise Exception("Invalid role.")
-
-
-# Process each line of input individually
-for line in sys.stdin:
-    raw_data = json.loads(line)
-    metadata = dict([(k, v) for k, v in raw_data.items() if k != "conversations"])
-
-    content = []
-    for step in raw_data["conversations"]:
-        content.extend(convert_step(step, metadata))
-
-    # Standardize the data
-    standardize_data = create_trajectory_with_tool_call_links(
-        id=str(raw_data["unique_id"]), content=content
-    )
-
-    # Print the standardized data as JSON
-    print(json.dumps(standardize_data.model_dump()))
+if __name__ == "__main__":
+    main(__file__)

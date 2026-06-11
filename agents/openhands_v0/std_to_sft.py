@@ -17,12 +17,14 @@ from agents.openhands_v0.api import (
 )
 from agents.openhands_v0.system_prompt.system import get_system_message
 from agents.openhands_v0.system_prompt.user import get_web_user_message
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from scripts.atif_input import load_trajectory
+from scripts.atif_input import (
+    ApiAction,
+    CodeAction,
+    MessageAction,
+    TextObservation,
+    WebObservation,
+    load_trajectory,
+)
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"

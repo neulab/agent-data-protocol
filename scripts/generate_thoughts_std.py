@@ -1,20 +1,22 @@
+"""Generate missing reasoning text for normalized ATIF tool-call steps."""
+
+from __future__ import annotations
+
 import json
 import os
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import openai
+from tqdm import tqdm
 
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.observation.text import TextObservation
-from schema.trajectory import Trajectory
-from scripts.atif_input import load_trajectory
+from schema.atif import ATIFTrajectory, content_to_text, normalize_atif_trajectory
 
-dataset = os.getenv("MY_DATASET")
-assert dataset, "Please set the environment variable MY_DATASET"
+DATASET = os.getenv("MY_DATASET")
+assert DATASET, "Please set the environment variable MY_DATASET"
 
-GENERATED_THOUGHTS_FILE = os.path.join(f"datasets/{dataset}/generated_thoughts.json")
+GENERATED_THOUGHTS_FILE = os.path.join(f"datasets/{DATASET}/generated_thoughts.json")
 if os.path.exists(GENERATED_THOUGHTS_FILE):
     with open(GENERATED_THOUGHTS_FILE) as f:
         GENERATED_THOUGHTS = json.load(f)
@@ -26,222 +28,102 @@ if not api_key:
     print("openai api_key not found", file=sys.stderr)
 client = openai.OpenAI(api_key=api_key)
 
-STR_REPLACE_EDITOR_EXAMPLES = """
-    EXAMPLE 1:
-    History:
-    [{
-        "class_": "text_observation",
-        "content": "Here's the result of running `cat -n` on /workspace/dask__dask__2022.6/dask/base.py:\n  1101\t    @nor ......[Truncated]",
-        "source": "user"
-    }]
-
-    Current Action: api_action
-    Function: str_replace_editor
-    Arguments: {"command": "insert", "path": "/workspace/dask__dask__2022.6/dask/base.py", "new_str": "from enum import Enum\n\n@normalize_token.register(Enum)\ndef normalize_enum(e):\n    return type(e).__name__, e.name, e.value\n", "insert_line": 965}
-
-    Model Output:
-    {"description": "The `dask.base` module contains the `normalize_token` function, which is used to create deterministic tokens for various Python objects. To address the issue described in the PR, we need to add a new normalization function for `Enum` types. This function should be registered with the `normalize_token` dispatcher.\n\nHere's the plan:\n\n1. **Identify the Location for the New Function**: The new function should be added to the `dask.base` module, where other normalization functions are defined.\n\n2. **Implement the Function**: Implement the function `normalize_enum` as described in the PR, which returns a tuple of the enum's type name, name, and value.\n\n3. **Register the Function**: Use the `@normalize_token.register(Enum)` decorator to register the function with the `normalize_token` dispatcher.\n\nLet's implement these changes in the `dask.base` module."}
-
-    EXAMPLE 2:
-    History:
-    [{
-        "class_": "text_observation",
-        "content": "Here's the files and directories up to 2 levels deep in /workspace/dask__dask__2022.6/dask, excludin ......[Truncated]",
-        "source": "user"
-    }]
-
-    Current Action: api_action
-    Function: str_replace_editor
-    Arguments: {"command": "view", "path": "/workspace/dask__dask__2022.6/dask/base.py"}
-
-    Model Output:
-    {"description": "The repository appears to be organized into several sub-modules, with the core logic likely within files like `base.py`. The task at hand requires us to modify the Dask library to ensure deterministic hashing for `Enum` types. The `tokenize` function that is mentioned in the PR description is likely defined or used in `base.py`.\n\nLet's follow these steps:\n\n1. **Locate the `base.py` file** - This file likely contains the `tokenize` function, which we'll need to modify to support deterministic hashing for `Enum` types.\n\n2. **Create a script to reproduce the error** - We will write a small script that uses the `tokenize` function on `Enum` types to confirm its current behavior prior to modification. This will help us ensure our changes are effective.\n\n3. **Modify the code in `base.py`** - Implement the logic provided in the PR description to handle `Enum` types in a deterministic manner.\n\n4. **Rerun the test script** - Confirm that the changes resolve the issue of non-deterministic hashing for `Enum` types.\n\nLet's start by viewing the `base.py` file."}
-"""
-
-BASH_EXAMPLES = """
-    EXAMPLE 1:
-    History:
-    [{
-        "class_": "text_observation",
-        "content": "python3 /workspace/python__mypy__0.820/reproduce_error.py[Python Interpreter: /opt/miniconda3/envs/t ......[Truncated]",
-        "source": "user"
-    }]
-
-    Current Action: code_action
-    Function: bash
-    Arguments: {"command":"mypy --follow-imports=silent --show-error-codes --warn-unused-ignores --warn-redundant-casts --strict --show-traceback /workspace/python__mypy__0.820/reproduce_error.py"}
-
-    Model Output:
-    {"description": "The script executed without any errors, which indicates that the issue might not manifest when running this code as a standalone script. The problem likely occurs when `mypy` performs type checking on this code. \n\nTo reproduce the error, we need to run `mypy` on this script using the specified command-line flags from the PR description. Let's proceed with that."}
-
-    EXAMPLE 2:
-    History:
-    [{
-        "class_": "text_observation",
-        "content": "The file /workspace/python__mypy__0.820/mypy/constraints.py has been edited. Here's the result of ru ......[Truncated]",
-        "source": "user"
-    }]
-
-    Current Action: code_action
-    Function: bash
-    Arguments: {"command":"mypy --follow-imports=silent --show-error-codes --warn-unused-ignores --warn-redundant-casts --strict --show-traceback /workspace/python__mypy__0.820/reproduce_error.py"}
-
-    Model Output:
-    {"description": "I have modified the `infer_constraints_from_protocol_members` function in `constraints.py` to handle cases where `inst` or `temp` might be `None`. Instead of asserting their presence, the function now skips over such cases, preventing the internal error.\n\nLet's rerun the `mypy` check on the `reproduce_error.py` script to verify that this change resolves the issue."}
-"""
-
 EXAMPLES = """
-    EXAMPLE 1:
-    History:
-    [{
-        "class_": "text_observation",
-        "content": "Here is your task. You are in the middle of a room. Looking quickly around you, you see a bathtubbasin 1, a garbagecan 1, a handtowelholder 1, a shelf 3, a shelf 2, a shelf 1, a sinkbasin 1, a toilet 1, a toiletpaperhanger 1, and a towelholder 1.\nYour task is to: find two spraybottle and put them in toilet.",
-        "source": "user"
-    }]
+EXAMPLE:
+History:
+User: Fix the failing tests.
 
-    Current Action: api_action
-    Function: go
-    Arguments: {"location": "\"shelf 1\""}
+Current Tool Call: execute_bash
+Arguments: {"command": "pytest -q"}
 
-    Model Output:
-    {"description": "To accomplish the task, I need to first find the spraybottles. I'll start with checking the shelves, as they are common places to store spraybottles."}
-
-    EXAMPLE 2:
-    History:
-    [{
-        "class_": "text_observation",
-        "content": "On the toilet 1, you see nothing.",
-        "source": "user"
-    }]
-
-    Current Action: api_action
-    Function: put
-    Arguments: {"item": "\"spraybottle 1\"", "target": "\"toilet 1\""}
-
-    Model Output:
-    {"description": "The previous action seems invalid as the script reads \"On the toilet 1, you see nothing.\" I should try putting the spraybottle again in the toilet."}
+Model Output:
+{"description": "I need to run the focused test suite first so I can see the current failure before editing the code."}
 """
 
 
-def generate_thought(context, action_class, action_function, action_kwargs):
-    if action_class == "api_action" and action_function == "str_replace_editor":
-        examples = STR_REPLACE_EDITOR_EXAMPLES
-    elif action_class == "code_action" and action_function == "bash":
-        examples = BASH_EXAMPLES
-    else:
-        examples = EXAMPLES
+def generate_thought(context: str, function_name: str, arguments: dict) -> str:
     prompt = f"""
-    Based on the history and current action, generate a reasoning of why the agent decides to perform this action from the agent's perspective, using the agent's tone.
-    Below are some example:
-    {examples}
+Based on the history and current tool call, generate a concise reasoning sentence from the agent's perspective.
+{EXAMPLES}
 
-    Now, consider the following:
+History:
+{context}
 
-    History:
-    {context}
+Current Tool Call: {function_name}
+Arguments: {json.dumps(arguments, ensure_ascii=False)}
 
-    Current Action: {action_class}
-    Function: {action_function}
-    Arguments: {action_kwargs}
-
-    Respond **only** in valid JSON format with a single field "description".
-    """
-
+Respond only in valid JSON format with a single field "description".
+"""
     response = client.chat.completions.create(
         model="o4-mini",
         messages=[{"role": "user", "content": prompt}],
     )
-    content = response.choices[0].message.content
+    content = response.choices[0].message.content or ""
     match = re.search(r'\{.*?"description"\s*:\s*".*?"\s*\}', content, re.DOTALL)
-    if match:
-        try:
-            description_obj = json.loads(match.group(0))
-            return description_obj["description"]
-        except Exception as e:
-            print("JSON parsing failed:", e, file=sys.stderr)
-            print("Matched content:", match.group(0), file=sys.stderr)
-            return ""
-    else:
+    if not match:
         print("No valid JSON found in GPT response:", content, file=sys.stderr)
+        return ""
+    try:
+        return json.loads(match.group(0))["description"]
+    except Exception as exc:  # noqa: BLE001
+        print("JSON parsing failed:", exc, file=sys.stderr)
         return ""
 
 
-def generate_thoughts_for_line(line):
-    trajectory = load_trajectory(line)
-    id = trajectory.id
-    events = trajectory.content
-    if id not in GENERATED_THOUGHTS:
-        GENERATED_THOUGHTS[id] = {}
-    print(f"generating function thoughts for {id}", file=sys.stderr)
-    for idx, m in enumerate(events):
-        idx = str(idx)
-        if isinstance(m, TextObservation):
-            if len(m.content) > 100:
-                m.content = (m.content[:100] + " ......[Truncated]",)
-        elif isinstance(m, ApiAction) and not m.description:
-            if idx not in GENERATED_THOUGHTS[id]:
-                GENERATED_THOUGHTS[id][idx] = generate_thought(
-                    events[: int(idx)], "api_action", m.function, m.kwargs
-                )
-            m.description = GENERATED_THOUGHTS[id][idx]
-        elif isinstance(m, CodeAction) and not m.description:
-            if idx not in GENERATED_THOUGHTS[id]:
-                GENERATED_THOUGHTS[id][idx] = generate_thought(
-                    events[: int(idx)], "code_action", m.language, m.content
-                )
-            m.description = GENERATED_THOUGHTS[id][idx]
+def history_before_step(trajectory: ATIFTrajectory, step_index: int) -> str:
+    lines = []
+    for step in trajectory.steps[:step_index]:
+        message = content_to_text(step.message)
+        if message:
+            lines.append(f"{step.source}: {message[:500]}")
+        if step.observation:
+            for result in step.observation.results:
+                lines.append(f"observation: {content_to_text(result.content)[:500]}")
+    return "\n".join(lines)
+
+
+def generate_thoughts_for_line(line: str) -> None:
+    trajectory = normalize_atif_trajectory(ATIFTrajectory(**json.loads(line)))
+    trajectory_id = trajectory.trajectory_id or trajectory.session_id or "atif-trajectory"
+    GENERATED_THOUGHTS.setdefault(trajectory_id, {})
+    print(f"generating function thoughts for {trajectory_id}", file=sys.stderr)
+    for step_index, step in enumerate(trajectory.steps):
+        if not step.tool_calls or content_to_text(step.message).strip():
+            continue
+        key = str(step_index)
+        if key not in GENERATED_THOUGHTS[trajectory_id]:
+            call = step.tool_calls[0]
+            GENERATED_THOUGHTS[trajectory_id][key] = generate_thought(
+                history_before_step(trajectory, step_index), call.function_name, call.arguments
+            )
     with open(GENERATED_THOUGHTS_FILE, "w") as f:
         json.dump(GENERATED_THOUGHTS, f, indent=2, ensure_ascii=False)
-    return
 
 
-def process_line(line):
-    trajectory = load_trajectory(line)
-    id = trajectory.id
-    events = trajectory.content
-    for idx, m in enumerate(events):
-        idx = str(idx)
-        if idx in GENERATED_THOUGHTS[id]:
-            try:
-                m.description = GENERATED_THOUGHTS[id][idx]
-            except Exception:
-                print(f"{id}")
-                assert False
-    return Trajectory(
-        id=id,
-        content=events,
-        details=trajectory.details,
-    )
+def process_line(line: str) -> ATIFTrajectory:
+    trajectory = normalize_atif_trajectory(ATIFTrajectory(**json.loads(line)))
+    trajectory_id = trajectory.trajectory_id or trajectory.session_id or "atif-trajectory"
+    for step_index, step in enumerate(trajectory.steps):
+        thought = GENERATED_THOUGHTS.get(trajectory_id, {}).get(str(step_index))
+        if thought and not content_to_text(step.message).strip():
+            step.message = thought
+    return trajectory
 
 
-def test(line):
+def test(line: str) -> ATIFTrajectory:
     generate_thoughts_for_line(line)
-    data_with_thoughts = process_line(line)
-    return data_with_thoughts
+    return process_line(line)
 
 
 if __name__ == "__main__":
-    # output = []
-    # for line in sys.stdin:
-    #     generate_thoughts_for_line(line)
-    #     data_with_thoughts = process_line(line)
-    #     if data_with_thoughts:
-    #         output.append(data_with_thoughts.model_dump_json())
-    # with open(f'datasets/{dataset}/full_std.jsonl', 'w') as f:
-    #     f.write('\n'.join(output))
+    with open(f"datasets/{DATASET}/full_std.jsonl") as f:
+        lines = f.readlines()
 
     output = []
-    with open(f"datasets/{dataset}/full_std.jsonl") as f:
-        f = f.readlines()
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-
-    from tqdm import tqdm
-
     with ThreadPoolExecutor(max_workers=16) as executor:
-        futures = [executor.submit(test, line) for line in f]
+        futures = [executor.submit(test, line) for line in lines]
         for future in tqdm(as_completed(futures), total=len(futures)):
             data_with_thoughts = future.result()
-            if data_with_thoughts:
-                output.append(data_with_thoughts.model_dump_json())
-    with open(f"datasets/{dataset}/full_std.jsonl", "w") as f:
+            output.append(data_with_thoughts.model_dump_json(exclude_none=True))
+    with open(f"datasets/{DATASET}/full_std.jsonl", "w") as f:
         f.write("\n".join(output))

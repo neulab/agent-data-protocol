@@ -17,7 +17,7 @@ This repository serves as a standardized collection of agent training data from 
 This repository contains:
 - **Datasets**: Agent training data in standardized format ([`datasets/`](datasets))
 - **Agents**: Agent-specific implementations and conversion scripts ([`agents/`](agents)])
-- **Schema**: ATIF and ADP schema definitions ([`schema/`](schema))
+- **Schema**: ATIF schema definitions ([`schema/`](schema))
 - **Scripts**: General tility scripts ([`scripts/`](scripts))
 
 ### Data Flow
@@ -68,8 +68,6 @@ pip install -r requirements.txt
 This will install pre-commit and set up the hooks to ensure code quality.
 
 ## Contributing New Datasets
-
-Note: see [`schema/SCHEMA.md`](schema/SCHEMA.md) first for better understanding of the ADP standardized data format.
 
 ### Dataset Structure
 
@@ -165,10 +163,10 @@ python datasets/$MY_DATASET/extract_raw.py | python scripts/jsonl_to_json.py | j
 
 #### Step 2: Create Standardized Format Converter
 
-1. Create `raw_to_standardized.py` that converts raw data to ADP standardized schemas.
-Essentially, you should map each action / observation in the raw data to an action / observation in [ADP schemas](schema/SCHEMA.md#core-schema-components).
+1. Create `raw_to_atif.py` and `atif_to_std.py`; `raw_to_standardized.py` should be only a compatibility wrapper that emits normalized ATIF.
+Map each raw message, tool call, and observation to the closest ATIF step, tool call, or observation result.
 
-The root `Trajectory` includes a protocol-level `schema_version` field. When converters return `Trajectory(...).model_dump()` or `model_dump_json()`, the current version is included automatically. If a converter emits trajectory dictionaries manually, include `"schema_version": SCHEMA_VERSION` from `schema.version`.
+The root `ATIFTrajectory` includes a protocol-level `schema_version` field. When converters return `ATIFTrajectory(...).model_dump()` or `model_dump_json()`, the current ATIF version is included automatically from `schema.atif.ATIF_SCHEMA_VERSION`.
 
 **Brief conversion examples:**
 ```python
@@ -194,11 +192,7 @@ TextObservation(class_="TextObservation", text="Command executed", source="envir
 
 import json
 import sys
-from schema.trajectory import Trajectory
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
-from schema.action.api import ApiAction
-from schema.observation.text import TextObservation
+from schema.atif import ATIFTrajectory, Step, ToolCall, ATIFObservation, ObservationResult
 
 def convert_raw_to_standardized(raw_data):
     """Convert a raw data sample to standardized format."""
@@ -262,7 +256,7 @@ if __name__ == "__main__":
            pass
    ```
 
-2. **Create API definitions (when applicable)**: If your standardized dataset contains [ApiAction](schema/SCHEMA.md#apiaction), create an `api.py` file to define the available functions. This is crucial for later conversion to agent specific formats.
+2. **Create API definitions (when applicable)**: If your standardized dataset contains ATIF tool calls, create an `api.py` file to define the available functions. This is crucial for later conversion to agent specific formats.
 
    **When to include api.py:**
    - Your dataset contains structured actions (e.g., `go("bedroom")`, `click("button_id")`, `search("query")`)
@@ -319,7 +313,7 @@ if __name__ == "__main__":
 
    Then in your `raw_to_standardized.py`, use `ApiAction` for structured actions:
    ```python
-   from schema.action.api import ApiAction
+   from schema.atif import ToolCall
 
    # Convert structured actions to ApiAction
    if action_type == "click":
@@ -441,7 +435,7 @@ The output data should ideally be directly usable for training using [LLaMA Fact
 import json
 import sys
 from typing import Dict, Any
-from schema.trajectory import Trajectory
+from schema.atif import ATIFTrajectory
 
 def convert_trajectory_to_sft(trajectory: Trajectory) -> Dict[str, Any]:
     """Convert a standardized trajectory to SFT format."""
@@ -544,7 +538,6 @@ Before submitting your contribution:
 - [ ] Standardized format conversion passes validation
 - [ ] SFT format conversion produces valid output
 - [ ] `sample_std.json` files include the current root-level `schema_version`
-- [ ] If schema-impacting files under `schema/` changed, `SCHEMA_VERSION` in `schema/version.py` was bumped
 - [ ] All required files are present
 - [ ] README is comprehensive and accurate
 - [ ] Tests pass

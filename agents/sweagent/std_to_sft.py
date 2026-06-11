@@ -8,12 +8,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from agents.sweagent.api import get_api_tool_description
 from agents.sweagent.system_message import base_template
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from scripts.atif_input import load_trajectory
+from scripts.atif_input import (
+    ApiAction,
+    CodeAction,
+    MessageAction,
+    TextObservation,
+    WebObservation,
+    load_trajectory,
+)
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"

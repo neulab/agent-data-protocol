@@ -26,21 +26,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Check schema version bump
-      run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          base_ref="origin/${{ github.base_ref }}"
-        else
-          base_ref="${{ github.event.before }}"
-        fi
-
-        if echo "$base_ref" | grep -Eq '^0+$'; then
-          echo "Skipping schema version bump check because no base ref is available."
-        else
-          python scripts/check_schema_version_bump.py \
-            --base-ref "$base_ref" \
-            --head-ref HEAD
-        fi
     - name: Run pytest
       run: |
         pytest tests/test_*.py

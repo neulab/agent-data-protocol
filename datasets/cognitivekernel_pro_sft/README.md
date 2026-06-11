@@ -2,7 +2,7 @@
 
 ## Description
 
-[CognitiveKernel/CognitiveKernel-Pro-SFT](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) contains supervised fine-tuning data for the paper [Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training](https://huggingface.co/papers/2508.00414). The dataset consists of single-step action-module examples where the assistant emits a `Thought:` plus a fenced Python `Code:` action. Source system prompts and formatting scaffolding are excluded from the extracted ADP records so the user prompt contains only the target task instruction.
+[CognitiveKernel/CognitiveKernel-Pro-SFT](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) contains supervised fine-tuning data for the paper [Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training](https://huggingface.co/papers/2508.00414). The dataset consists of single-step action-module examples where the assistant emits a `Thought:` plus a fenced Python `Code:` action. Source system prompts and formatting scaffolding are excluded from the extracted ATIF records so the user prompt contains only the target task instruction.
 
 The released files cover URLQA (`ck-pro-web.sft.jsonl`), DocBench (`docbench.sft.jsonl`), TableBench (`tablebench.sft.jsonl`), and WebWalkerQA (`webwalker_subset.sft.jsonl`). Other sources mentioned by the authors are not included in the public release because of license restrictions.
 

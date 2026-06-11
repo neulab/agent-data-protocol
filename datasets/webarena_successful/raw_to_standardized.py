@@ -1,111 +1,11 @@
-import json
+# ruff: noqa: E402, I001
 import sys
-from itertools import chain
+from pathlib import Path
 
-from webarena_constants import ASCII_CHARSET, FREQ_UNICODE_CHARSET, SPECIAL_KEYS
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from schema.action.api import ApiAction
-from schema.observation.image import ImageObservation
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.tool_call_links import create_trajectory_with_tool_call_links
-
-_id2key = list(chain(SPECIAL_KEYS, ASCII_CHARSET, FREQ_UNICODE_CHARSET, ["\n"]))
-
-root = "datasets/webarena_successful"
-
-# step does not have screenshot recording, skip to maintain the consistency of data format
-SOURCE_BLACK_LIST = ["SteP"]
-
-
-def process_data(raw_traj):
-    task = raw_traj["intent"]
-    model = raw_traj["source"]
-    if model in SOURCE_BLACK_LIST:
-        return None
-
-    traj = create_trajectory_with_tool_call_links(
-        id=str(raw_traj["task_id"]),
-        content=[TextObservation(content=task, source="user")],
-    )
-
-    for element in raw_traj["trajectory"]:
-        if "action" in element:
-            function = element["action"]["action_name"]
-            kwargs = {}
-
-            if function == "stop":
-                kwargs["answer"] = element["action"]["answer"]
-            elif function == "type":
-                # TODO: ignoring the special keys for now, fix this
-                kwargs["text"] = "".join(
-                    [
-                        _id2key[i]
-                        for i in element["action"]["text"]
-                        if i < len(_id2key) and i >= len(SPECIAL_KEYS)
-                    ]
-                )
-                kwargs["element_id"] = element["action"]["element_id"]
-            elif function in ["hover", "click"]:
-                kwargs["element_id"] = element["action"]["element_id"]
-            elif function == "scroll":
-                kwargs["dx"] = 0
-                kwargs["dy"] = 100 if element["action"]["direction"].lower() == "down" else -100
-            elif function in ["key_press", "press"]:
-                kwargs["key_comb"] = element["action"]["key_comb"]
-                function = "press"
-            elif function in ["new_tab", "goto", "goto_url"]:
-                kwargs["url"] = element["action"]["url"]
-                function = "goto" if function == "goto_url" else function
-            elif function in ["tab_focus", "page_focus"]:
-                kwargs["page_number"] = element["action"]["page_number"]
-                function = "tab_focus"
-            elif function in ["go_back", "page_close", "go_forward"]:
-                kwargs = {}
-                function = "tab_close" if function == "page_close" else function
-            else:
-                raise ValueError(f"Unknown function: {function}")
-
-            action = ApiAction(
-                function=function,
-                kwargs=kwargs,
-                description=element["metadata"].get("cot", ""),
-            )
-            traj.content.append(action)
-        elif "url" in element:
-            url = element["url"]
-            html = element["axtree"]
-            screenshot_path = element["screenshot_path"].replace(
-                "demo_trajs/images/", f"{root}/screenshots"
-            )
-            img_obs = ImageObservation(
-                content=screenshot_path,
-                annotations=[],
-                source="environment",
-            )
-            web_obs = WebObservation(
-                url=url,
-                viewport_size=[1280, 720],
-                html=html,
-                image_observation=img_obs,
-                axtree=None,
-            )
-            traj.content.append(web_obs)
-        else:
-            raise ValueError(f"Unknown element type: {element}")
-
-    return create_trajectory_with_tool_call_links(
-        id=traj.id,
-        content=traj.content,
-    ).model_dump()
+from scripts.raw_to_standardized_common import main
 
 
 if __name__ == "__main__":
-    # Process each line of input individually
-    for line in sys.stdin:
-        raw_data = json.loads(line)
-        standardized_data = process_data(raw_data)
-
-        # Print the standardized data as JSON if not None
-        if standardized_data:
-            print(json.dumps(standardized_data))
+    main(__file__)

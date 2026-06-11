@@ -39,9 +39,6 @@ from openhands.tools.terminal import TerminalTool
 from openhands.tools.terminal.definition import MAX_CMD_OUTPUT_SIZE, maybe_truncate
 from pydantic import SecretStr
 
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
 from schema.dataset_metadata import (
     DatasetMetadata,
     OpenAIToolSpec,
@@ -49,11 +46,16 @@ from schema.dataset_metadata import (
     is_browser_api_action,
     load_dataset_metadata,
 )
-from schema.observation.image import ImageObservation
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
-from scripts.atif_input import load_trajectory
+from scripts.atif_input import (
+    ApiAction,
+    CodeAction,
+    ImageObservation,
+    MessageAction,
+    TextObservation,
+    Trajectory,
+    WebObservation,
+    load_trajectory,
+)
 
 try:
     from openhands.tools.browser_use import BrowserToolSet
@@ -409,7 +411,7 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
 
 def heredoc_command(interpreter: str, language: str, content: str) -> str:
     digest = hashlib.sha1(content.encode()).hexdigest()[:12]
-    delimiter = f"ADP_{re.sub(r'[^A-Za-z0-9]+', '_', language).upper()}_{digest}"
+    delimiter = f"ATIF_{re.sub(r'[^A-Za-z0-9]+', '_', language).upper()}_{digest}"
     return f"{interpreter} <<'{delimiter}'\n{content}\n{delimiter}"
 
 

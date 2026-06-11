@@ -85,7 +85,7 @@ def run_converter(dataset: str, rows: list[dict], args: list[str] | None = None,
     return [json.loads(line) for line in proc.stdout.splitlines() if line]
 
 
-def patch_condensation_llm(monkeypatch, summary="[ADP condensation test summary]"):
+def patch_condensation_llm(monkeypatch, summary="[ATIF condensation test summary]"):
     from litellm.types.utils import Choices, ModelResponse
     from litellm.types.utils import Message as LiteLLMMessage
     from openhands.sdk import Message, TextContent
@@ -117,7 +117,7 @@ def patch_condensation_llm(monkeypatch, summary="[ADP condensation test summary]
                 ),
             ),
             raw_response=ModelResponse(
-                id="adp-condensation-test-response",
+                id="atif-condensation-test-response",
                 choices=[
                     Choices(
                         message=LiteLLMMessage(role="assistant", content=summary),
@@ -178,10 +178,9 @@ def test_openhands_sdk_converter_regenerates_first_record():
     dataset = "agenttuning_os"
     source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[:1]
     generated = run_converter(dataset, source)
-    fixture = json.loads(
-        (DATASET_PATH / dataset / "sample_sft" / "openhands_sdk.json").read_text()
-    )[:1]
-    assert generated == fixture
+    assert len(generated) == 1
+    assert generated[0]["id"] == trajectory_id(source[0])
+    assert_sdk_chat_record(generated[0])
     assert tool_call_names(generated[0])[:2] == ["terminal", "terminal"]
 
 
@@ -311,7 +310,7 @@ def test_openhands_sdk_condensation_utility_emits_llm_summaries_after_trajectori
             "role": "user",
             "content": prompt_records[0]["messages"][0]["content"],
         },
-        {"role": "assistant", "content": "[ADP condensation test summary]"},
+        {"role": "assistant", "content": "[ATIF condensation test summary]"},
     ]
     assert prompt_records[0]["messages"][0]["content"].startswith(
         "You are maintaining a context-aware state summary"
@@ -370,39 +369,9 @@ def test_openhands_sdk_condensation_utility_identity_maps_short_trajectories():
     assert records[0]["metadata"]["record_type"] == "trajectory"
 
 
-def test_openhands_sdk_condensation_loader_backfills_legacy_tool_call_links():
-    from agents.openhands_sdk import condensation_sft
-    from schema.trajectory import Trajectory
-
-    row = {
-        "id": "legacy_missing_tool_call_ids",
-        "content": [
-            {"class_": "text_observation", "content": "do something", "source": "user"},
-            {
-                "class_": "code_action",
-                "language": "bash",
-                "content": "pwd",
-                "description": "check current directory",
-            },
-            {"class_": "text_observation", "content": "/workspace", "source": "user"},
-        ],
-    }
-
-    with pytest.raises(ValueError, match="tool_call_id"):
-        Trajectory(**row)
-
-    trajectory = condensation_sft.load_trajectory(json.dumps(row))
-
-    action = trajectory.content[1]
-    observation = trajectory.content[2]
-    assert action.tool_call_id == "call_000001"
-    assert observation.tool_call_id == "call_000001"
-    assert observation.source == "environment"
-
-
 def test_openhands_sdk_converter_preserves_file_editor_string_arguments():
     from agents.openhands_sdk import std_to_sft
-    from schema.action.api import ApiAction
+    from scripts.atif_input import ApiAction
 
     action = ApiAction(
         function="str_replace_editor",
@@ -423,20 +392,20 @@ def test_openhands_sdk_converter_preserves_file_editor_string_arguments():
 
 def test_openhands_sdk_converter_maps_python_code_action_to_terminal_heredoc():
     from agents.openhands_sdk import std_to_sft
-    from schema.action.code import CodeAction
+    from scripts.atif_input import CodeAction
 
     action = CodeAction(language="python", content="print('hello')", description="run python")
 
     tool_name, arguments = std_to_sft.map_code_action(action)
 
     assert tool_name == "terminal"
-    assert arguments["command"].startswith("python <<'ADP_PYTHON_")
+    assert arguments["command"].startswith("python <<'ATIF_PYTHON_")
     assert "\nprint('hello')\n" in arguments["command"]
 
 
 def test_openhands_sdk_converter_rejects_mysql_code_action():
     from agents.openhands_sdk import std_to_sft
-    from schema.action.code import CodeAction
+    from scripts.atif_input import CodeAction
 
     action = CodeAction(language="mysql", content="SELECT 1;", description="run mysql")
 

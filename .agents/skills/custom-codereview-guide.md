@@ -20,7 +20,7 @@ For every dataset addition or dataset-format change, verify that the PR follows 
 - `sample_raw.json`, `sample_std.json`, and each `sample_sft/<agent_name>.json` represent **the same records in the same order**, with matching IDs between standardized and SFT stages. This is a hard requirement, not a soft preference.
 - Sample size is small but representative — normally 3–5 trajectories — and covers important edge cases (tool calls, command output, final answers, dataset-specific action types, failures/rewards/terminal states where applicable).
 - Extraction, standardization, and SFT conversion are deterministic so future contributors can reproduce the samples (no unseeded `random.*`, time-dependent behavior, or nondeterministic dict ordering in outputs).
-- `schema_raw.py` validates `sample_raw.json` and standardized trajectories validate against the ADP schema.
+- `schema_raw.py` validates `sample_raw.json` and standardized trajectories validate against the ATIF schema.
 - Every `ApiAction.function` exists in the dataset's `api.py`, and every `kwargs` object satisfies that function's Python signature (including required parameters such as the `message` argument for `finish`). If the dataset emits `ApiAction` without an `api.py`, flag it.
 - If standardized trajectories include top-level `available_apis`, verify the dataset has `api.py`, the source data explicitly specifies per-instance tool/API availability, the list is not merely copied wholesale from `api.py` or inferred from used actions, every listed API exists in `api.py`, and every `ApiAction.function` in that trajectory appears in the list.
 - SFT messages containing `<function=`, `<function_calls>`, or `<invoke name=` use `"from": "function_call"` (not `gpt`, `human`, `assistant`, etc.).

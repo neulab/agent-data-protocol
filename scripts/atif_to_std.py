@@ -1,6 +1,6 @@
 """Normalize ATIF JSONL records while keeping ATIF as both input and output.
 
-Despite the historical script name, this does not emit legacy ADP records. It
+Despite the historical script name, this does not emit legacy non-ATIF records. It
 standardizes ATIF tool names/arguments before downstream SFT converters consume
 the ATIF trajectory.
 """

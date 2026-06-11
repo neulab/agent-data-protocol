@@ -21,7 +21,7 @@ from openhands.sdk.event import MessageEvent, SystemPromptEvent
 from openhands.sdk.event.condenser import Condensation
 from openhands.sdk.llm.llm_response import LLMResponse
 from openhands.sdk.tool import ToolDefinition
-from pydantic import PrivateAttr, SecretStr, TypeAdapter, ValidationError
+from pydantic import PrivateAttr, SecretStr
 
 from agents.openhands_sdk.std_to_sft import (
     SDKEventBuilder,
@@ -31,21 +31,16 @@ from agents.openhands_sdk.std_to_sft import (
     sdk_tool_specs,
     serializable_tool,
 )
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
 from schema.dataset_metadata import load_dataset_metadata
-from schema.observation.image import ImageObservation
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.tool_call_links import backfill_adjacent_tool_call_links
-from schema.trajectory import Trajectory
-from scripts.atif_input import load_trajectory as load_atif_aware_trajectory
-
-TRAJECTORY_CONTENT_ADAPTER = TypeAdapter(
-    list[
-        ApiAction | CodeAction | MessageAction | TextObservation | WebObservation | ImageObservation
-    ]
+from scripts.atif_input import (
+    ApiAction,
+    CodeAction,
+    ImageObservation,
+    MessageAction,
+    TextObservation,
+    Trajectory,
+    WebObservation,
+    load_trajectory,
 )
 
 DEFAULT_MAX_SIZE = 1_000_000
@@ -82,20 +77,6 @@ class PromptCapturingLLM(LLM):
             on_token=on_token,
             **kwargs,
         )
-
-
-def load_trajectory(line: str) -> Trajectory:
-    try:
-        return load_atif_aware_trajectory(line)
-    except ValidationError:
-        data = json.loads(line)
-        content = data.get("content")
-        if not isinstance(content, list):
-            raise
-        data["content"] = backfill_adjacent_tool_call_links(
-            TRAJECTORY_CONTENT_ADAPTER.validate_python(content)
-        )
-        return Trajectory(**data)
 
 
 def format_messages(llm: LLM, messages: list[Message]) -> list[dict[str, Any]]:
