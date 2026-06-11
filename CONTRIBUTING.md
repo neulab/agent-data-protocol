@@ -82,7 +82,6 @@ datasets/$YOUR_DATASET_NAME/
 ├── extract_raw.py              # Script to extract raw data
 ├── raw_to_atif.py              # Raw-to-ATIF conversion script
 ├── atif_to_std.py              # ATIF-to-ATIF tool normalization script
-├── raw_to_standardized.py      # Conversion script
 ├── metadata.json               # Tool and runtime metadata
 ├── sample_raw.json             # 5 raw samples
 ├── sample_atif.json            # 5 ATIF samples
@@ -163,166 +162,128 @@ python datasets/$MY_DATASET/extract_raw.py | python scripts/jsonl_to_json.py | j
 
 #### Step 2: Create Standardized Format Converter
 
-1. Create `raw_to_atif.py` and `atif_to_std.py`; `raw_to_standardized.py` should be only a compatibility wrapper that emits normalized ATIF.
+1. Create `raw_to_atif.py` and `atif_to_std.py`.
 Map each raw message, tool call, and observation to the closest ATIF step, tool call, or observation result.
 
 The root `ATIFTrajectory` includes a protocol-level `schema_version` field. When converters return `ATIFTrajectory(...).model_dump()` or `model_dump_json()`, the current ATIF version is included automatically from `schema.atif.ATIF_SCHEMA_VERSION`.
 
 **Brief conversion examples:**
 ```python
-# Raw data examples → Standardized actions
+# Raw message → ATIF user/agent step
+Step(step_id=1, source="user", message="Hello")
 
-# Text message: {"type": "message", "text": "Hello"} →
-MessageAction(class_="MessageAction", message="Hello")
+# Raw function call → ATIF tool call on an agent step
+ToolCall(tool_call_id="call_1", function_name="click", arguments={"xpath": "//button"})
 
-# Code execution: {"type": "code", "language": "python", "code": "print('hi')"} →
-CodeAction(class_="CodeAction", language="python", content="print('hi')")
-
-# Function call: {"type": "action", "function": "click", "args": {"xpath": "//button"}} →
-ApiAction(class_="api_action", function="click", kwargs={"xpath": "//button"})
-
-# Environment response: {"type": "output", "text": "Command executed"} →
-TextObservation(class_="TextObservation", text="Command executed", source="environment")
+# Raw environment response → ATIF observation result linked to a tool call
+ObservationResult(source_call_id="call_1", content="Command executed")
 ```
 
 **Complete example:**
 ```python
 #!/usr/bin/env python3
-"""Convert raw data to standardized format."""
+"""Convert raw data to ATIF format."""
 
 import json
 import sys
-from schema.atif import ATIFTrajectory, Step, ToolCall, ATIFObservation, ObservationResult
 
-def convert_raw_to_standardized(raw_data):
-    """Convert a raw data sample to standardized format."""
+from schema.atif import ATIFObservation, ATIFTrajectory, Agent, ObservationResult, Step, ToolCall
 
-    content = []
 
-    # Example conversion logic
-    for item in raw_data["content"]:
-        if item["type"] == "message":
-            content.append(MessageAction(
-                class_="MessageAction",
-                message=item["message"],
-                description=item.get("thoughts", "")
-            ))
-        elif item["type"] == "python":
-            content.append(CodeAction(
-                class_="CodeAction",
-                language="python",
-                content=item["code"],
-                description=item.get("thoughts", "")
-            ))
-        elif item["type"] == "action":
-            content.append(ApiAction(
-                class_="api_action",
-                function=item["function"],
-                kwargs=item["args"],
-                description=item.get("thoughts", "")
-            ))
-        elif item["type"] == "observation":
-            content.append(TextObservation(
-                class_="TextObservation",
-                text=item["text"],
-                source="environment"
-            ))
+def convert_raw_to_atif(raw_data):
+    """Convert one raw sample to an ATIF trajectory."""
+    steps = [Step(step_id=1, source="user", message=raw_data["prompt"])]
 
-    return Trajectory(
-        id=raw_data["id"],
-        content=content,
-        details=raw_data.get("metadata", {})
+    tool_call = ToolCall(
+        tool_call_id="call_1",
+        function_name=raw_data["action"]["name"],
+        arguments=raw_data["action"].get("arguments", {}),
     )
+    steps.append(
+        Step(
+            step_id=2,
+            source="agent",
+            message=raw_data.get("thought", ""),
+            tool_calls=[tool_call],
+            observation=ATIFObservation(
+                results=[ObservationResult(source_call_id="call_1", content=raw_data["observation"])]
+            ),
+        )
+    )
+
+    return ATIFTrajectory(
+        trajectory_id=raw_data["id"],
+        agent=Agent(name="dataset_converter", version="raw"),
+        steps=steps,
+    )
+
 
 if __name__ == "__main__":
     for line in sys.stdin:
-        raw_data = json.loads(line.strip())
-        standardized = convert_raw_to_standardized(raw_data)
-        print(standardized.model_dump_json())
+        raw_data = json.loads(line)
+        atif = convert_raw_to_atif(raw_data)
+        print(atif.model_dump_json(exclude_none=True))
 ```
 
-**Using schema_raw.py in raw_to_standardized.py (if applicable):**
+**Using schema_raw.py in raw_to_atif.py (if applicable):**
    ```python
    from schema_raw import SchemaRaw
 
-   def convert_raw_to_standardized(raw_data):
+   def convert_raw_to_atif(raw_data):
        # Validate and parse raw data
        data = SchemaRaw(**raw_data)
 
        # Now use typed data with IDE support and validation
-       content = []
+       steps = []
        for item in data.items:
            # Process with type safety
            pass
    ```
 
-2. **Create API definitions (when applicable)**: If your standardized dataset contains ATIF tool calls, create an `api.py` file to define the available functions. This is crucial for later conversion to agent specific formats.
+2. **Declare custom tool metadata (when applicable)**: If your standardized dataset contains ATIF tool calls that are not built-in tools, add those tools to `metadata.json`. This is crucial for later conversion to agent-specific formats.
 
-   **When to include api.py:**
+   **When to declare custom tools in metadata.json:**
    - Your dataset contains structured actions (e.g., `go("bedroom")`, `click("button_id")`, `search("query")`)
    - Actions have specific parameters and can be represented as function calls
    - The data contains interactions with a specific environment, tool, or API
-   - You want to convert actions to `ApiAction` schema objects in your standardized format
+   - You want downstream SFT converters to validate and describe those tool calls consistently
 
-   **Why api.py is important for agents:**
+   **Why metadata.json is important for agents:**
    - **Function Call Training**: Agents learn to make structured function calls rather than generating free-form text
    - **Parameter Validation**: Ensures agents learn correct parameter types and formats
    - **Standardization**: Provides a consistent representation for tool calls across different datasets
    - **SFT Conversion**: Many agent training frameworks expect function call formats for fine-tuning
 
-   **What to include in api.py:**
-   ```python
-   def function_name(param1: type, param2: type) -> return_type:
-       """Clear description of what the function does.
-
-       Args:
-           param1 (type): Description of parameter 1
-           param2 (type): Description of parameter 2
-
-       Example:
-           function_name("example_value", 123)
-       """
-       pass
+   **Example metadata.json custom tool for a web browsing dataset:**
+   ```json
+   {
+     "custom_tools": [
+       {
+         "type": "function",
+         "function": {
+           "name": "click",
+           "description": "Click on a web element.",
+           "parameters": {
+             "type": "object",
+             "properties": {"xpath": {"type": "string"}},
+             "required": ["xpath"]
+           }
+         }
+       }
+     ]
+   }
    ```
 
-   **Example api.py for a web browsing dataset:**
-   ```python
-   def click(xpath: str) -> None:
-       """Click on a web element.
-
-       Args:
-           xpath (str): The xpath of the element to click.
-
-       Example:
-           click("//button[@id='submit']")
-       """
-       pass
-
-   def type(xpath: str, text: str) -> None:
-       """Type text into an input field.
-
-       Args:
-           xpath (str): The xpath of the input element.
-           text (str): The text to type.
-
-       Example:
-           type("//input[@name='username']", "john_doe")
-       """
-       pass
-   ```
-
-   Then in your `raw_to_standardized.py`, use `ApiAction` for structured actions:
+   Then in your `raw_to_atif.py`, use `ToolCall` for structured actions:
    ```python
    from schema.atif import ToolCall
 
-   # Convert structured actions to ApiAction
    if action_type == "click":
-       content.append(ApiAction(
-           class_="api_action",
-           function="click",
-           kwargs={"xpath": action_data["xpath"]},
-           description=action_data.get("thought", "")
-       ))
+       tool_call = ToolCall(
+           tool_call_id="call_1",
+           function_name="click",
+           arguments={"xpath": action_data["xpath"]},
+       )
    ```
 
 

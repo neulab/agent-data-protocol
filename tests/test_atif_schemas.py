@@ -98,9 +98,8 @@ def test_sample_atif_and_standardized_records_align(sample_path):
     ]
 
 
-def test_raw_to_atif_common_does_not_depend_on_adp_standardization():
+def test_raw_to_atif_common_does_not_depend_on_legacy_schema():
     source = (REPO_ROOT / "scripts" / "raw_to_atif_common.py").read_text()
-    assert "raw_to_standardized" not in source
     assert "schema.trajectory" not in source
 
 

@@ -22,5 +22,6 @@
 
 2. **Convert raw data to standardized format**
      ```sh
-     cat weblinx_raw.jsonl | python raw_to_standardized.py > weblinx_standardized.jsonl
+     cat weblinx_raw.jsonl | python raw_to_atif.py > weblinx_atif.jsonl
+     cat weblinx_atif.jsonl | python atif_to_std.py > weblinx_standardized.jsonl
      ```

@@ -24,4 +24,4 @@ This ADP conversion represents each task with a source instruction and the datas
 
 This source is a benchmark task repository rather than a multi-turn trajectory dataset. The converter therefore captures an oracle single-action trajectory from the reference solution script instead of interactive agent execution logs.
 
-The raw source files include Terminal-Bench contamination canary comments. These lines are preserved in `sample_raw.json` to reflect the source data, but `raw_to_standardized.py` strips them from generated `CodeAction` content so standardized and SFT training samples do not carry benchmark canary markers.
+The raw source files include Terminal-Bench contamination canary comments. These lines are preserved in `sample_raw.json` to reflect the source data, but `raw_to_atif.py` and `atif_to_std.py` strips them from generated `CodeAction` content so standardized and SFT training samples do not carry benchmark canary markers.

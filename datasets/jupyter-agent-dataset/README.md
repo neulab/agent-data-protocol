@@ -38,7 +38,12 @@ MAX_ROWS=3 MAX_ORIGINAL_NOTEBOOK_CHARS=500000 python datasets/$MY_DATASET/extrac
 
 cat datasets/$MY_DATASET/sample_raw.json \
   | python scripts/json_to_jsonl.py \
-  | python datasets/$MY_DATASET/raw_to_standardized.py \
+  | python datasets/$MY_DATASET/raw_to_atif.py \
+  | python scripts/jsonl_to_json.py \
+  > datasets/$MY_DATASET/sample_atif.json
+cat datasets/$MY_DATASET/sample_atif.json \
+  | python scripts/json_to_jsonl.py \
+  | python datasets/$MY_DATASET/atif_to_std.py \
   | python scripts/jsonl_to_json.py \
   > datasets/$MY_DATASET/sample_std.json
 

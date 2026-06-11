@@ -113,7 +113,7 @@ Original format from various sources (research papers, datasets, etc.)
 Dataset-specific raw-to-ATIF conversion using Harbor's Agent Trajectory Interchange Format. This layer preserves the raw tool/action shape with minimal normalization and is validated by `ATIFTrajectory`.
 
 ### 3. ATIF Normalization and Standardized Format
-`atif_to_std.py` normalizes ATIF tool names/arguments and emits ATIF JSONL. `raw_to_standardized.py` is retained as a compatibility command name that also emits normalized ATIF. Committed `sample_std.json` fixtures are ATIF std data:
+`atif_to_std.py` normalizes ATIF tool names/arguments and emits ATIF JSONL. Committed `sample_std.json` fixtures are ATIF std data:
 - **Steps**: `system`, `user`, or `agent` turns with natural-language messages
 - **Tool calls**: `function_name`, `arguments`, and `tool_call_id`
 - **Observations**: Tool/environment results linked with `source_call_id`
@@ -139,7 +139,6 @@ agent-data-protocol/
 │   │   ├── extract_raw.py
 │   │   ├── raw_to_atif.py
 │   │   ├── atif_to_std.py
-│   │   ├── raw_to_standardized.py
 │   │   ├── metadata.json
 │   │   ├── sample_raw.json
 │   │   ├── sample_atif.json

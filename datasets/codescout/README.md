@@ -45,7 +45,11 @@ MAX_ROWS_PER_SOURCE=1 python datasets/codescout/extract_raw.py \
 
 cat datasets/codescout/sample_raw.json \
   | python scripts/json_to_jsonl.py \
-  | python datasets/codescout/raw_to_standardized.py \
+  | python datasets/codescout/raw_to_atif.py \
+  | python scripts/jsonl_to_json.py > datasets/codescout/sample_atif.json
+cat datasets/codescout/sample_atif.json \
+  | python scripts/json_to_jsonl.py \
+  | python datasets/codescout/atif_to_std.py \
   | python scripts/jsonl_to_json.py > datasets/codescout/sample_std.json
 
 cat datasets/codescout/sample_std.json \

@@ -24,7 +24,7 @@
 - Assistant XML calls to `str_replace_editor` and `think` are converted to `ApiAction`.
 - Assistant XML calls to `finish` or `submit` are converted to terminal `MessageAction` content using the ADP `<finish> ... </finish>` convention.
 - Some resolved source rows end without an explicit `finish` or `submit` call. For those rows, standardization appends an environment success observation and a terminal finish message so the SFT trajectory has an explicit completion state.
-- Only resolved trajectories are emitted by `extract_raw.py` and `raw_to_standardized.py` for supervised fine-tuning samples.
+- Only resolved trajectories are emitted by `extract_raw.py` and `raw_to_atif.py` and `atif_to_std.py` for supervised fine-tuning samples.
 
 ## Sample Generation
 
@@ -33,6 +33,7 @@ export MY_DATASET=logicstar_swe-star
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
 python datasets/$MY_DATASET/extract_raw.py | head -3 | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_raw.json
-cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
+cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_atif.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_atif.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/atif_to_std.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
 cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft.json
 ```
