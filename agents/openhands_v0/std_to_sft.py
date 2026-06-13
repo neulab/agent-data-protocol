@@ -5,9 +5,6 @@ import os
 import re
 import sys
 import traceback
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from agents.openhands_v0.api import (
     browser_default_apis,

@@ -5,11 +5,6 @@ from __future__ import annotations
 import json
 import re
 import sys
-from pathlib import Path
-
-DATASET_DIR = Path(__file__).resolve().parent
-REPO_ROOT = DATASET_DIR.parents[1]
-sys.path.insert(0, str(REPO_ROOT))
 
 from schema.atif import ATIFTrajectory, normalize_atif_trajectory
 

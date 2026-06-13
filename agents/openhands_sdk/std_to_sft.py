@@ -9,10 +9,7 @@ import re
 import sys
 import tempfile
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
 os.environ.setdefault("LOG_LEVEL", "ERROR")
