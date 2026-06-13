@@ -184,6 +184,42 @@ def test_openhands_sdk_converter_regenerates_first_record():
     assert tool_call_names(generated[0])[:2] == ["terminal", "terminal"]
 
 
+def test_openhands_sdk_converter_balances_action_without_observation():
+    source = [
+        {
+            "schema_version": "ATIF-v1.7",
+            "trajectory_id": "missing-tool-observation",
+            "agent": {"name": "test", "version": "test"},
+            "extra": {"adp_available_apis": ["go"]},
+            "steps": [
+                {"step_id": 1, "source": "user", "message": "Move to the kitchen."},
+                {
+                    "step_id": 2,
+                    "source": "agent",
+                    "message": "",
+                    "tool_calls": [
+                        {
+                            "tool_call_id": "call_missing_observation",
+                            "function_name": "go",
+                            "arguments": {"location": "kitchen"},
+                        }
+                    ],
+                },
+            ],
+        }
+    ]
+
+    generated = run_converter("agenttuning_alfworld", source)
+
+    assert len(generated) == 1
+    assert_sdk_chat_record(generated[0])
+    tool_messages = [
+        message for message in generated[0]["messages"] if message.get("role") == "tool"
+    ]
+    assert tool_messages[-1]["tool_call_id"] == "call_missing_observation"
+    assert tool_messages[-1]["content"] == ""
+
+
 def test_openhands_sdk_converter_reads_dataset_at_call_time(monkeypatch):
     from agents.openhands_sdk import std_to_sft
 

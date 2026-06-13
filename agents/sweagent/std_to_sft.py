@@ -117,6 +117,11 @@ def standardized_event_to_swe_message(
             function_call = format_function("bash", {"command": api_action})
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
+        if function_name == "think":
+            thought_text = arguments.get("thought") or arguments.get("content") or ""
+            function_call = format_function("bash", {"command": f"think(thought={thought_text!r})"})
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
+
         raise ValueError(f"Undefined API: {event}")
 
     if isinstance(event, CodeAction):

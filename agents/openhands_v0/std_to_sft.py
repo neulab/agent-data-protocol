@@ -173,7 +173,8 @@ def standardized_event_to_openhands_v0_message(
         PREV_BID = None
         thought = action_text_prefix(event)
         function_name = event.function
-        arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
+        raw_arguments = dict(event.kwargs)
+        arguments = {k: v for k, v in raw_arguments.items() if k not in ["element_id", "xpath"]}
 
         # for tool that are one of the default OH tools
         if function_name in openhands_v0_default_tools and function_name not in api_sigs:
@@ -199,14 +200,14 @@ def standardized_event_to_openhands_v0_message(
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         # try to directly get the browsergym_id from the event kwargs
-        browsergym_id = event.kwargs.get("bid", None)
+        browsergym_id = raw_arguments.get("bid", None)
         if not browsergym_id:
-            browsergym_id = event.kwargs.get("element_id", None)
+            browsergym_id = raw_arguments.get("element_id", None)
         # this gets the browsergym_id of the element that the user is interacting with
         # the latest(last seen) html's obs is updated whenever build_axtree is called
         # the latest obs is used to get the browsergym_id
         if not browsergym_id:
-            event_xpath = event.kwargs.get("xpath", None)
+            event_xpath = raw_arguments.get("xpath", None)
             if event_xpath:
                 browsergym_id = get_generate_axtree().get_bid(id, event_xpath, "all")
                 if not browsergym_id:
@@ -236,20 +237,26 @@ def standardized_event_to_openhands_v0_message(
                 return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
             raise ValueError(f"Undefined API or missing browser element identifier: {event}")
         if not browsergym_id[0] == browsergym_id[-1] == '"':
-            browsergym_id = f'"{browsergym_id[0]}"'
+            browsergym_id = json.dumps(browsergym_id)
         PREV_BID = browsergym_id
         # for apis that are browser based but are not OH default browser apis
         # these should all be dataset specific apis
         if function_name in api_sigs:
+            browser_arguments = dict(raw_arguments)
             if "bid" in api_sigs[function_name]["required"] and browsergym_id:
-                arguments["bid"] = browsergym_id
+                browser_arguments["bid"] = browsergym_id
+                browser_arguments.pop("xpath", None)
+                browser_arguments.pop("element_id", None)
+                browser_arguments.pop("id", None)
             if not verify_args(
-                api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
+                api_sigs[function_name]["required"],
+                api_sigs[function_name]["optional"],
+                browser_arguments,
             ):
                 if thought:
                     return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
                 raise ValueError(f"Function call with wrong argument: {event}")
-            api_action = format_python_call(function_name, arguments)
+            api_action = format_python_call(function_name, browser_arguments)
             function_call = format_function(
                 api_env, {function_args.get(api_env, "code"): api_action}
             )
@@ -257,8 +264,12 @@ def standardized_event_to_openhands_v0_message(
 
         # for tool calls that are browser based and need bid
         api_args = browser_default_apis[function_name]
+        arguments = dict(raw_arguments)
         if browsergym_id:
             arguments["bid"] = browsergym_id
+            arguments.pop("xpath", None)
+            arguments.pop("element_id", None)
+            arguments.pop("id", None)
 
         # to handle mismatching "bid" and "id" arguments
         if "bid" not in arguments:

@@ -49,7 +49,7 @@ def process_row(line):
                     thought = ""
                     message = message_content
                 else:
-                    return []
+                    raise ValueError(f"Unsupported AgentLab function call: {message_content}")
                 action = f'send_msg_to_user(text="{message}")'
 
             else:

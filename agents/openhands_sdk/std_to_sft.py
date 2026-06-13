@@ -474,6 +474,7 @@ class SDKEventBuilder:
         self.tool_names_by_tool_call_id: dict[str, str] = {}
         self.call_index = 0
         self.last_action_event: ActionEvent | None = None
+        self.pending_tool_call_ids: list[str] = []
 
     @property
     def tools_map(self) -> dict[str, ToolDefinition]:
@@ -485,6 +486,7 @@ class SDKEventBuilder:
     def append_action_batch(
         self, events: list[ApiAction | CodeAction], *, batch_number: int
     ) -> None:
+        self.flush_missing_tool_results()
         response_id = f"llm_response_{batch_number:06d}"
         for offset, event in enumerate(events):
             self.call_index += 1
@@ -506,42 +508,46 @@ class SDKEventBuilder:
             )
             self.action_ids_by_tool_call_id[action_event.tool_call_id] = action_event.id
             self.tool_names_by_tool_call_id[action_event.tool_call_id] = action_event.tool_name
+            self.pending_tool_call_ids.append(action_event.tool_call_id)
             self.last_action_event = action_event
             self.append(action_event)
+
+    def _append_tool_result(self, tool_call_id: str, content: str) -> None:
+        action_id = self.action_ids_by_tool_call_id.get(tool_call_id)
+        if action_id is None:
+            raise ValueError(f"No action event found for observation {tool_call_id!r}")
+        tool_name = self.tool_names_by_tool_call_id[tool_call_id]
+        self.append(
+            ObservationEvent(
+                observation=DatasetToolObservation(output=content),
+                action_id=action_id,
+                tool_name=tool_name,
+                tool_call_id=tool_call_id,
+            )
+        )
+        if tool_call_id in self.pending_tool_call_ids:
+            self.pending_tool_call_ids.remove(tool_call_id)
+
+    def flush_missing_tool_results(self) -> None:
+        for tool_call_id in list(self.pending_tool_call_ids):
+            self._append_tool_result(tool_call_id, "")
 
     def append_observation(
         self, event: TextObservation | WebObservation | ImageObservation
     ) -> None:
         content = observation_content(event)
         if event.tool_call_id is None:
+            self.flush_missing_tool_results()
             source = getattr(event, "source", "environment")
             role = "assistant" if source == "agent" else "user"
             self.append(MessageEvent(source=source, llm_message=text_message(role, content)))
             return
-        action_id = self.action_ids_by_tool_call_id.get(event.tool_call_id)
-        if action_id is None:
-            raise ValueError(f"No action event found for observation {event.tool_call_id!r}")
-        tool_name = self.tool_names_by_tool_call_id[event.tool_call_id]
-        self.append(
-            ObservationEvent(
-                observation=DatasetToolObservation(output=content),
-                action_id=action_id,
-                tool_name=tool_name,
-                tool_call_id=event.tool_call_id,
-            )
-        )
+        self._append_tool_result(event.tool_call_id, content)
 
     def append_synthetic_tool_result(self, content: str) -> None:
         if self.last_action_event is None:
             raise ValueError("No action event is available for a synthetic tool result")
-        self.append(
-            ObservationEvent(
-                observation=DatasetToolObservation(output=content),
-                action_id=self.last_action_event.id,
-                tool_name=self.last_action_event.tool_name,
-                tool_call_id=self.last_action_event.tool_call_id,
-            )
-        )
+        self._append_tool_result(self.last_action_event.tool_call_id, content)
 
 
 def observation_content(event: TextObservation | WebObservation | ImageObservation) -> str:
@@ -582,6 +588,7 @@ def append_message_action(builder: SDKEventBuilder, event: MessageAction) -> Non
         builder.append_action_batch([api_action], batch_number=builder.call_index + 1)
         return
     content = "\n\n".join(part for part in [event_description(event), event.content] if part)
+    builder.flush_missing_tool_results()
     builder.append(
         MessageEvent(
             source="agent",
@@ -622,6 +629,7 @@ def append_standardized_events(
         else:
             raise ValueError(f"Unsupported event type: {type(event)}")
         index += 1
+    builder.flush_missing_tool_results()
 
 
 def serializable_tool(tool: ToolDefinition) -> dict[str, Any]:
