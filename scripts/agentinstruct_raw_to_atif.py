@@ -12,7 +12,9 @@ def has_valid_conversation_shape(record: dict) -> bool:
         return False
     if roles and roles[0] == "agent":
         return False
-    return not any(current == "agent" and following == "agent" for current, following in zip(roles, roles[1:]))
+    return not any(
+        current == "agent" and following == "agent" for current, following in zip(roles, roles[1:])
+    )
 
 
 def main(script_file: str) -> None:  # noqa: ARG001
