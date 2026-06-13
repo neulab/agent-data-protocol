@@ -6,22 +6,6 @@ import pytest
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
 
-# Datasets that are not completely finished (not documented in DATASETS.md)
-INCOMPLETE_DATASETS = [
-    "android_in_the_wild",
-    "androidcontrol",
-    "eto",
-    "go-browse-wa",
-    "llava_plus",
-    "mind2web",
-    "omniact",
-    "screenagent",
-    "turkingbench",
-    "webarena_successful",
-    "weblinx",
-    "wonderbread",
-]
-
 
 def get_subdirectories(directory):
     ignore_dirs = ["__pycache__"]
@@ -33,17 +17,17 @@ def get_subdirectories(directory):
 
 
 @pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
-def test_sample_atif_and_openhands_v0_sft_records_align(subdir):
-    """OpenHands v0 SFT samples should preserve normalized ATIF record ids."""
+def test_sample_atif_and_openhands_sdk_sft_records_align(subdir):
+    """OpenHands SDK SFT samples should preserve normalized ATIF record ids."""
     subdir_path = os.path.join(DATASET_PATH, subdir)
     sample_atif_path = os.path.join(subdir_path, "sample_atif.json")
-    sample_sft_path = os.path.join(subdir_path, "sample_sft", "openhands_v0.json")
+    sample_sft_path = os.path.join(subdir_path, "sample_sft", "openhands_sdk.json")
 
     if not os.path.exists(sample_atif_path):
-        pytest.skip(f"sample_atif.json not found in {subdir_path}")
+        raise AssertionError(f"sample_atif.json not found in {subdir_path}")
 
     assert os.path.exists(sample_sft_path), (
-        f"sample_sft/openhands_v0.json not found in {subdir_path}"
+        f"sample_sft/openhands_sdk.json not found in {subdir_path}"
     )
 
     with open(sample_atif_path, "r") as f:
@@ -65,9 +49,9 @@ def test_sample_atif_and_openhands_v0_sft_records_align(subdir):
 
 
 @pytest.mark.parametrize("subdir", get_subdirectories(DATASET_PATH))
-def test_std_to_sft_conversion(subdir):
+def test_std_to_openhands_sdk_sft_conversion(subdir):
     """
-    Test that sample_sft/openhands_v0.json aligns with ATIF records.
+    Test that sample_sft/openhands_sdk.json aligns with ATIF records.
 
     Checks:
     1. Both files exist
@@ -75,21 +59,17 @@ def test_std_to_sft_conversion(subdir):
     3. Each sample has the expected structure
     4. The number of turns in each sample is similar
     """
-    # Skip incomplete datasets
-    if subdir in INCOMPLETE_DATASETS:
-        pytest.skip(f"Skipping incomplete dataset: {subdir}")
-
     subdir_path = os.path.join(DATASET_PATH, subdir)
 
     # Check if both files exist
     sample_atif_path = os.path.join(subdir_path, "sample_atif.json")
-    sample_sft_path = os.path.join(subdir_path, "sample_sft", "openhands_v0.json")
+    sample_sft_path = os.path.join(subdir_path, "sample_sft", "openhands_sdk.json")
 
     if not os.path.exists(sample_atif_path):
-        pytest.skip(f"sample_atif.json not found in {subdir_path}")
+        raise AssertionError(f"sample_atif.json not found in {subdir_path}")
 
     assert os.path.exists(sample_sft_path), (
-        f"sample_sft/openhands_v0.json not found in {subdir_path}"
+        f"sample_sft/openhands_sdk.json not found in {subdir_path}"
     )
 
     # Load the files
@@ -113,17 +93,17 @@ def test_std_to_sft_conversion(subdir):
         )
 
         # Check if the SFT sample has the expected structure
-        assert "conversations" in sft_sample, (
-            f"Sample {i} in {subdir} SFT data missing 'conversations' field"
+        assert "messages" in sft_sample, f"Sample {i} in {subdir} SFT data missing 'messages' field"
+        assert sft_sample["messages"][0]["role"] == "system", (
+            f"Sample {i} in {subdir} SFT data missing initial SDK system message"
         )
-        assert "system" in sft_sample, f"Sample {i} in {subdir} SFT data missing 'system' field"
 
         # Check if the number of turns is similar
         # In ATIF format, each turn is an item in the "steps" array
         atif_turns = len(atif_sample["steps"])
 
-        # In SFT format, each turn is an item in the "conversations" array
-        sft_turns = len(sft_sample["conversations"])
+        # In SDK SFT format, each turn is an item in the "messages" array.
+        sft_turns = max(0, len(sft_sample["messages"]) - 1)
 
         # The number of turns might not be exactly the same due to how std_to_sft.py processes the data.
         # For example, system messages might be handled differently. We'll allow some flexibility but

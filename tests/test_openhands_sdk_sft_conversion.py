@@ -16,13 +16,10 @@ from schema.dataset_metadata import (
 
 ROOT = Path(__file__).parent.parent
 DATASET_PATH = ROOT / "datasets"
-SDK_SAMPLE_DATASETS = [
-    "agenttuning_alfworld",
-    "agenttuning_kg",
-    "agenttuning_mind2web",
-    "agenttuning_os",
-    "agenttuning_webshop",
-]
+
+
+def sample_std_datasets():
+    return sorted(path.parent.name for path in DATASET_PATH.glob("*/sample_std.json"))
 
 
 def content_text(message):
@@ -134,17 +131,14 @@ def patch_condensation_llm(monkeypatch, summary="[ATIF condensation test summary
     monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "completion", fake_completion)
 
 
-def test_openhands_sdk_generated_samples_are_sdk_chat_records():
-    for dataset in SDK_SAMPLE_DATASETS:
-        records = json.loads(
-            (DATASET_PATH / dataset / "sample_sft" / "openhands_sdk.json").read_text()
-        )
-        std_rows = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())
-        metadata = load_dataset_metadata(dataset, required=True)
-        assert [record["id"] for record in records] == [trajectory_id(row) for row in std_rows]
-        assert metadata.custom_tools or metadata.code_enabled or metadata.browser_enabled
-        for record in records:
-            assert_sdk_chat_record(record)
+@pytest.mark.parametrize("dataset", sample_std_datasets())
+def test_openhands_sdk_generated_samples_are_sdk_chat_records(dataset):
+    records = json.loads((DATASET_PATH / dataset / "sample_sft" / "openhands_sdk.json").read_text())
+    std_rows = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())
+    load_dataset_metadata(dataset, required=True)
+    assert [record["id"] for record in records] == [trajectory_id(row) for row in std_rows]
+    for record in records:
+        assert_sdk_chat_record(record)
 
 
 def test_openhands_sdk_converter_uses_metadata_custom_tools():

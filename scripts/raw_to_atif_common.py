@@ -346,6 +346,13 @@ def xml_tool_calls(content: str) -> tuple[str, list[ToolCall]]:
                 flags=re.DOTALL,
             )
         }
+        has_unnamed_parameters = re.search(
+            r"<parameter>(.*?)</parameter>",
+            function_match.group(2),
+            flags=re.DOTALL,
+        )
+        if not params and (function_name == "str_replace_editor" or has_unnamed_parameters):
+            return message, tool_calls
         message = (content[: function_match.start()] + content[function_match.end() :]).strip()
         tool_calls.append(
             ToolCall(

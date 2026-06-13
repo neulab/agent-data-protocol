@@ -6,7 +6,12 @@ import pytest
 from pydantic import ValidationError
 
 from schema.atif import ATIFTrajectory
-from schema.dataset_metadata import custom_tool_names, is_browser_api_action, load_dataset_metadata
+from schema.dataset_metadata import (
+    custom_tool_map,
+    custom_tool_names,
+    is_browser_api_action,
+    load_dataset_metadata,
+)
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
 NUMERIC_DETAIL_KEYS = {"reward", "score", "step"}
@@ -23,6 +28,104 @@ NUMERIC_DETAIL_KEY_SUFFIXES = {
     "_score",
     "_success",
 }
+BUILT_IN_TOOL_SCHEMAS = {
+    "execute_bash": {
+        "type": "object",
+        "properties": {
+            "command": {"type": "string"},
+            "is_input": {"type": "boolean"},
+            "reset": {"type": "boolean"},
+            "security_risk": {"type": "string"},
+            "summary": {"type": "string"},
+            "timeout": {"type": "number"},
+        },
+        "required": ["command"],
+        "additionalProperties": False,
+    },
+    "execute_ipython_cell": {
+        "type": "object",
+        "properties": {"code": {"type": "string"}},
+        "required": ["code"],
+        "additionalProperties": False,
+    },
+    "finish": {
+        "type": "object",
+        "properties": {"message": {"type": "string"}, "task_completed": {"type": "string"}},
+        "required": ["message", "task_completed"],
+        "additionalProperties": False,
+    },
+    "stop": {
+        "type": "object",
+        "properties": {"message": {"type": "string"}, "output": {"type": "string"}},
+        "additionalProperties": False,
+    },
+    "submit": {"type": "object", "properties": {}, "additionalProperties": False},
+    "str_replace_editor": {
+        "type": "object",
+        "properties": {
+            "command": {"type": "string"},
+            "path": {"type": "string"},
+            "file_text": {"type": "string"},
+            "old_str": {"type": "string"},
+            "new_str": {"type": "string"},
+            "insert_line": {"type": "integer"},
+            "summary": {"type": "string"},
+            "view_range": {"type": "array", "items": {"type": "integer"}},
+        },
+        "required": ["command", "path"],
+        "additionalProperties": False,
+    },
+    "think": {
+        "type": "object",
+        "properties": {"thought": {"type": "string"}},
+        "required": ["thought"],
+        "additionalProperties": False,
+    },
+    "task_tracker": {"type": "object", "properties": {}, "additionalProperties": True},
+}
+
+
+def validate_schema_value(schema, value, path):
+    if not schema:
+        return []
+    if "anyOf" in schema:
+        option_errors = [validate_schema_value(option, value, path) for option in schema["anyOf"]]
+        if any(not errors for errors in option_errors):
+            return []
+        return [f"{path} did not match anyOf: {option_errors[0]}"]
+    schema_type = schema.get("type")
+    if schema_type == "object":
+        if not isinstance(value, dict):
+            return [f"{path} must be an object"]
+        errors = []
+        properties = schema.get("properties", {}) or {}
+        for key in schema.get("required", []) or []:
+            if key not in value:
+                errors.append(f"{path}.{key} is required")
+        if schema.get("additionalProperties") is False:
+            extra = sorted(set(value) - set(properties))
+            if extra:
+                errors.append(f"{path} has unsupported properties {extra}")
+        for key, item in value.items():
+            if key in properties:
+                errors.extend(validate_schema_value(properties[key], item, f"{path}.{key}"))
+        return errors
+    if schema_type == "array" and not isinstance(value, list):
+        return [f"{path} must be an array"]
+    if schema_type == "boolean" and not isinstance(value, bool):
+        return [f"{path} must be a boolean"]
+    if schema_type == "integer" and not (isinstance(value, int) and not isinstance(value, bool)):
+        return [f"{path} must be an integer"]
+    if schema_type == "number" and not (
+        isinstance(value, (int, float)) and not isinstance(value, bool)
+    ):
+        return [f"{path} must be a number"]
+    if schema_type == "string" and not isinstance(value, str):
+        return [f"{path} must be a string"]
+    enum = schema.get("enum")
+    if enum is not None and value not in enum:
+        return [f"{path} must be one of {enum}"]
+    return []
 
 
 def is_numeric_detail_key(key):
@@ -104,6 +207,7 @@ def test_sample_standardized_atif_against_schema(sample_path):
     dataset_name = Path(sample_path).parent.name
     metadata = load_dataset_metadata(dataset_name, required=True)
     api_function_names = custom_tool_names(metadata)
+    api_function_specs = custom_tool_map(metadata)
     built_in_api_names = {
         "execute_bash",
         "execute_code",
@@ -195,5 +299,37 @@ def test_sample_standardized_atif_against_schema(sample_path):
                         f"{tool_call.function_name} not found in metadata.json in "
                         f"{os.path.dirname(sample_path)}"
                     )
+                    if tool_call.function_name in {"execute_bash", "execute_ipython_cell"}:
+                        expected_language = (
+                            "bash" if tool_call.function_name == "execute_bash" else "python"
+                        )
+                        assert expected_language in metadata.code_enabled, (
+                            f"{tool_call.function_name} is used in {sample_path} sample "
+                            f"{sample_id}, but metadata.json code_enabled does not include "
+                            f"{expected_language!r}"
+                        )
+                    if tool_call.function_name == "str_replace_editor":
+                        assert metadata.file_editor_enabled, (
+                            f"str_replace_editor is used in {sample_path} sample {sample_id}, "
+                            "but metadata.json file_editor_enabled is false"
+                        )
+                    if tool_call.function_name in api_function_specs:
+                        argument_schema = api_function_specs[
+                            tool_call.function_name
+                        ].function.parameters
+                    elif tool_call.function_name in BUILT_IN_TOOL_SCHEMAS:
+                        argument_schema = BUILT_IN_TOOL_SCHEMAS[tool_call.function_name]
+                    else:
+                        argument_schema = None
+                    if argument_schema is not None:
+                        argument_errors = validate_schema_value(
+                            argument_schema,
+                            tool_call.arguments,
+                            f"{tool_call.function_name}.arguments",
+                        )
+                        assert not argument_errors, (
+                            f"Tool arguments do not match metadata/schema in {sample_path} "
+                            f"sample {sample_id} step {step_id}: {argument_errors}"
+                        )
         except ValidationError as e:
             pytest.fail(f"Validation failed for {sample_path}: {str(e)}")

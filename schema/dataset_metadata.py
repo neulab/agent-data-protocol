@@ -45,12 +45,22 @@ class OpenAIToolSpec(BaseModel):
     function: OpenAIFunctionSpec
 
 
+class SampleExpectations(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    min_std_steps: int | None = None
+    min_std_tool_calls: int | None = None
+    min_sdk_messages: int | None = None
+
+
 class DatasetMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     custom_tools: list[OpenAIToolSpec] = Field(default_factory=list)
     code_enabled: list[str] = Field(default_factory=list)
+    file_editor_enabled: bool = False
     browser_enabled: bool = False
+    sample_expectations: SampleExpectations = Field(default_factory=SampleExpectations)
 
     @model_validator(mode="after")
     def validate_unique_custom_tool_names(self):

@@ -44,6 +44,7 @@ def _parse_browser_action(action: str) -> tuple[str | None, dict[str, Any]]:
         "press": ["bid", "key_comb"],
         "fill": ["bid", "value"],
         "select_option": ["bid", "options"],
+        "send_msg_to_user": ["msg"],
         "scroll": ["delta_x", "delta_y"],
     }.get(function_name, [])
     for name, value in zip(positional_names, args):

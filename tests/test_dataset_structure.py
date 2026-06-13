@@ -58,15 +58,15 @@ def test_dataset_structure(subdir):
     assert os.path.exists(sample_std_path), f"sample_std.json not found in {subdir_path}"
     assert os.path.exists(sample_atif_path), f"sample_atif.json not found in {subdir_path}"
 
-    # If sample_std.json exists, then an OpenHands v0 SFT sample should exist.
+    # If sample_std.json exists, then an OpenHands SDK SFT sample should exist.
     if os.path.exists(sample_std_path):
         sample_sft_dir = os.path.join(subdir_path, "sample_sft")
-        openhands_v0_sft_path = os.path.join(sample_sft_dir, "openhands_v0.json")
+        openhands_sdk_sft_path = os.path.join(sample_sft_dir, "openhands_sdk.json")
         assert os.path.isdir(sample_sft_dir), (
             f"sample_std.json exists but sample_sft directory not found in {subdir_path}"
         )
-        assert os.path.exists(openhands_v0_sft_path), (
-            f"sample_std.json exists but sample_sft/openhands_v0.json not found in {subdir_path}"
+        assert os.path.exists(openhands_sdk_sft_path), (
+            f"sample_std.json exists but sample_sft/openhands_sdk.json not found in {subdir_path}"
         )
 
     # Check for other JSON files that shouldn't be there

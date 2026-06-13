@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 import re
 from typing import Any, Literal, Union, cast
@@ -160,6 +161,59 @@ def content_to_text(content: ATIFContent) -> str:
     return "\n".join(parts)
 
 
+def parse_jsonish_scalar(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        pass
+    try:
+        return ast.literal_eval(value)
+    except (ValueError, SyntaxError):
+        return value
+
+
+def parse_bool(value: Any) -> Any:
+    value = parse_jsonish_scalar(value)
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+    return value
+
+
+def normalize_builtin_tool_arguments(
+    function_name: str, arguments: dict[str, Any]
+) -> dict[str, Any]:
+    normalized = dict(arguments)
+    if function_name == "execute_bash":
+        if "command" in normalized:
+            normalized["command"] = str(normalized["command"])
+        for key in ("is_input", "reset"):
+            if key in normalized:
+                normalized[key] = parse_bool(normalized[key])
+        if "timeout" in normalized:
+            normalized["timeout"] = parse_jsonish_scalar(normalized["timeout"])
+        return normalized
+    if function_name == "execute_ipython_cell":
+        if "code" in normalized:
+            normalized["code"] = str(normalized["code"])
+        return normalized
+    if function_name == "str_replace_editor":
+        for key in ("command", "path", "file_text", "old_str", "new_str"):
+            if key in normalized:
+                normalized[key] = str(normalized[key])
+        if "insert_line" in normalized:
+            normalized["insert_line"] = parse_jsonish_scalar(normalized["insert_line"])
+        if "view_range" in normalized:
+            normalized["view_range"] = parse_jsonish_scalar(normalized["view_range"])
+        return normalized
+    return normalized
+
+
 def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
     normalized = cast(ATIFTrajectory, trajectory.model_copy(deep=True))
     seen_tool_call_ids: set[str] = set()
@@ -249,6 +303,7 @@ def normalize_atif_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
                     "message": json.dumps(arguments.get("locations") or arguments),
                     "task_completed": "true",
                 }
+            arguments = normalize_builtin_tool_arguments(tool_call.function_name, arguments)
             if normalized_language and tool_call.extra and "language" in tool_call.extra:
                 tool_call.extra = {**tool_call.extra, "language": normalized_language}
             tool_call.arguments = arguments
