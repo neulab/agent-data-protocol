@@ -10,9 +10,7 @@ from scripts.raw_to_atif_common import trajectory_from_record
 def atif_record(record: dict[str, Any]) -> dict[str, Any]:
     converted = dict(record)
     answer = {
-        key.split(".", 1)[1]: value
-        for key, value in record.items()
-        if key.startswith("Answer.")
+        key.split(".", 1)[1]: value for key, value in record.items() if key.startswith("Answer.")
     }
     if answer:
         converted["Answer"] = answer
