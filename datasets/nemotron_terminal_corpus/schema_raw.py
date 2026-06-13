@@ -1,11 +1,12 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ConversationTurn(BaseModel):
     role: str
     content: str
+    model_config = ConfigDict(extra="allow")
 
 
 class SchemaRaw(BaseModel):
@@ -19,3 +20,4 @@ class SchemaRaw(BaseModel):
     run_id: Optional[str] = None
     trial_name: Optional[str] = None
     enable_thinking: Optional[bool] = None
+    model_config = ConfigDict(extra="allow")

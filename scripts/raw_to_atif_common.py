@@ -30,6 +30,8 @@ from schema.atif import (
 ROLE_MAP = {
     "assistant": "agent",
     "agent": "agent",
+    "bard": "agent",
+    "chatgpt": "agent",
     "gpt": "agent",
     "model": "agent",
     "system": "system",

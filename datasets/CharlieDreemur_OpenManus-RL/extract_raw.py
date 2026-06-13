@@ -31,21 +31,12 @@ def fetch_rows(offset: int, length: int) -> dict:
         return json.loads(response.read().decode("utf-8"))
 
 
-def normalize_row(row: dict) -> dict:
-    return {
-        "id": row["id"],
-        "conversations": [
-            {"role": turn["role"], "content": turn["content"]} for turn in row["conversations"]
-        ],
-    }
-
-
 def iter_representative_rows() -> Iterable[dict]:
     for offset in REPRESENTATIVE_OFFSETS:
         payload = fetch_rows(offset, 1)
         rows = payload.get("rows", [])
         if rows:
-            yield normalize_row(rows[0]["row"])
+            yield rows[0]["row"]
 
 
 def iter_all_rows(skip_ids: set[str]) -> Iterable[dict]:
@@ -58,7 +49,7 @@ def iter_all_rows(skip_ids: set[str]) -> Iterable[dict]:
         if not rows:
             break
         for wrapped in rows:
-            row = normalize_row(wrapped["row"])
+            row = wrapped["row"]
             if row["id"] not in skip_ids:
                 yield row
         offset += len(rows)
