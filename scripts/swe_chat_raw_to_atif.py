@@ -14,7 +14,9 @@ def flattened_session(record: dict[str, Any]) -> dict[str, Any]:
         session = {}
     first_turn = turns[0] if turns and isinstance(turns[0], dict) else {}
     return {
-        "session_id": record.get("session_id") or session.get("session_id") or first_turn.get("session_id"),
+        "session_id": record.get("session_id")
+        or session.get("session_id")
+        or first_turn.get("session_id"),
         "repo_id": session.get("repo_id") or first_turn.get("repo_id"),
         "checkpoint_pk": first_turn.get("checkpoint_pk") or session.get("canonical_checkpoint_pk"),
         "user_id": session.get("user_id") or first_turn.get("user_id"),

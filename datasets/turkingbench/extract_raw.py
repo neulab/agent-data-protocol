@@ -37,12 +37,4 @@ if __name__ == "__main__":
             row = row.fillna("").to_dict()
             row["_id"] = row["Task"] + "__" + str(index)
 
-            # TODO: handle this in SchemaRaw using @root_validator?
-            # put all keys that start with "Answer." into a nested dict
-            row["Answer"] = {
-                k.split(".", 1)[1]: v for k, v in row.items() if k.startswith("Answer.")
-            }
-            # remove all keys that start with "Answer."
-            row = {k: v for k, v in row.items() if not k.startswith("Answer.")}
-
             print(json.dumps(row))

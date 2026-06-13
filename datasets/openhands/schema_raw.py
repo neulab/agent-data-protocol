@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class Inputs(BaseModel):
@@ -100,7 +100,7 @@ class TrajectoryItem(BaseModel):
     observation: Optional[str] = None
     content: Optional[str] = ""
     log: Optional[str] = None
-    extras: Optional[Extras] = None
+    extras: Optional[Union[str, Extras]] = None
     cause: Optional[int] = None
     error: Optional[Union[str, bool]] = None
     error_code: Optional[int] = None
@@ -118,3 +118,5 @@ class SchemaRaw(BaseModel):
     timestamp: Optional[str] = None
     permissions: Optional[str] = None
     trajectory: List[TrajectoryItem]
+
+    model_config = ConfigDict(extra="allow")
