@@ -8,6 +8,7 @@ through ADP standardization or apply repository-wide tool normalization. Dataset
 
 from __future__ import annotations
 
+import ast
 import json
 import re
 import sys
@@ -30,6 +31,7 @@ from schema.atif import (
 ROLE_MAP = {
     "assistant": "agent",
     "agent": "agent",
+    "ai": "agent",
     "bard": "agent",
     "chatgpt": "agent",
     "gpt": "agent",
@@ -272,6 +274,43 @@ def source_tool_call(message: dict[str, Any]) -> list[ToolCall]:
     ]
 
 
+def function_calls_field_tool_calls(message: dict[str, Any]) -> list[ToolCall]:
+    raw_calls = message.get("function_calls")
+    if not raw_calls:
+        return []
+    calls = raw_calls if isinstance(raw_calls, list) else str(raw_calls).splitlines()
+    tool_calls = []
+    for index, raw_call in enumerate(calls, start=1):
+        if isinstance(raw_call, dict):
+            name = raw_call.get("name") or raw_call.get("function_name")
+            arguments = parse_arguments(raw_call.get("arguments"))
+        else:
+            match = re.match(r"\s*([A-Za-z0-9_.-]+)\((.*)\)\s*$", str(raw_call), flags=re.DOTALL)
+            if not match:
+                continue
+            name = match.group(1)
+            try:
+                parsed = ast.parse(f"f({match.group(2)})", mode="eval")
+                arguments = {
+                    keyword.arg: ast.literal_eval(keyword.value)
+                    for keyword in parsed.body.keywords
+                    if keyword.arg is not None
+                }
+            except (SyntaxError, ValueError):
+                arguments = {"arguments": match.group(2)}
+        if not name:
+            continue
+        tool_calls.append(
+            ToolCall(
+                tool_call_id=f"call_{index}",
+                function_name=re.sub(r"[^A-Za-z0-9_]", "_", str(name)),
+                arguments=arguments,
+                extra={"raw_function_name": str(name)},
+            )
+        )
+    return tool_calls
+
+
 def xml_tool_calls(content: str) -> tuple[str, list[ToolCall]]:
     tool_calls: list[ToolCall] = []
     message = content
@@ -316,6 +355,58 @@ def xml_tool_calls(content: str) -> tuple[str, list[ToolCall]]:
                 extra={"raw_format": "function_xml"},
             )
         )
+    return message, tool_calls
+
+
+def fenced_command_tool_calls(content: str) -> tuple[str, list[ToolCall]] | None:
+    match = re.search(r"```(?:bash|sh)?\s*(.*?)\s*```", content, flags=re.DOTALL)
+    if not match:
+        return None
+    command = match.group(1).strip()
+    if not command:
+        return None
+    thought = (content[: match.start()] + content[match.end() :]).strip()
+    return thought, [
+        ToolCall(
+            tool_call_id="call_1",
+            function_name="bash",
+            arguments={"command": command},
+        )
+    ]
+
+
+def json_command_tool_calls(content: str) -> tuple[str, list[ToolCall]] | None:
+    json_match = re.search(r"(\{.*\})\s*$", content, flags=re.DOTALL)
+    if not json_match:
+        return None
+    try:
+        payload = json.loads(json_match.group(1))
+    except json.JSONDecodeError:
+        return None
+    commands = payload.get("commands")
+    if not isinstance(commands, list):
+        return None
+    tool_calls = []
+    for index, command in enumerate(commands, start=1):
+        if not isinstance(command, dict):
+            continue
+        keystrokes = str(command.get("keystrokes") or "").strip()
+        if not keystrokes:
+            continue
+        tool_calls.append(
+            ToolCall(
+                tool_call_id=f"call_{index}",
+                function_name="bash",
+                arguments={"command": keystrokes},
+            )
+        )
+    if not tool_calls:
+        return None
+    message_parts = [
+        str(payload.get("analysis") or "").strip(),
+        str(payload.get("plan") or "").strip(),
+    ]
+    message = "\n\n".join(part for part in message_parts if part)
     return message, tool_calls
 
 
@@ -402,6 +493,14 @@ def source_format_tool_calls(content: str) -> tuple[str, list[ToolCall]]:
     if os_call is not None:
         return os_call
 
+    fenced_call = fenced_command_tool_calls(content)
+    if fenced_call is not None:
+        return fenced_call
+
+    json_command_call = json_command_tool_calls(content)
+    if json_command_call is not None:
+        return json_command_call
+
     action_match = re.search(r"(?:^|\n)\s*ACTION:\s*(.*?)\s*$", content, flags=re.DOTALL)
     if action_match:
         action = action_match.group(1).strip()
@@ -445,6 +544,8 @@ def message_content(message: dict[str, Any]) -> Any:
         return message["value"]
     if "utterance" in message:
         return message["utterance"]
+    if "text" in message:
+        return message["text"]
     if "system_prompt" in message:
         return message["system_prompt"]
     return ""
@@ -454,8 +555,26 @@ def add_observation(steps: list[Step], content: Any, source_call_id: str | None 
     result_content = atif_content(content)
     if isinstance(result_content, str) and result_content.startswith("Observation:\n"):
         result_content = result_content.split("Observation:\n", 1)[1]
-    result = ObservationResult(source_call_id=source_call_id, content=result_content)
     if steps and steps[-1].source == "agent":
+        if (
+            source_call_id is None
+            and isinstance(result_content, str)
+            and steps[-1].tool_calls
+            and len(steps[-1].tool_calls) > 1
+        ):
+            parts = [part for part in result_content.splitlines() if part.strip()]
+            if len(parts) == len(steps[-1].tool_calls):
+                observation = steps[-1].observation or ATIFObservation(results=[])
+                for tool_call, part in zip(steps[-1].tool_calls, parts):
+                    observation.results.append(
+                        ObservationResult(
+                            source_call_id=tool_call.tool_call_id,
+                            content=part,
+                        )
+                    )
+                steps[-1].observation = observation
+                return
+        result = ObservationResult(source_call_id=source_call_id, content=result_content)
         if source_call_id is None and steps[-1].tool_calls:
             result.source_call_id = steps[-1].tool_calls[0].tool_call_id
         observation = steps[-1].observation or ATIFObservation(results=[])
@@ -492,6 +611,8 @@ def append_message_step(steps: list[Step], message: dict[str, Any]) -> None:
 
     text = text_from_content(content)
     tool_calls = openai_tool_calls(message)
+    if not tool_calls:
+        tool_calls = function_calls_field_tool_calls(message)
     if not tool_calls:
         tool_calls = source_tool_call(message)
         if tool_calls and message.get("tool_name"):
