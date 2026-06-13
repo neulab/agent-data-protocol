@@ -47,18 +47,5 @@ class SchemaRaw(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     session_id: str
-    repo_id: str | None = None
-    checkpoint_pk: str | None = None
-    user_id: str | None = None
-    agent: str | None = None
-    strategy: str | None = None
-    branch: str | None = None
-    created_at: Any = None
-    transcript_path: str | None = None
-    tool_call_count: int | None = None
-    turn_count: int | None = None
-    prompt_count: int | None = None
-    agent_percentage: float | None = None
-    user_persona: str | None = None
-    session_success: str | None = None
+    session: dict[str, Any] | None = None
     turns: list[ConversationTurn]

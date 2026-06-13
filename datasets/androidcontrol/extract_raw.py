@@ -2,13 +2,12 @@ import base64
 import io
 import json
 import os
+import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 import tensorflow as tf
-from android_env_utils import representation_utils
-from android_env_utils.android_env.proto.a11y import android_accessibility_forest_pb2
 
 # import pandas as pd
 from PIL import Image
@@ -41,37 +40,6 @@ def _parse_function(example_proto):
     return tf.io.parse_single_example(example_proto, feature_description)
 
 
-# Convert UI elements to dictionaries for easier handling
-def convert_ui_elements_to_dicts(ui_elements):
-    filtered_list = []
-    """ The filtering implementations in Android Control and Android World are a bit different:
-    Android World:
-    https://github.com/google-research/android_world/blob/4d941153396c5daf4adc013f2f5cd265858bdffa/android_world/agents/m3a_utils.py#L448
-
-    Android Control:
-    https://github.com/google-research/google-research/issues/2120#issuecomment-2332316904
-
-    """
-
-    # Here I use AndroidWorld's for now since it makes more senses:
-
-    for element in ui_elements:
-        element_dict = element.to_dict()
-        if (
-            (element_dict["content_description"] is not None or element_dict["text"] is not None)
-            and element_dict["is_visible"]
-            and (element_dict["bbox_pixels"]["height"] > 0)
-            and (element_dict["bbox_pixels"]["width"] > 0)
-            and (element_dict["bbox_pixels"]["x_min"] < 1080)
-            and (element_dict["bbox_pixels"]["y_min"] < 2400)
-            and (element_dict["bbox_pixels"]["x_max"] > 0)
-            and (element_dict["bbox_pixels"]["y_max"] > 0)
-        ):
-            filtered_list.append(element_dict)
-
-    return filtered_list
-
-
 # Function to process a single TFRecord file
 def process_tfrecord_file(tfrecord_file):
     raw_dataset = tf.data.TFRecordDataset(tfrecord_file, compression_type="GZIP")
@@ -93,15 +61,11 @@ def process_tfrecord_file(tfrecord_file):
             step_instruction.decode("utf-8") for step_instruction in record["step_instructions"]
         ]
 
-        # Handle accessibility_trees using base64 encoding
         if "accessibility_trees" in record:
-            parsed_trees = []
-            for tree_data in record["accessibility_trees"]:
-                forest = android_accessibility_forest_pb2.AndroidAccessibilityForest()
-                forest.ParseFromString(tree_data)
-                ui_elements = representation_utils.forest_to_ui_elements(forest)
-                parsed_trees.append(convert_ui_elements_to_dicts(ui_elements))
-            record["accessibility_trees"] = parsed_trees
+            record["accessibility_trees"] = [
+                base64.b64encode(tree_data).decode("utf-8")
+                for tree_data in record["accessibility_trees"]
+            ]
 
         # Save screenshots as images
         screenshots_dir = os.path.join(output_dir, str(episode_id))
@@ -143,7 +107,6 @@ if not os.path.exists(output_dir):
 tfrecord_files = [
     os.path.join(data_dir, f) for f in os.listdir(data_dir) if not f.endswith(".json")
 ]
-tfrecord_files_remote = tf.io.gfile.glob("gs://gresearch/android_control/android_control*")
 # Create a list to store parsed data
 data = []
 # Use ThreadPoolExecutor to process files in parallel
@@ -163,13 +126,12 @@ with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
 
 # print(f"Total records processed: {len(data)}")
 
-# Save data to a JSON file
-# TODO: If you want to directly dump all the files
-with open("sample_raw.json", "w", encoding="utf-8") as f:
-    json.dump(data, f, ensure_ascii=False, indent=4)
-# TODO: If you want to print them out. Notice that the dataset is super large!
-for i in data:
-    print(json.dumps(i))
+try:
+    for i in data:
+        print(json.dumps(i))
+except BrokenPipeError:
+    sys.stdout = open(os.devnull, "w")
+    sys.exit(0)
 
 # Uncomment the following lines if you want to save the data to a CSV file
 # import pandas as pd

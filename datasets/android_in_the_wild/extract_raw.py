@@ -49,20 +49,6 @@ def parse_image_data(image_bytes, height, width, nb_channels) -> Image.Image:
     #  }}} function parse_image_data #
 
 
-# ACTION_TYPES = [ "dual-point gesture", "type"
-# , "go_back", "go_home", "enter"
-# , "task_complete", "task_impossible"
-# ]
-ACTION_TYPES = {
-    3: "type",
-    4: "dual-point gesture",
-    5: "go_back",
-    6: "go_home",
-    7: "enter",
-    10: "task_complete",
-    11: "task_impossible",
-}
-
 for dataset_name, directory in dataset_directories.items():
     file_names = tf.io.gfile.glob(directory)
 
@@ -94,10 +80,7 @@ for dataset_name, directory in dataset_directories.items():
         for k in ["episode_length", "android_api_level", "step_id"]:
             json_dict[k] = json_dict[k][0]
 
-        # others
-        # not sure about the meaning of action_type, convert it according Sec. 3 in
-        # the paper
-        json_dict["results/action_type"] = ACTION_TYPES[json_dict["results/action_type"][0]]
+        json_dict["results/action_type"] = json_dict["results/action_type"][0]
 
         # (y, x, H, W)
         bboxes: np.ndarray = np.reshape(

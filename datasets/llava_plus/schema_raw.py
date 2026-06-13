@@ -1,27 +1,37 @@
-from typing import List, Optional
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class APIParams(BaseModel):
-    boxes: Optional[List[List[float]]] = None
-    prompt: Optional[str] = None
+    model_config = ConfigDict(extra="allow")
+
+    boxes: list[list[float]] | None = None
+    prompt: str | None = None
 
 
 class Action(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     API_name: str
     API_params: APIParams
 
 
 class Conversation(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     from_: str = Field(..., alias="from")
     value: str
-    thoughts: Optional[str] = None
-    actions: Optional[List[Action]] = None
+    thoughts: str | None = None
+    actions: list[Action] | None = None
 
 
 class SchemaRaw(BaseModel):
-    unique_id: str
-    image: str
-    conversations: List[Conversation]
-    data_source: str
+    model_config = ConfigDict(extra="allow")
+
+    unique_id: str | None = None
+    id: str | None = None
+    image: str | None = None
+    conversations: list[Conversation]
+    data_source: str | None = None
+    metadata: dict[str, Any] | None = None

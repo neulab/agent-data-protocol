@@ -17,8 +17,8 @@
 
 ## Conversion Notes
 
-- `extract_raw.py` streams the `conversations` table and emits one raw ADP item per `session_id`, preserving all rows for each emitted session under `turns`.
-- The extractor also attempts to load the smaller `sessions` table to enrich each raw item with metadata such as `agent`, `strategy`, token/tool counts, code-attribution percentage, persona, and success score.
+- `extract_raw.py` streams the `conversations` table and emits one raw ADP item per `session_id`, preserving source conversation rows under `turns`.
+- The extractor also attempts to load the smaller `sessions` table and stores the raw session row under `session` when available; `raw_to_atif.py` owns the later interpretation of session metadata.
 - Rows with `turn_type="user_prompt"` are converted to `TextObservation(source="user")`.
 - Rows with `turn_type="assistant_response"` are converted to `MessageAction`.
 - Rows with `turn_type="assistant_thinking"` are converted to the OpenHands-compatible `think` API action.
