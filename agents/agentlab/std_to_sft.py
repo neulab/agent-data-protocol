@@ -9,11 +9,20 @@ from scripts.atif_input import load_trajectory
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
 
-system = "# Instructions\nYou are a UI Assistant, your goal is to help the user perform tasks using a web browser. \nReview the instructions from the user, the current state of the page and all other information to find the best possible next action to accomplish your goal. Your answer will be interpreted and executed by a program, make sure to follow the formatting instructions.\n"
 with open("agents/agentlab/action_space.txt") as f:
     action_space = f.read().strip()
 with open("agents/agentlab/suffix.txt") as f:
     suffix = f.read().strip()
+
+system = (
+    "# Instructions\n"
+    "You are a UI Assistant, your goal is to help the user perform tasks using a web browser.\n"
+    "Review the instructions from the user, the current state of the page and all other "
+    "information to find the best possible next action to accomplish your goal. Your answer "
+    "will be interpreted and executed by a program, make sure to follow the formatting "
+    "instructions.\n\n"
+    f"{action_space}\n\n{suffix}"
+)
 
 
 def process_row(line):
@@ -77,7 +86,7 @@ def process_row(line):
                 _, tree, _ = match.groups()
                 tree = "# Current page Accessibility Tree\n" + tree.strip() + "\n\n"
             history = "\n\n\n\n\n# History of past actions\n" + "\n".join(past_actions) + "\n\n"
-            observation = {"role": "user", "content": goal + tree + action_space + history + suffix}
+            observation = {"role": "user", "content": goal + tree + history}
     return ret
 
 

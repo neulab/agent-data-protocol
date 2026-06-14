@@ -9,7 +9,6 @@ import traceback
 from agents.openhands_v0.api import (
     browser_default_apis,
     get_api_tool_description,
-    get_language_descriptions,
     openhands_v0_default_tools,
 )
 from agents.openhands_v0.system_prompt.system import get_system_message
@@ -172,6 +171,8 @@ def standardized_event_to_openhands_v0_message(
         function_name = event.function
         raw_arguments = dict(event.kwargs)
         arguments = {k: v for k, v in raw_arguments.items() if k not in ["element_id", "xpath"]}
+        if function_name == "file_editor":
+            function_name = "str_replace_editor"
 
         # for tool that are one of the default OH tools
         if function_name in openhands_v0_default_tools and function_name not in api_sigs:
@@ -368,9 +369,6 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
             if not message:
                 return None
             if len(conversations) == 0:
-                # append api function docs to first user message when available
-                if api_env:
-                    message["value"] = api_tool_description + message["value"]
                 conversations.extend([message])
                 continue
 
@@ -394,9 +392,6 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
             traceback.print_exc()
             print(e, file=sys.stderr)
             return None
-    if languages:
-        language_descriptions = get_language_descriptions(languages)
-        conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
     return {
         "id": trajectory.id,
         "conversations": to_hf_messages(conversations),

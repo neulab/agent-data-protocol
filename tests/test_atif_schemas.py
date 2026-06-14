@@ -152,7 +152,7 @@ def test_dataset_atif_to_std_script_normalizes_tool_names(dataset_name):
         check=True,
     )
     normalized = ATIFTrajectory(**json.loads(process.stdout))
-    assert normalized.steps[0].tool_calls[0].function_name == "execute_bash"
+    assert normalized.steps[0].tool_calls[0].function_name == "terminal"
     assert normalized.steps[0].tool_calls[0].arguments == {"command": "ls"}
     assert normalized.steps[0].tool_calls[0].extra == {
         "adp_class": "code_action",

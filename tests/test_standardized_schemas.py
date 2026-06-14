@@ -42,7 +42,26 @@ BUILT_IN_TOOL_SCHEMAS = {
         "required": ["command"],
         "additionalProperties": False,
     },
+    "terminal": {
+        "type": "object",
+        "properties": {
+            "command": {"type": "string"},
+            "is_input": {"type": "boolean"},
+            "reset": {"type": "boolean"},
+            "security_risk": {"type": "string"},
+            "summary": {"type": "string"},
+            "timeout": {"type": "number"},
+        },
+        "required": ["command"],
+        "additionalProperties": False,
+    },
     "execute_ipython_cell": {
+        "type": "object",
+        "properties": {"code": {"type": "string"}},
+        "required": ["code"],
+        "additionalProperties": False,
+    },
+    "python": {
         "type": "object",
         "properties": {"code": {"type": "string"}},
         "required": ["code"],
@@ -50,7 +69,10 @@ BUILT_IN_TOOL_SCHEMAS = {
     },
     "finish": {
         "type": "object",
-        "properties": {"message": {"type": "string"}, "task_completed": {"type": "string"}},
+        "properties": {
+            "message": {"type": "string"},
+            "task_completed": {"anyOf": [{"type": "boolean"}, {"type": "string"}]},
+        },
         "required": ["message", "task_completed"],
         "additionalProperties": False,
     },
@@ -61,6 +83,21 @@ BUILT_IN_TOOL_SCHEMAS = {
     },
     "submit": {"type": "object", "properties": {}, "additionalProperties": False},
     "str_replace_editor": {
+        "type": "object",
+        "properties": {
+            "command": {"type": "string"},
+            "path": {"type": "string"},
+            "file_text": {"type": "string"},
+            "old_str": {"type": "string"},
+            "new_str": {"type": "string"},
+            "insert_line": {"type": "integer"},
+            "summary": {"type": "string"},
+            "view_range": {"type": "array", "items": {"type": "integer"}},
+        },
+        "required": ["command", "path"],
+        "additionalProperties": False,
+    },
+    "file_editor": {
         "type": "object",
         "properties": {
             "command": {"type": "string"},
@@ -208,17 +245,7 @@ def test_sample_standardized_atif_against_schema(sample_path):
     metadata = load_dataset_metadata(dataset_name, required=True)
     api_function_names = custom_tool_names(metadata)
     api_function_specs = custom_tool_map(metadata)
-    built_in_api_names = {
-        "execute_bash",
-        "execute_code",
-        "execute_ipython_cell",
-        "finish",
-        "stop",
-        "submit",
-        "str_replace_editor",
-        "think",
-        "task_tracker",
-    }
+    built_in_api_names = set(BUILT_IN_TOOL_SCHEMAS) | {"execute_code"}
 
     for sample_id, sample in enumerate(samples):
         try:
@@ -259,7 +286,8 @@ def test_sample_standardized_atif_against_schema(sample_path):
                     tool_call.function_name
                     for step in traj.steps
                     for tool_call in (step.tool_calls or [])
-                    if tool_call.function_name not in {"execute_bash", "execute_ipython_cell"}
+                    if tool_call.function_name
+                    not in {"execute_bash", "execute_ipython_cell", "terminal", "python"}
                 }
                 missing_used_apis = sorted(used_apis - set(available_apis))
                 assert not missing_used_apis, (
@@ -299,18 +327,25 @@ def test_sample_standardized_atif_against_schema(sample_path):
                         f"{tool_call.function_name} not found in metadata.json in "
                         f"{os.path.dirname(sample_path)}"
                     )
-                    if tool_call.function_name in {"execute_bash", "execute_ipython_cell"}:
+                    if tool_call.function_name in {
+                        "execute_bash",
+                        "execute_ipython_cell",
+                        "terminal",
+                        "python",
+                    }:
                         expected_language = (
-                            "bash" if tool_call.function_name == "execute_bash" else "python"
+                            "bash"
+                            if tool_call.function_name in {"execute_bash", "terminal"}
+                            else "python"
                         )
                         assert expected_language in metadata.code_enabled, (
                             f"{tool_call.function_name} is used in {sample_path} sample "
                             f"{sample_id}, but metadata.json code_enabled does not include "
                             f"{expected_language!r}"
                         )
-                    if tool_call.function_name == "str_replace_editor":
+                    if tool_call.function_name in {"str_replace_editor", "file_editor"}:
                         assert metadata.file_editor_enabled, (
-                            f"str_replace_editor is used in {sample_path} sample {sample_id}, "
+                            f"{tool_call.function_name} is used in {sample_path} sample {sample_id}, "
                             "but metadata.json file_editor_enabled is false"
                         )
                     if tool_call.function_name in api_function_specs:

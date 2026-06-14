@@ -95,6 +95,8 @@ def standardized_event_to_swe_message(
         thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
+        if function_name == "file_editor":
+            function_name = "str_replace_editor"
 
         # for tool that are one of the default SWE-Agent tools
         if function_name in sweagent_default_tools and function_name not in api_sigs:
@@ -182,12 +184,9 @@ def process_row(line, api_tool_description, api_sigs):
             if not message:
                 print(event, file=sys.stderr)
                 return None
-            if len(conversations) == 0:
-                # append api function docs to first user message when available
-                message["value"] = api_tool_description + message["value"]
-                conversations.extend([message])
-                continue
-            if conversations[-1]["from"] == "function_call" or message["from"] == "observation":
+            if conversations and (
+                conversations[-1]["from"] == "function_call" or message["from"] == "observation"
+            ):
                 message["value"] = "OBSERVATION:\n" + message["value"]
             conversations.extend([message])
 

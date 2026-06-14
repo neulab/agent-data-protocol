@@ -111,7 +111,7 @@ def _code_action_from_tool_call(
 ) -> CodeAction | None:
     name = tool_call.function_name
     args = tool_call.arguments
-    if name == "execute_bash":
+    if name in {"execute_bash", "terminal"}:
         return CodeAction(
             tool_call_id=tool_call.tool_call_id,
             language="bash",
@@ -120,7 +120,7 @@ def _code_action_from_tool_call(
             reasoning_content=reasoning_content,
             reward=reward,
         )
-    if name == "execute_ipython_cell":
+    if name in {"execute_ipython_cell", "python"}:
         return CodeAction(
             tool_call_id=tool_call.tool_call_id,
             language="python",

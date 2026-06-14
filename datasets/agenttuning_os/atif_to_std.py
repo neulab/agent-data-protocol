@@ -7,6 +7,7 @@ import re
 import sys
 
 from schema.atif import ATIFTrajectory, normalize_atif_trajectory
+from scripts.atif_to_std_common import standardize_tools
 
 ANSWER_FORMAT = (
     "If you think you have got the answer to the question, you should print like this:"
@@ -32,7 +33,7 @@ def clean_terminal_output(content: str) -> str:
 
 
 def normalize_agenttuning_os_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
-    normalized = normalize_atif_trajectory(trajectory)
+    normalized = standardize_tools(normalize_atif_trajectory(trajectory))
     for step in normalized.steps:
         if step.source == "user" and isinstance(step.message, str):
             first_user_match = FIRST_USER_MESSAGE.match(step.message)
