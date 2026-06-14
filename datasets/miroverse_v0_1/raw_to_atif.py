@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sys
 
-from scripts.miroverse_tools import extract_available_tools_from_messages
+from miroverse_tools import extract_available_tools_from_messages
 from scripts.raw_to_atif_common import trajectory_from_record
 
 

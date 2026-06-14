@@ -7,6 +7,7 @@ import pytest
 from schema.dataset_metadata import DatasetMetadata
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
+SCRIPTS_PATH = Path(__file__).parent.parent / "scripts"
 
 
 def get_subdirectories(directory):
@@ -94,3 +95,23 @@ def test_dataset_structure(subdir):
                     f"Legacy SFT sample filename found: {file} in {sample_sft_dir}. "
                     "Use sample_sft/{agent_name}.json instead."
                 )
+
+
+def test_shared_scripts_are_not_dataset_or_agent_specific():
+    """Dataset-specific scripts live in datasets/*; agent-specific scripts live in agents/*."""
+    forbidden_names = {"miroverse_tools.py"}
+    forbidden_agent_name_parts = {"agentlab", "openhands", "sweagent", "swe_agent"}
+    violations = []
+    for path in SCRIPTS_PATH.glob("*.py"):
+        name = path.name
+        if (
+            name.endswith("_raw_to_atif.py")
+            or (name.startswith("extract_") and name.endswith("_raw.py"))
+            or name in forbidden_names
+            or any(part in name for part in forbidden_agent_name_parts)
+        ):
+            violations.append(path.relative_to(SCRIPTS_PATH.parent).as_posix())
+    assert not violations, (
+        "Dataset-specific scripts must live under their dataset directory and "
+        f"agent-specific scripts must live under agents/: {violations}"
+    )
