@@ -102,7 +102,9 @@ def test_standardized_samples_use_agent_neutral_tool_names(sample_path):
 def test_agent_sft_converters_do_not_branch_on_dataset_names(converter_path):
     tree = ast.parse(converter_path.read_text())
     constants = {node.value for node in ast.walk(tree) if isinstance(node, ast.Constant)}
-    leaked_dataset_names = sorted(DATASET_BRANCH_NAMES & {value for value in constants if isinstance(value, str)})
+    leaked_dataset_names = sorted(
+        DATASET_BRANCH_NAMES & {value for value in constants if isinstance(value, str)}
+    )
     assert not leaked_dataset_names, (
         f"{converter_path} contains dataset-specific string constants: {leaked_dataset_names}"
     )
