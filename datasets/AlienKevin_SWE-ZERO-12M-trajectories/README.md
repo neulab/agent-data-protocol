@@ -27,6 +27,8 @@ The raw dataset is a list of chat-style messages with `role` and `content` field
 
 `atif_to_std.py` uses the shared standardization pass, which maps `bash` tool calls to the standard `terminal` tool. The trajectory metadata preserves the raw `instance_id`, repository, `trajectory_format`, `exit_status`, and `duration_sec`. Trajectory IDs are derived deterministically from the instance ID plus a content hash because the source dataset contains many independent rollouts per PR with the same `instance_id`.
 
+If an assistant message contains multiple bash blocks despite the source system prompt requiring exactly one, the converter emits a warning and uses the final block. The final block is treated as the executable action because it is the last stated command after any preceding reasoning or malformed draft command.
+
 ## Known Limitations
 
 The dataset card describes this corpus as a mid-training dataset rather than a verified SFT dataset. The trajectories are execution-free, not validated against tests, and many rollouts terminate with `incomplete` or other non-submitted statuses. This converter preserves those trajectories instead of filtering to submitted-only samples.

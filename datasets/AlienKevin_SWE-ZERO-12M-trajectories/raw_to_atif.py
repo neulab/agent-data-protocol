@@ -46,6 +46,12 @@ def assistant_step(content: str, step_id: int, tool_call_id: str) -> Step:
     if not bash_matches:
         return Step(step_id=step_id, source="agent", message=content)
 
+    if len(bash_matches) > 1:
+        print(
+            f"Step {step_id} has {len(bash_matches)} bash blocks; using the final block",
+            file=sys.stderr,
+        )
+
     match = bash_matches[-1]
     message = strip_thought_prefix(content[: match.start()])
     command = match.group(1).strip()
