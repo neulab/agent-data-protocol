@@ -1,5 +1,8 @@
 import json
+import os
+import sys
 from itertools import zip_longest
+from typing import Any
 
 from datasets import load_dataset
 
@@ -12,17 +15,20 @@ SOURCES = [
 SPLIT = "train"
 
 
+def json_safe(value: Any) -> Any:
+    return json.loads(json.dumps(value, ensure_ascii=False, default=str))
+
+
 def iter_source(task_type: str, dataset_name: str):
     dataset = load_dataset(dataset_name, split=SPLIT, streaming=True)
     for row_index, item in enumerate(dataset):
-        yield {
-            "id": f"{task_type}_{row_index}",
-            "source_dataset": dataset_name,
-            "task_type": task_type,
-            "split": SPLIT,
-            "row_index": row_index,
-            "messages": item["messages"],
-        }
+        row = dict(item)
+        row.setdefault("id", f"{task_type}_{row_index}")
+        row.setdefault("source_dataset", dataset_name)
+        row.setdefault("task_type", task_type)
+        row.setdefault("split", SPLIT)
+        row.setdefault("row_index", row_index)
+        yield row
 
 
 def main():
@@ -31,9 +37,10 @@ def main():
         for rows in zip_longest(*iterators):
             for row in rows:
                 if row is not None:
-                    print(json.dumps(row, ensure_ascii=False))
+                    print(json.dumps(json_safe(row), ensure_ascii=False))
     except BrokenPipeError:
-        pass
+        sys.stdout = open(os.devnull, "w")
+        sys.exit(0)
 
 
 if __name__ == "__main__":

@@ -5,9 +5,9 @@ from pathlib import Path
 DATASET_DIR = Path(__file__).parent.parent / "datasets" / "agenttuning_os"
 
 
-def load_raw_to_standardized():
-    converter_path = DATASET_DIR / "raw_to_standardized.py"
-    spec = importlib.util.spec_from_file_location("agenttuning_os_converter", converter_path)
+def load_atif_to_std():
+    converter_path = DATASET_DIR / "atif_to_std.py"
+    spec = importlib.util.spec_from_file_location("agenttuning_os_atif_to_std", converter_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -25,7 +25,7 @@ def iter_strings(value):
 
 
 def test_clean_terminal_output_removes_control_sequences_and_shell_prompt():
-    converter = load_raw_to_standardized()
+    converter = load_atif_to_std()
 
     assert (
         converter.clean_terminal_output(

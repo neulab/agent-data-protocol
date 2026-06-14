@@ -7,6 +7,7 @@ import pytest
 from schema.dataset_metadata import DatasetMetadata
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets"
+SCRIPTS_PATH = Path(__file__).parent.parent / "scripts"
 
 
 def get_subdirectories(directory):
@@ -26,7 +27,8 @@ def test_dataset_structure(subdir):
     dataset_sft_converter_path = os.path.join(subdir_path, "std_to_sft.py")
     assert not os.path.exists(dataset_sft_converter_path), (
         f"Dataset-local std_to_sft.py is not allowed in {subdir_path}; "
-        "use a shared converter under agents/ instead"
+        "put normalization in raw_to_atif.py or atif_to_std.py, then use a shared "
+        "converter under agents/ instead"
     )
 
     dataset_api_path = os.path.join(subdir_path, "api.py")
@@ -47,30 +49,32 @@ def test_dataset_structure(subdir):
     sample_raw_path = os.path.join(subdir_path, "sample_raw.json")
     assert os.path.exists(sample_raw_path), f"sample_raw.json not found in {subdir_path}"
 
-    # If raw_to_standardized.py exists, the dataset should have sample_std.json
-    raw_to_std_path = os.path.join(subdir_path, "raw_to_standardized.py")
+    raw_to_atif_path = os.path.join(subdir_path, "raw_to_atif.py")
+    atif_to_std_path = os.path.join(subdir_path, "atif_to_std.py")
     sample_std_path = os.path.join(subdir_path, "sample_std.json")
+    sample_atif_path = os.path.join(subdir_path, "sample_atif.json")
 
-    if os.path.exists(raw_to_std_path):
-        assert os.path.exists(sample_std_path), (
-            f"raw_to_standardized.py exists but sample_std.json not found in {subdir_path}"
-        )
+    assert os.path.exists(raw_to_atif_path), f"raw_to_atif.py not found in {subdir_path}"
+    assert os.path.exists(atif_to_std_path), f"atif_to_std.py not found in {subdir_path}"
+    assert os.path.exists(sample_std_path), f"sample_std.json not found in {subdir_path}"
+    assert os.path.exists(sample_atif_path), f"sample_atif.json not found in {subdir_path}"
 
-    # If sample_std.json exists, then an OpenHands v0 SFT sample should exist.
+    # If sample_std.json exists, then an OpenHands SDK SFT sample should exist.
     if os.path.exists(sample_std_path):
         sample_sft_dir = os.path.join(subdir_path, "sample_sft")
-        openhands_v0_sft_path = os.path.join(sample_sft_dir, "openhands_v0.json")
+        openhands_sdk_sft_path = os.path.join(sample_sft_dir, "openhands_sdk.json")
         assert os.path.isdir(sample_sft_dir), (
             f"sample_std.json exists but sample_sft directory not found in {subdir_path}"
         )
-        assert os.path.exists(openhands_v0_sft_path), (
-            f"sample_std.json exists but sample_sft/openhands_v0.json not found in {subdir_path}"
+        assert os.path.exists(openhands_sdk_sft_path), (
+            f"sample_std.json exists but sample_sft/openhands_sdk.json not found in {subdir_path}"
         )
 
     # Check for other JSON files that shouldn't be there
     allowed_jsons = [
         "metadata.json",
         "sample_raw.json",
+        "sample_atif.json",
         "sample_std.json",
         "generated_thoughts.json",
     ]
@@ -91,3 +95,23 @@ def test_dataset_structure(subdir):
                     f"Legacy SFT sample filename found: {file} in {sample_sft_dir}. "
                     "Use sample_sft/{agent_name}.json instead."
                 )
+
+
+def test_shared_scripts_are_not_dataset_or_agent_specific():
+    """Dataset-specific scripts live in datasets/*; agent-specific scripts live in agents/*."""
+    forbidden_names = {"miroverse_tools.py"}
+    forbidden_agent_name_parts = {"agentlab", "openhands", "sweagent", "swe_agent"}
+    violations = []
+    for path in SCRIPTS_PATH.glob("*.py"):
+        name = path.name
+        if (
+            name.endswith("_raw_to_atif.py")
+            or (name.startswith("extract_") and name.endswith("_raw.py"))
+            or name in forbidden_names
+            or any(part in name for part in forbidden_agent_name_parts)
+        ):
+            violations.append(path.relative_to(SCRIPTS_PATH.parent).as_posix())
+    assert not violations, (
+        "Dataset-specific scripts must live under their dataset directory and "
+        f"agent-specific scripts must live under agents/: {violations}"
+    )

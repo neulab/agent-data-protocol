@@ -17,7 +17,4 @@ for shortcode in splits["train"]:
     demo_dir = weblinx_dump / "demonstrations" / shortcode
     replay = json.loads((demo_dir / "replay.json").read_text())
     metadata = json.loads((demo_dir / "form.json").read_text())
-    replay["shortcode"] = shortcode
-    replay["description"] = metadata["description"]
-    replay["tasks"] = metadata["tasks"]
-    print(json.dumps(replay))
+    print(json.dumps({"shortcode": shortcode, "replay": replay, "form": metadata}))

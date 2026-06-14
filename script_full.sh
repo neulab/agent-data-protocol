@@ -5,8 +5,11 @@ echo RAW
 python datasets/$MY_DATASET/extract_raw.py > datasets/$MY_DATASET/full_raw.jsonl
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
+echo ATIF
+cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_atif.py > datasets/$MY_DATASET/full_atif.jsonl
+
 echo STD
-cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_standardized.py > datasets/$MY_DATASET/full_std.jsonl
+cat datasets/$MY_DATASET/full_atif.jsonl | python datasets/$MY_DATASET/atif_to_std.py > datasets/$MY_DATASET/full_std.jsonl
 
 echo SFT
 cat datasets/$MY_DATASET/full_std.jsonl | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash > datasets/$MY_DATASET/full_sft/full_sft_openhands_v0.jsonl

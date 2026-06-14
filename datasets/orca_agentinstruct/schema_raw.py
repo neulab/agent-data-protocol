@@ -1,13 +1,7 @@
-from typing import List
-
-from pydantic import BaseModel
-
-
-class Conversation(BaseModel):
-    content: str
-    role: str
+from pydantic import BaseModel, ConfigDict
 
 
 class SchemaRaw(BaseModel):
     id: str
-    conversations: List[Conversation]
+    messages: str
+    model_config = ConfigDict(extra="allow")

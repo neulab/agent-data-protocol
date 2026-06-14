@@ -5,12 +5,14 @@ import sys
 
 from agents.sweagent.api import get_api_tool_description
 from agents.sweagent.system_message import base_template
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from scripts.atif_input import (
+    ApiAction,
+    CodeAction,
+    MessageAction,
+    TextObservation,
+    WebObservation,
+    load_trajectory,
+)
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -93,6 +95,8 @@ def standardized_event_to_swe_message(
         thought = f"<think>\n{event.description}\n</think>\n\n" if event.description else ""
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
+        if function_name == "file_editor":
+            function_name = "str_replace_editor"
 
         # for tool that are one of the default SWE-Agent tools
         if function_name in sweagent_default_tools and function_name not in api_sigs:
@@ -110,6 +114,11 @@ def standardized_event_to_swe_message(
                 raise ValueError(f"Function call with wrong argument: {event}")
             api_action = f"{function_name}({', '.join([f'{k}={arguments[k]}' for k in arguments])})"
             function_call = format_function("bash", {"command": api_action})
+            return {"from": "function_call", "value": f"{thought}{function_call}"}
+
+        if function_name == "think":
+            thought_text = arguments.get("thought") or arguments.get("content") or ""
+            function_call = format_function("bash", {"command": f"think(thought={thought_text!r})"})
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         raise ValueError(f"Undefined API: {event}")
@@ -156,9 +165,7 @@ def standardized_event_to_swe_message(
 
 
 def process_row(line, api_tool_description, api_sigs):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     if trajectory.available_apis is not None:
@@ -177,12 +184,9 @@ def process_row(line, api_tool_description, api_sigs):
             if not message:
                 print(event, file=sys.stderr)
                 return None
-            if len(conversations) == 0:
-                # append api function docs to first user message when available
-                message["value"] = api_tool_description + message["value"]
-                conversations.extend([message])
-                continue
-            if conversations[-1]["from"] == "function_call" or message["from"] == "observation":
+            if conversations and (
+                conversations[-1]["from"] == "function_call" or message["from"] == "observation"
+            ):
                 message["value"] = "OBSERVATION:\n" + message["value"]
             conversations.extend([message])
 

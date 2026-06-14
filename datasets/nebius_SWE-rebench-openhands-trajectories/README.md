@@ -27,4 +27,4 @@ The raw dataset is in chat-completion format:
 - Other assistant tool calls, such as `think`, `str_replace_editor`, and `task_tracker`, become `ApiAction` entries with their JSON arguments preserved.
 - Some resolved rows end without an explicit `finish` tool call. For those rows, standardization appends an environment success observation and a terminal finish action so the SFT trajectory has an explicit completion state.
 
-Only resolved trajectories are emitted by `extract_raw.py` and `raw_to_standardized.py`, matching the dataset's successful-trajectory subset for SFT conversion.
+Only resolved trajectories are emitted by `extract_raw.py` and `raw_to_atif.py` and `atif_to_std.py`, matching the dataset's successful-trajectory subset for SFT conversion.

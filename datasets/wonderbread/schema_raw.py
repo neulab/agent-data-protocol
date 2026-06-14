@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class StateData(BaseModel):
@@ -47,6 +47,13 @@ class WebArena(BaseModel):
     eval: dict[str, Any]
     intent_template_id: int
 
+    model_config = ConfigDict(extra="allow")
+
 
 class SchemaRaw(BaseModel):
     trace: list[State | Action]
+    webarena: WebArena | dict[str, Any]
+    sop_text: str | None = None
+    task_stamp: str | None = None
+
+    model_config = ConfigDict(extra="allow")

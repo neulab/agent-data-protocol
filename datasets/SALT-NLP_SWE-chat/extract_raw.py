@@ -54,37 +54,16 @@ def load_session_metadata(token: str | None) -> dict[str, dict[str, Any]]:
     return metadata
 
 
-def compact_turn(row: dict[str, Any]) -> dict[str, Any]:
-    return {key: value for key, value in row.items() if value is not None}
-
-
 def build_session(
     session_id: str,
     turns: list[dict[str, Any]],
     session_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    session_metadata = dict(session_metadata or {})
-    first_turn = turns[0] if turns else {}
-    item = {
+    return {
         "session_id": session_id,
-        "repo_id": session_metadata.get("repo_id") or first_turn.get("repo_id"),
-        "checkpoint_pk": first_turn.get("checkpoint_pk")
-        or session_metadata.get("canonical_checkpoint_pk"),
-        "user_id": session_metadata.get("user_id") or first_turn.get("user_id"),
-        "agent": session_metadata.get("agent") or first_turn.get("agent"),
-        "strategy": session_metadata.get("strategy") or first_turn.get("strategy"),
-        "branch": session_metadata.get("branch"),
-        "created_at": session_metadata.get("created_at") or first_turn.get("timestamp"),
-        "transcript_path": session_metadata.get("transcript_path"),
-        "tool_call_count": session_metadata.get("tool_call_count"),
-        "turn_count": session_metadata.get("turn_count"),
-        "prompt_count": session_metadata.get("prompt_count"),
-        "agent_percentage": session_metadata.get("agent_percentage"),
-        "user_persona": session_metadata.get("user_persona"),
-        "session_success": session_metadata.get("session_success"),
-        "turns": [compact_turn(turn) for turn in turns],
+        "session": dict(session_metadata) if session_metadata else None,
+        "turns": [dict(turn) for turn in turns],
     }
-    return {key: value for key, value in item.items() if value is not None}
 
 
 def iter_grouped_sessions(

@@ -31,24 +31,26 @@ def load_json(path: Path):
 
 
 @pytest.mark.parametrize("sample_path", get_sample_std_paths())
-def test_standardized_message_actions_do_not_include_think_tokens(sample_path):
+def test_standardized_atif_agent_messages_do_not_include_think_tokens(sample_path):
     samples = load_json(sample_path)
     for sample_index, sample in enumerate(samples):
-        for event_index, event in enumerate(sample.get("content", [])):
-            if event.get("class_") != "message_action":
+        for step_index, step in enumerate(sample.get("steps", [])):
+            if step.get("source") != "agent":
                 continue
 
-            content = event.get("content") or ""
+            content = step.get("message") or ""
+            if isinstance(content, list):
+                content = "\n".join(part.get("text", "") for part in content)
             assert not THINK_TOKEN_RE.search(content), (
-                f"MessageAction.content in {sample_path} sample {sample_index} "
-                f"event {event_index} contains <think> tags; move the block to "
+                f"ATIF agent message in {sample_path} sample {sample_index} "
+                f"step {step_index} contains <think> tags; move the block to "
                 "reasoning_content instead"
             )
 
-            reasoning_content = event.get("reasoning_content") or ""
+            reasoning_content = step.get("reasoning_content") or ""
             assert not THINK_TOKEN_RE.search(reasoning_content), (
-                f"MessageAction.reasoning_content in {sample_path} sample {sample_index} "
-                f"event {event_index} should contain reasoning text without raw <think> tags"
+                f"ATIF reasoning_content in {sample_path} sample {sample_index} "
+                f"step {step_index} should contain reasoning text without raw <think> tags"
             )
 
 

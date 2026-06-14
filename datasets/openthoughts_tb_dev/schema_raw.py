@@ -12,7 +12,7 @@ class SchemaRaw(BaseModel):
     id: str
     instruction: str
     task_toml: str
-    solution: FileRecord
+    solution: Optional[FileRecord] = None
     dockerfile: Optional[FileRecord] = None
     verification_files: List[FileRecord] = []
     source_files: List[str] = []

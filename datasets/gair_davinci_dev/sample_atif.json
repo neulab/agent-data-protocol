@@ -1,0 +1,264 @@
+[
+  {
+    "schema_version": "ATIF-v1.7",
+    "session_id": "davinci_env_sample_0",
+    "trajectory_id": "davinci_env_sample_0",
+    "agent": {
+      "name": "gair_davinci_dev",
+      "version": "raw"
+    },
+    "steps": [
+      {
+        "step_id": 1,
+        "source": "system",
+        "message": "You are a helpful assistant that can interact with a computer to solve tasks."
+      },
+      {
+        "step_id": 2,
+        "source": "user",
+        "message": "We need fix a SyntaxError caused by `import . as cli` in `/testbed/plumbum/cli/image.py`. Please inspect and patch the repository."
+      },
+      {
+        "step_id": 3,
+        "source": "agent",
+        "message": "I'll list the top-level files first.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_0001",
+            "function_name": "bash",
+            "arguments": {
+              "command": "ls -F /testbed"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_0001",
+              "content": "CHANGELOG.rst\nLICENSE\nplumbum/\ntests/\n"
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "agent",
+        "message": "I'll open the file mentioned in the issue.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_0002",
+            "function_name": "str_replace_editor",
+            "arguments": {
+              "command": "view",
+              "path": "/testbed/plumbum/cli/image.py",
+              "view_range": [
+                1,
+                40
+              ]
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_0002",
+              "content": "1\tfrom __future__ import annotations\n2\t\n3\timport . as cli\n4\tfrom plumbum import local\n"
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 5,
+        "source": "agent",
+        "message": "The relative import is invalid. I'll replace it with an explicit package import.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_0003",
+            "function_name": "str_replace_editor",
+            "arguments": {
+              "command": "str_replace",
+              "path": "/testbed/plumbum/cli/image.py",
+              "old_str": "import . as cli",
+              "new_str": "from plumbum import cli"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_0003",
+              "content": "The file /testbed/plumbum/cli/image.py has been edited."
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 6,
+        "source": "agent",
+        "message": "The syntax error is fixed, so I'll submit the solution.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_0004",
+            "function_name": "submit",
+            "arguments": {},
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ]
+      }
+    ],
+    "extra": {
+      "raw": {
+        "sample_name": "davinci_env_sample_0"
+      },
+      "source_dataset": "gair_davinci_dev"
+    }
+  },
+  {
+    "schema_version": "ATIF-v1.7",
+    "session_id": "davinci_env_sample_1",
+    "trajectory_id": "davinci_env_sample_1",
+    "agent": {
+      "name": "gair_davinci_dev",
+      "version": "raw"
+    },
+    "steps": [
+      {
+        "step_id": 1,
+        "source": "system",
+        "message": "You are a helpful assistant that can interact with a computer to solve tasks."
+      },
+      {
+        "step_id": 2,
+        "source": "user",
+        "message": "Run the focused tests for the package and report whether they pass."
+      },
+      {
+        "step_id": 3,
+        "source": "agent",
+        "message": "I'll run the focused pytest target.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_1001",
+            "function_name": "bash",
+            "arguments": {
+              "command": "pytest tests/test_cli.py -q",
+              "timeout": 120
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_1001",
+              "content": "........\n8 passed in 0.42s\n"
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "agent",
+        "message": "The focused tests passed: 8 tests completed successfully in 0.42 seconds."
+      }
+    ],
+    "extra": {
+      "raw": {
+        "sample_name": "davinci_env_sample_1"
+      },
+      "source_dataset": "gair_davinci_dev"
+    }
+  },
+  {
+    "schema_version": "ATIF-v1.7",
+    "session_id": "davinci_env_sample_2",
+    "trajectory_id": "davinci_env_sample_2",
+    "agent": {
+      "name": "gair_davinci_dev",
+      "version": "raw"
+    },
+    "steps": [
+      {
+        "step_id": 1,
+        "source": "system",
+        "message": "You are a helpful assistant that can interact with a computer to solve tasks."
+      },
+      {
+        "step_id": 2,
+        "source": "user",
+        "message": "Create a small regression test file at `/testbed/tests/test_regression.py` that checks `normalize_title('Hello World') == 'hello-world'`."
+      },
+      {
+        "step_id": 3,
+        "source": "agent",
+        "message": "I'll create the requested regression test file.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_2001",
+            "function_name": "str_replace_editor",
+            "arguments": {
+              "command": "create",
+              "path": "/testbed/tests/test_regression.py",
+              "file_text": "from app.text import normalize_title\n\n\ndef test_normalize_title_spaces():\n    assert normalize_title('Hello World') == 'hello-world'\n"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_2001",
+              "content": "File created successfully at /testbed/tests/test_regression.py."
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "agent",
+        "message": "I'll run the new test to verify it passes.",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_2002",
+            "function_name": "bash",
+            "arguments": {
+              "command": "pytest /testbed/tests/test_regression.py -q"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "call_2002",
+              "content": ".\n1 passed in 0.05s\n"
+            }
+          ]
+        }
+      }
+    ],
+    "extra": {
+      "raw": {
+        "sample_name": "davinci_env_sample_2"
+      },
+      "source_dataset": "gair_davinci_dev"
+    }
+  }
+]

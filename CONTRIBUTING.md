@@ -17,28 +17,29 @@ This repository serves as a standardized collection of agent training data from 
 This repository contains:
 - **Datasets**: Agent training data in standardized format ([`datasets/`](datasets))
 - **Agents**: Agent-specific implementations and conversion scripts ([`agents/`](agents)])
-- **Schema**: ADP standardized format definitions ([`schema/`](schema))
+- **Schema**: ATIF schema definitions ([`schema/`](schema))
 - **Scripts**: General tility scripts ([`scripts/`](scripts))
 
 ### Data Flow
 ```
-Raw Dataset      →  Standardized Format  →  Agent Specific SFT Format
-      ↓                   ↓                       ↓
-sample_raw.json  →  sample_std.json      →  sample_sft/<agent_name>.json
+sample_raw.json → raw_to_atif.py → sample_atif.json → atif_to_std.py → sample_std.json → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
 ```
 
-### Standardized Schema Components
+### ATIF Standardized Schema Components
 
-Our standardized format uses these main components:
+Committed `sample_atif.json` and `sample_std.json` files are ATIF trajectories. `raw_to_atif.py` should preserve raw trajectory structure with minimal formatting changes. `atif_to_std.py` should keep ATIF in and ATIF out while standardizing tool-call names and arguments for downstream converters.
 
-#### Actions
-- **MessageAction**: Text-based communication
-- **CodeAction**: Code execution requests
-- **ApiAction**: API calls
+#### Steps
+- **source**: ATIF step source, one of `system`, `user`, or `agent`
+- **message**: Natural-language content for the step
+
+#### Tool Calls
+- **function_name**: Tool name, standardized by `atif_to_std.py`
+- **arguments**: Tool arguments matching a built-in or `metadata.json` schema
+- **tool_call_id**: Identifier used to link results
 
 #### Observations
-- **TextObservation**: Text-based responses
-- **WebObservation**: Web page content
+- **observation.results**: Tool/environment results linked to tool calls with `source_call_id`
 
 ## Development Setup
 
@@ -68,8 +69,6 @@ This will install pre-commit and set up the hooks to ensure code quality.
 
 ## Contributing New Datasets
 
-Note: see [`schema/SCHEMA.md`](schema/SCHEMA.md) first for better understanding of the ADP standardized data format.
-
 ### Dataset Structure
 
 Each dataset must follow this directory structure:
@@ -81,9 +80,11 @@ datasets/$YOUR_DATASET_NAME/
 ├── requirements.txt            # Dataset-specific dependencies (optional)
 ├── schema_raw.py               # Raw data schema (optional)
 ├── extract_raw.py              # Script to extract raw data
-├── raw_to_standardized.py      # Conversion script
-├── api.py                      # API definitions (optional)
+├── raw_to_atif.py              # Raw-to-ATIF conversion script
+├── atif_to_std.py              # ATIF-to-ATIF tool normalization script
+├── metadata.json               # Tool and runtime metadata
 ├── sample_raw.json             # 5 raw samples
+├── sample_atif.json            # 5 ATIF samples
 ├── sample_std.json             # 5 standardized samples
 └── sample_sft                  # SFT format samples
   ├── openhands_v0.json         # 5 OpenHands v0 SFT samples (if applicable)
@@ -161,177 +162,136 @@ python datasets/$MY_DATASET/extract_raw.py | python scripts/jsonl_to_json.py | j
 
 #### Step 2: Create Standardized Format Converter
 
-1. Create `raw_to_standardized.py` that converts raw data to ADP standardized schemas.
-Essentially, you should map each action / observation in the raw data to an action / observation in [ADP schemas](schema/SCHEMA.md#core-schema-components).
+1. Create `raw_to_atif.py` and `atif_to_std.py`.
+Map each raw message, tool call, and observation to the closest ATIF step, tool call, or observation result.
 
-The root `Trajectory` includes a protocol-level `schema_version` field. When converters return `Trajectory(...).model_dump()` or `model_dump_json()`, the current version is included automatically. If a converter emits trajectory dictionaries manually, include `"schema_version": SCHEMA_VERSION` from `schema.version`.
+The root `ATIFTrajectory` includes a protocol-level `schema_version` field. When converters return `ATIFTrajectory(...).model_dump()` or `model_dump_json()`, the current ATIF version is included automatically from `schema.atif.ATIF_SCHEMA_VERSION`.
 
 **Brief conversion examples:**
 ```python
-# Raw data examples → Standardized actions
+# Raw message → ATIF user/agent step
+Step(step_id=1, source="user", message="Hello")
 
-# Text message: {"type": "message", "text": "Hello"} →
-MessageAction(class_="MessageAction", message="Hello")
+# Raw function call → ATIF tool call on an agent step
+ToolCall(tool_call_id="call_1", function_name="click", arguments={"xpath": "//button"})
 
-# Code execution: {"type": "code", "language": "python", "code": "print('hi')"} →
-CodeAction(class_="CodeAction", language="python", content="print('hi')")
-
-# Function call: {"type": "action", "function": "click", "args": {"xpath": "//button"}} →
-ApiAction(class_="api_action", function="click", kwargs={"xpath": "//button"})
-
-# Environment response: {"type": "output", "text": "Command executed"} →
-TextObservation(class_="TextObservation", text="Command executed", source="environment")
+# Raw environment response → ATIF observation result linked to a tool call
+ObservationResult(source_call_id="call_1", content="Command executed")
 ```
 
 **Complete example:**
 ```python
 #!/usr/bin/env python3
-"""Convert raw data to standardized format."""
+"""Convert raw data to ATIF format."""
 
 import json
 import sys
-from schema.trajectory import Trajectory
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
-from schema.action.api import ApiAction
-from schema.observation.text import TextObservation
 
-def convert_raw_to_standardized(raw_data):
-    """Convert a raw data sample to standardized format."""
+from schema.atif import ATIFObservation, ATIFTrajectory, Agent, ObservationResult, Step, ToolCall
 
-    content = []
 
-    # Example conversion logic
-    for item in raw_data["content"]:
-        if item["type"] == "message":
-            content.append(MessageAction(
-                class_="MessageAction",
-                message=item["message"],
-                description=item.get("thoughts", "")
-            ))
-        elif item["type"] == "python":
-            content.append(CodeAction(
-                class_="CodeAction",
-                language="python",
-                content=item["code"],
-                description=item.get("thoughts", "")
-            ))
-        elif item["type"] == "action":
-            content.append(ApiAction(
-                class_="api_action",
-                function=item["function"],
-                kwargs=item["args"],
-                description=item.get("thoughts", "")
-            ))
-        elif item["type"] == "observation":
-            content.append(TextObservation(
-                class_="TextObservation",
-                text=item["text"],
-                source="environment"
-            ))
+def convert_raw_to_atif(raw_data):
+    """Convert one raw sample to an ATIF trajectory."""
+    steps = [Step(step_id=1, source="user", message=raw_data["prompt"])]
 
-    return Trajectory(
-        id=raw_data["id"],
-        content=content,
-        details=raw_data.get("metadata", {})
+    tool_call = ToolCall(
+        tool_call_id="call_1",
+        function_name=raw_data["action"]["name"],
+        arguments=raw_data["action"].get("arguments", {}),
     )
+    steps.append(
+        Step(
+            step_id=2,
+            source="agent",
+            message=raw_data.get("thought", ""),
+            tool_calls=[tool_call],
+            observation=ATIFObservation(
+                results=[ObservationResult(source_call_id="call_1", content=raw_data["observation"])]
+            ),
+        )
+    )
+
+    return ATIFTrajectory(
+        trajectory_id=raw_data["id"],
+        agent=Agent(name="dataset_converter", version="raw"),
+        steps=steps,
+    )
+
 
 if __name__ == "__main__":
     for line in sys.stdin:
-        raw_data = json.loads(line.strip())
-        standardized = convert_raw_to_standardized(raw_data)
-        print(standardized.model_dump_json())
+        raw_data = json.loads(line)
+        atif = convert_raw_to_atif(raw_data)
+        print(atif.model_dump_json(exclude_none=True))
 ```
 
-**Using schema_raw.py in raw_to_standardized.py (if applicable):**
+**Using schema_raw.py in raw_to_atif.py (if applicable):**
    ```python
    from schema_raw import SchemaRaw
 
-   def convert_raw_to_standardized(raw_data):
+   def convert_raw_to_atif(raw_data):
        # Validate and parse raw data
        data = SchemaRaw(**raw_data)
 
        # Now use typed data with IDE support and validation
-       content = []
+       steps = []
        for item in data.items:
            # Process with type safety
            pass
    ```
 
-2. **Create API definitions (when applicable)**: If your standardized dataset contains [ApiAction](schema/SCHEMA.md#apiaction), create an `api.py` file to define the available functions. This is crucial for later conversion to agent specific formats.
+2. **Declare custom tool metadata (when applicable)**: If your standardized dataset contains ATIF tool calls that are not built-in tools, add those tools to `metadata.json`. This is crucial for later conversion to agent-specific formats.
 
-   **When to include api.py:**
+   **When to declare custom tools in metadata.json:**
    - Your dataset contains structured actions (e.g., `go("bedroom")`, `click("button_id")`, `search("query")`)
    - Actions have specific parameters and can be represented as function calls
    - The data contains interactions with a specific environment, tool, or API
-   - You want to convert actions to `ApiAction` schema objects in your standardized format
+   - You want downstream SFT converters to validate and describe those tool calls consistently
 
-   **Why api.py is important for agents:**
+   **Why metadata.json is important for agents:**
    - **Function Call Training**: Agents learn to make structured function calls rather than generating free-form text
    - **Parameter Validation**: Ensures agents learn correct parameter types and formats
    - **Standardization**: Provides a consistent representation for tool calls across different datasets
    - **SFT Conversion**: Many agent training frameworks expect function call formats for fine-tuning
 
-   **What to include in api.py:**
-   ```python
-   def function_name(param1: type, param2: type) -> return_type:
-       """Clear description of what the function does.
-
-       Args:
-           param1 (type): Description of parameter 1
-           param2 (type): Description of parameter 2
-
-       Example:
-           function_name("example_value", 123)
-       """
-       pass
+   **Example metadata.json custom tool for a web browsing dataset:**
+   ```json
+   {
+     "custom_tools": [
+       {
+         "type": "function",
+         "function": {
+           "name": "click",
+           "description": "Click on a web element.",
+           "parameters": {
+             "type": "object",
+             "properties": {"xpath": {"type": "string"}},
+             "required": ["xpath"]
+           }
+         }
+       }
+     ]
+   }
    ```
 
-   **Example api.py for a web browsing dataset:**
+   Then in your `raw_to_atif.py`, use `ToolCall` for structured actions:
    ```python
-   def click(xpath: str) -> None:
-       """Click on a web element.
+   from schema.atif import ToolCall
 
-       Args:
-           xpath (str): The xpath of the element to click.
-
-       Example:
-           click("//button[@id='submit']")
-       """
-       pass
-
-   def type(xpath: str, text: str) -> None:
-       """Type text into an input field.
-
-       Args:
-           xpath (str): The xpath of the input element.
-           text (str): The text to type.
-
-       Example:
-           type("//input[@name='username']", "john_doe")
-       """
-       pass
-   ```
-
-   Then in your `raw_to_standardized.py`, use `ApiAction` for structured actions:
-   ```python
-   from schema.action.api import ApiAction
-
-   # Convert structured actions to ApiAction
    if action_type == "click":
-       content.append(ApiAction(
-           class_="api_action",
-           function="click",
-           kwargs={"xpath": action_data["xpath"]},
-           description=action_data.get("thought", "")
-       ))
+       tool_call = ToolCall(
+           tool_call_id="call_1",
+           function_name="click",
+           arguments={"xpath": action_data["xpath"]},
+       )
    ```
 
 
-3. Generate standardized samples:
+3. Generate ATIF and standardized samples:
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
-cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
+cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_atif.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_atif.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/atif_to_std.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
 ```
 
 #### Step 3: Validate Standardized Format
@@ -366,7 +326,7 @@ Each agent implementation should follow this structure:
 agents/YOUR_AGENT_NAME/
 ├── __init__.py                # Agent module initialization
 ├── api.py                     # Agent-specific API definitions
-├── std_to_sft.py              # Standardized to SFT conversion
+├── std_to_sft.py              # ATIF to SFT conversion
 ├── system_prompt/             # System prompts and templates
 └── README.md                  # Agent documentation
 ```
@@ -426,7 +386,7 @@ When responding, always:
 
 #### Step 4: Create SFT Conversion Script
 
-Create `std_to_sft.py` for converting standardized format to your agent's SFT format.
+Create `std_to_sft.py` for converting normalized ATIF format to your agent's SFT format.
 The output data should ideally be directly usable for training using [LLaMA Factory](https://github.com/hiyouga/LLaMA-Factory).
 
 ```python
@@ -436,7 +396,7 @@ The output data should ideally be directly usable for training using [LLaMA Fact
 import json
 import sys
 from typing import Dict, Any
-from schema.trajectory import Trajectory
+from schema.atif import ATIFTrajectory
 
 def convert_trajectory_to_sft(trajectory: Trajectory) -> Dict[str, Any]:
     """Convert a standardized trajectory to SFT format."""
@@ -484,7 +444,7 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/YOUR_AGENT_NAME/std_to_sft.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/YOUR_AGENT_NAME.json
 ```
 
-For example, for OpenHands v0:
+For example, OpenHands v0 consumes normalized ATIF:
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
@@ -535,10 +495,10 @@ pytest tests/test_dataset_structure.py
 Before submitting your contribution:
 
 - [ ] Raw data extraction script works correctly
+- [ ] ATIF conversion produces `sample_atif.json` and passes ATIF schema validation
 - [ ] Standardized format conversion passes validation
 - [ ] SFT format conversion produces valid output
 - [ ] `sample_std.json` files include the current root-level `schema_version`
-- [ ] If schema-impacting files under `schema/` changed, `SCHEMA_VERSION` in `schema/version.py` was bumped
 - [ ] All required files are present
 - [ ] README is comprehensive and accurate
 - [ ] Tests pass

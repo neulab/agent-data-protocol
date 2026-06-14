@@ -6,7 +6,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 def test_dataset_converters_do_not_use_unseeded_random_choice():
     offenders = []
-    for converter_path in sorted((REPO_ROOT / "datasets").glob("*/raw_to_standardized.py")):
+    converter_paths = [
+        *(REPO_ROOT / "datasets").glob("*/raw_to_atif.py"),
+        *(REPO_ROOT / "datasets").glob("*/atif_to_std.py"),
+    ]
+    for converter_path in sorted(converter_paths):
         tree = ast.parse(converter_path.read_text(), filename=str(converter_path))
         random_module_names = {"random"}
         random_choice_names = set()

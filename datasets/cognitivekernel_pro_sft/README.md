@@ -2,7 +2,7 @@
 
 ## Description
 
-[CognitiveKernel/CognitiveKernel-Pro-SFT](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) contains supervised fine-tuning data for the paper [Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training](https://huggingface.co/papers/2508.00414). The dataset consists of single-step action-module examples where the assistant emits a `Thought:` plus a fenced Python `Code:` action. Source system prompts and formatting scaffolding are excluded from the extracted ADP records so the user prompt contains only the target task instruction.
+[CognitiveKernel/CognitiveKernel-Pro-SFT](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) contains supervised fine-tuning data for the paper [Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training](https://huggingface.co/papers/2508.00414). The dataset consists of single-step action-module examples where the assistant emits a `Thought:` plus a fenced Python `Code:` action. Source system prompts and formatting scaffolding are excluded from the extracted ATIF records so the user prompt contains only the target task instruction.
 
 The released files cover URLQA (`ck-pro-web.sft.jsonl`), DocBench (`docbench.sft.jsonl`), TableBench (`tablebench.sft.jsonl`), and WebWalkerQA (`webwalker_subset.sft.jsonl`). Other sources mentioned by the authors are not included in the public release because of license restrictions.
 
@@ -31,7 +31,8 @@ export MY_DATASET=cognitivekernel_pro_sft
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
 python datasets/$MY_DATASET/extract_raw.py --sample | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_raw.json
-cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_standardized.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
+cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_atif.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_atif.json
+cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/atif_to_std.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
 cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands/std_to_sft.py --is_web=no --api_env=execute_ipython_cell | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft.json
 ```
 

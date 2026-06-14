@@ -29,7 +29,8 @@ export MY_DATASET=openresearcher
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
 python datasets/openresearcher/extract_raw.py --configs seed_42 --offset 1 --limit 3 --max-messages 120 | python scripts/jsonl_to_json.py > datasets/openresearcher/sample_raw.json
-cat datasets/openresearcher/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/openresearcher/raw_to_standardized.py | python scripts/jsonl_to_json.py > datasets/openresearcher/sample_std.json
+cat datasets/openresearcher/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/openresearcher/raw_to_atif.py | python scripts/jsonl_to_json.py > datasets/openresearcher/sample_atif.json
+cat datasets/openresearcher/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/openresearcher/atif_to_std.py | python scripts/jsonl_to_json.py > datasets/openresearcher/sample_std.json
 cat datasets/openresearcher/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands/std_to_sft.py --is_web=no --api_env=browser | python scripts/jsonl_to_json.py > datasets/openresearcher/sample_sft.json
 mkdir -p datasets/openresearcher/sample_sft
 cp datasets/openresearcher/sample_sft.json datasets/openresearcher/sample_sft/sample_sft_openhands.json

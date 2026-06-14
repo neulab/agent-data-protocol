@@ -44,11 +44,6 @@ def iter_task_ids(metadata):
             yield task_id, source_files
 
 
-def is_placeholder_solution(content):
-    normalized = content.strip().lower()
-    return not normalized or "no solution written" in normalized
-
-
 def optional_file(task_id, relative_path):
     path = f"{task_id}/{relative_path}"
     try:
@@ -59,8 +54,6 @@ def optional_file(task_id, relative_path):
 
 def build_record(task_id, source_files):
     solution = optional_file(task_id, "solution/solve.sh")
-    if solution is None or is_placeholder_solution(solution["content"]):
-        return None
 
     verification_files = []
     for relative_path in ["tests/test.sh", "tests/test_outputs.py"]:
@@ -83,8 +76,6 @@ def main():
     metadata = fetch_json(HF_API_URL)
     for task_id, source_files in iter_task_ids(metadata):
         record = build_record(task_id, source_files)
-        if record is None:
-            continue
         print(json.dumps(record, ensure_ascii=False), flush=True)
 
 

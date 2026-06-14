@@ -2,7 +2,7 @@
 
 ## Description
 
-AgentLab is a specialized AI agent framework designed for web automation and GUI interaction tasks. This converter transforms ADP standardized trajectories into AgentLab's supervised fine-tuning (SFT) format using JSON-formatted actions with accessibility trees.
+AgentLab is a specialized AI agent framework designed for web automation and GUI interaction tasks. This converter transforms standardized ATIF trajectories into AgentLab's supervised fine-tuning (SFT) format using JSON-formatted actions with accessibility trees.
 
 ## Agent Information
 

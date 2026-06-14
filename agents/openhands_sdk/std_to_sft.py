@@ -36,9 +36,6 @@ from openhands.tools.terminal import TerminalTool
 from openhands.tools.terminal.definition import MAX_CMD_OUTPUT_SIZE, maybe_truncate
 from pydantic import SecretStr
 
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
 from schema.dataset_metadata import (
     DatasetMetadata,
     OpenAIToolSpec,
@@ -46,10 +43,16 @@ from schema.dataset_metadata import (
     is_browser_api_action,
     load_dataset_metadata,
 )
-from schema.observation.image import ImageObservation
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from scripts.atif_input import (
+    ApiAction,
+    CodeAction,
+    ImageObservation,
+    MessageAction,
+    TextObservation,
+    Trajectory,
+    WebObservation,
+    load_trajectory,
+)
 
 try:
     from openhands.tools.browser_use import BrowserToolSet
@@ -115,6 +118,36 @@ def parse_scalar(value: Any) -> Any:
 
 def normalize_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     return {key: parse_scalar(value) for key, value in kwargs.items()}
+
+
+def _schema_type(schema: dict[str, Any]) -> str | None:
+    schema_type = schema.get("type")
+    return schema_type if isinstance(schema_type, str) else None
+
+
+def coerce_value_for_schema(value: Any, schema: dict[str, Any]) -> Any:
+    schema_type = _schema_type(schema)
+    if schema_type == "string":
+        return stringify_value(value)
+    if schema_type in {"integer", "number", "boolean", "array", "object"}:
+        return parse_scalar(value)
+    for option in schema.get("anyOf", []) or []:
+        if isinstance(option, dict) and _schema_type(option) == "string" and isinstance(value, str):
+            return value
+    return value
+
+
+def normalize_metadata_tool_kwargs(
+    function_name: str, kwargs: dict[str, Any], metadata: DatasetMetadata
+) -> dict[str, Any]:
+    tool_spec = custom_tool_map(metadata).get(function_name)
+    if tool_spec is None:
+        return normalize_kwargs(kwargs)
+    properties = (tool_spec.function.parameters or {}).get("properties", {}) or {}
+    return {
+        key: coerce_value_for_schema(value, properties.get(key, {}))
+        for key, value in kwargs.items()
+    }
 
 
 FILE_EDITOR_STRING_FIELDS = {"command", "path", "file_text", "old_str", "new_str"}
@@ -230,6 +263,8 @@ def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[To
     code_languages = {language.lower() for language in metadata.code_enabled}
     if code_languages & SUPPORTED_TERMINAL_CODE_LANGUAGES:
         specs.append(Tool(name=TerminalTool.name))
+    if metadata.file_editor_enabled:
+        specs.append(Tool(name=FileEditorTool.name))
     unsupported_code = sorted(code_languages - SUPPORTED_TERMINAL_CODE_LANGUAGES)
     if unsupported_code:
         raise ValueError(
@@ -308,6 +343,8 @@ def extract_legacy_tool_call(content: str) -> tuple[str, dict[str, Any], str] | 
     match = re.search(r"<function=([A-Za-z_][A-Za-z0-9_]*)>", content)
     if not match:
         return None
+    if match.group(1) == "example_function_name":
+        return None
     close_match = re.search(r"</function>", content[match.end() :])
     block_end = match.end() + close_match.start() if close_match is not None else len(content)
     trailing_start = match.end() + close_match.end() if close_match is not None else len(content)
@@ -320,6 +357,11 @@ def extract_legacy_tool_call(content: str) -> tuple[str, dict[str, Any], str] | 
             re.DOTALL,
         )
     }
+    if not args and (
+        match.group(1) == "str_replace_editor"
+        or re.search(r"<parameter>(.*?)</parameter>", block, re.DOTALL)
+    ):
+        return None
     thought = (content[: match.start()] + content[trailing_start:]).strip()
     return match.group(1), args, thought
 
@@ -384,11 +426,15 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
         return map_browser_action(function_name, kwargs)
     tool_name = OPENHANDS_TOOL_ALIASES.get(function_name, function_name)
     if function_name == "submit":
-        return "finish", {"message": kwargs.get("message", "Done.")}
+        return "finish", {"message": stringify_value(kwargs.get("message"), "Done.")}
     if function_name == "stop":
-        return "finish", {"message": kwargs.get("output", kwargs.get("message", ""))}
+        return "finish", {
+            "message": stringify_value(kwargs.get("output", kwargs.get("message", "")))
+        }
     if tool_name == "finish":
-        return "finish", {"message": kwargs.get("message", kwargs.get("output", ""))}
+        return "finish", {
+            "message": stringify_value(kwargs.get("message", kwargs.get("output", "")))
+        }
     if function_name == "edit_file":
         return "file_editor", {
             "command": "str_replace",
@@ -396,12 +442,14 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
             "old_str": stringify_value(kwargs.get("old_str")),
             "new_str": stringify_value(kwargs.get("content", kwargs.get("new_str"))),
         }
+    if tool_name == function_name:
+        return tool_name, normalize_metadata_tool_kwargs(function_name, event.kwargs, metadata)
     return tool_name, kwargs
 
 
 def heredoc_command(interpreter: str, language: str, content: str) -> str:
     digest = hashlib.sha1(content.encode()).hexdigest()[:12]
-    delimiter = f"ADP_{re.sub(r'[^A-Za-z0-9]+', '_', language).upper()}_{digest}"
+    delimiter = f"ATIF_{re.sub(r'[^A-Za-z0-9]+', '_', language).upper()}_{digest}"
     return f"{interpreter} <<'{delimiter}'\n{content}\n{delimiter}"
 
 
@@ -464,6 +512,7 @@ class SDKEventBuilder:
         self.tool_names_by_tool_call_id: dict[str, str] = {}
         self.call_index = 0
         self.last_action_event: ActionEvent | None = None
+        self.pending_tool_call_ids: list[str] = []
 
     @property
     def tools_map(self) -> dict[str, ToolDefinition]:
@@ -475,6 +524,7 @@ class SDKEventBuilder:
     def append_action_batch(
         self, events: list[ApiAction | CodeAction], *, batch_number: int
     ) -> None:
+        self.flush_missing_tool_results()
         response_id = f"llm_response_{batch_number:06d}"
         for offset, event in enumerate(events):
             self.call_index += 1
@@ -496,42 +546,52 @@ class SDKEventBuilder:
             )
             self.action_ids_by_tool_call_id[action_event.tool_call_id] = action_event.id
             self.tool_names_by_tool_call_id[action_event.tool_call_id] = action_event.tool_name
+            self.pending_tool_call_ids.append(action_event.tool_call_id)
             self.last_action_event = action_event
             self.append(action_event)
+
+    def _append_tool_result(self, tool_call_id: str, content: str) -> None:
+        action_id = self.action_ids_by_tool_call_id.get(tool_call_id)
+        if action_id is None or tool_call_id not in self.pending_tool_call_ids:
+            self.flush_missing_tool_results()
+            self.append(
+                MessageEvent(
+                    source="environment",
+                    llm_message=text_message("user", content),
+                )
+            )
+            return
+        tool_name = self.tool_names_by_tool_call_id[tool_call_id]
+        self.append(
+            ObservationEvent(
+                observation=DatasetToolObservation(output=content),
+                action_id=action_id,
+                tool_name=tool_name,
+                tool_call_id=tool_call_id,
+            )
+        )
+        self.pending_tool_call_ids.remove(tool_call_id)
+
+    def flush_missing_tool_results(self) -> None:
+        for tool_call_id in list(self.pending_tool_call_ids):
+            self._append_tool_result(tool_call_id, "")
 
     def append_observation(
         self, event: TextObservation | WebObservation | ImageObservation
     ) -> None:
         content = observation_content(event)
         if event.tool_call_id is None:
+            self.flush_missing_tool_results()
             source = getattr(event, "source", "environment")
             role = "assistant" if source == "agent" else "user"
             self.append(MessageEvent(source=source, llm_message=text_message(role, content)))
             return
-        action_id = self.action_ids_by_tool_call_id.get(event.tool_call_id)
-        if action_id is None:
-            raise ValueError(f"No action event found for observation {event.tool_call_id!r}")
-        tool_name = self.tool_names_by_tool_call_id[event.tool_call_id]
-        self.append(
-            ObservationEvent(
-                observation=DatasetToolObservation(output=content),
-                action_id=action_id,
-                tool_name=tool_name,
-                tool_call_id=event.tool_call_id,
-            )
-        )
+        self._append_tool_result(event.tool_call_id, content)
 
     def append_synthetic_tool_result(self, content: str) -> None:
         if self.last_action_event is None:
             raise ValueError("No action event is available for a synthetic tool result")
-        self.append(
-            ObservationEvent(
-                observation=DatasetToolObservation(output=content),
-                action_id=self.last_action_event.id,
-                tool_name=self.last_action_event.tool_name,
-                tool_call_id=self.last_action_event.tool_call_id,
-            )
-        )
+        self._append_tool_result(self.last_action_event.tool_call_id, content)
 
 
 def observation_content(event: TextObservation | WebObservation | ImageObservation) -> str:
@@ -572,6 +632,7 @@ def append_message_action(builder: SDKEventBuilder, event: MessageAction) -> Non
         builder.append_action_batch([api_action], batch_number=builder.call_index + 1)
         return
     content = "\n\n".join(part for part in [event_description(event), event.content] if part)
+    builder.flush_missing_tool_results()
     builder.append(
         MessageEvent(
             source="agent",
@@ -612,6 +673,7 @@ def append_standardized_events(
         else:
             raise ValueError(f"Unsupported event type: {type(event)}")
         index += 1
+    builder.flush_missing_tool_results()
 
 
 def serializable_tool(tool: ToolDefinition) -> dict[str, Any]:
@@ -639,16 +701,55 @@ def normalize_message_content(messages: list[dict[str, Any]]) -> list[dict[str, 
     return normalized
 
 
-def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[str, Any]:
-    trajectory = Trajectory(**json.loads(line))
+def process_trajectory(
+    trajectory: Trajectory,
+    model: str,
+    dataset_name: str | None = None,
+) -> dict[str, Any]:
     dataset_name = dataset_name or os.getenv("MY_DATASET")
     metadata = load_dataset_metadata(dataset_name, required=True)
     register_metadata_tools(metadata)
-    first_event = trajectory.content[0] if trajectory.content else None
-    if not isinstance(first_event, TextObservation) or first_event.source != "user":
-        raise ValueError(
-            "OpenHands SDK conversion expects the first event to be a user TextObservation"
+    if not trajectory.content:
+        raise ValueError("OpenHands SDK conversion expects at least one trajectory event")
+    first_user_index = next(
+        (
+            index
+            for index, event in enumerate(trajectory.content)
+            if isinstance(event, TextObservation) and event.source == "user"
+        ),
+        None,
+    )
+    if first_user_index is None:
+        first_user_message = ""
+        start_index = 0
+    else:
+        first_user = trajectory.content[first_user_index]
+        first_user_message = first_user.content
+        start_index = first_user_index + 1
+    initial_context_end = (
+        first_user_index if first_user_index is not None else len(trajectory.content)
+    )
+    initial_context = [
+        observation_content(event)
+        if isinstance(event, (TextObservation, WebObservation, ImageObservation))
+        else event.content
+        for event in trajectory.content[:initial_context_end]
+        if isinstance(event, (TextObservation, WebObservation, ImageObservation, MessageAction))
+    ]
+    if not first_user_message and initial_context:
+        first_user_message = initial_context.pop(0)
+        start_index = 1
+    if initial_context:
+        first_user_message = "\n\n".join(
+            part
+            for part in [
+                first_user_message,
+                "Initial context:\n" + "\n\n".join(initial_context),
+            ]
+            if part
         )
+    if not first_user_message:
+        first_user_message = f"Continue trajectory {trajectory.id}."
 
     llm = LLM(
         usage_id="openhands-sdk-sft-converter",
@@ -659,8 +760,8 @@ def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[
     with tempfile.TemporaryDirectory(prefix="openhands-sdk-sft-") as tmpdir:
         conversation = Conversation(agent=agent, workspace=tmpdir, visualizer=None)
         try:
-            conversation.send_message(first_event.content)
-            append_standardized_events(conversation, trajectory, metadata, start_index=1)
+            conversation.send_message(first_user_message)
+            append_standardized_events(conversation, trajectory, metadata, start_index=start_index)
             convertible_events = [
                 event
                 for event in conversation.state.events
@@ -682,6 +783,10 @@ def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[
             "generation": "openhands_sdk_events",
         },
     }
+
+
+def process_row(line: str, model: str, dataset_name: str | None = None) -> dict[str, Any]:
+    return process_trajectory(load_trajectory(line), model, dataset_name)
 
 
 def main() -> None:

@@ -2,7 +2,7 @@
 
 ## Description
 
-OpenHands v0 is a general-purpose AI agent format for software engineering tasks and web browsing activities. This converter transforms ADP standardized trajectories into OpenHands v0 supervised fine-tuning (SFT) format using XML-style function calls.
+OpenHands v0 is a general-purpose AI agent format for software engineering tasks and web browsing activities. This converter transforms standardized ATIF trajectories into OpenHands v0 supervised fine-tuning (SFT) format using XML-style function calls.
 
 The converter supports both coding tasks (bash, Python) and web browsing scenarios, with configurable API environments and automatic HTML-to-accessibility-tree conversion for web observations.
 

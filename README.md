@@ -64,20 +64,21 @@ mkdir -p datasets/$MY_DATASET/full_sft
 echo "Extracting raw data..."
 python datasets/$MY_DATASET/extract_raw.py > datasets/$MY_DATASET/full_raw.jsonl
 
-# Step 2: Convert to standardized format
-echo "Converting to standardized format..."
+# Step 2: Convert to ATIF and ATIF std formats
 export PYTHONPATH=`pwd`:$PYTHONPATH
-cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_standardized.py > datasets/$MY_DATASET/full_std.jsonl
+echo "Converting to ATIF format..."
+cat datasets/$MY_DATASET/full_raw.jsonl | python datasets/$MY_DATASET/raw_to_atif.py > datasets/$MY_DATASET/full_atif.jsonl
+echo "Normalizing ATIF tool calls..."
+cat datasets/$MY_DATASET/full_atif.jsonl | python datasets/$MY_DATASET/atif_to_std.py > datasets/$MY_DATASET/full_std.jsonl
 
 # Step 3: Convert to agent-specific SFT format
 echo "Converting to SFT format..."
-export PYTHONPATH=`pwd`:$PYTHONPATH
 
-# For OpenHands v0, there are dataset specific arguments to pass in
+# OpenHands v0 consumes normalized ATIF; there are dataset specific arguments to pass in
 export MY_AGENT=openhands_v0
 cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py --is_web=no --api_env=execute_bash > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
 
-# For SWE-agent
+# SWE-agent consumes normalized ATIF std records
 export MY_AGENT=sweagent
 cat datasets/$MY_DATASET/full_std.jsonl | python agents/$MY_AGENT/std_to_sft.py > datasets/$MY_DATASET/full_sft/full_sft_$MY_AGENT.jsonl
 ```
@@ -99,31 +100,31 @@ The repository currently supports datasets from various domains (we welcome more
 
 ## Data Flow
 
-The ADP follows a three-stage pipeline:
+The ADP follows a staged pipeline with ATIF as an interchange layer:
 
 ```
-Raw Dataset      →  Standardized Format  →  Agent Specific SFT Format
-      ↓                   ↓                       ↓
-sample_raw.json  →  sample_std.json      →  sample_sft/<agent_name>.json
+sample_raw.json → raw_to_atif.py → sample_atif.json → atif_to_std.py → sample_std.json → agents/*/std_to_sft.py → sample_sft/<agent_name>.json
 ```
 
 ### 1. Raw Data
 Original format from various sources (research papers, datasets, etc.)
 
-### 2. Standardized Format
-Unified representation using ADP schemas:
-- **Actions**: `MessageAction`, `CodeAction`, `ApiAction`
-- **Observations**: `TextObservation`, `WebObservation`
-- **Trajectory**: Container for complete interaction sequences
+### 2. ATIF Format
+Dataset-specific raw-to-ATIF conversion using Harbor's Agent Trajectory Interchange Format. This layer preserves the raw tool/action shape with minimal normalization and is validated by `ATIFTrajectory`.
 
-### 3. SFT Format
-Agent-specific format ready for supervised fine-tuning
+### 3. ATIF Normalization and Standardized Format
+`atif_to_std.py` normalizes ATIF tool names/arguments and emits ATIF JSONL. Committed `sample_std.json` fixtures are ATIF std data:
+- **Steps**: `system`, `user`, or `agent` turns with natural-language messages
+- **Tool calls**: `function_name`, `arguments`, and `tool_call_id`
+- **Observations**: Tool/environment results linked with `source_call_id`
+
+### 4. SFT Format
+Agent-specific format ready for supervised fine-tuning. Shared `std_to_sft.py` converters accept ATIF input after dataset-specific `atif_to_std.py` normalization.
 
 ## Documentation
 
 ### Schema Documentation
-For detailed information about ADP schemas, data structures, and validation:
-- **[SCHEMA.md](schema/SCHEMA.md)** - Complete schema documentation with examples
+The canonical standardized schema is the ATIF model in [`schema/atif.py`](schema/atif.py).
 
 ### Contributing Guidelines
 To contribute new datasets or agent implementations:
@@ -136,9 +137,11 @@ agent-data-protocol/
 ├── datasets/           # Dataset implementations
 │   ├── swe-smith/     # Example dataset
 │   │   ├── extract_raw.py
-│   │   ├── raw_to_standardized.py
-│   │   ├── api.py
+│   │   ├── raw_to_atif.py
+│   │   ├── atif_to_std.py
+│   │   ├── metadata.json
 │   │   ├── sample_raw.json
+│   │   ├── sample_atif.json
 │   │   ├── sample_std.json
 │   │   ├── sample_sft/   # Sample SFT format
 │   │   │   ├── openhands_v0.json
@@ -152,11 +155,8 @@ agent-data-protocol/
 │   ├── sweagent/      # SWE-agent
 │   ├── agentlab/      # AgentLab
 │   └── ...
-├── schema/            # ADP schema definitions
-│   ├── SCHEMA.md      # Schema documentation
-│   ├── action/        # Action schemas
-│   ├── observation/   # Observation schemas
-│   └── trajectory.py  # Trajectory container
+├── schema/            # ATIF schema definitions
+│   └── atif.py        # ATIF trajectory, step, tool-call, and observation models
 ├── scripts/           # Utility scripts
 └── tests/            # Validation tests
 ```
@@ -166,13 +166,14 @@ agent-data-protocol/
 ### Converting a Single Dataset
 
 ```bash
-# Example: Convert swe-smith dataset -> ADP -> OpenHands v0 SFT
+# Example: Convert swe-smith dataset -> ATIF -> OpenHands v0 SFT
 export MY_DATASET=swe-smith
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
-# Extract and convert
+# Extract and convert through ATIF
 python datasets/$MY_DATASET/extract_raw.py | \
-python datasets/$MY_DATASET/raw_to_standardized.py | \
+python datasets/$MY_DATASET/raw_to_atif.py | \
+python datasets/$MY_DATASET/atif_to_std.py | \
 python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash \
 > swe_smith_openhands_v0.jsonl
 ```
@@ -185,7 +186,8 @@ export MY_DATASET=mind2web
 export PYTHONPATH=`pwd`:$PYTHONPATH
 
 python datasets/$MY_DATASET/extract_raw.py | \
-python datasets/$MY_DATASET/raw_to_standardized.py | \
+python datasets/$MY_DATASET/raw_to_atif.py | \
+python datasets/$MY_DATASET/atif_to_std.py | \
 python agents/openhands_v0/std_to_sft.py --is_web=yes --api_env=browser \
 > mind2web_openhands_v0.jsonl
 ```

@@ -1,6 +1,6 @@
-from typing import Any, List, Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class State(BaseModel):
@@ -21,7 +21,7 @@ class Step(BaseModel):
 
 class SchemaRaw(BaseModel):
     shortcode: str
-    description: str
-    status: Optional[str] = None
-    tasks: List[str]
-    data: List[Step]
+    replay: dict[str, Any]
+    form: dict[str, Any]
+
+    model_config = ConfigDict(extra="allow")

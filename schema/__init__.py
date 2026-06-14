@@ -1,3 +1,3 @@
-from schema.version import SCHEMA_VERSION, SUPPORTED_SCHEMA_VERSIONS
+from schema.atif import ATIF_SCHEMA_VERSION, ATIFTrajectory
 
-__all__ = ["SCHEMA_VERSION", "SUPPORTED_SCHEMA_VERSIONS"]
+__all__ = ["ATIF_SCHEMA_VERSION", "ATIFTrajectory"]
