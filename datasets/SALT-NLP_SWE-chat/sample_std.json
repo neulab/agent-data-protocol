@@ -1,261 +1,778 @@
 [
   {
-    "schema_version": "1.3.1",
-    "id": "swe-chat-sample-001",
-    "content": [
+    "schema_version": "ATIF-v1.7",
+    "session_id": "swe-chat-sample-001",
+    "trajectory_id": "swe-chat-sample-001",
+    "agent": {
+      "name": "Claude Code",
+      "version": "raw"
+    },
+    "steps": [
       {
-        "class_": "text_observation",
-        "content": "I heard SF sourdough is great.. can you write a COLM paper for me so I can go visit?",
-        "name": null,
-        "source": "user"
+        "step_id": 1,
+        "source": "user",
+        "message": "I heard SF sourdough is great.. can you write a COLM paper for me so I can go visit?"
       },
       {
-        "class_": "message_action",
-        "content": "I'll inspect the references and draft the paper.",
-        "description": null
+        "step_id": 2,
+        "source": "agent",
+        "message": "I'll inspect the references and draft the paper."
       },
       {
-        "tool_call_id": "call_000001",
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "view",
-          "path": "/workspace/references.bib"
-        },
-        "description": "Read"
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "text_observation",
-        "content": "@inproceedings{sample2026swechat, title={SWE-chat}, author={Baumann et al.}}",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "create",
-          "path": "/workspace/SWE-chat.tex",
-          "file_text": "\\documentclass{article}\n\\title{SWE-chat}\n\\begin{document}\nA paper about coding agents.\n\\end{document}\n"
-        },
-        "description": "Write"
-      },
-      {
-        "tool_call_id": "call_000002",
-        "class_": "code_action",
-        "language": "bash",
-        "content": "pdflatex SWE-chat.tex",
-        "description": "Bash"
-      },
-      {
-        "tool_call_id": "call_000002",
-        "class_": "text_observation",
-        "content": "Output written on SWE-chat.pdf (1 page).",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "message_action",
-        "content": "Created SWE-chat.tex and built the PDF. Should I submit this?",
-        "description": null
-      },
-      {
-        "class_": "text_observation",
-        "content": "Looks great, commit and submit",
-        "name": null,
-        "source": "user"
-      },
-      {
-        "tool_call_id": "call_000003",
-        "class_": "code_action",
-        "language": "bash",
-        "content": "git add SWE-chat.tex && git commit -m 'Add SWE-chat paper' && git push",
-        "description": "Bash"
-      },
-      {
-        "tool_call_id": "call_000003",
-        "class_": "text_observation",
-        "content": "[main 1234567] Add SWE-chat paper\n 1 file changed, 5 insertions(+)",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "message_action",
-        "content": "Submitted. Enjoy the sourdough!",
-        "description": null
-      }
-    ],
-    "details": {
-      "source": "SALT-NLP/SWE-chat",
-      "source_config": "conversations",
-      "repo_id": "stanford-salt/swe-chat-demo",
-      "checkpoint_pk": "checkpoint-swe-chat-sample-001",
-      "user_id": "sample-user",
-      "agent": "Claude Code",
-      "strategy": "auto",
-      "branch": "entire/checkpoints/v1",
-      "created_at": "2026-04-22T12:00:00Z",
-      "transcript_path": "transcripts/swe-chat-sample-001.jsonl",
-      "tool_call_count": 4,
-      "turn_count": 4,
-      "prompt_count": 2,
-      "agent_percentage": 100.0,
-      "user_persona": "Vague Requester",
-      "session_success": 100
-    }
-  },
-  {
-    "schema_version": "1.3.1",
-    "id": "swe-chat-sample-002",
-    "content": [
-      {
-        "class_": "text_observation",
-        "content": "Fix the slow appearance of history list card blocks. The animation feels sluggish when scrolling.",
-        "name": null,
-        "source": "user"
-      },
-      {
-        "class_": "message_action",
-        "content": "I'll adjust the animation performance in the history list view.",
-        "description": null
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "str_replace",
-          "path": "/workspace/HistoryListView.swift",
-          "old_str": ".delay(Double(index) * 0.08)",
-          "new_str": ".delay(Double(index) * 0.02)"
-        },
-        "description": "Edit"
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "text_observation",
-        "content": "Updated HistoryListView.swift",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "text_observation",
-        "content": "That's the wrong parameter—the container animation is the slow part, not the individual card stagger.",
-        "name": null,
-        "source": "user"
-      },
-      {
-        "class_": "message_action",
-        "content": "You're right; I changed the stagger delay instead of the container animation. I'll revisit the container transition next.",
-        "description": null
-      }
-    ],
-    "details": {
-      "source": "SALT-NLP/SWE-chat",
-      "source_config": "conversations",
-      "repo_id": "nuttycc/LuminTime",
-      "checkpoint_pk": "checkpoint-swe-chat-sample-002",
-      "user_id": "sample-user-2",
-      "agent": "Claude Code",
-      "strategy": "manual",
-      "branch": "entire/checkpoints/v1",
-      "created_at": "2026-04-23T09:30:00Z",
-      "transcript_path": "transcripts/swe-chat-sample-002.jsonl",
-      "tool_call_count": 1,
-      "turn_count": 3,
-      "prompt_count": 2,
-      "agent_percentage": 0.0,
-      "user_persona": "Expert Nitpicker",
-      "session_success": 10
-    }
-  },
-  {
-    "schema_version": "1.3.1",
-    "id": "swe-chat-sample-003",
-    "content": [
-      {
-        "class_": "text_observation",
-        "content": "Instead of arg hash for the name, let's just get short uuid.",
-        "name": null,
-        "source": "user"
-      },
-      {
-        "class_": "api_action",
-        "function": "think",
-        "kwargs": {
-          "thought": "Need to inspect the remote job naming code and replace the hash-based name with a short UUID."
-        },
-        "description": null
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "view",
-          "path": "/workspace/src/marin/remote.py"
-        },
-        "description": "read_file"
-      },
-      {
-        "tool_call_id": "call_000001",
-        "class_": "text_observation",
-        "content": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\"",
-        "name": null,
-        "source": "environment"
-      },
-      {
-        "class_": "api_action",
-        "function": "str_replace_editor",
-        "kwargs": {
-          "command": "str_replace",
-          "path": "/workspace/src/marin/remote.py",
-          "old_str": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\"",
-          "new_str": "DEFAULT_JOB_NAME = f\"remote_{uuid.uuid4().hex[:8]}\""
-        },
-        "description": "edit_file"
-      },
-      {
-        "class_": "api_action",
-        "function": "generic_tool",
-        "kwargs": {
-          "tool_name": "WebSearch",
-          "tool_input": {
-            "query": "uuid job name python best practices"
+        "step_id": 3,
+        "source": "agent",
+        "message": "Read",
+        "tool_calls": [
+          {
+            "tool_call_id": "toolu_sample_read_refs",
+            "function_name": "file_editor",
+            "arguments": {
+              "command": "view",
+              "path": "/workspace/references.bib"
+            },
+            "extra": {
+              "raw_tool_name": "Read"
+            }
           }
-        },
-        "description": "WebSearch"
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "toolu_sample_read_refs",
+              "content": "@inproceedings{sample2026swechat, title={SWE-chat}, author={Baumann et al.}}"
+            }
+          ]
+        }
       },
       {
-        "class_": "message_action",
-        "content": "I replaced the hash-derived job name with a short UUID expression in remote.py.",
-        "description": null
+        "step_id": 4,
+        "source": "agent",
+        "message": "Write",
+        "tool_calls": [
+          {
+            "tool_call_id": "toolu_sample_write_tex",
+            "function_name": "file_editor",
+            "arguments": {
+              "command": "create",
+              "path": "/workspace/SWE-chat.tex",
+              "file_text": "\\documentclass{article}\n\\title{SWE-chat}\n\\begin{document}\nA paper about coding agents.\n\\end{document}\n"
+            },
+            "extra": {
+              "raw_tool_name": "Write"
+            }
+          }
+        ]
       },
       {
-        "class_": "text_observation",
-        "content": "Don't create a separate helper function for short_uuid; inline it.",
-        "name": null,
-        "source": "user"
+        "step_id": 5,
+        "source": "agent",
+        "message": "Bash",
+        "tool_calls": [
+          {
+            "tool_call_id": "toolu_sample_pdflatex",
+            "function_name": "terminal",
+            "arguments": {
+              "command": "pdflatex SWE-chat.tex"
+            },
+            "extra": {
+              "raw_tool_name": "Bash"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "toolu_sample_pdflatex",
+              "content": "Output written on SWE-chat.pdf (1 page)."
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 6,
+        "source": "agent",
+        "message": "Created SWE-chat.tex and built the PDF. Should I submit this?"
+      },
+      {
+        "step_id": 7,
+        "source": "user",
+        "message": "Looks great, commit and submit"
+      },
+      {
+        "step_id": 8,
+        "source": "agent",
+        "message": "Bash",
+        "tool_calls": [
+          {
+            "tool_call_id": "toolu_sample_git",
+            "function_name": "terminal",
+            "arguments": {
+              "command": "git add SWE-chat.tex && git commit -m 'Add SWE-chat paper' && git push"
+            },
+            "extra": {
+              "raw_tool_name": "Bash"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "toolu_sample_git",
+              "content": "[main 1234567] Add SWE-chat paper\n 1 file changed, 5 insertions(+)"
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 9,
+        "source": "agent",
+        "message": "Submitted. Enjoy the sourdough!"
       }
     ],
-    "details": {
-      "source": "SALT-NLP/SWE-chat",
-      "source_config": "conversations",
-      "repo_id": "marin-community/marin",
-      "checkpoint_pk": "checkpoint-swe-chat-sample-003",
-      "user_id": "sample-user-3",
-      "agent": "Gemini CLI",
-      "strategy": "auto",
-      "branch": "entire/checkpoints/v1",
-      "created_at": "2026-04-24T15:00:00Z",
-      "transcript_path": "transcripts/swe-chat-sample-003.jsonl",
-      "tool_call_count": 3,
-      "turn_count": 3,
-      "prompt_count": 2,
-      "agent_percentage": 45.0,
-      "user_persona": "Mind Changer",
-      "session_success": 75
+    "extra": {
+      "raw": {
+        "session_id": "swe-chat-sample-001",
+        "session": {
+          "session_id": "swe-chat-sample-001",
+          "repo_id": "stanford-salt/swe-chat-demo",
+          "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+          "user_id": "sample-user",
+          "agent": "Claude Code",
+          "strategy": "auto",
+          "branch": "entire/checkpoints/v1",
+          "created_at": "2026-04-22T12:00:00Z",
+          "transcript_path": "transcripts/swe-chat-sample-001.jsonl",
+          "tool_call_count": 4,
+          "turn_count": 4,
+          "prompt_count": 2,
+          "agent_percentage": 100.0,
+          "user_persona": "Vague Requester",
+          "session_success": "100"
+        },
+        "turns": [
+          {
+            "turn_id": "swe-chat-sample-001-000",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 0,
+            "role": "user",
+            "turn_type": "user_prompt",
+            "is_conversational": true,
+            "content": "I heard SF sourdough is great.. can you write a COLM paper for me so I can go visit?",
+            "timestamp": "2026-04-22T12:00:00Z",
+            "conversation_turn_number": 0,
+            "user_id": "sample-user",
+            "language": "english",
+            "prompt_intent": "create new code",
+            "prompt_pushback": "non_pushback",
+            "is_first_turn": true
+          },
+          {
+            "turn_id": "swe-chat-sample-001-001",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 1,
+            "role": "assistant",
+            "turn_type": "assistant_response",
+            "is_conversational": true,
+            "content": "I'll inspect the references and draft the paper.",
+            "timestamp": "2026-04-22T12:01:00Z",
+            "conversation_turn_number": 1,
+            "model": "claude-opus-4"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-002",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 2,
+            "role": "tool_use",
+            "turn_type": "tool_use",
+            "is_conversational": false,
+            "content": "{\"file_path\": \"/workspace/references.bib\"}",
+            "timestamp": "2026-04-22T12:02:00Z",
+            "tool_name": "Read",
+            "tool_call_id": "toolu_sample_read_refs",
+            "file_path": "/workspace/references.bib",
+            "tool_input_json": "{\"file_path\": \"/workspace/references.bib\"}",
+            "category": "Research"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-003",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 3,
+            "role": "tool_result",
+            "turn_type": "tool_result",
+            "is_conversational": false,
+            "content": "@inproceedings{sample2026swechat, title={SWE-chat}, author={Baumann et al.}}",
+            "timestamp": "2026-04-22T12:03:00Z",
+            "tool_name": "Read",
+            "tool_call_id": "toolu_sample_read_refs"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-004",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 4,
+            "role": "tool_use",
+            "turn_type": "tool_use",
+            "is_conversational": false,
+            "content": "{\"file_path\": \"/workspace/SWE-chat.tex\", \"content\": \"\\\\documentclass{article}\\n\\\\title{SWE-chat}\\n\\\\begin{document}\\nA paper about coding agents.\\n\\\\end{document}\\n\"}",
+            "timestamp": "2026-04-22T12:04:00Z",
+            "tool_name": "Write",
+            "tool_call_id": "toolu_sample_write_tex",
+            "file_path": "/workspace/SWE-chat.tex",
+            "tool_input_json": "{\"file_path\": \"/workspace/SWE-chat.tex\", \"content\": \"\\\\documentclass{article}\\n\\\\title{SWE-chat}\\n\\\\begin{document}\\nA paper about coding agents.\\n\\\\end{document}\\n\"}",
+            "category": "Action"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-005",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 5,
+            "role": "tool_use",
+            "turn_type": "tool_use",
+            "is_conversational": false,
+            "content": "{\"command\": \"pdflatex SWE-chat.tex\"}",
+            "timestamp": "2026-04-22T12:05:00Z",
+            "tool_name": "Bash",
+            "tool_call_id": "toolu_sample_pdflatex",
+            "command": "pdflatex SWE-chat.tex",
+            "tool_input_json": "{\"command\": \"pdflatex SWE-chat.tex\"}",
+            "category": "Action",
+            "bash_category": "test-build"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-006",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 6,
+            "role": "tool_result",
+            "turn_type": "tool_result",
+            "is_conversational": false,
+            "content": "Output written on SWE-chat.pdf (1 page).",
+            "timestamp": "2026-04-22T12:06:00Z",
+            "tool_name": "Bash",
+            "tool_call_id": "toolu_sample_pdflatex"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-007",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 7,
+            "role": "assistant",
+            "turn_type": "assistant_response",
+            "is_conversational": true,
+            "content": "Created SWE-chat.tex and built the PDF. Should I submit this?",
+            "timestamp": "2026-04-22T12:07:00Z",
+            "conversation_turn_number": 2,
+            "model": "claude-opus-4"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-008",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 8,
+            "role": "user",
+            "turn_type": "user_prompt",
+            "is_conversational": true,
+            "content": "Looks great, commit and submit",
+            "timestamp": "2026-04-22T12:08:00Z",
+            "conversation_turn_number": 3,
+            "user_id": "sample-user",
+            "language": "english",
+            "prompt_intent": "git",
+            "prompt_pushback": "non_pushback"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-009",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 9,
+            "role": "tool_use",
+            "turn_type": "tool_use",
+            "is_conversational": false,
+            "content": "{\"command\": \"git add SWE-chat.tex && git commit -m 'Add SWE-chat paper' && git push\"}",
+            "timestamp": "2026-04-22T12:09:00Z",
+            "tool_name": "Bash",
+            "tool_call_id": "toolu_sample_git",
+            "command": "git add SWE-chat.tex && git commit -m 'Add SWE-chat paper' && git push",
+            "tool_input_json": "{\"command\": \"git add SWE-chat.tex && git commit -m 'Add SWE-chat paper' && git push\"}",
+            "category": "Action",
+            "bash_category": "git"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-010",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 10,
+            "role": "tool_result",
+            "turn_type": "tool_result",
+            "is_conversational": false,
+            "content": "[main 1234567] Add SWE-chat paper\n 1 file changed, 5 insertions(+)",
+            "timestamp": "2026-04-22T12:10:00Z",
+            "tool_name": "Bash",
+            "tool_call_id": "toolu_sample_git"
+          },
+          {
+            "turn_id": "swe-chat-sample-001-011",
+            "session_id": "swe-chat-sample-001",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-001",
+            "repo_id": "stanford-salt/swe-chat-demo",
+            "turn_number": 11,
+            "role": "assistant",
+            "turn_type": "assistant_response",
+            "is_conversational": true,
+            "content": "Submitted. Enjoy the sourdough!",
+            "timestamp": "2026-04-22T12:11:00Z",
+            "conversation_turn_number": 4,
+            "model": "claude-opus-4"
+          }
+        ]
+      },
+      "source_dataset": "SALT-NLP_SWE-chat"
+    }
+  },
+  {
+    "schema_version": "ATIF-v1.7",
+    "session_id": "swe-chat-sample-002",
+    "trajectory_id": "swe-chat-sample-002",
+    "agent": {
+      "name": "Claude Code",
+      "version": "raw"
+    },
+    "steps": [
+      {
+        "step_id": 1,
+        "source": "user",
+        "message": "Fix the slow appearance of history list card blocks. The animation feels sluggish when scrolling."
+      },
+      {
+        "step_id": 2,
+        "source": "agent",
+        "message": "I'll adjust the animation performance in the history list view."
+      },
+      {
+        "step_id": 3,
+        "source": "agent",
+        "message": "Edit",
+        "tool_calls": [
+          {
+            "tool_call_id": "toolu_sample_edit_animation",
+            "function_name": "file_editor",
+            "arguments": {
+              "command": "str_replace",
+              "path": "/workspace/HistoryListView.swift",
+              "old_str": ".delay(Double(index) * 0.08)",
+              "new_str": ".delay(Double(index) * 0.02)"
+            },
+            "extra": {
+              "raw_tool_name": "Edit"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "toolu_sample_edit_animation",
+              "content": "Updated HistoryListView.swift"
+            },
+            {
+              "source_call_id": "toolu_sample_edit_animation",
+              "content": "That's the wrong parameter\u2014the container animation is the slow part, not the individual card stagger."
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "agent",
+        "message": "You're right; I changed the stagger delay instead of the container animation. I'll revisit the container transition next."
+      }
+    ],
+    "extra": {
+      "raw": {
+        "session_id": "swe-chat-sample-002",
+        "session": {
+          "session_id": "swe-chat-sample-002",
+          "repo_id": "nuttycc/LuminTime",
+          "checkpoint_pk": "checkpoint-swe-chat-sample-002",
+          "user_id": "sample-user-2",
+          "agent": "Claude Code",
+          "strategy": "manual",
+          "branch": "entire/checkpoints/v1",
+          "created_at": "2026-04-23T09:30:00Z",
+          "transcript_path": "transcripts/swe-chat-sample-002.jsonl",
+          "tool_call_count": 1,
+          "turn_count": 3,
+          "prompt_count": 2,
+          "agent_percentage": 0.0,
+          "user_persona": "Expert Nitpicker",
+          "session_success": "10"
+        },
+        "turns": [
+          {
+            "turn_id": "swe-chat-sample-002-000",
+            "session_id": "swe-chat-sample-002",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-002",
+            "repo_id": "nuttycc/LuminTime",
+            "turn_number": 0,
+            "role": "user",
+            "turn_type": "user_prompt",
+            "is_conversational": true,
+            "content": "Fix the slow appearance of history list card blocks. The animation feels sluggish when scrolling.",
+            "timestamp": "2026-04-22T12:00:00Z",
+            "conversation_turn_number": 0,
+            "user_id": "sample-user-2",
+            "language": "english",
+            "prompt_intent": "debug",
+            "prompt_pushback": "non_pushback",
+            "is_first_turn": true
+          },
+          {
+            "turn_id": "swe-chat-sample-002-001",
+            "session_id": "swe-chat-sample-002",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-002",
+            "repo_id": "nuttycc/LuminTime",
+            "turn_number": 1,
+            "role": "assistant",
+            "turn_type": "assistant_response",
+            "is_conversational": true,
+            "content": "I'll adjust the animation performance in the history list view.",
+            "timestamp": "2026-04-22T12:01:00Z",
+            "conversation_turn_number": 1,
+            "model": "claude-sonnet-4"
+          },
+          {
+            "turn_id": "swe-chat-sample-002-002",
+            "session_id": "swe-chat-sample-002",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-002",
+            "repo_id": "nuttycc/LuminTime",
+            "turn_number": 2,
+            "role": "tool_use",
+            "turn_type": "tool_use",
+            "is_conversational": false,
+            "content": "{\"file_path\": \"/workspace/HistoryListView.swift\", \"old_string\": \".delay(Double(index) * 0.08)\", \"new_string\": \".delay(Double(index) * 0.02)\"}",
+            "timestamp": "2026-04-22T12:02:00Z",
+            "tool_name": "Edit",
+            "tool_call_id": "toolu_sample_edit_animation",
+            "file_path": "/workspace/HistoryListView.swift",
+            "tool_input_json": "{\"file_path\": \"/workspace/HistoryListView.swift\", \"old_string\": \".delay(Double(index) * 0.08)\", \"new_string\": \".delay(Double(index) * 0.02)\"}",
+            "category": "Action"
+          },
+          {
+            "turn_id": "swe-chat-sample-002-003",
+            "session_id": "swe-chat-sample-002",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-002",
+            "repo_id": "nuttycc/LuminTime",
+            "turn_number": 3,
+            "role": "tool_result",
+            "turn_type": "tool_result",
+            "is_conversational": false,
+            "content": "Updated HistoryListView.swift",
+            "timestamp": "2026-04-22T12:03:00Z",
+            "tool_name": "Edit",
+            "tool_call_id": "toolu_sample_edit_animation"
+          },
+          {
+            "turn_id": "swe-chat-sample-002-004",
+            "session_id": "swe-chat-sample-002",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-002",
+            "repo_id": "nuttycc/LuminTime",
+            "turn_number": 4,
+            "role": "user",
+            "turn_type": "user_prompt",
+            "is_conversational": true,
+            "content": "That's the wrong parameter\u2014the container animation is the slow part, not the individual card stagger.",
+            "timestamp": "2026-04-22T12:04:00Z",
+            "conversation_turn_number": 2,
+            "user_id": "sample-user-2",
+            "language": "english",
+            "prompt_intent": "debug",
+            "prompt_pushback": "correction"
+          },
+          {
+            "turn_id": "swe-chat-sample-002-005",
+            "session_id": "swe-chat-sample-002",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-002",
+            "repo_id": "nuttycc/LuminTime",
+            "turn_number": 5,
+            "role": "assistant",
+            "turn_type": "assistant_response",
+            "is_conversational": true,
+            "content": "You're right; I changed the stagger delay instead of the container animation. I'll revisit the container transition next.",
+            "timestamp": "2026-04-22T12:05:00Z",
+            "conversation_turn_number": 3,
+            "model": "claude-sonnet-4"
+          }
+        ]
+      },
+      "source_dataset": "SALT-NLP_SWE-chat"
+    }
+  },
+  {
+    "schema_version": "ATIF-v1.7",
+    "session_id": "swe-chat-sample-003",
+    "trajectory_id": "swe-chat-sample-003",
+    "agent": {
+      "name": "Gemini CLI",
+      "version": "raw"
+    },
+    "steps": [
+      {
+        "step_id": 1,
+        "source": "user",
+        "message": "Instead of arg hash for the name, let's just get short uuid."
+      },
+      {
+        "step_id": 2,
+        "source": "agent",
+        "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_1",
+            "function_name": "think",
+            "arguments": {
+              "thought": "Need to inspect the remote job naming code and replace the hash-based name with a short UUID."
+            }
+          }
+        ]
+      },
+      {
+        "step_id": 3,
+        "source": "agent",
+        "message": "read_file",
+        "tool_calls": [
+          {
+            "tool_call_id": "toolu_sample_read_remote",
+            "function_name": "file_editor",
+            "arguments": {
+              "command": "view",
+              "path": "/workspace/src/marin/remote.py"
+            },
+            "extra": {
+              "raw_tool_name": "read_file"
+            }
+          }
+        ],
+        "observation": {
+          "results": [
+            {
+              "source_call_id": "toolu_sample_read_remote",
+              "content": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\""
+            }
+          ]
+        }
+      },
+      {
+        "step_id": 4,
+        "source": "agent",
+        "message": "edit_file",
+        "tool_calls": [
+          {
+            "tool_call_id": "toolu_sample_edit_remote",
+            "function_name": "file_editor",
+            "arguments": {
+              "command": "str_replace",
+              "path": "/workspace/src/marin/remote.py",
+              "old_str": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\"",
+              "new_str": "DEFAULT_JOB_NAME = f\"remote_{uuid.uuid4().hex[:8]}\""
+            },
+            "extra": {
+              "raw_tool_name": "edit_file"
+            }
+          }
+        ]
+      },
+      {
+        "step_id": 5,
+        "source": "agent",
+        "message": "WebSearch",
+        "tool_calls": [
+          {
+            "tool_call_id": "toolu_sample_websearch",
+            "function_name": "web_search",
+            "arguments": {
+              "query": "uuid job name python best practices"
+            },
+            "extra": {
+              "raw_tool_name": "WebSearch"
+            }
+          }
+        ]
+      },
+      {
+        "step_id": 6,
+        "source": "agent",
+        "message": "I replaced the hash-derived job name with a short UUID expression in remote.py."
+      },
+      {
+        "step_id": 7,
+        "source": "user",
+        "message": "Don't create a separate helper function for short_uuid; inline it."
+      }
+    ],
+    "extra": {
+      "raw": {
+        "session_id": "swe-chat-sample-003",
+        "session": {
+          "session_id": "swe-chat-sample-003",
+          "repo_id": "marin-community/marin",
+          "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+          "user_id": "sample-user-3",
+          "agent": "Gemini CLI",
+          "strategy": "auto",
+          "branch": "entire/checkpoints/v1",
+          "created_at": "2026-04-24T15:00:00Z",
+          "transcript_path": "transcripts/swe-chat-sample-003.jsonl",
+          "tool_call_count": 3,
+          "turn_count": 3,
+          "prompt_count": 2,
+          "agent_percentage": 45.0,
+          "user_persona": "Mind Changer",
+          "session_success": "75"
+        },
+        "turns": [
+          {
+            "turn_id": "swe-chat-sample-003-000",
+            "session_id": "swe-chat-sample-003",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+            "repo_id": "marin-community/marin",
+            "turn_number": 0,
+            "role": "user",
+            "turn_type": "user_prompt",
+            "is_conversational": true,
+            "content": "Instead of arg hash for the name, let's just get short uuid.",
+            "timestamp": "2026-04-22T12:00:00Z",
+            "conversation_turn_number": 0,
+            "user_id": "sample-user-3",
+            "language": "english",
+            "prompt_intent": "refactor",
+            "prompt_pushback": "requirement_change",
+            "is_first_turn": true
+          },
+          {
+            "turn_id": "swe-chat-sample-003-001",
+            "session_id": "swe-chat-sample-003",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+            "repo_id": "marin-community/marin",
+            "turn_number": 1,
+            "role": "assistant",
+            "turn_type": "assistant_thinking",
+            "is_conversational": false,
+            "content": "Need to inspect the remote job naming code and replace the hash-based name with a short UUID.",
+            "timestamp": "2026-04-22T12:01:00Z",
+            "model": "gemini-2.5-pro"
+          },
+          {
+            "turn_id": "swe-chat-sample-003-002",
+            "session_id": "swe-chat-sample-003",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+            "repo_id": "marin-community/marin",
+            "turn_number": 2,
+            "role": "tool_use",
+            "turn_type": "tool_use",
+            "is_conversational": false,
+            "content": "{\"path\": \"/workspace/src/marin/remote.py\"}",
+            "timestamp": "2026-04-22T12:02:00Z",
+            "tool_name": "read_file",
+            "tool_call_id": "toolu_sample_read_remote",
+            "file_path": "/workspace/src/marin/remote.py",
+            "tool_input_json": "{\"path\": \"/workspace/src/marin/remote.py\"}",
+            "category": "Research"
+          },
+          {
+            "turn_id": "swe-chat-sample-003-003",
+            "session_id": "swe-chat-sample-003",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+            "repo_id": "marin-community/marin",
+            "turn_number": 3,
+            "role": "tool_result",
+            "turn_type": "tool_result",
+            "is_conversational": false,
+            "content": "DEFAULT_JOB_NAME = f\"remote_{arg_hash}\"",
+            "timestamp": "2026-04-22T12:03:00Z",
+            "tool_name": "read_file",
+            "tool_call_id": "toolu_sample_read_remote"
+          },
+          {
+            "turn_id": "swe-chat-sample-003-004",
+            "session_id": "swe-chat-sample-003",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+            "repo_id": "marin-community/marin",
+            "turn_number": 4,
+            "role": "tool_use",
+            "turn_type": "tool_use",
+            "is_conversational": false,
+            "content": "{\"path\": \"/workspace/src/marin/remote.py\", \"old_string\": \"DEFAULT_JOB_NAME = f\\\"remote_{arg_hash}\\\"\", \"new_string\": \"DEFAULT_JOB_NAME = f\\\"remote_{uuid.uuid4().hex[:8]}\\\"\"}",
+            "timestamp": "2026-04-22T12:04:00Z",
+            "tool_name": "edit_file",
+            "tool_call_id": "toolu_sample_edit_remote",
+            "file_path": "/workspace/src/marin/remote.py",
+            "tool_input_json": "{\"path\": \"/workspace/src/marin/remote.py\", \"old_string\": \"DEFAULT_JOB_NAME = f\\\"remote_{arg_hash}\\\"\", \"new_string\": \"DEFAULT_JOB_NAME = f\\\"remote_{uuid.uuid4().hex[:8]}\\\"\"}",
+            "category": "Action"
+          },
+          {
+            "turn_id": "swe-chat-sample-003-005",
+            "session_id": "swe-chat-sample-003",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+            "repo_id": "marin-community/marin",
+            "turn_number": 5,
+            "role": "tool_use",
+            "turn_type": "tool_use",
+            "is_conversational": false,
+            "content": "{\"query\": \"uuid job name python best practices\"}",
+            "timestamp": "2026-04-22T12:05:00Z",
+            "tool_name": "WebSearch",
+            "tool_call_id": "toolu_sample_websearch",
+            "tool_input_json": "{\"query\": \"uuid job name python best practices\"}",
+            "category": "Research"
+          },
+          {
+            "turn_id": "swe-chat-sample-003-006",
+            "session_id": "swe-chat-sample-003",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+            "repo_id": "marin-community/marin",
+            "turn_number": 6,
+            "role": "assistant",
+            "turn_type": "assistant_response",
+            "is_conversational": true,
+            "content": "I replaced the hash-derived job name with a short UUID expression in remote.py.",
+            "timestamp": "2026-04-22T12:06:00Z",
+            "conversation_turn_number": 1,
+            "model": "gemini-2.5-pro"
+          },
+          {
+            "turn_id": "swe-chat-sample-003-007",
+            "session_id": "swe-chat-sample-003",
+            "checkpoint_pk": "checkpoint-swe-chat-sample-003",
+            "repo_id": "marin-community/marin",
+            "turn_number": 7,
+            "role": "user",
+            "turn_type": "user_prompt",
+            "is_conversational": true,
+            "content": "Don't create a separate helper function for short_uuid; inline it.",
+            "timestamp": "2026-04-22T12:07:00Z",
+            "conversation_turn_number": 2,
+            "user_id": "sample-user-3",
+            "language": "english",
+            "prompt_intent": "refactor",
+            "prompt_pushback": "correction"
+          }
+        ]
+      },
+      "source_dataset": "SALT-NLP_SWE-chat"
     }
   }
 ]

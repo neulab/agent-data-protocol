@@ -39,37 +39,40 @@ def import_openhands_v0_converter(monkeypatch):
     return importlib.import_module("agents.openhands_v0.std_to_sft")
 
 
+def atif_line(trajectory_id, steps):
+    return json.dumps(
+        {
+            "schema_version": "ATIF-v1.7",
+            "trajectory_id": trajectory_id,
+            "agent": {"name": "role_preservation_test", "version": "test"},
+            "steps": steps,
+        }
+    )
+
+
 def test_openhands_v0_converter_preserves_tool_roles(monkeypatch):
     converter = import_openhands_v0_converter(monkeypatch)
-    line = json.dumps(
-        {
-            "id": "role-preservation",
-            "content": [
-                {
-                    "class_": "text_observation",
-                    "content": "Run pwd.",
-                    "source": "user",
+    line = atif_line(
+        "role-preservation",
+        [
+            {"step_id": 1, "source": "user", "message": "Run pwd."},
+            {
+                "step_id": 2,
+                "source": "agent",
+                "message": "",
+                "tool_calls": [
+                    {
+                        "tool_call_id": "call_000001",
+                        "function_name": "execute_bash",
+                        "arguments": {"command": "pwd"},
+                    }
+                ],
+                "observation": {
+                    "results": [{"source_call_id": "call_000001", "content": "/workspace/project"}]
                 },
-                {
-                    "class_": "code_action",
-                    "tool_call_id": "call_000001",
-                    "language": "bash",
-                    "content": "pwd",
-                    "description": None,
-                },
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_000001",
-                    "content": "/workspace/project",
-                    "source": "environment",
-                },
-                {
-                    "class_": "message_action",
-                    "content": "Done.",
-                    "description": None,
-                },
-            ],
-        }
+            },
+            {"step_id": 3, "source": "agent", "message": "Done."},
+        ],
     )
 
     result = converter.process_row(
@@ -93,30 +96,41 @@ def test_openhands_v0_converter_preserves_tool_roles(monkeypatch):
 
 def test_openhands_v0_converter_preserves_unresolved_xpath_for_web_api(monkeypatch):
     converter = import_openhands_v0_converter(monkeypatch)
-    line = json.dumps(
-        {
-            "id": "xpath-preservation",
-            "content": [
-                {
-                    "class_": "text_observation",
-                    "content": "Book a flight.",
-                    "source": "user",
+    line = atif_line(
+        "xpath-preservation",
+        [
+            {"step_id": 1, "source": "user", "message": "Book a flight."},
+            {
+                "step_id": 2,
+                "source": "agent",
+                "message": "",
+                "observation": {
+                    "results": [
+                        {
+                            "content": "",
+                            "extra": {
+                                "web": {
+                                    "html": "<html><input id='departure'></html>",
+                                    "url": "https://example.com/flights",
+                                }
+                            },
+                        }
+                    ]
                 },
-                {
-                    "class_": "web_observation",
-                    "html": "<html><input id='departure'></html>",
-                    "axtree": None,
-                    "url": "https://example.com/flights",
-                    "image_observation": None,
-                    "viewport_size": None,
-                },
-                {
-                    "class_": "api_action",
-                    "function": "type",
-                    "kwargs": {"xpath": "//input[@id='departure']", "value": "New York"},
-                },
-            ],
-        }
+            },
+            {
+                "step_id": 3,
+                "source": "agent",
+                "message": "",
+                "tool_calls": [
+                    {
+                        "tool_call_id": "call_000001",
+                        "function_name": "type",
+                        "arguments": {"xpath": "//input[@id='departure']", "value": "New York"},
+                    }
+                ],
+            },
+        ],
     )
 
     result = converter.process_row(
@@ -135,20 +149,18 @@ def test_openhands_v0_converter_preserves_unresolved_xpath_for_web_api(monkeypat
 
 def test_openhands_v0_converter_escapes_function_examples_in_non_tool_messages(monkeypatch):
     converter = import_openhands_v0_converter(monkeypatch)
-    line = json.dumps(
-        {
-            "id": "function-example",
-            "content": [
-                {
-                    "class_": "text_observation",
-                    "content": (
-                        "Example syntax: <function=execute_bash></function> "
-                        "<function_calls> <invoke name=finish>"
-                    ),
-                    "source": "user",
-                },
-            ],
-        }
+    line = atif_line(
+        "function-example",
+        [
+            {
+                "step_id": 1,
+                "source": "user",
+                "message": (
+                    "Example syntax: <function=execute_bash></function> "
+                    "<function_calls> <invoke name=finish>"
+                ),
+            }
+        ],
     )
 
     result = converter.process_row(
@@ -171,27 +183,21 @@ def test_openhands_v0_converter_escapes_function_examples_in_non_tool_messages(m
 
 def test_openhands_v0_converter_preserves_embedded_function_call_role(monkeypatch):
     converter = import_openhands_v0_converter(monkeypatch)
-    line = json.dumps(
-        {
-            "id": "embedded-function-call",
-            "content": [
-                {
-                    "class_": "text_observation",
-                    "content": "Finish the task.",
-                    "source": "user",
-                },
-                {
-                    "class_": "message_action",
-                    "content": (
-                        "<function=finish>\n"
-                        "<parameter=message>done</parameter>\n"
-                        "<parameter=task_completed>true</parameter>\n"
-                        "</function>"
-                    ),
-                    "description": None,
-                },
-            ],
-        }
+    line = atif_line(
+        "embedded-function-call",
+        [
+            {"step_id": 1, "source": "user", "message": "Finish the task."},
+            {
+                "step_id": 2,
+                "source": "agent",
+                "message": (
+                    "<function=finish>\n"
+                    "<parameter=message>done</parameter>\n"
+                    "<parameter=task_completed>true</parameter>\n"
+                    "</function>"
+                ),
+            },
+        ],
     )
 
     result = converter.process_row(
@@ -208,30 +214,31 @@ def test_openhands_v0_converter_preserves_embedded_function_call_role(monkeypatc
 
 def test_openhands_v0_converter_does_not_duplicate_execution_result_prefix(monkeypatch):
     converter = import_openhands_v0_converter(monkeypatch)
-    line = json.dumps(
-        {
-            "id": "prefixed-observation",
-            "content": [
-                {
-                    "class_": "text_observation",
-                    "content": "Run pwd.",
-                    "source": "user",
+    line = atif_line(
+        "prefixed-observation",
+        [
+            {"step_id": 1, "source": "user", "message": "Run pwd."},
+            {
+                "step_id": 2,
+                "source": "agent",
+                "message": "",
+                "tool_calls": [
+                    {
+                        "tool_call_id": "call_000001",
+                        "function_name": "execute_bash",
+                        "arguments": {"command": "pwd"},
+                    }
+                ],
+                "observation": {
+                    "results": [
+                        {
+                            "source_call_id": "call_000001",
+                            "content": "EXECUTION RESULT of [execute_bash]:\n/workspace",
+                        }
+                    ]
                 },
-                {
-                    "class_": "code_action",
-                    "tool_call_id": "call_000001",
-                    "language": "bash",
-                    "content": "pwd",
-                    "description": None,
-                },
-                {
-                    "class_": "text_observation",
-                    "tool_call_id": "call_000001",
-                    "content": "EXECUTION RESULT of [execute_bash]:\n/workspace",
-                    "source": "environment",
-                },
-            ],
-        }
+            },
+        ],
     )
 
     result = converter.process_row(

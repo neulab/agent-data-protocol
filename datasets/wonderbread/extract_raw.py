@@ -10,14 +10,6 @@ source_file_name = root + "/" + os.path.basename(urllib.parse.urlparse(zenodo_li
 data_folder = source_file_name.split(".")[0]
 
 
-def extract_sop(s: str) -> str:
-    sop = []
-    for line in s.split("\n"):
-        if line and line[0].isdigit():
-            sop.append(line)
-    return "\n".join(sop)
-
-
 if not os.path.exists(data_folder):
     # download the file
     subprocess.run(["wget", "-c", zenodo_link, "-O", source_file_name], check=True)
@@ -48,14 +40,11 @@ for task_stamp in os.listdir(data_folder):
         task_stamp = task_stamp[:-4]
     with open(f"{task_folder}/{task_stamp}.json") as f:
         data = json.load(f)
-        wa_info = data.pop("webarena")
-        task = wa_info["intent"]
 
     with open(f"{task_folder}/SOP - {task_stamp}.txt", "r") as f:
         sop = f.read()
 
-    data["sop"] = extract_sop(sop)
+    data["sop_text"] = sop
     data["task_stamp"] = task_stamp
-    data["task"] = task
 
     print(json.dumps(data))

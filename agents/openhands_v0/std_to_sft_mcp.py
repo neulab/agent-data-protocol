@@ -13,12 +13,14 @@ from agents.openhands_v0.convert_api_to_mcp import (
 )
 from agents.openhands_v0.system_prompt.system import get_system_message
 from agents.openhands_v0.system_prompt.user import get_web_user_message
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from scripts.atif_input import (
+    ApiAction,
+    CodeAction,
+    MessageAction,
+    TextObservation,
+    WebObservation,
+    load_trajectory,
+)
 from scripts.html_to_axtree import HTMLToAXTree
 
 dataset = os.getenv("MY_DATASET")
@@ -30,7 +32,7 @@ openhands_v0_default_tools = {
     "finish": {"required": ["message", "task_completed"], "optional": []},
     "web_read": {"required": ["url"], "optional": []},
     "browser": {"required": ["code"], "optional": []},
-    "execute_ipython_cell": {"code": ["command"], "optional": []},
+    "execute_ipython_cell": {"required": ["code"], "optional": []},
     "str_replace_editor": {
         "required": ["command", "path"],
         "optional": ["file_text", "old_str", "new_str", "insert_line", "view_range"],
@@ -140,6 +142,8 @@ def standardized_event_to_openhands_v0_message(
         thought = event.description + "\n\n" if event.description else ""
         function_name = event.function
         arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
+        if function_name == "file_editor":
+            function_name = "str_replace_editor"
 
         # for tool that are one of the default OH tools
         if function_name in openhands_v0_default_tools and function_name not in api_sigs:
@@ -300,9 +304,7 @@ def standardized_event_to_openhands_v0_message(
 
 
 def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, api_tools):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     row_api_tool_description = api_tool_description
@@ -331,7 +333,6 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
         mcp_tools = {}
     else:
         mcp_tools = row_api_tools
-        row_api_tool_description = ""
     for i in range(len(events)):
         event = events[i]
         try:
@@ -349,9 +350,6 @@ def process_row(line, is_web, chunk, api_env, api_tool_description, api_sigs, ap
             if not message:
                 return None
             if len(conversations) == 0:
-                # append api function docs to first user message when available
-                if api_env:
-                    message["value"] = row_api_tool_description + message["value"]
                 conversations.extend([message])
                 continue
 

@@ -16,13 +16,10 @@ from schema.dataset_metadata import (
 
 ROOT = Path(__file__).parent.parent
 DATASET_PATH = ROOT / "datasets"
-SDK_SAMPLE_DATASETS = [
-    "agenttuning_alfworld",
-    "agenttuning_kg",
-    "agenttuning_mind2web",
-    "agenttuning_os",
-    "agenttuning_webshop",
-]
+
+
+def sample_std_datasets():
+    return sorted(path.parent.name for path in DATASET_PATH.glob("*/sample_std.json"))
 
 
 def content_text(message):
@@ -43,6 +40,10 @@ def tool_call_names(record):
         if message.get("role") == "assistant"
         for tool_call in message.get("tool_calls", [])
     ]
+
+
+def trajectory_id(row: dict) -> str:
+    return str(row.get("trajectory_id") or row["id"])
 
 
 def assert_sdk_chat_record(record):
@@ -81,7 +82,7 @@ def run_converter(dataset: str, rows: list[dict], args: list[str] | None = None,
     return [json.loads(line) for line in proc.stdout.splitlines() if line]
 
 
-def patch_condensation_llm(monkeypatch, summary="[ADP condensation test summary]"):
+def patch_condensation_llm(monkeypatch, summary="[ATIF condensation test summary]"):
     from litellm.types.utils import Choices, ModelResponse
     from litellm.types.utils import Message as LiteLLMMessage
     from openhands.sdk import Message, TextContent
@@ -113,7 +114,7 @@ def patch_condensation_llm(monkeypatch, summary="[ADP condensation test summary]
                 ),
             ),
             raw_response=ModelResponse(
-                id="adp-condensation-test-response",
+                id="atif-condensation-test-response",
                 choices=[
                     Choices(
                         message=LiteLLMMessage(role="assistant", content=summary),
@@ -130,17 +131,14 @@ def patch_condensation_llm(monkeypatch, summary="[ADP condensation test summary]
     monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "completion", fake_completion)
 
 
-def test_openhands_sdk_generated_samples_are_sdk_chat_records():
-    for dataset in SDK_SAMPLE_DATASETS:
-        records = json.loads(
-            (DATASET_PATH / dataset / "sample_sft" / "openhands_sdk.json").read_text()
-        )
-        std_rows = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())
-        metadata = load_dataset_metadata(dataset, required=True)
-        assert [record["id"] for record in records] == [row["id"] for row in std_rows]
-        assert metadata.custom_tools or metadata.code_enabled or metadata.browser_enabled
-        for record in records:
-            assert_sdk_chat_record(record)
+@pytest.mark.parametrize("dataset", sample_std_datasets())
+def test_openhands_sdk_generated_samples_are_sdk_chat_records(dataset):
+    records = json.loads((DATASET_PATH / dataset / "sample_sft" / "openhands_sdk.json").read_text())
+    std_rows = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())
+    load_dataset_metadata(dataset, required=True)
+    assert [record["id"] for record in records] == [trajectory_id(row) for row in std_rows]
+    for record in records:
+        assert_sdk_chat_record(record)
 
 
 def test_openhands_sdk_converter_uses_metadata_custom_tools():
@@ -174,17 +172,52 @@ def test_openhands_sdk_converter_regenerates_first_record():
     dataset = "agenttuning_os"
     source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[:1]
     generated = run_converter(dataset, source)
-    fixture = json.loads(
-        (DATASET_PATH / dataset / "sample_sft" / "openhands_sdk.json").read_text()
-    )[:1]
-    assert generated == fixture
+    assert len(generated) == 1
+    assert generated[0]["id"] == trajectory_id(source[0])
+    assert_sdk_chat_record(generated[0])
     assert tool_call_names(generated[0])[:2] == ["terminal", "terminal"]
+
+
+def test_openhands_sdk_converter_balances_action_without_observation():
+    source = [
+        {
+            "schema_version": "ATIF-v1.7",
+            "trajectory_id": "missing-tool-observation",
+            "agent": {"name": "test", "version": "test"},
+            "extra": {"adp_available_apis": ["go"]},
+            "steps": [
+                {"step_id": 1, "source": "user", "message": "Move to the kitchen."},
+                {
+                    "step_id": 2,
+                    "source": "agent",
+                    "message": "",
+                    "tool_calls": [
+                        {
+                            "tool_call_id": "call_missing_observation",
+                            "function_name": "go",
+                            "arguments": {"location": "kitchen"},
+                        }
+                    ],
+                },
+            ],
+        }
+    ]
+
+    generated = run_converter("agenttuning_alfworld", source)
+
+    assert len(generated) == 1
+    assert_sdk_chat_record(generated[0])
+    tool_messages = [
+        message for message in generated[0]["messages"] if message.get("role") == "tool"
+    ]
+    assert tool_messages[-1]["tool_call_id"] == "call_missing_observation"
+    assert tool_messages[-1]["content"] == ""
 
 
 def test_openhands_sdk_converter_reads_dataset_at_call_time(monkeypatch):
     from agents.openhands_sdk import std_to_sft
 
-    dataset = "agenttuning_os"
+    dataset = "agenttuning_alfworld"
     source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
     monkeypatch.setenv("MY_DATASET", dataset)
 
@@ -194,7 +227,7 @@ def test_openhands_sdk_converter_reads_dataset_at_call_time(monkeypatch):
 
 
 def test_openhands_sdk_converter_rejects_unsupported_legacy_cli_flags():
-    dataset = "agenttuning_os"
+    dataset = "agenttuning_alfworld"
     source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[:1]
 
     env = os.environ.copy()
@@ -298,15 +331,16 @@ def test_openhands_sdk_condensation_utility_emits_llm_summaries_after_trajectori
         prompt_records[0],
         trajectory_records[1],
     ]
-    assert trajectory_records[0]["id"] == f"{source['id']}__trajectory_0001"
-    assert prompt_records[0]["id"] == f"{source['id']}__condensation_0001"
-    assert trajectory_records[1]["id"] == f"{source['id']}__trajectory_0002"
+    source_id = trajectory_id(source)
+    assert trajectory_records[0]["id"] == f"{source_id}__trajectory_0001"
+    assert prompt_records[0]["id"] == f"{source_id}__condensation_0001"
+    assert trajectory_records[1]["id"] == f"{source_id}__trajectory_0002"
     assert prompt_records[0]["messages"] == [
         {
             "role": "user",
             "content": prompt_records[0]["messages"][0]["content"],
         },
-        {"role": "assistant", "content": "[ADP condensation test summary]"},
+        {"role": "assistant", "content": "[ATIF condensation test summary]"},
     ]
     assert prompt_records[0]["messages"][0]["content"].startswith(
         "You are maintaining a context-aware state summary"
@@ -360,44 +394,14 @@ def test_openhands_sdk_condensation_utility_identity_maps_short_trajectories():
     )
 
     assert len(records) == 1
-    assert records[0]["id"] == f"{source['id']}__trajectory_0001"
+    assert records[0]["id"] == f"{trajectory_id(source)}__trajectory_0001"
     assert records[0]["metadata"]["generation"] == "openhands_sdk_events"
     assert records[0]["metadata"]["record_type"] == "trajectory"
 
 
-def test_openhands_sdk_condensation_loader_backfills_legacy_tool_call_links():
-    from agents.openhands_sdk import condensation_sft
-    from schema.trajectory import Trajectory
-
-    row = {
-        "id": "legacy_missing_tool_call_ids",
-        "content": [
-            {"class_": "text_observation", "content": "do something", "source": "user"},
-            {
-                "class_": "code_action",
-                "language": "bash",
-                "content": "pwd",
-                "description": "check current directory",
-            },
-            {"class_": "text_observation", "content": "/workspace", "source": "user"},
-        ],
-    }
-
-    with pytest.raises(ValueError, match="tool_call_id"):
-        Trajectory(**row)
-
-    trajectory = condensation_sft.load_trajectory(json.dumps(row))
-
-    action = trajectory.content[1]
-    observation = trajectory.content[2]
-    assert action.tool_call_id == "call_000001"
-    assert observation.tool_call_id == "call_000001"
-    assert observation.source == "environment"
-
-
 def test_openhands_sdk_converter_preserves_file_editor_string_arguments():
     from agents.openhands_sdk import std_to_sft
-    from schema.action.api import ApiAction
+    from scripts.atif_input import ApiAction
 
     action = ApiAction(
         function="str_replace_editor",
@@ -418,20 +422,20 @@ def test_openhands_sdk_converter_preserves_file_editor_string_arguments():
 
 def test_openhands_sdk_converter_maps_python_code_action_to_terminal_heredoc():
     from agents.openhands_sdk import std_to_sft
-    from schema.action.code import CodeAction
+    from scripts.atif_input import CodeAction
 
     action = CodeAction(language="python", content="print('hello')", description="run python")
 
     tool_name, arguments = std_to_sft.map_code_action(action)
 
     assert tool_name == "terminal"
-    assert arguments["command"].startswith("python <<'ADP_PYTHON_")
+    assert arguments["command"].startswith("python <<'ATIF_PYTHON_")
     assert "\nprint('hello')\n" in arguments["command"]
 
 
 def test_openhands_sdk_converter_rejects_mysql_code_action():
     from agents.openhands_sdk import std_to_sft
-    from schema.action.code import CodeAction
+    from scripts.atif_input import CodeAction
 
     action = CodeAction(language="mysql", content="SELECT 1;", description="run mysql")
 

@@ -9,17 +9,18 @@ import traceback
 from agents.openhands_v0.api import (
     browser_default_apis,
     get_api_tool_description,
-    get_language_descriptions,
     openhands_v0_default_tools,
 )
 from agents.openhands_v0.system_prompt.system import get_system_message
 from agents.openhands_v0.system_prompt.user import get_web_user_message
-from schema.action.api import ApiAction
-from schema.action.code import CodeAction
-from schema.action.message import MessageAction
-from schema.observation.text import TextObservation
-from schema.observation.web import WebObservation
-from schema.trajectory import Trajectory
+from scripts.atif_input import (
+    ApiAction,
+    CodeAction,
+    MessageAction,
+    TextObservation,
+    WebObservation,
+    load_trajectory,
+)
 
 dataset = os.getenv("MY_DATASET")
 assert dataset, "Please set the environment variable MY_DATASET"
@@ -168,13 +169,16 @@ def standardized_event_to_openhands_v0_message(
         PREV_BID = None
         thought = action_text_prefix(event)
         function_name = event.function
-        arguments = {k: v for k, v in event.kwargs.items() if k not in ["element_id", "xpath"]}
+        raw_arguments = dict(event.kwargs)
+        arguments = {k: v for k, v in raw_arguments.items() if k not in ["element_id", "xpath"]}
+        if function_name == "file_editor":
+            function_name = "str_replace_editor"
 
         # for tool that are one of the default OH tools
         if function_name in openhands_v0_default_tools and function_name not in api_sigs:
             tool_args = openhands_v0_default_tools[function_name]
             if not verify_args(tool_args["required"], tool_args["optional"], arguments):
-                raise ValueError(f"Function call with wrong argument: {event}")
+                return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
             function_call = format_function(function_name, arguments)
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
@@ -194,14 +198,14 @@ def standardized_event_to_openhands_v0_message(
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         # try to directly get the browsergym_id from the event kwargs
-        browsergym_id = event.kwargs.get("bid", None)
+        browsergym_id = raw_arguments.get("bid", None)
         if not browsergym_id:
-            browsergym_id = event.kwargs.get("element_id", None)
+            browsergym_id = raw_arguments.get("element_id", None)
         # this gets the browsergym_id of the element that the user is interacting with
         # the latest(last seen) html's obs is updated whenever build_axtree is called
         # the latest obs is used to get the browsergym_id
         if not browsergym_id:
-            event_xpath = event.kwargs.get("xpath", None)
+            event_xpath = raw_arguments.get("xpath", None)
             if event_xpath:
                 browsergym_id = get_generate_axtree().get_bid(id, event_xpath, "all")
                 if not browsergym_id:
@@ -216,6 +220,8 @@ def standardized_event_to_openhands_v0_message(
             if not verify_args(
                 api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
             ):
+                if thought:
+                    return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
                 raise ValueError(f"Function call with wrong argument: {event}")
             api_action = format_python_call(function_name, arguments)
             function_call = format_function(
@@ -224,19 +230,31 @@ def standardized_event_to_openhands_v0_message(
             return {"from": "function_call", "value": f"{thought}{function_call}"}
 
         api_env = "browser"
+        if not browsergym_id:
+            if thought:
+                return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
+            raise ValueError(f"Undefined API or missing browser element identifier: {event}")
         if not browsergym_id[0] == browsergym_id[-1] == '"':
-            browsergym_id = f'"{browsergym_id[0]}"'
+            browsergym_id = json.dumps(browsergym_id)
         PREV_BID = browsergym_id
         # for apis that are browser based but are not OH default browser apis
         # these should all be dataset specific apis
         if function_name in api_sigs:
+            browser_arguments = dict(raw_arguments)
             if "bid" in api_sigs[function_name]["required"] and browsergym_id:
-                arguments["bid"] = browsergym_id
+                browser_arguments["bid"] = browsergym_id
+                browser_arguments.pop("xpath", None)
+                browser_arguments.pop("element_id", None)
+                browser_arguments.pop("id", None)
             if not verify_args(
-                api_sigs[function_name]["required"], api_sigs[function_name]["optional"], arguments
+                api_sigs[function_name]["required"],
+                api_sigs[function_name]["optional"],
+                browser_arguments,
             ):
+                if thought:
+                    return {"from": "gpt", "value": escape_function_call_patterns(thought.strip())}
                 raise ValueError(f"Function call with wrong argument: {event}")
-            api_action = format_python_call(function_name, arguments)
+            api_action = format_python_call(function_name, browser_arguments)
             function_call = format_function(
                 api_env, {function_args.get(api_env, "code"): api_action}
             )
@@ -244,8 +262,12 @@ def standardized_event_to_openhands_v0_message(
 
         # for tool calls that are browser based and need bid
         api_args = browser_default_apis[function_name]
+        arguments = dict(raw_arguments)
         if browsergym_id:
             arguments["bid"] = browsergym_id
+            arguments.pop("xpath", None)
+            arguments.pop("element_id", None)
+            arguments.pop("id", None)
 
         # to handle mismatching "bid" and "id" arguments
         if "bid" not in arguments:
@@ -320,9 +342,7 @@ def standardized_event_to_openhands_v0_message(
 
 
 def process_row(line, is_web, api_env, api_tool_description, api_sigs):
-    std_dataset = [json.loads(line)]
-    std_data = std_dataset[0]
-    trajectory = Trajectory(**std_data)
+    trajectory = load_trajectory(line)
     id = trajectory.id
     events = trajectory.content
     if trajectory.available_apis is not None:
@@ -349,9 +369,6 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
             if not message:
                 return None
             if len(conversations) == 0:
-                # append api function docs to first user message when available
-                if api_env:
-                    message["value"] = api_tool_description + message["value"]
                 conversations.extend([message])
                 continue
 
@@ -375,9 +392,6 @@ def process_row(line, is_web, api_env, api_tool_description, api_sigs):
             traceback.print_exc()
             print(e, file=sys.stderr)
             return None
-    if languages:
-        language_descriptions = get_language_descriptions(languages)
-        conversations[0]["value"] = language_descriptions + "\n\n" + conversations[0]["value"]
     return {
         "id": trajectory.id,
         "conversations": to_hf_messages(conversations),

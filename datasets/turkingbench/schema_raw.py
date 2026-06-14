@@ -8,6 +8,5 @@ class SchemaRaw(BaseModel):
     Description: str
     Keywords: str
     Template: str
-    Answer: dict[str, str]
 
     model_config = ConfigDict(extra="allow")
