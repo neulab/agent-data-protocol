@@ -16,15 +16,16 @@ SWE-ZERO 12M Trajectories is a large-scale execution-free agentic coding trace d
 
 ## Schema Mapping
 
-The raw dataset is a list of chat-style messages with `role` and `content` fields:
+The raw dataset is a list of chat-style messages with `role` and `content` fields.
+`raw_to_atif.py` keeps the mini-swe-agent-specific extraction local to this dataset:
 
 - `system` messages are skipped because they only define the mini-swe-agent response format and execution-free shell constraints.
-- Initial `user` task messages become `TextObservation(source="user")`.
-- Later `user` messages beginning with `Observation:` become `TextObservation(source="environment")` with the prefix removed.
-- `assistant` messages containing fenced `bash` blocks become `CodeAction(language="bash")`; the text before the final bash block is preserved as the action description after removing a leading `THOUGHT:` label.
-- `assistant` messages without a bash block become `MessageAction` entries so malformed or terminal natural-language turns are preserved.
+- Initial `user` task messages become ATIF `user` steps.
+- Later `user` messages beginning with `Observation:` become tool observation results on the preceding agent step with the prefix removed.
+- `assistant` messages containing fenced `bash` blocks become ATIF agent steps with `bash` tool calls; the text before the final bash block is preserved as the step message after removing a leading `THOUGHT:` label.
+- `assistant` messages without a bash block become plain ATIF agent message steps so malformed or terminal natural-language turns are preserved.
 
-The standardized trajectory details preserve the raw `instance_id`, repository, `trajectory_format`, `exit_status`, and `duration_sec`. Trajectory IDs are derived deterministically from the instance ID plus a content hash because the source dataset contains many independent rollouts per PR with the same `instance_id`.
+`atif_to_std.py` uses the shared standardization pass, which maps `bash` tool calls to the standard `terminal` tool. The trajectory metadata preserves the raw `instance_id`, repository, `trajectory_format`, `exit_status`, and `duration_sec`. Trajectory IDs are derived deterministically from the instance ID plus a content hash because the source dataset contains many independent rollouts per PR with the same `instance_id`.
 
 ## Known Limitations
 
