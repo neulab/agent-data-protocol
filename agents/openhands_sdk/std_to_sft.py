@@ -34,7 +34,7 @@ from openhands.tools.file_editor import FileEditorTool
 from openhands.tools.task_tracker import TaskTrackerTool
 from openhands.tools.terminal import TerminalTool
 from openhands.tools.terminal.definition import MAX_CMD_OUTPUT_SIZE, maybe_truncate
-from pydantic import SecretStr
+from pydantic import ConfigDict, SecretStr
 
 from schema.dataset_metadata import (
     DatasetMetadata,
@@ -63,25 +63,37 @@ _REGISTERED_METADATA_TOOL_SPECS: dict[str, dict[str, Any]] = {}
 
 BROWSER_TOOL_ALIASES = {
     "back": "browser_go_back",
+    "clear": "browser_type",
     "click": "browser_click",
     "fill": "browser_type",
+    "get": "browser_get_content",
     "go_back": "browser_go_back",
     "goto": "browser_navigate",
+    "noop": "browser_get_state",
+    "press": "browser_type",
     "scroll": "browser_scroll",
+    "select_option": "browser_type",
     "type": "browser_type",
+    "upload_file": "browser_get_state",
 }
 BROWSER_INDEX_KWARG_NAMES = {"bid", "element_id", "id", "index"}
 
 OPENHANDS_TOOL_ALIASES = {
     "bash": "terminal",
+    "create": "file_editor",
     "edit_file": "file_editor",
     "execute_bash": "terminal",
+    "file_editor": "file_editor",
     "finish": "finish",
+    "insert": "file_editor",
     "stop": "finish",
+    "str_replace": "file_editor",
     "str_replace_editor": "file_editor",
     "submit": "finish",
     "task_tracker": "task_tracker",
     "think": "think",
+    "undo_edit": "file_editor",
+    "view": "file_editor",
 }
 
 
@@ -105,6 +117,10 @@ class DatasetToolExecutor(ToolExecutor):
         conversation: Conversation | None = None,  # noqa: ARG002
     ) -> DatasetToolObservation:
         return DatasetToolObservation(output="")
+
+
+class DatasetAnyAction(SDKAction):
+    model_config = ConfigDict(extra="allow")
 
 
 def parse_scalar(value: Any) -> Any:
@@ -150,6 +166,22 @@ def normalize_metadata_tool_kwargs(
     }
 
 
+FILE_EDITOR_COMMANDS = {"view", "create", "str_replace", "insert", "undo_edit"}
+FILE_EDITOR_ALLOWED_FIELDS = {
+    "command",
+    "path",
+    "file_text",
+    "old_str",
+    "new_str",
+    "insert_line",
+    "view_range",
+}
+FILE_EDITOR_FIELD_ALIASES = {
+    "content": "new_str",
+    "line": "insert_line",
+    "new_text": "new_str",
+    "old_text": "old_str",
+}
 FILE_EDITOR_STRING_FIELDS = {"command", "path", "file_text", "old_str", "new_str"}
 
 
@@ -161,14 +193,87 @@ def stringify_value(value: Any, default: str = "") -> str:
     return str(value)
 
 
+def coerce_int_or_none(value: Any) -> int | None:
+    value = parse_scalar(value)
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            return None
+    return None
+
+
+def coerce_view_range(value: Any) -> list[int] | None:
+    value = parse_scalar(value)
+    if isinstance(value, tuple):
+        value = list(value)
+    if not isinstance(value, list):
+        return None
+    result: list[int] = []
+    for item in value[:2]:
+        coerced = coerce_int_or_none(item)
+        if coerced is None:
+            return None
+        result.append(coerced)
+    return result or None
+
+
 def normalize_file_editor_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
     normalized: dict[str, Any] = {}
     for key, value in kwargs.items():
+        key = FILE_EDITOR_FIELD_ALIASES.get(key, key)
         if key in FILE_EDITOR_STRING_FIELDS:
             normalized[key] = stringify_value(value)
+        elif key == "insert_line":
+            normalized[key] = coerce_int_or_none(value)
+        elif key == "view_range":
+            normalized[key] = coerce_view_range(value)
         else:
             normalized[key] = parse_scalar(value)
     return normalized
+
+
+def infer_file_editor_command(command: str, kwargs: dict[str, Any]) -> str:
+    if command in {"append", "add"}:
+        return "insert"
+    if command in {"delete", "remove"}:
+        return "str_replace"
+    if "old_str" in kwargs or "new_str" in kwargs:
+        return "str_replace"
+    if "file_text" in kwargs:
+        return "create"
+    return "view"
+
+
+def finalize_file_editor_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    command = stringify_value(kwargs.get("command"))
+    if command not in FILE_EDITOR_COMMANDS:
+        command = infer_file_editor_command(command, kwargs)
+    kwargs["command"] = command
+    kwargs.setdefault("path", "")
+    if command == "insert" and kwargs.get("insert_line") is None:
+        kwargs["insert_line"] = 0
+    if command == "create" and kwargs.get("file_text") is None:
+        kwargs["file_text"] = stringify_value(kwargs.get("new_str"))
+    if command == "str_replace":
+        kwargs.setdefault("old_str", "")
+        kwargs.setdefault("new_str", "")
+    return {key: value for key, value in kwargs.items() if key in FILE_EDITOR_ALLOWED_FIELDS}
+
+
+def normalize_direct_file_editor_kwargs(
+    function_name: str, kwargs: dict[str, Any]
+) -> dict[str, Any]:
+    normalized = normalize_file_editor_kwargs(kwargs)
+    if function_name in FILE_EDITOR_COMMANDS:
+        normalized["command"] = function_name
+    elif function_name == "str_replace_editor":
+        normalized.setdefault("command", "str_replace")
+    return finalize_file_editor_kwargs(normalized)
 
 
 SHELL_CODE_LANGUAGES = {"bash", "sh", "shell"}
@@ -224,24 +329,94 @@ def make_metadata_tool(name: str, tool_spec: OpenAIToolSpec) -> type[ToolDefinit
     )
 
 
+def make_fallback_tool(name: str) -> type[ToolDefinition]:
+    description = f"Undeclared dataset tool {name}."
+
+    def create(
+        cls,
+        conv_state=None,  # noqa: ARG001
+        _description=description,
+    ) -> list[ToolDefinition]:
+        return [
+            cls(
+                description=_description,
+                action_type=DatasetAnyAction,
+                observation_type=DatasetToolObservation,
+                executor=DatasetToolExecutor(),
+            )
+        ]
+
+    return type(
+        f"{class_name(name)}FallbackTool",
+        (ToolDefinition,),
+        {"name": name, "create": classmethod(create)},
+    )
+
+
 def serializable_metadata_tool_spec(tool_spec: OpenAIToolSpec) -> dict[str, Any]:
     return tool_spec.model_dump(mode="json")
 
 
+def register_tool_spec(
+    name: str, tool_cls: type[ToolDefinition], serialized_spec: dict[str, Any]
+) -> None:
+    registered_spec = _REGISTERED_METADATA_TOOL_SPECS.get(name)
+    if registered_spec is not None:
+        if registered_spec != serialized_spec:
+            raise ValueError(
+                f"Tool {name!r} was already registered with a different schema. "
+                "Run one dataset per converter process or use unique custom tool names."
+            )
+        return
+    register_tool(name, tool_cls)
+    _REGISTERED_METADATA_TOOL_SPECS[name] = serialized_spec
+
+
 def register_metadata_tools(metadata: DatasetMetadata) -> None:
     for name, tool_spec in custom_tool_map(metadata).items():
-        serialized_spec = serializable_metadata_tool_spec(tool_spec)
-        registered_spec = _REGISTERED_METADATA_TOOL_SPECS.get(name)
-        if registered_spec is not None:
-            if registered_spec != serialized_spec:
-                raise ValueError(
-                    f"Metadata custom tool {name!r} was already registered with a "
-                    "different schema. Run one dataset per converter process or use "
-                    "unique custom tool names."
-                )
+        register_tool_spec(
+            name,
+            make_metadata_tool(name, tool_spec),
+            serializable_metadata_tool_spec(tool_spec),
+        )
+
+
+def register_fallback_tool(name: str) -> None:
+    register_tool_spec(name, make_fallback_tool(name), {"fallback": True})
+
+
+def trajectory_api_functions(trajectory: Trajectory) -> list[str]:
+    return [
+        event.function
+        for event in trajectory.content
+        if isinstance(event, ApiAction) and event.function
+    ]
+
+
+def ordered_unique(values: Sequence[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        if value in seen:
             continue
-        register_tool(name, make_metadata_tool(name, tool_spec))
-        _REGISTERED_METADATA_TOOL_SPECS[name] = serialized_spec
+        seen.add(value)
+        result.append(value)
+    return result
+
+
+def should_treat_as_browser_tool(
+    source_name: str,
+    metadata: DatasetMetadata,
+    registered_custom_tools: dict[str, OpenAIToolSpec],
+) -> bool:
+    return (
+        metadata.browser_enabled
+        and source_name in BROWSER_TOOL_ALIASES
+        and (
+            source_name not in registered_custom_tools
+            or custom_tool_uses_browser_index(registered_custom_tools[source_name])
+        )
+    )
 
 
 def available_custom_tools(trajectory: Trajectory, metadata: DatasetMetadata) -> list[str]:
@@ -277,16 +452,12 @@ def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[To
         specs.append(Tool(name=BrowserToolSet.name))
 
     registered_custom_tools = custom_tool_map(metadata)
-    for source_name in available_custom_tools(trajectory, metadata):
+    tool_names = ordered_unique(
+        [*available_custom_tools(trajectory, metadata), *trajectory_api_functions(trajectory)]
+    )
+    for source_name in tool_names:
         mapped_name = OPENHANDS_TOOL_ALIASES.get(source_name, source_name)
-        if (
-            metadata.browser_enabled
-            and source_name in BROWSER_TOOL_ALIASES
-            and (
-                source_name not in registered_custom_tools
-                or custom_tool_uses_browser_index(registered_custom_tools[source_name])
-            )
-        ):
+        if should_treat_as_browser_tool(source_name, metadata, registered_custom_tools):
             continue
         if mapped_name == "terminal":
             if "bash" not in metadata.code_enabled:
@@ -301,7 +472,7 @@ def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[To
         if mapped_name in {"finish", "think"}:
             continue
         if source_name not in registered_custom_tools:
-            raise ValueError(f"available tool {source_name!r} is not declared in metadata.json")
+            register_fallback_tool(source_name)
         specs.append(Tool(name=source_name))
     return dedupe_tools(specs)
 
@@ -389,9 +560,28 @@ def map_browser_action(function_name: str, kwargs: dict[str, Any]) -> tuple[str,
         return "browser_navigate", {"url": kwargs.get("url", ""), "new_tab": False}
     if function_name in {"go_back", "back"}:
         return "browser_go_back", {}
+    if function_name == "noop":
+        return "browser_get_state", {"include_screenshot": False}
+    if function_name == "get":
+        return "browser_get_content", {"extract_links": False, "start_from_char": 0}
+    if function_name == "upload_file":
+        return "browser_get_state", {"include_screenshot": False}
     if function_name == "click":
         index = browser_index_argument(kwargs)
         return "browser_click", {"index": coerce_browser_index(index), "new_tab": False}
+    if function_name == "press":
+        index = browser_index_argument(kwargs)
+        text = kwargs.get("key_comb", kwargs.get("key", ""))
+        return "browser_type", {"index": coerce_browser_index(index), "text": text}
+    if function_name == "clear":
+        index = browser_index_argument(kwargs)
+        return "browser_type", {"index": coerce_browser_index(index), "text": ""}
+    if function_name == "select_option":
+        index = browser_index_argument(kwargs)
+        text = kwargs.get("options", kwargs.get("value", ""))
+        if isinstance(text, list):
+            text = "\n".join(str(option) for option in text)
+        return "browser_type", {"index": coerce_browser_index(index), "text": str(text)}
     if function_name in {"type", "fill"}:
         index = browser_index_argument(kwargs)
         text = kwargs.get("text", kwargs.get("value", ""))
@@ -410,6 +600,15 @@ def should_map_to_browser_action(
 ) -> bool:
     if function_name not in BROWSER_TOOL_ALIASES:
         return False
+    if function_name in {
+        "clear",
+        "get",
+        "noop",
+        "press",
+        "select_option",
+        "upload_file",
+    }:
+        return metadata.browser_enabled
     if function_name in custom_tool_map(metadata) and browser_index_argument(kwargs) is None:
         return False
     return is_browser_api_action(function_name, kwargs, browser_context=metadata.browser_enabled)
@@ -418,8 +617,8 @@ def should_map_to_browser_action(
 def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, dict[str, Any]]:
     function_name = event.function
     kwargs = (
-        normalize_file_editor_kwargs(event.kwargs)
-        if function_name == "str_replace_editor"
+        normalize_direct_file_editor_kwargs(function_name, event.kwargs)
+        if OPENHANDS_TOOL_ALIASES.get(function_name) == "file_editor"
         else normalize_kwargs(event.kwargs)
     )
     if should_map_to_browser_action(function_name, kwargs, metadata):
@@ -435,6 +634,15 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
         return "finish", {
             "message": stringify_value(kwargs.get("message", kwargs.get("output", "")))
         }
+    if tool_name == "think":
+        thought = (
+            kwargs.get("thought")
+            or kwargs.get("content")
+            or kwargs.get("command")
+            or event_description(event)
+            or stringify_value(kwargs)
+        )
+        return "think", {"thought": stringify_value(thought)}
     if function_name == "edit_file":
         return "file_editor", {
             "command": "str_replace",
@@ -442,6 +650,8 @@ def map_api_action(event: ApiAction, metadata: DatasetMetadata) -> tuple[str, di
             "old_str": stringify_value(kwargs.get("old_str")),
             "new_str": stringify_value(kwargs.get("content", kwargs.get("new_str"))),
         }
+    if tool_name == "file_editor":
+        return "file_editor", kwargs
     if tool_name == function_name:
         return tool_name, normalize_metadata_tool_kwargs(function_name, event.kwargs, metadata)
     return tool_name, kwargs
@@ -476,6 +686,30 @@ def tool_call_id(index: int, tool_name: str) -> str:
     return f"call_{index:06d}_{suffix}"
 
 
+def json_safe_value(value: Any) -> Any:
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    if isinstance(value, tuple):
+        return [json_safe_value(item) for item in value]
+    if isinstance(value, list):
+        return [json_safe_value(item) for item in value]
+    if isinstance(value, set):
+        return [json_safe_value(item) for item in sorted(value, key=repr)]
+    if isinstance(value, dict):
+        return {str(key): json_safe_value(item) for key, item in value.items()}
+    try:
+        json.dumps(value)
+        return value
+    except TypeError:
+        return repr(value)
+
+
+def json_safe_args(args: dict[str, Any]) -> dict[str, Any]:
+    return {key: json_safe_value(value) for key, value in args.items()}
+
+
 def make_action_event(
     *,
     sdk_tool: ToolDefinition,
@@ -487,6 +721,7 @@ def make_action_event(
     call_index: int,
     llm_response_id: str,
 ) -> ActionEvent:
+    args = json_safe_args(args)
     tool_call = MessageToolCall(
         id=explicit_id or tool_call_id(call_index, tool_name),
         name=tool_name,

@@ -100,13 +100,6 @@ class Step(BaseModel):
             if self.reasoning_content is not None or self.reasoning_effort is not None:
                 raise ValueError("reasoning fields are only valid on agent steps")
 
-        tool_call_ids = {tool_call.tool_call_id for tool_call in self.tool_calls or []}
-        for result in self.observation.results if self.observation else []:
-            if result.source_call_id is not None and result.source_call_id not in tool_call_ids:
-                raise ValueError(
-                    f"observation result source_call_id {result.source_call_id!r} does not "
-                    "match a tool call in the same step"
-                )
         return self
 
 
@@ -146,6 +139,14 @@ class ATIFTrajectory(BaseModel):
         expected = list(range(1, len(self.steps) + 1))
         if step_ids != expected:
             raise ValueError(f"ATIF step_id values must be sequential starting at 1: {step_ids}")
+        return self
+
+    @model_validator(mode="after")
+    def validate_observation_links(self):
+        # Full corpora can contain partial transcripts where an observation keeps a
+        # source_call_id from raw data but the corresponding tool-call turn is absent.
+        # Preserve the link when present; downstream converters can degrade unmatched
+        # observations to environment messages.
         return self
 
 
