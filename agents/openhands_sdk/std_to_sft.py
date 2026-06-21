@@ -692,11 +692,34 @@ def text_content(content: Any) -> str:
     return ""
 
 
+_SOUL_WRAP = re.compile(r"\A<SOUL>\n(.+?)\n</SOUL>\n\n", re.DOTALL)
+
+
+def strip_soul_wrapper(content: str) -> str:
+    """Drop the leading ``<SOUL>\\n...\\n</SOUL>\\n\\n`` section the SDK prepends
+    to the system prompt.
+
+    Committed ``openhands_sdk.json`` samples (the canonical artifacts for this
+    repo) begin directly with the soul sentence and do not carry the
+    ``<SOUL>`` wrapper. Recent ``openhands-sdk`` versions wrap that sentence in
+    ``<SOUL>\\n...\\n</SOUL>`` via ``SoulSection``, so the live converter output
+    would otherwise diverge from the committed samples. Stripping the wrapper
+    keeps generated records consistent with the committed canonical format.
+    """
+    match = _SOUL_WRAP.match(content)
+    if match:
+        return match.group(1) + "\n\n" + content[match.end() :]
+    return content
+
+
 def normalize_message_content(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     normalized = []
     for message in messages:
         normalized_message = dict(message)
-        normalized_message["content"] = text_content(normalized_message.get("content", ""))
+        content = text_content(normalized_message.get("content", ""))
+        if normalized_message.get("role") == "system":
+            content = strip_soul_wrapper(content)
+        normalized_message["content"] = content
         normalized.append(normalized_message)
     return normalized
 
