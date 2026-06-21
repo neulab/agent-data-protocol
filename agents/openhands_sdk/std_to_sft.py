@@ -696,15 +696,10 @@ _SOUL_WRAP = re.compile(r"\A<SOUL>\n(.+?)\n</SOUL>\n\n", re.DOTALL)
 
 
 def strip_soul_wrapper(content: str) -> str:
-    """Drop the leading ``<SOUL>\\n...\\n</SOUL>\\n\\n`` section the SDK prepends
-    to the system prompt.
-
-    Committed ``openhands_sdk.json`` samples (the canonical artifacts for this
-    repo) begin directly with the soul sentence and do not carry the
-    ``<SOUL>`` wrapper. Recent ``openhands-sdk`` versions wrap that sentence in
-    ``<SOUL>\\n...\\n</SOUL>`` via ``SoulSection``, so the live converter output
-    would otherwise diverge from the committed samples. Stripping the wrapper
-    keeps generated records consistent with the committed canonical format.
+    """Strip the ``<SOUL>...</SOUL>`` wrapper from the system prompt,
+    keeping the enclosed soul sentence intact. Normalises output from
+    recent SDK versions that add this wrapper to match the committed
+    canonical sample format.
     """
     match = _SOUL_WRAP.match(content)
     if match:
