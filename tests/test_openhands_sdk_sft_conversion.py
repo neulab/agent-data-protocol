@@ -48,7 +48,11 @@ def trajectory_id(row: dict) -> str:
 
 def assert_sdk_chat_record(record):
     assert record["messages"][0]["role"] == "system"
-    assert content_text(record["messages"][0]).startswith("You are OpenHands agent")
+    # The openhands-sdk system prompt begins with a ``<SOUL>`` section (recent
+    # SDK versions wrap the soul sentence in ``<SOUL>\n...\n</SOUL>``). Assert
+    # the soul sentence is present rather than at offset 0 so the test tracks
+    # the SDK's prompt format without coupling to the wrapper.
+    assert "You are OpenHands agent" in content_text(record["messages"][0])
     assert record["metadata"]["generation"] == "openhands_sdk_events"
     tool_names = {tool["function"]["name"] for tool in record["tools"]}
     pending_tool_call_ids = []
