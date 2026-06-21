@@ -73,14 +73,17 @@ def attach_observation(step: Step, content: str) -> None:
     source_call_id = None
     if step.tool_calls:
         source_call_id = step.tool_calls[-1].tool_call_id
-    step.observation = ATIFObservation(
-        results=[
-            ObservationResult(
-                source_call_id=source_call_id,
-                content=normalize_observation(content),
-            )
-        ]
+    result = ObservationResult(
+        source_call_id=source_call_id,
+        content=normalize_observation(content),
     )
+    # The ATIF schema models observations as a list of results on a single
+    # ATIFObservation. Append rather than overwrite so multiple consecutive
+    # ``Observation:`` user messages after one agent step are all retained.
+    if step.observation is None:
+        step.observation = ATIFObservation(results=[result])
+    else:
+        step.observation.results.append(result)
 
 
 def process_data(data: SchemaRaw) -> ATIFTrajectory | None:

@@ -29,6 +29,8 @@ The raw dataset is a list of chat-style messages with `role` and `content` field
 
 If an assistant message contains multiple bash blocks despite the source system prompt requiring exactly one, the converter emits a warning and uses the final block. The final block is treated as the executable action because it is the last stated command after any preceding reasoning or malformed draft command.
 
+If two or more consecutive `Observation:` user messages follow a single agent step, the converter appends each one as a separate `ObservationResult` on that step's existing `ATIFObservation` rather than overwriting it. The ATIF schema models observations as a list of results on a single observation object, so appending preserves every observation while keeping one observation object per agent step. Each retained result keeps its `source_call_id` link to the step's tool call (or `None` for plain-message agent steps). Downstream standardization and SFT conversion already iterate the results list, so multiple observations are emitted as multiple observation events.
+
 ## Known Limitations
 
 The dataset card describes this corpus as a mid-training dataset rather than a verified SFT dataset. The trajectories are execution-free, not validated against tests, and many rollouts terminate with `incomplete` or other non-submitted statuses. This converter preserves those trajectories instead of filtering to submitted-only samples.
