@@ -5,6 +5,8 @@ import json
 import sys
 from pathlib import Path
 
+from schema.atif import ATIFTrajectory
+
 REPO_ROOT = Path(__file__).parent.parent
 DATASET_DIR = REPO_ROOT / "datasets" / "AlienKevin_SWE-ZERO-12M-trajectories"
 
@@ -83,10 +85,8 @@ def test_single_observation_still_uses_single_result():
 def test_committed_samples_validate_and_keep_observation_links():
     sample_atif = json.loads((DATASET_DIR / "sample_atif.json").read_text())
     assert sample_atif, "sample_atif.json should contain at least one trajectory"
-    # Every observation result on an agent step must link to a tool call in that
-    # step (or be unlinked); this is enforced by the ATIF schema validator.
-    from schema.atif import ATIFTrajectory
-
+    # The ATIF schema does not enforce source_call_id referential integrity;
+    # assert it explicitly.
     for trajectory in sample_atif:
         parsed = ATIFTrajectory(**trajectory)
         for step in parsed.steps:
