@@ -470,7 +470,7 @@ async def process_line(
 ) -> list[dict[str, Any]]:
     try:
         async with semaphore:
-            return await process_row_async(
+            row_task = process_row_async(
                 line,
                 max_tokens=args.max_tokens,
                 model=args.model,
@@ -478,6 +478,28 @@ async def process_line(
                 max_size=args.max_size,
                 keep_first=args.keep_first,
             )
+            if args.row_timeout > 0:
+                return await asyncio.wait_for(row_task, timeout=args.row_timeout)
+            return await row_task
+    except TimeoutError:
+        row_id = None
+        try:
+            row_id = json.loads(line).get("id")
+        except Exception:
+            pass
+        print(
+            json.dumps(
+                {
+                    "id": row_id,
+                    "error_type": "TimeoutError",
+                    "error": f"row exceeded timeout={args.row_timeout}s",
+                },
+                ensure_ascii=False,
+            ),
+            file=sys.stderr,
+            flush=True,
+        )
+        raise
     except Exception as exc:
         if not args.continue_on_error:
             raise
@@ -587,12 +609,26 @@ def main() -> None:
         action="store_true",
         help="Log per-row conversion errors to stderr and continue processing remaining rows.",
     )
+    parser.add_argument(
+        "--row-timeout",
+        type=float,
+        default=float(os.getenv("ADP_CONDENSER_ROW_TIMEOUT", "1800")),
+        help=(
+            "Maximum seconds to spend on one input row before failing the run. "
+            "Set to 0 to disable."
+        ),
+    )
     args = parser.parse_args()
     if args.concurrency < 1:
         raise ValueError("--concurrency must be at least 1")
     if args.chunk_size < 1:
         raise ValueError("--chunk-size must be at least 1")
-    asyncio.run(process_stream(args))
+    if args.row_timeout < 0:
+        raise ValueError("--row-timeout must be non-negative")
+    try:
+        asyncio.run(process_stream(args))
+    except TimeoutError:
+        sys.exit(124)
 
 
 if __name__ == "__main__":
