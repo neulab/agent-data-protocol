@@ -393,6 +393,14 @@ def trajectory_api_functions(trajectory: Trajectory) -> list[str]:
     ]
 
 
+def trajectory_code_languages(trajectory: Trajectory) -> set[str]:
+    return {
+        event.language.lower()
+        for event in trajectory.content
+        if isinstance(event, CodeAction) and event.language
+    }
+
+
 def ordered_unique(values: Sequence[str]) -> list[str]:
     seen: set[str] = set()
     result: list[str] = []
@@ -435,7 +443,10 @@ def custom_tool_uses_browser_index(tool_spec: OpenAIToolSpec) -> bool:
 
 def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[Tool]:
     specs: list[Tool] = []
-    code_languages = {language.lower() for language in metadata.code_enabled}
+    code_languages = {
+        *{language.lower() for language in metadata.code_enabled},
+        *trajectory_code_languages(trajectory),
+    }
     if code_languages & SUPPORTED_TERMINAL_CODE_LANGUAGES:
         specs.append(Tool(name=TerminalTool.name))
     if metadata.file_editor_enabled:
@@ -460,8 +471,7 @@ def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[To
         if should_treat_as_browser_tool(source_name, metadata, registered_custom_tools):
             continue
         if mapped_name == "terminal":
-            if "bash" not in metadata.code_enabled:
-                raise ValueError(f"{source_name!r} maps to terminal, but bash is disabled")
+            specs.append(Tool(name=TerminalTool.name))
             continue
         if mapped_name == "file_editor":
             specs.append(Tool(name=FileEditorTool.name))
