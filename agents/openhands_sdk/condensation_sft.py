@@ -63,10 +63,13 @@ class PromptCapturingLLM(LLM):
     """LLM that records condenser prompts before delegating to LiteLLM."""
 
     _captured_messages: list[list[Message]] = PrivateAttr(default_factory=list)
+    _completion_semaphore: asyncio.Semaphore | None = PrivateAttr(default=None)
 
     def __init__(self, **data: Any) -> None:
+        completion_semaphore = data.pop("completion_semaphore", None)
         super().__init__(**data)
         self._captured_messages = []
+        self._completion_semaphore = completion_semaphore
 
     @property
     def captured_messages(self) -> list[list[Message]]:
@@ -81,15 +84,21 @@ class PromptCapturingLLM(LLM):
         on_token: Any | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
-        self._captured_messages.append(messages)
-        return await super().acompletion(
-            messages=messages,
-            tools=tools,
-            _return_metrics=_return_metrics,
-            add_security_risk_prediction=add_security_risk_prediction,
-            on_token=on_token,
-            **kwargs,
-        )
+        async def run_completion() -> LLMResponse:
+            self._captured_messages.append(messages)
+            return await super(PromptCapturingLLM, self).acompletion(
+                messages=messages,
+                tools=tools,
+                _return_metrics=_return_metrics,
+                add_security_risk_prediction=add_security_risk_prediction,
+                on_token=on_token,
+                **kwargs,
+            )
+
+        if self._completion_semaphore is None:
+            return await run_completion()
+        async with self._completion_semaphore:
+            return await run_completion()
 
 
 def format_messages(llm: LLM, messages: list[Message]) -> list[dict[str, Any]]:
@@ -246,6 +255,7 @@ async def append_standardized_events_with_condensation_async(
     include_trajectories: bool,
     output_trajectory_id: str | None = None,
     source_row_id: str | None = None,
+    llm_semaphore: asyncio.Semaphore | None = None,
 ) -> list[dict[str, Any]]:
     """Replay trajectory events and emit trajectory plus condensation records.
 
@@ -293,6 +303,7 @@ async def append_standardized_events_with_condensation_async(
         model=model,
         api_key=SecretStr(os.getenv("LLM_API_KEY") or "not-used"),
         base_url=os.getenv("LLM_BASE_URL"),
+        completion_semaphore=llm_semaphore,
     )
     condenser = LLMSummarizingCondenser(
         llm=condenser_llm,
@@ -423,6 +434,7 @@ async def process_row_async(
     include_trajectories: bool = True,
     max_size: int = DEFAULT_MAX_SIZE,
     keep_first: int = 2,
+    llm_semaphore: asyncio.Semaphore | None = None,
 ) -> list[dict[str, Any]]:
     trajectory = load_trajectory(line)
     output_trajectory_id = trajectory.id
@@ -457,6 +469,7 @@ async def process_row_async(
                 include_trajectories=include_trajectories,
                 output_trajectory_id=output_trajectory_id,
                 source_row_id=source_row_id,
+                llm_semaphore=llm_semaphore,
             )
         finally:
             conversation.close()
@@ -467,6 +480,7 @@ async def process_line(
     *,
     args: argparse.Namespace,
     semaphore: asyncio.Semaphore,
+    llm_semaphore: asyncio.Semaphore,
 ) -> list[dict[str, Any]]:
     try:
         async with semaphore:
@@ -477,6 +491,7 @@ async def process_line(
                 include_trajectories=args.include_trajectories == "yes",
                 max_size=args.max_size,
                 keep_first=args.keep_first,
+                llm_semaphore=llm_semaphore,
             )
             if args.row_timeout > 0:
                 return await asyncio.wait_for(row_task, timeout=args.row_timeout)
@@ -527,6 +542,7 @@ async def process_stream(args: argparse.Namespace) -> None:
     from tqdm import tqdm
 
     semaphore = asyncio.Semaphore(args.concurrency)
+    llm_semaphore = asyncio.Semaphore(args.llm_concurrency)
     max_in_flight = max(args.chunk_size, args.concurrency)
     progress = tqdm(
         desc="condensation_sft",
@@ -545,7 +561,14 @@ async def process_stream(args: argparse.Namespace) -> None:
                 line = line.strip()
                 if line:
                     pending.add(
-                        asyncio.create_task(process_line(line, args=args, semaphore=semaphore))
+                        asyncio.create_task(
+                            process_line(
+                                line,
+                                args=args,
+                                semaphore=semaphore,
+                                llm_semaphore=llm_semaphore,
+                            )
+                        )
                     )
                     break
             else:
@@ -600,6 +623,15 @@ def main() -> None:
         help="Maximum number of input rows to keep scheduled at once.",
     )
     parser.add_argument(
+        "--llm-concurrency",
+        type=int,
+        default=int(os.getenv("ADP_CONDENSER_LLM_CONCURRENCY", "0")),
+        help=(
+            "Maximum concurrent async condenser LLM requests. Defaults to "
+            "--concurrency when unset or 0."
+        ),
+    )
+    parser.add_argument(
         "--no-progress",
         action="store_true",
         help="Disable tqdm progress output on stderr.",
@@ -623,6 +655,10 @@ def main() -> None:
         raise ValueError("--concurrency must be at least 1")
     if args.chunk_size < 1:
         raise ValueError("--chunk-size must be at least 1")
+    if args.llm_concurrency < 0:
+        raise ValueError("--llm-concurrency must be non-negative")
+    if args.llm_concurrency == 0:
+        args.llm_concurrency = args.concurrency
     if args.row_timeout < 0:
         raise ValueError("--row-timeout must be non-negative")
     try:
