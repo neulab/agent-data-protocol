@@ -34,7 +34,7 @@ from openhands.tools.file_editor import FileEditorTool
 from openhands.tools.task_tracker import TaskTrackerTool
 from openhands.tools.terminal import TerminalTool
 from openhands.tools.terminal.definition import MAX_CMD_OUTPUT_SIZE, maybe_truncate
-from pydantic import ConfigDict, SecretStr
+from pydantic import ConfigDict, SecretStr, ValidationError
 
 from schema.dataset_metadata import (
     DatasetMetadata,
@@ -302,7 +302,7 @@ def normalize_parameters(function: OpenAIToolSpec) -> dict[str, Any]:
 
 
 def make_metadata_tool(name: str, tool_spec: OpenAIToolSpec) -> type[ToolDefinition]:
-    parameters = normalize_parameters(tool_spec)
+    parameters = {**normalize_parameters(tool_spec), "additionalProperties": True}
     action_type = SDKAction.from_mcp_schema(f"{class_name(name)}Action", parameters)
     description = tool_spec.function.description or f"Dataset metadata tool {name}."
 
@@ -722,6 +722,10 @@ def make_action_event(
     llm_response_id: str,
 ) -> ActionEvent:
     args = json_safe_args(args)
+    try:
+        action = sdk_tool.action_from_arguments(args)
+    except ValidationError:
+        action = DatasetAnyAction.model_validate(args)
     tool_call = MessageToolCall(
         id=explicit_id or tool_call_id(call_index, tool_name),
         name=tool_name,
@@ -731,7 +735,7 @@ def make_action_event(
     return ActionEvent(
         thought=[TextContent(text=thought)] if thought else [],
         reasoning_content=reasoning_content,
-        action=sdk_tool.action_from_arguments(args),
+        action=action,
         tool_name=tool_name,
         tool_call_id=tool_call.id,
         tool_call=tool_call,
