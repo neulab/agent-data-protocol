@@ -479,23 +479,21 @@ async def process_line(
     line: str,
     *,
     args: argparse.Namespace,
-    semaphore: asyncio.Semaphore,
     llm_semaphore: asyncio.Semaphore,
 ) -> list[dict[str, Any]]:
     try:
-        async with semaphore:
-            row_task = process_row_async(
-                line,
-                max_tokens=args.max_tokens,
-                model=args.model,
-                include_trajectories=args.include_trajectories == "yes",
-                max_size=args.max_size,
-                keep_first=args.keep_first,
-                llm_semaphore=llm_semaphore,
-            )
-            if args.row_timeout > 0:
-                return await asyncio.wait_for(row_task, timeout=args.row_timeout)
-            return await row_task
+        row_task = process_row_async(
+            line,
+            max_tokens=args.max_tokens,
+            model=args.model,
+            include_trajectories=args.include_trajectories == "yes",
+            max_size=args.max_size,
+            keep_first=args.keep_first,
+            llm_semaphore=llm_semaphore,
+        )
+        if args.row_timeout > 0:
+            return await asyncio.wait_for(row_task, timeout=args.row_timeout)
+        return await row_task
     except TimeoutError:
         row_id = None
         try:
@@ -541,9 +539,7 @@ async def process_line(
 async def process_stream(args: argparse.Namespace) -> None:
     from tqdm import tqdm
 
-    semaphore = asyncio.Semaphore(args.concurrency)
     llm_semaphore = asyncio.Semaphore(args.llm_concurrency)
-    max_in_flight = max(args.chunk_size, args.concurrency)
     progress = tqdm(
         desc="condensation_sft",
         unit="row",
@@ -556,7 +552,7 @@ async def process_stream(args: argparse.Namespace) -> None:
 
     def schedule_available() -> None:
         nonlocal input_exhausted
-        while len(pending) < max_in_flight and not input_exhausted:
+        while len(pending) < args.max_in_flight_rows and not input_exhausted:
             for line in input_iter:
                 line = line.strip()
                 if line:
@@ -565,7 +561,6 @@ async def process_stream(args: argparse.Namespace) -> None:
                             process_line(
                                 line,
                                 args=args,
-                                semaphore=semaphore,
                                 llm_semaphore=llm_semaphore,
                             )
                         )
@@ -611,15 +606,15 @@ def main() -> None:
         help="Whether to emit the original OpenHands SDK trajectory record before summaries.",
     )
     parser.add_argument(
-        "--concurrency",
-        type=int,
-        default=1,
-        help="Number of input trajectories to process concurrently.",
-    )
-    parser.add_argument(
         "--chunk-size",
         type=int,
-        default=100,
+        default=None,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--max-in-flight-rows",
+        type=int,
+        default=int(os.getenv("ADP_CONDENSER_MAX_IN_FLIGHT_ROWS", "100")),
         help="Maximum number of input rows to keep scheduled at once.",
     )
     parser.add_argument(
@@ -628,7 +623,7 @@ def main() -> None:
         default=int(os.getenv("ADP_CONDENSER_LLM_CONCURRENCY", "0")),
         help=(
             "Maximum concurrent async condenser LLM requests. Defaults to "
-            "--concurrency when unset or 0."
+            "--max-in-flight-rows when unset or 0."
         ),
     )
     parser.add_argument(
@@ -651,14 +646,14 @@ def main() -> None:
         ),
     )
     args = parser.parse_args()
-    if args.concurrency < 1:
-        raise ValueError("--concurrency must be at least 1")
-    if args.chunk_size < 1:
-        raise ValueError("--chunk-size must be at least 1")
+    if args.chunk_size is not None:
+        args.max_in_flight_rows = args.chunk_size
+    if args.max_in_flight_rows < 1:
+        raise ValueError("--max-in-flight-rows must be at least 1")
     if args.llm_concurrency < 0:
         raise ValueError("--llm-concurrency must be non-negative")
     if args.llm_concurrency == 0:
-        args.llm_concurrency = args.concurrency
+        args.llm_concurrency = args.max_in_flight_rows
     if args.row_timeout < 0:
         raise ValueError("--row-timeout must be non-negative")
     try:
