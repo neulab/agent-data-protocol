@@ -291,12 +291,14 @@ def function_calls_field_tool_calls(message: dict[str, Any]) -> list[ToolCall]:
             name = match.group(1)
             try:
                 parsed = ast.parse(f"f({match.group(2)})", mode="eval")
+                if not isinstance(parsed.body, ast.Call):
+                    raise ValueError("function call arguments did not parse as a call")
                 arguments = {
                     keyword.arg: ast.literal_eval(keyword.value)
                     for keyword in parsed.body.keywords
                     if keyword.arg is not None
                 }
-            except (SyntaxError, ValueError):
+            except (AttributeError, SyntaxError, ValueError):
                 arguments = {"arguments": match.group(2)}
         if not name:
             continue
