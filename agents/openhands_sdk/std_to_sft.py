@@ -128,7 +128,7 @@ def parse_scalar(value: Any) -> Any:
         return value
     try:
         return ast.literal_eval(value)
-    except (ValueError, SyntaxError):
+    except (TypeError, ValueError, SyntaxError):
         return value
 
 
