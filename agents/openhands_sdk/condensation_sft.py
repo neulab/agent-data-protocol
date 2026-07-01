@@ -494,7 +494,7 @@ async def process_line(
         if args.row_timeout > 0:
             return await asyncio.wait_for(row_task, timeout=args.row_timeout)
         return await row_task
-    except TimeoutError:
+    except asyncio.TimeoutError:
         row_id = None
         try:
             row_id = json.loads(line).get("id")
@@ -658,7 +658,7 @@ def main() -> None:
         raise ValueError("--row-timeout must be non-negative")
     try:
         asyncio.run(process_stream(args))
-    except TimeoutError:
+    except asyncio.TimeoutError:
         sys.exit(124)
 
 
