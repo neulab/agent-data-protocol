@@ -770,7 +770,7 @@ def screenagent_trajectories(items: list[Any], dataset_name: str) -> Iterable[AT
         )
 
 
-def trajectories_from_input(records: list[Any], dataset_name: str) -> Iterable[ATIFTrajectory]:
+def trajectories_from_input(records: Iterable[Any], dataset_name: str) -> Iterable[ATIFTrajectory]:
     for index, record in enumerate(records):
         if isinstance(record, list):
             yield from screenagent_trajectories(record, dataset_name)
@@ -787,7 +787,7 @@ def trajectories_from_input(records: list[Any], dataset_name: str) -> Iterable[A
 
 def main(script_file: str) -> None:
     dataset_name = dataset_name_from_script(script_file)
-    records = [json.loads(line) for line in sys.stdin if line.strip()]
+    records = (json.loads(line) for line in sys.stdin if line.strip())
     for trajectory in trajectories_from_input(records, dataset_name):
         print(trajectory.model_dump_json(exclude_none=True))
 
