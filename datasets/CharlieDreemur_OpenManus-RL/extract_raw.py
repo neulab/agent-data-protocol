@@ -1,9 +1,13 @@
 import json
 import os
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Iterable
+
+from tenacity import retry, retry_if_exception, stop_after_attempt
+from tenacity import wait_exponential_jitter
 
 DATASET_NAME = "CharlieDreemur/OpenManus-RL"
 CONFIG = "default"
@@ -17,6 +21,18 @@ PAGE_SIZE = 100
 REPRESENTATIVE_OFFSETS = [0, 5000, 10000, 20000, 48920]
 
 
+def is_retryable_fetch_error(exc: BaseException) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in {429, 500, 502, 503, 504}
+    return isinstance(exc, (TimeoutError, urllib.error.URLError))
+
+
+@retry(
+    retry=retry_if_exception(is_retryable_fetch_error),
+    wait=wait_exponential_jitter(initial=1, max=60),
+    stop=stop_after_attempt(int(os.getenv("OPENMANUS_RL_FETCH_RETRIES", "8"))),
+    reraise=True,
+)
 def fetch_rows(offset: int, length: int) -> dict:
     params = urllib.parse.urlencode(
         {
