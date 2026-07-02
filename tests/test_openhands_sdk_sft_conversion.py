@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -48,7 +49,15 @@ def trajectory_id(row: dict) -> str:
 
 def assert_sdk_chat_record(record):
     assert record["messages"][0]["role"] == "system"
-    assert content_text(record["messages"][0]).startswith("You are OpenHands agent")
+    system_text = content_text(record["messages"][0])
+    # OpenHands SDK 1.29.3+ wraps the agent identity in <SOUL>...</SOUL> tags.
+    # Accept both the legacy format and the new SOUL-wrapped format.
+    if system_text.startswith("<SOUL>"):
+        inner = re.search(r"<SOUL>\n(.*?)\n</SOUL>", system_text, re.DOTALL)
+        assert inner is not None
+        assert inner.group(1).startswith("You are OpenHands agent")
+    else:
+        assert system_text.startswith("You are OpenHands agent")
     assert record["metadata"]["generation"] == "openhands_sdk_events"
     tool_names = {tool["function"]["name"] for tool in record["tools"]}
     pending_tool_call_ids = []
