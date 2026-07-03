@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import sys
 from typing import Any
 
@@ -49,6 +50,32 @@ def parse_action(action_str: str) -> tuple[str, dict[str, Any]]:
     return function_name, kwargs
 
 
+def get_action_string(raw_step: dict[str, Any]) -> str:
+    step_data = raw_step["step_data"]
+    parsed_action = step_data.get("parsed_action")
+    if isinstance(parsed_action, str) and parsed_action.strip():
+        return parsed_action
+
+    raw_action = step_data.get("action")
+    if isinstance(raw_action, str):
+        try:
+            action_data = json.loads(raw_action)
+        except json.JSONDecodeError:
+            action_data = None
+        if isinstance(action_data, dict) and isinstance(action_data.get("action"), str):
+            return action_data["action"]
+
+        match = re.search(r'"action"\s*:\s*("(?:\\.|[^"\\])*")', raw_action)
+        if match:
+            return json.loads(match.group(1))
+
+    raise ValueError(
+        "missing parsed action for "
+        f"trajectory {raw_step.get('traj_data', {}).get('traj_num')} "
+        f"step {step_data.get('step_number')}"
+    )
+
+
 def make_observation_step(step_id: int, raw_step: dict[str, Any]) -> Step:
     step_data = raw_step["step_data"]
     return Step(
@@ -82,7 +109,7 @@ def make_observation_step(step_id: int, raw_step: dict[str, Any]) -> Step:
 
 
 def make_action_step(step_id: int, raw_step: dict[str, Any], call_id: str) -> Step:
-    function_name, kwargs = parse_action(raw_step["step_data"]["parsed_action"])
+    function_name, kwargs = parse_action(get_action_string(raw_step))
     thought = raw_step["step_data"].get("thought")
     if function_name == "send_msg_to_user":
         function_name = "finish"
@@ -106,7 +133,7 @@ def emit_trajectory(traj_id: int, goal: str, raw_steps: list[dict[str, Any]]) ->
     next_step_id = 2
     next_call_id = 1
     for raw_step in raw_steps:
-        function_name, _ = parse_action(raw_step["step_data"]["parsed_action"])
+        function_name, _ = parse_action(get_action_string(raw_step))
         steps.append(make_observation_step(next_step_id, raw_step))
         next_step_id += 1
         steps.append(make_action_step(next_step_id, raw_step, f"call_{next_call_id:06d}"))
