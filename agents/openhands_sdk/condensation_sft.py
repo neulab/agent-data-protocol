@@ -13,6 +13,14 @@ from typing import Any
 os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
 os.environ.setdefault("LOG_LEVEL", "ERROR")
 
+from litellm.exceptions import (
+    APIConnectionError,
+    BadGatewayError,
+    InternalServerError,
+    RateLimitError,
+    ServiceUnavailableError,
+    Timeout,
+)
 from openhands.sdk import LLM, Agent, Conversation, LLMConvertibleEvent, Message, TextContent
 from openhands.sdk.context.condenser import LLMSummarizingCondenser
 from openhands.sdk.context.condenser.utils import get_total_token_count
@@ -51,6 +59,16 @@ from scripts.atif_input import (
 )
 
 DEFAULT_MAX_SIZE = 1_000_000
+TRANSIENT_LLM_EXCEPTIONS = (
+    APIConnectionError,
+    BadGatewayError,
+    InternalServerError,
+    RateLimitError,
+    ServiceUnavailableError,
+    Timeout,
+    OSError,
+    asyncio.TimeoutError,
+)
 
 
 def source_row_id_from_line(line: str, trajectory_id: str) -> str:
@@ -129,7 +147,7 @@ class PromptCapturingLLM(LLM):
                     initial=self._llm_retry_min_wait,
                     max=self._llm_retry_max_wait,
                 ),
-                retry=retry_if_exception_type(Exception),
+                retry=retry_if_exception_type(TRANSIENT_LLM_EXCEPTIONS),
                 reraise=True,
             ):
                 with attempt:

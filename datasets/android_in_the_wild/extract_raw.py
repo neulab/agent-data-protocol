@@ -16,6 +16,8 @@ credential_path = os.path.join(
 )
 if os.path.exists(credential_path):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_path
+# Leave ADC unset when the file is absent so hosted runtimes can authenticate
+# through metadata-server credentials instead of failing before TensorFlow reads GCS.
 os.environ["CURL_CA_BUNDLE"] = certifi.where()
 
 # Define dataset directories

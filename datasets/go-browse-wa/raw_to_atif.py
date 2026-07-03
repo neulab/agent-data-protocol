@@ -217,6 +217,8 @@ def emit_trajectory(traj_id: int, goal: str, raw_steps: list[dict[str, Any]]) ->
 
 
 def safe_emit_trajectory(traj_id: int, goal: str, raw_steps: list[dict[str, Any]]) -> None:
+    # Some source trajectories contain malformed or consecutive noop actions.
+    # Skip only those trajectories instead of rejecting the whole conversion run.
     try:
         emit_trajectory(traj_id, goal, raw_steps)
     except Exception as exc:
