@@ -199,7 +199,6 @@ def emit_trajectory(traj_id: int, goal: str, raw_steps: list[dict[str, Any]]) ->
     next_step_id = 2
     next_call_id = 1
     for raw_step in raw_steps:
-        function_name, _ = parse_action(get_action_string(raw_step))
         steps.append(make_observation_step(next_step_id, raw_step))
         next_step_id += 1
         steps.append(make_action_step(next_step_id, raw_step, f"call_{next_call_id:06d}"))
