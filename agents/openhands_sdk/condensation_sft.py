@@ -72,25 +72,6 @@ class PromptCapturingLLM(LLM):
     def captured_messages(self) -> list[list[Message]]:
         return self._captured_messages
 
-    def completion(
-        self,
-        messages: list[Message],
-        tools: Sequence[ToolDefinition] | None = None,
-        _return_metrics: bool = False,
-        add_security_risk_prediction: bool = False,
-        on_token: Any | None = None,
-        **kwargs: Any,
-    ) -> LLMResponse:
-        self._captured_messages.append(messages)
-        return super().completion(
-            messages=messages,
-            tools=tools,
-            _return_metrics=_return_metrics,
-            add_security_risk_prediction=add_security_risk_prediction,
-            on_token=on_token,
-            **kwargs,
-        )
-
     async def acompletion(
         self,
         messages: list[Message],

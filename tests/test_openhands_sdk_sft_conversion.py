@@ -101,16 +101,7 @@ def patch_condensation_llm(monkeypatch, summary="[ATIF condensation test summary
 
     from agents.openhands_sdk import condensation_sft
 
-    def fake_completion(
-        self,
-        messages,
-        tools=None,
-        _return_metrics=False,
-        add_security_risk_prediction=False,
-        on_token=None,
-        **kwargs,
-    ):
-        self._captured_messages.append(messages)
+    def fake_response(self):
         return LLMResponse(
             message=Message(role="assistant", content=[TextContent(text=summary)]),
             metrics=MetricsSnapshot(
@@ -147,17 +138,9 @@ def patch_condensation_llm(monkeypatch, summary="[ATIF condensation test summary
         on_token=None,
         **kwargs,
     ):
-        return fake_completion(
-            self,
-            messages,
-            tools=tools,
-            _return_metrics=_return_metrics,
-            add_security_risk_prediction=add_security_risk_prediction,
-            on_token=on_token,
-            **kwargs,
-        )
+        self._captured_messages.append(messages)
+        return fake_response(self)
 
-    monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "completion", fake_completion)
     monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "acompletion", fake_acompletion)
 
 
