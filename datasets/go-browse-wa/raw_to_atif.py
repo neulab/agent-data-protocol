@@ -62,8 +62,15 @@ def get_action_string(raw_step: dict[str, Any]) -> str:
             action_data = json.loads(raw_action)
         except json.JSONDecodeError:
             action_data = None
-        if isinstance(action_data, dict) and isinstance(action_data.get("action"), str):
-            return action_data["action"]
+        if isinstance(action_data, dict):
+            action_value = action_data.get("action")
+            if isinstance(action_value, str):
+                return action_value
+            if isinstance(action_value, dict) and len(action_value) == 1:
+                function_name, arguments = next(iter(action_value.items()))
+                if isinstance(arguments, dict):
+                    kwargs = ", ".join(f"{key}={value!r}" for key, value in arguments.items())
+                    return f"{function_name}({kwargs})"
 
         match = re.search(r'"action"\s*:\s*("(?:\\.|[^"\\])*")', raw_action)
         if match:
