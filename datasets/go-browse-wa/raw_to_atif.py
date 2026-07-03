@@ -4,12 +4,21 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import sys
 from typing import Any
 
 from schema.atif import Agent, ATIFObservation, ATIFTrajectory, ObservationResult, Step, ToolCall
 
 GO_BROWSE_WA_VIEWPORT_SIZE = (1280, 1440)
+POSITIONAL_ACTION_ARGS = {
+    "click": ["bid"],
+    "fill": ["bid", "value"],
+    "select_option": ["bid", "options"],
+    "scroll": ["delta_x", "delta_y"],
+    "send_msg_to_user": ["text"],
+    "noop": ["wait_ms"],
+}
 
 
 def ast_value(node: ast.AST) -> Any:
@@ -23,7 +32,13 @@ def ast_value(node: ast.AST) -> Any:
 
 
 def parse_action(action_str: str) -> tuple[str, dict[str, Any]]:
-    tree = ast.parse(action_str)
+    try:
+        tree = ast.parse(action_str)
+    except SyntaxError:
+        recovered = parse_malformed_action(action_str)
+        if recovered is not None:
+            return recovered
+        raise
     if not isinstance(tree.body[0], ast.Expr) or not isinstance(tree.body[0].value, ast.Call):
         raise ValueError(f"Invalid action string: {action_str}")
     call = tree.body[0].value
@@ -31,14 +46,7 @@ def parse_action(action_str: str) -> tuple[str, dict[str, Any]]:
         raise ValueError(f"Invalid action function: {action_str}")
     function_name = call.func.id
     kwargs: dict[str, Any] = {}
-    positional_names = {
-        "click": ["bid"],
-        "fill": ["bid", "value"],
-        "select_option": ["bid", "options"],
-        "scroll": ["delta_x", "delta_y"],
-        "send_msg_to_user": ["text"],
-        "noop": ["wait_ms"],
-    }.get(function_name, [])
+    positional_names = POSITIONAL_ACTION_ARGS.get(function_name, [])
     for index, arg in enumerate(call.args):
         key = positional_names[index] if index < len(positional_names) else f"arg{index}"
         kwargs[key] = ast_value(arg)
@@ -47,6 +55,95 @@ def parse_action(action_str: str) -> tuple[str, dict[str, Any]]:
             raise ValueError(f"Unsupported **kwargs in action: {action_str}")
         kwargs[keyword.arg] = ast_value(keyword.value)
     return function_name, kwargs
+
+
+def parse_malformed_action(action_str: str) -> tuple[str, dict[str, Any]] | None:
+    match = re.match(r"^([A-Za-z_]\w*)\((.*)\)\}?$", action_str.strip(), flags=re.DOTALL)
+    if not match:
+        return None
+    function_name = match.group(1)
+    positional_names = POSITIONAL_ACTION_ARGS.get(function_name)
+    if not positional_names:
+        return None
+    args_text = match.group(2)
+    if function_name == "send_msg_to_user":
+        raw_args = [args_text.strip()] if args_text else []
+    elif function_name in {"click", "noop"}:
+        raw_args = [args_text.split(",", 1)[0].strip()] if args_text else []
+    else:
+        max_splits = max(len(positional_names) - 1, 0)
+        raw_args = [part.strip() for part in args_text.split(",", max_splits)] if args_text else []
+    kwargs = {}
+    for index, raw_arg in enumerate(raw_args[: len(positional_names)]):
+        kwargs[positional_names[index]] = parse_malformed_arg(raw_arg)
+    return function_name, kwargs
+
+
+def parse_malformed_arg(raw_arg: str) -> Any:
+    try:
+        return ast.literal_eval(raw_arg)
+    except (SyntaxError, ValueError):
+        value = raw_arg.strip()
+        if value[:1] in {"'", '"'}:
+            value = value[1:]
+        if value[-1:] in {"'", '"'}:
+            value = value[:-1]
+        return value
+
+
+def get_action_string(raw_step: dict[str, Any]) -> str:
+    step_data = raw_step["step_data"]
+    parsed_action = step_data.get("parsed_action")
+    if isinstance(parsed_action, str) and parsed_action.strip():
+        try:
+            parse_action(parsed_action)
+            return parsed_action
+        except (SyntaxError, ValueError):
+            pass
+
+    raw_action = step_data.get("action")
+    if isinstance(raw_action, str):
+        try:
+            action_data = json.loads(raw_action)
+        except json.JSONDecodeError:
+            action_data = None
+        if isinstance(action_data, dict):
+            action_value = action_data.get("action")
+            if isinstance(action_value, str):
+                return action_value
+            if isinstance(action_value, dict) and len(action_value) == 1:
+                function_name, arguments = next(iter(action_value.items()))
+                if isinstance(arguments, dict):
+                    kwargs = ", ".join(f"{key}={value!r}" for key, value in arguments.items())
+                    return f"{function_name}({kwargs})"
+
+        match = re.search(r'"action"\s*:\s*("(?:\\.|[^"\\])*")', raw_action)
+        if match:
+            action_value = json.loads(match.group(1))
+            try:
+                parse_action(action_value)
+                return action_value
+            except (SyntaxError, ValueError):
+                pass
+        marker = '"action": "'
+        marker_index = raw_action.rfind(marker)
+        if marker_index >= 0:
+            action_value = raw_action[marker_index + len(marker) :].strip()
+            if action_value.endswith("}"):
+                action_value = action_value[:-1].strip()
+            if action_value.endswith('"'):
+                action_value = action_value[:-1].strip()
+            try:
+                parse_action(action_value)
+                return action_value
+            except (SyntaxError, ValueError):
+                pass
+
+    raise ValueError(
+        "missing parsed action for "
+        f"trajectory {raw_step.get('traj_data', {}).get('traj_num')} "
+        f"step {step_data.get('step_number')}"
+    )
 
 
 def make_observation_step(step_id: int, raw_step: dict[str, Any]) -> Step:
@@ -82,7 +179,7 @@ def make_observation_step(step_id: int, raw_step: dict[str, Any]) -> Step:
 
 
 def make_action_step(step_id: int, raw_step: dict[str, Any], call_id: str) -> Step:
-    function_name, kwargs = parse_action(raw_step["step_data"]["parsed_action"])
+    function_name, kwargs = parse_action(get_action_string(raw_step))
     thought = raw_step["step_data"].get("thought")
     if function_name == "send_msg_to_user":
         function_name = "finish"
@@ -105,12 +202,7 @@ def emit_trajectory(traj_id: int, goal: str, raw_steps: list[dict[str, Any]]) ->
     steps = [Step(step_id=1, source="user", message=goal)]
     next_step_id = 2
     next_call_id = 1
-    previous_action = ""
     for raw_step in raw_steps:
-        function_name, _ = parse_action(raw_step["step_data"]["parsed_action"])
-        if previous_action == "noop" and function_name == "noop":
-            raise ValueError("consecutive noop")
-        previous_action = function_name
         steps.append(make_observation_step(next_step_id, raw_step))
         next_step_id += 1
         steps.append(make_action_step(next_step_id, raw_step, f"call_{next_call_id:06d}"))
@@ -127,6 +219,15 @@ def emit_trajectory(traj_id: int, goal: str, raw_steps: list[dict[str, Any]]) ->
     print(trajectory.model_dump_json(exclude_none=True))
 
 
+def safe_emit_trajectory(traj_id: int, goal: str, raw_steps: list[dict[str, Any]]) -> None:
+    # Consecutive noop actions are valid wait events in this source data; only
+    # skip trajectories that are malformed or incomplete.
+    try:
+        emit_trajectory(traj_id, goal, raw_steps)
+    except Exception as exc:
+        print(f"Skipping trajectory {traj_id}: {exc}", file=sys.stderr)
+
+
 def main() -> None:
     current_traj_id: int | None = None
     current_goal = ""
@@ -139,14 +240,14 @@ def main() -> None:
         traj_data = raw_step["traj_data"]
         traj_id = int(traj_data["traj_num"])
         if current_traj_id is not None and traj_id != current_traj_id and current_steps:
-            emit_trajectory(current_traj_id, current_goal, current_steps)
+            safe_emit_trajectory(current_traj_id, current_goal, current_steps)
             current_steps = []
         current_traj_id = traj_id
         current_goal = traj_data["goal"]
         if traj_data.get("reward", 0) >= 1:
             current_steps.append(raw_step)
     if current_traj_id is not None and current_steps:
-        emit_trajectory(current_traj_id, current_goal, current_steps)
+        safe_emit_trajectory(current_traj_id, current_goal, current_steps)
 
 
 if __name__ == "__main__":

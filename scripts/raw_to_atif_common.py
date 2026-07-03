@@ -195,13 +195,31 @@ def atif_content(content: Any) -> str | list[ContentPart]:
     return text_from_content(content)
 
 
+def json_safe_value(value: Any) -> Any:
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    if isinstance(value, dict):
+        return {str(key): json_safe_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe_value(item) for item in value]
+    try:
+        json.dumps(value)
+        return value
+    except TypeError:
+        return repr(value)
+
+
+def json_safe_arguments(arguments: dict[str, Any]) -> dict[str, Any]:
+    return {str(key): json_safe_value(value) for key, value in arguments.items()}
+
+
 def parse_arguments(value: Any) -> dict[str, Any]:
     value = maybe_json(value)
     if isinstance(value, dict):
-        return value
+        return json_safe_arguments(value)
     if value in (None, ""):
         return {}
-    return {"value": value}
+    return {"value": json_safe_value(value)}
 
 
 def openai_tool_calls(message: dict[str, Any]) -> list[ToolCall]:
@@ -291,13 +309,16 @@ def function_calls_field_tool_calls(message: dict[str, Any]) -> list[ToolCall]:
             name = match.group(1)
             try:
                 parsed = ast.parse(f"f({match.group(2)})", mode="eval")
+                if not isinstance(parsed.body, ast.Call):
+                    raise ValueError("function call arguments did not parse as a call")
                 arguments = {
                     keyword.arg: ast.literal_eval(keyword.value)
                     for keyword in parsed.body.keywords
                     if keyword.arg is not None
                 }
-            except (SyntaxError, ValueError):
+            except (AttributeError, SyntaxError, ValueError):
                 arguments = {"arguments": match.group(2)}
+            arguments = json_safe_arguments(arguments)
         if not name:
             continue
         tool_calls.append(
@@ -749,7 +770,7 @@ def screenagent_trajectories(items: list[Any], dataset_name: str) -> Iterable[AT
         )
 
 
-def trajectories_from_input(records: list[Any], dataset_name: str) -> Iterable[ATIFTrajectory]:
+def trajectories_from_input(records: Iterable[Any], dataset_name: str) -> Iterable[ATIFTrajectory]:
     for index, record in enumerate(records):
         if isinstance(record, list):
             yield from screenagent_trajectories(record, dataset_name)
@@ -766,7 +787,7 @@ def trajectories_from_input(records: list[Any], dataset_name: str) -> Iterable[A
 
 def main(script_file: str) -> None:
     dataset_name = dataset_name_from_script(script_file)
-    records = [json.loads(line) for line in sys.stdin if line.strip()]
+    records = (json.loads(line) for line in sys.stdin if line.strip())
     for trajectory in trajectories_from_input(records, dataset_name):
         print(trajectory.model_dump_json(exclude_none=True))
 

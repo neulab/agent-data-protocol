@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import atexit
 import hashlib
 import json
 import os
@@ -34,7 +35,7 @@ from openhands.tools.file_editor import FileEditorTool
 from openhands.tools.task_tracker import TaskTrackerTool
 from openhands.tools.terminal import TerminalTool
 from openhands.tools.terminal.definition import MAX_CMD_OUTPUT_SIZE, maybe_truncate
-from pydantic import ConfigDict, SecretStr
+from pydantic import ConfigDict, SecretStr, ValidationError
 
 from schema.dataset_metadata import (
     DatasetMetadata,
@@ -60,6 +61,26 @@ except Exception:  # noqa: BLE001
     BrowserToolSet = None
 
 _REGISTERED_METADATA_TOOL_SPECS: dict[str, dict[str, Any]] = {}
+DATASET_TOOL_SCHEMA_FALLBACK_COUNT = 0
+
+
+def report_dataset_tool_schema_fallback_count() -> None:
+    if not DATASET_TOOL_SCHEMA_FALLBACK_COUNT:
+        return
+    print(
+        json.dumps(
+            {
+                "event": "dataset_tool_schema_fallback_summary",
+                "count": DATASET_TOOL_SCHEMA_FALLBACK_COUNT,
+            },
+            ensure_ascii=False,
+        ),
+        file=sys.stderr,
+        flush=True,
+    )
+
+
+atexit.register(report_dataset_tool_schema_fallback_count)
 
 BROWSER_TOOL_ALIASES = {
     "back": "browser_go_back",
@@ -128,7 +149,7 @@ def parse_scalar(value: Any) -> Any:
         return value
     try:
         return ast.literal_eval(value)
-    except (ValueError, SyntaxError):
+    except (TypeError, ValueError, SyntaxError):
         return value
 
 
@@ -302,7 +323,9 @@ def normalize_parameters(function: OpenAIToolSpec) -> dict[str, Any]:
 
 
 def make_metadata_tool(name: str, tool_spec: OpenAIToolSpec) -> type[ToolDefinition]:
-    parameters = normalize_parameters(tool_spec)
+    # Preserve raw dataset arguments even when metadata schemas are incomplete.
+    # The emitted OpenAI tool call still records the original JSON arguments.
+    parameters = {**normalize_parameters(tool_spec), "additionalProperties": True}
     action_type = SDKAction.from_mcp_schema(f"{class_name(name)}Action", parameters)
     description = tool_spec.function.description or f"Dataset metadata tool {name}."
 
@@ -393,6 +416,14 @@ def trajectory_api_functions(trajectory: Trajectory) -> list[str]:
     ]
 
 
+def trajectory_code_languages(trajectory: Trajectory) -> set[str]:
+    return {
+        event.language.lower()
+        for event in trajectory.content
+        if isinstance(event, CodeAction) and event.language
+    }
+
+
 def ordered_unique(values: Sequence[str]) -> list[str]:
     seen: set[str] = set()
     result: list[str] = []
@@ -435,7 +466,12 @@ def custom_tool_uses_browser_index(tool_spec: OpenAIToolSpec) -> bool:
 
 def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[Tool]:
     specs: list[Tool] = []
-    code_languages = {language.lower() for language in metadata.code_enabled}
+    # ATIF CodeAction.language is structural converter output, not inferred from
+    # model usage, so use it to preserve code actions missing from old metadata.
+    code_languages = {
+        *{language.lower() for language in metadata.code_enabled},
+        *trajectory_code_languages(trajectory),
+    }
     if code_languages & SUPPORTED_TERMINAL_CODE_LANGUAGES:
         specs.append(Tool(name=TerminalTool.name))
     if metadata.file_editor_enabled:
@@ -460,11 +496,12 @@ def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[To
         if should_treat_as_browser_tool(source_name, metadata, registered_custom_tools):
             continue
         if mapped_name == "terminal":
-            if "bash" not in metadata.code_enabled:
-                raise ValueError(f"{source_name!r} maps to terminal, but bash is disabled")
+            if not any(tool.name == TerminalTool.name for tool in specs):
+                specs.append(Tool(name=TerminalTool.name))
             continue
         if mapped_name == "file_editor":
-            specs.append(Tool(name=FileEditorTool.name))
+            if not any(tool.name == FileEditorTool.name for tool in specs):
+                specs.append(Tool(name=FileEditorTool.name))
             continue
         if mapped_name == "task_tracker":
             specs.append(Tool(name=TaskTrackerTool.name))
@@ -721,7 +758,26 @@ def make_action_event(
     call_index: int,
     llm_response_id: str,
 ) -> ActionEvent:
+    global DATASET_TOOL_SCHEMA_FALLBACK_COUNT
+
     args = json_safe_args(args)
+    try:
+        action = sdk_tool.action_from_arguments(args)
+    except ValidationError as exc:
+        DATASET_TOOL_SCHEMA_FALLBACK_COUNT += 1
+        print(
+            json.dumps(
+                {
+                    "event": "dataset_tool_schema_fallback",
+                    "tool_name": tool_name,
+                    "error": str(exc),
+                },
+                ensure_ascii=False,
+            ),
+            file=sys.stderr,
+            flush=True,
+        )
+        action = DatasetAnyAction.model_validate(args)
     tool_call = MessageToolCall(
         id=explicit_id or tool_call_id(call_index, tool_name),
         name=tool_name,
@@ -731,7 +787,7 @@ def make_action_event(
     return ActionEvent(
         thought=[TextContent(text=thought)] if thought else [],
         reasoning_content=reasoning_content,
-        action=sdk_tool.action_from_arguments(args),
+        action=action,
         tool_name=tool_name,
         tool_call_id=tool_call.id,
         tool_call=tool_call,

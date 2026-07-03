@@ -13,6 +13,14 @@ from typing import Any
 os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
 os.environ.setdefault("LOG_LEVEL", "ERROR")
 
+from litellm.exceptions import (
+    APIConnectionError,
+    BadGatewayError,
+    InternalServerError,
+    RateLimitError,
+    ServiceUnavailableError,
+    Timeout,
+)
 from openhands.sdk import LLM, Agent, Conversation, LLMConvertibleEvent, Message, TextContent
 from openhands.sdk.context.condenser import LLMSummarizingCondenser
 from openhands.sdk.context.condenser.utils import get_total_token_count
@@ -23,6 +31,12 @@ from openhands.sdk.event.condenser import Condensation
 from openhands.sdk.llm.llm_response import LLMResponse
 from openhands.sdk.tool import ToolDefinition
 from pydantic import PrivateAttr, SecretStr
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
 
 from agents.openhands_sdk.std_to_sft import (
     SDKEventBuilder,
@@ -45,6 +59,16 @@ from scripts.atif_input import (
 )
 
 DEFAULT_MAX_SIZE = 1_000_000
+TRANSIENT_LLM_EXCEPTIONS = (
+    APIConnectionError,
+    BadGatewayError,
+    InternalServerError,
+    RateLimitError,
+    ServiceUnavailableError,
+    Timeout,
+    OSError,
+    asyncio.TimeoutError,
+)
 
 
 def source_row_id_from_line(line: str, trajectory_id: str) -> str:
@@ -63,10 +87,31 @@ class PromptCapturingLLM(LLM):
     """LLM that records condenser prompts before delegating to LiteLLM."""
 
     _captured_messages: list[list[Message]] = PrivateAttr(default_factory=list)
+    _completion_semaphore: asyncio.Semaphore | None = PrivateAttr(default=None)
+    _llm_retries: int = PrivateAttr(default=1)
+    _llm_retry_min_wait: float = PrivateAttr(default=1.0)
+    _llm_retry_max_wait: float = PrivateAttr(default=30.0)
 
     def __init__(self, **data: Any) -> None:
+        completion_semaphore = data.pop("completion_semaphore", None)
+        llm_retries = data.pop(
+            "llm_retries",
+            int(os.getenv("ADP_CONDENSER_LLM_RETRIES", "3")),
+        )
+        llm_retry_min_wait = data.pop(
+            "llm_retry_min_wait",
+            float(os.getenv("ADP_CONDENSER_LLM_RETRY_MIN_WAIT", "1")),
+        )
+        llm_retry_max_wait = data.pop(
+            "llm_retry_max_wait",
+            float(os.getenv("ADP_CONDENSER_LLM_RETRY_MAX_WAIT", "30")),
+        )
         super().__init__(**data)
         self._captured_messages = []
+        self._completion_semaphore = completion_semaphore
+        self._llm_retries = max(1, llm_retries)
+        self._llm_retry_min_wait = max(0, llm_retry_min_wait)
+        self._llm_retry_max_wait = max(self._llm_retry_min_wait, llm_retry_max_wait)
 
     @property
     def captured_messages(self) -> list[list[Message]]:
@@ -82,14 +127,37 @@ class PromptCapturingLLM(LLM):
         **kwargs: Any,
     ) -> LLMResponse:
         self._captured_messages.append(messages)
-        return await super().acompletion(
-            messages=messages,
-            tools=tools,
-            _return_metrics=_return_metrics,
-            add_security_risk_prediction=add_security_risk_prediction,
-            on_token=on_token,
-            **kwargs,
-        )
+
+        async def run_completion() -> LLMResponse:
+            return await super(PromptCapturingLLM, self).acompletion(
+                messages=messages,
+                tools=tools,
+                _return_metrics=_return_metrics,
+                add_security_risk_prediction=add_security_risk_prediction,
+                on_token=on_token,
+                **kwargs,
+            )
+
+        async def run_with_retries() -> LLMResponse:
+            if self._llm_retries <= 1:
+                return await run_completion()
+            async for attempt in AsyncRetrying(
+                stop=stop_after_attempt(self._llm_retries),
+                wait=wait_exponential_jitter(
+                    initial=self._llm_retry_min_wait,
+                    max=self._llm_retry_max_wait,
+                ),
+                retry=retry_if_exception_type(TRANSIENT_LLM_EXCEPTIONS),
+                reraise=True,
+            ):
+                with attempt:
+                    return await run_completion()
+            raise RuntimeError("unreachable retry state")
+
+        if self._completion_semaphore is None:
+            return await run_with_retries()
+        async with self._completion_semaphore:
+            return await run_with_retries()
 
 
 def format_messages(llm: LLM, messages: list[Message]) -> list[dict[str, Any]]:
@@ -246,6 +314,7 @@ async def append_standardized_events_with_condensation_async(
     include_trajectories: bool,
     output_trajectory_id: str | None = None,
     source_row_id: str | None = None,
+    llm_semaphore: asyncio.Semaphore | None = None,
 ) -> list[dict[str, Any]]:
     """Replay trajectory events and emit trajectory plus condensation records.
 
@@ -293,6 +362,7 @@ async def append_standardized_events_with_condensation_async(
         model=model,
         api_key=SecretStr(os.getenv("LLM_API_KEY") or "not-used"),
         base_url=os.getenv("LLM_BASE_URL"),
+        completion_semaphore=llm_semaphore,
     )
     condenser = LLMSummarizingCondenser(
         llm=condenser_llm,
@@ -423,6 +493,7 @@ async def process_row_async(
     include_trajectories: bool = True,
     max_size: int = DEFAULT_MAX_SIZE,
     keep_first: int = 2,
+    llm_semaphore: asyncio.Semaphore | None = None,
 ) -> list[dict[str, Any]]:
     trajectory = load_trajectory(line)
     output_trajectory_id = trajectory.id
@@ -457,6 +528,7 @@ async def process_row_async(
                 include_trajectories=include_trajectories,
                 output_trajectory_id=output_trajectory_id,
                 source_row_id=source_row_id,
+                llm_semaphore=llm_semaphore,
             )
         finally:
             conversation.close()
@@ -466,46 +538,64 @@ async def process_line(
     line: str,
     *,
     args: argparse.Namespace,
-    semaphore: asyncio.Semaphore,
+    llm_semaphore: asyncio.Semaphore,
 ) -> list[dict[str, Any]]:
-    try:
-        async with semaphore:
-            return await process_row_async(
-                line,
-                max_tokens=args.max_tokens,
-                model=args.model,
-                include_trajectories=args.include_trajectories == "yes",
-                max_size=args.max_size,
-                keep_first=args.keep_first,
-            )
-    except Exception as exc:
-        if not args.continue_on_error:
-            raise
-        row_id = None
+    def row_id() -> Any:
         try:
-            row_id = json.loads(line).get("id")
+            row = json.loads(line)
         except Exception:
-            pass
+            return None
+        return row.get("id") or row.get("trajectory_id") or row.get("session_id")
+
+    def log_error(error_type: str, error: str) -> None:
         print(
             json.dumps(
                 {
-                    "id": row_id,
-                    "error_type": type(exc).__name__,
-                    "error": str(exc),
+                    "id": row_id(),
+                    "error_type": error_type,
+                    "error": error,
                 },
                 ensure_ascii=False,
             ),
             file=sys.stderr,
             flush=True,
         )
+
+    row_task = asyncio.create_task(
+        process_row_async(
+            line,
+            max_tokens=args.max_tokens,
+            model=args.model,
+            include_trajectories=args.include_trajectories == "yes",
+            max_size=args.max_size,
+            keep_first=args.keep_first,
+            llm_semaphore=llm_semaphore,
+        )
+    )
+    try:
+        if args.row_timeout > 0:
+            return await asyncio.wait_for(row_task, timeout=args.row_timeout)
+        return await row_task
+    except asyncio.CancelledError:
+        row_task.cancel()
+        await asyncio.gather(row_task, return_exceptions=True)
+        raise
+    except asyncio.TimeoutError:
+        log_error("TimeoutError", f"row exceeded timeout={args.row_timeout}s")
+        if args.continue_on_error:
+            return []
+        raise
+    except Exception as exc:
+        if not args.continue_on_error:
+            raise
+        log_error(type(exc).__name__, str(exc))
         return []
 
 
 async def process_stream(args: argparse.Namespace) -> None:
     from tqdm import tqdm
 
-    semaphore = asyncio.Semaphore(args.concurrency)
-    max_in_flight = max(args.chunk_size, args.concurrency)
+    llm_semaphore = asyncio.Semaphore(args.llm_concurrency)
     progress = tqdm(
         desc="condensation_sft",
         unit="row",
@@ -518,12 +608,18 @@ async def process_stream(args: argparse.Namespace) -> None:
 
     def schedule_available() -> None:
         nonlocal input_exhausted
-        while len(pending) < max_in_flight and not input_exhausted:
+        while len(pending) < args.max_in_flight_rows and not input_exhausted:
             for line in input_iter:
                 line = line.strip()
                 if line:
                     pending.add(
-                        asyncio.create_task(process_line(line, args=args, semaphore=semaphore))
+                        asyncio.create_task(
+                            process_line(
+                                line,
+                                args=args,
+                                llm_semaphore=llm_semaphore,
+                            )
+                        )
                     )
                     break
             else:
@@ -534,7 +630,24 @@ async def process_stream(args: argparse.Namespace) -> None:
         while pending:
             done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
             for task in done:
-                records = await task
+                try:
+                    records = await task
+                except Exception as exc:
+                    if not args.continue_on_error:
+                        raise
+                    print(
+                        json.dumps(
+                            {
+                                "id": None,
+                                "error_type": type(exc).__name__,
+                                "error": str(exc),
+                            },
+                            ensure_ascii=False,
+                        ),
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    records = []
                 for record in records:
                     print(json.dumps(record, ensure_ascii=False), flush=True)
                 progress.update(1)
@@ -566,16 +679,25 @@ def main() -> None:
         help="Whether to emit the original OpenHands SDK trajectory record before summaries.",
     )
     parser.add_argument(
-        "--concurrency",
-        type=int,
-        default=1,
-        help="Number of input trajectories to process concurrently.",
-    )
-    parser.add_argument(
         "--chunk-size",
         type=int,
-        default=100,
+        default=None,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--max-in-flight-rows",
+        type=int,
+        default=int(os.getenv("ADP_CONDENSER_MAX_IN_FLIGHT_ROWS", "100")),
         help="Maximum number of input rows to keep scheduled at once.",
+    )
+    parser.add_argument(
+        "--llm-concurrency",
+        type=int,
+        default=int(os.getenv("ADP_CONDENSER_LLM_CONCURRENCY", "0")),
+        help=(
+            "Maximum concurrent async condenser LLM requests. Defaults to "
+            "--max-in-flight-rows when unset or 0."
+        ),
     )
     parser.add_argument(
         "--no-progress",
@@ -587,12 +709,56 @@ def main() -> None:
         action="store_true",
         help="Log per-row conversion errors to stderr and continue processing remaining rows.",
     )
+    parser.add_argument(
+        "--row-timeout",
+        type=float,
+        default=float(os.getenv("ADP_CONDENSER_ROW_TIMEOUT", "1800")),
+        help=(
+            "Maximum seconds to spend on one input row before failing the run. Set to 0 to disable."
+        ),
+    )
+    parser.add_argument(
+        "--llm-retries",
+        type=int,
+        default=int(os.getenv("ADP_CONDENSER_LLM_RETRIES", "3")),
+        help="Maximum attempts for each async condenser LLM request.",
+    )
+    parser.add_argument(
+        "--llm-retry-min-wait",
+        type=float,
+        default=float(os.getenv("ADP_CONDENSER_LLM_RETRY_MIN_WAIT", "1")),
+        help="Minimum retry wait in seconds for async condenser LLM requests.",
+    )
+    parser.add_argument(
+        "--llm-retry-max-wait",
+        type=float,
+        default=float(os.getenv("ADP_CONDENSER_LLM_RETRY_MAX_WAIT", "30")),
+        help="Maximum retry wait in seconds for async condenser LLM requests.",
+    )
     args = parser.parse_args()
-    if args.concurrency < 1:
-        raise ValueError("--concurrency must be at least 1")
-    if args.chunk_size < 1:
-        raise ValueError("--chunk-size must be at least 1")
-    asyncio.run(process_stream(args))
+    if args.chunk_size is not None:
+        args.max_in_flight_rows = args.chunk_size
+    if args.max_in_flight_rows < 1:
+        raise ValueError("--max-in-flight-rows must be at least 1")
+    if args.llm_concurrency < 0:
+        raise ValueError("--llm-concurrency must be non-negative")
+    if args.llm_concurrency == 0:
+        args.llm_concurrency = args.max_in_flight_rows
+    if args.row_timeout < 0:
+        raise ValueError("--row-timeout must be non-negative")
+    if args.llm_retries < 1:
+        raise ValueError("--llm-retries must be at least 1")
+    if args.llm_retry_min_wait < 0:
+        raise ValueError("--llm-retry-min-wait must be non-negative")
+    if args.llm_retry_max_wait < args.llm_retry_min_wait:
+        raise ValueError("--llm-retry-max-wait must be at least --llm-retry-min-wait")
+    os.environ["ADP_CONDENSER_LLM_RETRIES"] = str(args.llm_retries)
+    os.environ["ADP_CONDENSER_LLM_RETRY_MIN_WAIT"] = str(args.llm_retry_min_wait)
+    os.environ["ADP_CONDENSER_LLM_RETRY_MAX_WAIT"] = str(args.llm_retry_max_wait)
+    try:
+        asyncio.run(process_stream(args))
+    except asyncio.TimeoutError:
+        sys.exit(124)
 
 
 if __name__ == "__main__":
