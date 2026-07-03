@@ -133,7 +133,11 @@ def get_action_string(raw_step: dict[str, Any]) -> str:
                 action_value = action_value[:-1].strip()
             if action_value.endswith('"'):
                 action_value = action_value[:-1].strip()
-            return action_value
+            try:
+                parse_action(action_value)
+                return action_value
+            except (SyntaxError, ValueError):
+                pass
 
     raise ValueError(
         "missing parsed action for "
