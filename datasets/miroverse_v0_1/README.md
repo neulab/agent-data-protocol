@@ -37,7 +37,8 @@ python datasets/$MY_DATASET/extract_raw.py | python scripts/jsonl_to_json.py > d
 cat datasets/$MY_DATASET/sample_raw.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/raw_to_atif.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_atif.json
 cat datasets/$MY_DATASET/sample_atif.json | python scripts/json_to_jsonl.py | python datasets/$MY_DATASET/atif_to_std.py | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_std.json
 
-cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft.json
+mkdir -p datasets/$MY_DATASET/sample_sft
+cat datasets/$MY_DATASET/sample_std.json | python scripts/json_to_jsonl.py | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash | python scripts/jsonl_to_json.py > datasets/$MY_DATASET/sample_sft/openhands_v0.json
 ```
 
 If you are regenerating the committed sample without access to the gated source repository, you can point `MIROVERSE_SOURCE_DATASET` at a repository containing the same JSONL files and set `MIROVERSE_FLAT_LAYOUT=1` when those files are stored at the repository root.

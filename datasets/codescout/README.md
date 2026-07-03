@@ -52,8 +52,9 @@ cat datasets/codescout/sample_atif.json \
   | python datasets/codescout/atif_to_std.py \
   | python scripts/jsonl_to_json.py > datasets/codescout/sample_std.json
 
+mkdir -p datasets/codescout/sample_sft
 cat datasets/codescout/sample_std.json \
   | python scripts/json_to_jsonl.py \
-  | python agents/openhands/std_to_sft.py --is_web=no --api_env=execute_bash \
-  | python scripts/jsonl_to_json.py > datasets/codescout/sample_sft.json
+  | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_bash \
+  | python scripts/jsonl_to_json.py > datasets/codescout/sample_sft/openhands_v0.json
 ```
