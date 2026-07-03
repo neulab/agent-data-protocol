@@ -6,8 +6,7 @@ import urllib.parse
 import urllib.request
 from typing import Iterable
 
-from tenacity import retry, retry_if_exception, stop_after_attempt
-from tenacity import wait_exponential_jitter
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential_jitter
 
 DATASET_NAME = "CharlieDreemur/OpenManus-RL"
 CONFIG = "default"

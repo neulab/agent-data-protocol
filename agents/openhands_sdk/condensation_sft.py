@@ -23,8 +23,12 @@ from openhands.sdk.event.condenser import Condensation
 from openhands.sdk.llm.llm_response import LLMResponse
 from openhands.sdk.tool import ToolDefinition
 from pydantic import PrivateAttr, SecretStr
-from tenacity import AsyncRetrying, retry_if_exception_type, stop_after_attempt
-from tenacity import wait_exponential_jitter
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
 
 from agents.openhands_sdk.std_to_sft import (
     SDKEventBuilder,
@@ -694,8 +698,7 @@ def main() -> None:
         type=float,
         default=float(os.getenv("ADP_CONDENSER_ROW_TIMEOUT", "1800")),
         help=(
-            "Maximum seconds to spend on one input row before failing the run. "
-            "Set to 0 to disable."
+            "Maximum seconds to spend on one input row before failing the run. Set to 0 to disable."
         ),
     )
     parser.add_argument(
