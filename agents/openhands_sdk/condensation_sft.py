@@ -581,8 +581,6 @@ async def process_line(
         await asyncio.gather(row_task, return_exceptions=True)
         raise
     except asyncio.TimeoutError:
-        row_task.cancel()
-        await asyncio.gather(row_task, return_exceptions=True)
         log_error("TimeoutError", f"row exceeded timeout={args.row_timeout}s")
         if args.continue_on_error:
             return []

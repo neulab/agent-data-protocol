@@ -302,6 +302,8 @@ def normalize_parameters(function: OpenAIToolSpec) -> dict[str, Any]:
 
 
 def make_metadata_tool(name: str, tool_spec: OpenAIToolSpec) -> type[ToolDefinition]:
+    # Preserve raw dataset arguments even when metadata schemas are incomplete.
+    # The emitted OpenAI tool call still records the original JSON arguments.
     parameters = {**normalize_parameters(tool_spec), "additionalProperties": True}
     action_type = SDKAction.from_mcp_schema(f"{class_name(name)}Action", parameters)
     description = tool_spec.function.description or f"Dataset metadata tool {name}."
@@ -443,6 +445,8 @@ def custom_tool_uses_browser_index(tool_spec: OpenAIToolSpec) -> bool:
 
 def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[Tool]:
     specs: list[Tool] = []
+    # ATIF CodeAction.language is structural converter output, not inferred from
+    # model usage, so use it to preserve code actions missing from old metadata.
     code_languages = {
         *{language.lower() for language in metadata.code_enabled},
         *trajectory_code_languages(trajectory),
@@ -734,7 +738,19 @@ def make_action_event(
     args = json_safe_args(args)
     try:
         action = sdk_tool.action_from_arguments(args)
-    except ValidationError:
+    except ValidationError as exc:
+        print(
+            json.dumps(
+                {
+                    "event": "dataset_tool_schema_fallback",
+                    "tool_name": tool_name,
+                    "error": str(exc),
+                },
+                ensure_ascii=False,
+            ),
+            file=sys.stderr,
+            flush=True,
+        )
         action = DatasetAnyAction.model_validate(args)
     tool_call = MessageToolCall(
         id=explicit_id or tool_call_id(call_index, tool_name),
