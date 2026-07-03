@@ -7,7 +7,7 @@ import json
 import os
 import sys
 import tempfile
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
@@ -72,7 +72,7 @@ class PromptCapturingLLM(LLM):
     def captured_messages(self) -> list[list[Message]]:
         return self._captured_messages
 
-    def completion(
+    async def acompletion(
         self,
         messages: list[Message],
         tools: Sequence[ToolDefinition] | None = None,
@@ -82,7 +82,7 @@ class PromptCapturingLLM(LLM):
         **kwargs: Any,
     ) -> LLMResponse:
         self._captured_messages.append(messages)
-        return super().completion(
+        return await super().acompletion(
             messages=messages,
             tools=tools,
             _return_metrics=_return_metrics,
@@ -195,7 +195,7 @@ def make_trajectory_record_from_conversation(
     }
 
 
-def condensation_prompt_record_if_needed(
+async def acondensation_prompt_record_if_needed(
     *,
     events: list[SDKEvent],
     condenser: LLMSummarizingCondenser,
@@ -211,7 +211,7 @@ def condensation_prompt_record_if_needed(
     view = View.from_events(events)
     prompt_token_count = token_count(view, condenser.llm)
     before_prompt_count = len(condenser_llm.captured_messages)
-    condensation_result = condenser.condense(view, agent_llm=agent_llm)
+    condensation_result = await condenser.acondense(view, agent_llm=agent_llm)
     if not isinstance(condensation_result, Condensation):
         return None
 
@@ -233,7 +233,7 @@ def condensation_prompt_record_if_needed(
     return condensation_result, prompt_record
 
 
-def append_standardized_events_with_condensation(
+async def append_standardized_events_with_condensation_async(
     *,
     conversation: Conversation,
     trajectory: Trajectory,
@@ -247,6 +247,14 @@ def append_standardized_events_with_condensation(
     output_trajectory_id: str | None = None,
     source_row_id: str | None = None,
 ) -> list[dict[str, Any]]:
+    """Replay trajectory events and emit trajectory plus condensation records.
+
+    ``start_index`` is respected only when the first trajectory event is a user
+    ``TextObservation`` that has already been emitted as the opening user
+    message. On the fallback path, where there is no leading user message to
+    consume, the index is intentionally reset to 0 so no trajectory content is
+    skipped.
+    """
     metadata = load_dataset_metadata(dataset_name, required=True)
     event_history: list[SDKEvent] = [
         SystemPromptEvent(
@@ -304,9 +312,9 @@ def append_standardized_events_with_condensation(
         if formatted_token_count(event_history, conversation.agent.llm) <= max_tokens:
             last_safe_events = list(event_history)
 
-    def emit_condensation_boundary_if_needed() -> None:
+    async def emit_condensation_boundary_if_needed() -> None:
         nonlocal segment_index, condensation_index, last_safe_events
-        result = condensation_prompt_record_if_needed(
+        result = await acondensation_prompt_record_if_needed(
             events=event_history,
             condenser=condenser,
             agent_llm=conversation.agent.llm,
@@ -343,7 +351,7 @@ def append_standardized_events_with_condensation(
     while index < len(trajectory.content):
         event = trajectory.content[index]
         if isinstance(event, (ApiAction, CodeAction)):
-            emit_condensation_boundary_if_needed()
+            await emit_condensation_boundary_if_needed()
             action_batch: list[ApiAction | CodeAction] = []
             while index < len(trajectory.content) and isinstance(
                 trajectory.content[index], (ApiAction, CodeAction)
@@ -356,7 +364,7 @@ def append_standardized_events_with_condensation(
             continue
 
         if isinstance(event, MessageAction):
-            emit_condensation_boundary_if_needed()
+            await emit_condensation_boundary_if_needed()
             append_message_action(builder, event)
             update_last_safe_events()
         elif isinstance(event, (TextObservation, WebObservation, ImageObservation)):
@@ -366,7 +374,7 @@ def append_standardized_events_with_condensation(
             raise ValueError(f"Unsupported event type: {type(event)}")
         index += 1
 
-    emit_condensation_boundary_if_needed()
+    await emit_condensation_boundary_if_needed()
     if include_trajectories or not records:
         records.append(
             make_trajectory_record_from_conversation(
@@ -384,6 +392,29 @@ def append_standardized_events_with_condensation(
 
 
 def process_row(
+    line: str,
+    *,
+    max_tokens: int,
+    model: str,
+    dataset_name: str | None = None,
+    include_trajectories: bool = True,
+    max_size: int = DEFAULT_MAX_SIZE,
+    keep_first: int = 2,
+) -> list[dict[str, Any]]:
+    return asyncio.run(
+        process_row_async(
+            line,
+            max_tokens=max_tokens,
+            model=model,
+            dataset_name=dataset_name,
+            include_trajectories=include_trajectories,
+            max_size=max_size,
+            keep_first=keep_first,
+        )
+    )
+
+
+async def process_row_async(
     line: str,
     *,
     max_tokens: int,
@@ -414,7 +445,7 @@ def process_row(
         conversation = Conversation(agent=agent, workspace=tmpdir, visualizer=None)
         try:
             conversation._ensure_agent_ready()
-            return append_standardized_events_with_condensation(
+            return await append_standardized_events_with_condensation_async(
                 conversation=conversation,
                 trajectory=trajectory,
                 dataset_name=dataset_name,
@@ -431,20 +462,6 @@ def process_row(
             conversation.close()
 
 
-def iter_input_chunks(chunk_size: int) -> Iterator[list[str]]:
-    chunk: list[str] = []
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            continue
-        chunk.append(line)
-        if len(chunk) >= chunk_size:
-            yield chunk
-            chunk = []
-    if chunk:
-        yield chunk
-
-
 async def process_line(
     line: str,
     *,
@@ -453,8 +470,7 @@ async def process_line(
 ) -> list[dict[str, Any]]:
     try:
         async with semaphore:
-            return await asyncio.to_thread(
-                process_row,
+            return await process_row_async(
                 line,
                 max_tokens=args.max_tokens,
                 model=args.model,
@@ -489,23 +505,45 @@ async def process_stream(args: argparse.Namespace) -> None:
     from tqdm import tqdm
 
     semaphore = asyncio.Semaphore(args.concurrency)
+    max_in_flight = max(args.chunk_size, args.concurrency)
     progress = tqdm(
         desc="condensation_sft",
         unit="row",
         dynamic_ncols=True,
         disable=args.no_progress,
     )
+    pending: set[asyncio.Task[list[dict[str, Any]]]] = set()
+    input_exhausted = False
+    input_iter = iter(sys.stdin)
+
+    def schedule_available() -> None:
+        nonlocal input_exhausted
+        while len(pending) < max_in_flight and not input_exhausted:
+            for line in input_iter:
+                line = line.strip()
+                if line:
+                    pending.add(
+                        asyncio.create_task(process_line(line, args=args, semaphore=semaphore))
+                    )
+                    break
+            else:
+                input_exhausted = True
+
     try:
-        for chunk in iter_input_chunks(args.chunk_size):
-            tasks = [
-                asyncio.create_task(process_line(line, args=args, semaphore=semaphore))
-                for line in chunk
-            ]
-            for task in asyncio.as_completed(tasks):
+        schedule_available()
+        while pending:
+            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+            for task in done:
                 records = await task
                 for record in records:
                     print(json.dumps(record, ensure_ascii=False), flush=True)
                 progress.update(1)
+            schedule_available()
+    except Exception:
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
+        raise
     finally:
         progress.close()
 
@@ -537,7 +575,7 @@ def main() -> None:
         "--chunk-size",
         type=int,
         default=100,
-        help="Number of input rows to schedule per async batch.",
+        help="Maximum number of input rows to keep scheduled at once.",
     )
     parser.add_argument(
         "--no-progress",
