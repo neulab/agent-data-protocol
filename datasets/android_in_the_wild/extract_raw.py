@@ -14,12 +14,8 @@ from PIL import Image, ImageDraw
 credential_path = os.path.join(
     os.environ["HOME"], ".config/gcloud/application_default_credentials.json"
 )
-if not os.path.exists(credential_path):
-    raise FileNotFoundError(
-        f"Credential file not found at {credential_path}\n Please run `gcloud auth application-default login` to set up your credentials."
-    )
-
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_path
+if os.path.exists(credential_path):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_path
 os.environ["CURL_CA_BUNDLE"] = certifi.where()
 
 # Define dataset directories

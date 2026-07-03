@@ -105,12 +105,8 @@ def emit_trajectory(traj_id: int, goal: str, raw_steps: list[dict[str, Any]]) ->
     steps = [Step(step_id=1, source="user", message=goal)]
     next_step_id = 2
     next_call_id = 1
-    previous_action = ""
     for raw_step in raw_steps:
         function_name, _ = parse_action(raw_step["step_data"]["parsed_action"])
-        if previous_action == "noop" and function_name == "noop":
-            raise ValueError("consecutive noop")
-        previous_action = function_name
         steps.append(make_observation_step(next_step_id, raw_step))
         next_step_id += 1
         steps.append(make_action_step(next_step_id, raw_step, f"call_{next_call_id:06d}"))
