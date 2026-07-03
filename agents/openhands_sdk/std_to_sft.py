@@ -475,10 +475,12 @@ def sdk_tool_specs(trajectory: Trajectory, metadata: DatasetMetadata) -> list[To
         if should_treat_as_browser_tool(source_name, metadata, registered_custom_tools):
             continue
         if mapped_name == "terminal":
-            specs.append(Tool(name=TerminalTool.name))
+            if not any(tool.name == TerminalTool.name for tool in specs):
+                specs.append(Tool(name=TerminalTool.name))
             continue
         if mapped_name == "file_editor":
-            specs.append(Tool(name=FileEditorTool.name))
+            if not any(tool.name == FileEditorTool.name for tool in specs):
+                specs.append(Tool(name=FileEditorTool.name))
             continue
         if mapped_name == "task_tracker":
             specs.append(Tool(name=TaskTrackerTool.name))
