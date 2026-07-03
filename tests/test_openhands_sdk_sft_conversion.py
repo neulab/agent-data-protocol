@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import re
@@ -137,7 +138,27 @@ def patch_condensation_llm(monkeypatch, summary="[ATIF condensation test summary
             ),
         )
 
+    async def fake_acompletion(
+        self,
+        messages,
+        tools=None,
+        _return_metrics=False,
+        add_security_risk_prediction=False,
+        on_token=None,
+        **kwargs,
+    ):
+        return fake_completion(
+            self,
+            messages,
+            tools=tools,
+            _return_metrics=_return_metrics,
+            add_security_risk_prediction=add_security_risk_prediction,
+            on_token=on_token,
+            **kwargs,
+        )
+
     monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "completion", fake_completion)
+    monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "acompletion", fake_acompletion)
 
 
 @pytest.mark.parametrize("dataset", sample_std_datasets())
@@ -358,6 +379,34 @@ def test_openhands_sdk_condensation_utility_emits_llm_summaries_after_trajectori
     assert prompt_records[0]["metadata"]["prompt_token_count_before_condensation"] > 2000
     assert prompt_records[0]["metadata"]["forgotten_event_count"] > 0
     assert prompt_records[0]["metadata"]["condensation_output"] == "llm"
+
+
+def test_openhands_sdk_condensation_utility_async_path_emits_llm_summaries(monkeypatch):
+    from agents.openhands_sdk import condensation_sft
+
+    patch_condensation_llm(monkeypatch, summary="[async condensation summary]")
+    dataset = "agenttuning_os"
+    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
+
+    records = asyncio.run(
+        condensation_sft.process_row_async(
+            json.dumps(source),
+            max_tokens=2000,
+            model="gpt-4o-mini",
+            dataset_name=dataset,
+        )
+    )
+
+    prompt_records = [
+        record
+        for record in records
+        if record["metadata"]["generation"] == "openhands_sdk_condensation_prompt"
+    ]
+    assert prompt_records
+    assert prompt_records[0]["messages"][-1] == {
+        "role": "assistant",
+        "content": "[async condensation summary]",
+    }
 
 
 def test_openhands_sdk_condensation_utility_rejects_non_llm_output_modes():
