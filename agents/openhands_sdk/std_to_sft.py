@@ -692,11 +692,29 @@ def text_content(content: Any) -> str:
     return ""
 
 
+_SOUL_WRAP = re.compile(r"\A<SOUL>\n(.+?)\n</SOUL>\n\n", re.DOTALL)
+
+
+def strip_soul_wrapper(content: str) -> str:
+    """Strip the ``<SOUL>...</SOUL>`` wrapper from the system prompt,
+    keeping the enclosed soul sentence intact. Normalises output from
+    recent SDK versions that add this wrapper to match the committed
+    canonical sample format.
+    """
+    match = _SOUL_WRAP.match(content)
+    if match:
+        return match.group(1) + "\n\n" + content[match.end() :]
+    return content
+
+
 def normalize_message_content(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     normalized = []
     for message in messages:
         normalized_message = dict(message)
-        normalized_message["content"] = text_content(normalized_message.get("content", ""))
+        content = text_content(normalized_message.get("content", ""))
+        if normalized_message.get("role") == "system":
+            content = strip_soul_wrapper(content)
+        normalized_message["content"] = content
         normalized.append(normalized_message)
     return normalized
 
