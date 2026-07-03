@@ -21,7 +21,8 @@ if os.path.exists(credential_path):
 # through metadata-server credentials instead of failing before TensorFlow reads GCS.
 elif "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
     print(
-        "GOOGLE_APPLICATION_CREDENTIALS is not set; relying on ambient ADC credentials",
+        "GOOGLE_APPLICATION_CREDENTIALS is not set; relying on ambient ADC credentials. "
+        "If running locally, authenticate with: gcloud auth application-default login",
         file=sys.stderr,
     )
 os.environ["CURL_CA_BUNDLE"] = certifi.where()

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import atexit
 import hashlib
 import json
 import os
@@ -60,6 +61,26 @@ except Exception:  # noqa: BLE001
     BrowserToolSet = None
 
 _REGISTERED_METADATA_TOOL_SPECS: dict[str, dict[str, Any]] = {}
+DATASET_TOOL_SCHEMA_FALLBACK_COUNT = 0
+
+
+def report_dataset_tool_schema_fallback_count() -> None:
+    if not DATASET_TOOL_SCHEMA_FALLBACK_COUNT:
+        return
+    print(
+        json.dumps(
+            {
+                "event": "dataset_tool_schema_fallback_summary",
+                "count": DATASET_TOOL_SCHEMA_FALLBACK_COUNT,
+            },
+            ensure_ascii=False,
+        ),
+        file=sys.stderr,
+        flush=True,
+    )
+
+
+atexit.register(report_dataset_tool_schema_fallback_count)
 
 BROWSER_TOOL_ALIASES = {
     "back": "browser_go_back",
@@ -741,6 +762,9 @@ def make_action_event(
     try:
         action = sdk_tool.action_from_arguments(args)
     except ValidationError as exc:
+        global DATASET_TOOL_SCHEMA_FALLBACK_COUNT
+
+        DATASET_TOOL_SCHEMA_FALLBACK_COUNT += 1
         print(
             json.dumps(
                 {
