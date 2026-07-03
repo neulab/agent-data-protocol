@@ -143,10 +143,16 @@ class ATIFTrajectory(BaseModel):
 
     @model_validator(mode="after")
     def validate_observation_links(self):
-        # Full corpora can contain partial transcripts where an observation keeps a
-        # source_call_id from raw data but the corresponding tool-call turn is absent.
-        # Preserve the link when present; downstream converters can degrade unmatched
-        # observations to environment messages.
+        for step in self.steps:
+            if not step.observation or not step.tool_calls:
+                continue
+            tool_call_ids = {tool_call.tool_call_id for tool_call in step.tool_calls}
+            for result in step.observation.results:
+                if result.source_call_id is not None and result.source_call_id not in tool_call_ids:
+                    raise ValueError(
+                        "observation source_call_id must reference a tool_call_id "
+                        "from the same step when that step contains tool calls"
+                    )
         return self
 
 
