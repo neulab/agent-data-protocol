@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import sys
@@ -44,6 +45,18 @@ from scripts.atif_input import (
 )
 
 DEFAULT_MAX_SIZE = 1_000_000
+
+
+def source_row_id_from_line(line: str, trajectory_id: str) -> str:
+    row = json.loads(line)
+    canonical = json.dumps(
+        row,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+    return f"{trajectory_id}__row_{digest}"
 
 
 class PromptCapturingLLM(LLM):
@@ -111,6 +124,8 @@ def formatted_token_count(events: Sequence[SDKEvent], llm: LLM) -> int:
 def make_condensation_prompt_record(
     *,
     trajectory_id: str,
+    source_trajectory_id: str | None = None,
+    source_row_id: str | None = None,
     dataset_name: str | None,
     prompt_messages: list[Message],
     formatting_llm: LLM,
@@ -125,23 +140,26 @@ def make_condensation_prompt_record(
         *prompt_messages,
         Message(role="assistant", content=[TextContent(text=condensation.summary)]),
     ]
+    metadata = {
+        "agent": "openhands_sdk",
+        "format": "openai_chat_completions",
+        "source_dataset": dataset_name,
+        "generation": "openhands_sdk_condensation_prompt",
+        "source_trajectory_id": source_trajectory_id or trajectory_id,
+        "condensation_index": condensation_index,
+        "max_tokens": max_tokens,
+        "prompt_token_count_before_condensation": prompt_token_count,
+        "forgotten_event_count": len(condensation.forgotten_event_ids),
+        "summary_offset": condensation.summary_offset,
+        "condensation_output": "llm",
+    }
+    if source_row_id is not None:
+        metadata["source_row_id"] = source_row_id
     return {
         "id": f"{trajectory_id}__condensation_{condensation_index:04d}",
         "messages": format_messages(formatting_llm, messages),
         "tools": [],
-        "metadata": {
-            "agent": "openhands_sdk",
-            "format": "openai_chat_completions",
-            "source_dataset": dataset_name,
-            "generation": "openhands_sdk_condensation_prompt",
-            "source_trajectory_id": trajectory_id,
-            "condensation_index": condensation_index,
-            "max_tokens": max_tokens,
-            "prompt_token_count_before_condensation": prompt_token_count,
-            "forgotten_event_count": len(condensation.forgotten_event_ids),
-            "summary_offset": condensation.summary_offset,
-            "condensation_output": "llm",
-        },
+        "metadata": metadata,
     }
 
 
@@ -149,6 +167,8 @@ def make_trajectory_record_from_conversation(
     *,
     conversation: Conversation,
     trajectory_id: str,
+    source_trajectory_id: str | None = None,
+    source_row_id: str | None = None,
     dataset_name: str | None,
     segment_index: int,
     events: Sequence[Any] | None = None,
@@ -156,19 +176,22 @@ def make_trajectory_record_from_conversation(
     view = View.from_events(events if events is not None else conversation.state.events)
     messages = LLMConvertibleEvent.events_to_messages(view.events)
     tools = [serializable_tool(tool) for tool in conversation.agent.tools_map.values()]
+    metadata = {
+        "agent": "openhands_sdk",
+        "format": "openai_chat_completions",
+        "source_dataset": dataset_name,
+        "generation": "openhands_sdk_events",
+        "record_type": "trajectory",
+        "source_trajectory_id": source_trajectory_id or trajectory_id,
+        "trajectory_segment_index": segment_index,
+    }
+    if source_row_id is not None:
+        metadata["source_row_id"] = source_row_id
     return {
         "id": f"{trajectory_id}__trajectory_{segment_index:04d}",
         "messages": format_messages(conversation.agent.llm, messages),
         "tools": tools,
-        "metadata": {
-            "agent": "openhands_sdk",
-            "format": "openai_chat_completions",
-            "source_dataset": dataset_name,
-            "generation": "openhands_sdk_events",
-            "record_type": "trajectory",
-            "source_trajectory_id": trajectory_id,
-            "trajectory_segment_index": segment_index,
-        },
+        "metadata": metadata,
     }
 
 
@@ -179,6 +202,8 @@ def condensation_prompt_record_if_needed(
     agent_llm: LLM,
     condenser_llm: PromptCapturingLLM,
     trajectory_id: str,
+    source_trajectory_id: str | None = None,
+    source_row_id: str | None = None,
     dataset_name: str | None,
     max_tokens: int,
     condensation_index: int,
@@ -195,6 +220,8 @@ def condensation_prompt_record_if_needed(
 
     prompt_record = make_condensation_prompt_record(
         trajectory_id=trajectory_id,
+        source_trajectory_id=source_trajectory_id,
+        source_row_id=source_row_id,
         dataset_name=dataset_name,
         prompt_messages=condenser_llm.captured_messages[-1],
         formatting_llm=agent_llm,
@@ -217,6 +244,8 @@ def append_standardized_events_with_condensation(
     keep_first: int,
     start_index: int,
     include_trajectories: bool,
+    output_trajectory_id: str | None = None,
+    source_row_id: str | None = None,
 ) -> list[dict[str, Any]]:
     metadata = load_dataset_metadata(dataset_name, required=True)
     event_history: list[SDKEvent] = [
@@ -227,20 +256,30 @@ def append_standardized_events_with_condensation(
     ]
     builder = TrackingSDKEventBuilder(conversation, metadata, event_history)
     first_event = trajectory.content[0]
-    if not isinstance(first_event, TextObservation) or first_event.source != "user":
-        raise ValueError(
-            "OpenHands SDK condensation conversion expects the first event to be a "
-            "user TextObservation"
+    index = start_index
+    if isinstance(first_event, TextObservation) and first_event.source == "user":
+        builder.append(
+            MessageEvent(
+                source="user",
+                llm_message=Message(
+                    role="user",
+                    content=[TextContent(text=first_event.content)],
+                ),
+            )
         )
-    builder.append(
-        MessageEvent(
-            source="user",
-            llm_message=Message(
-                role="user",
-                content=[TextContent(text=first_event.content)],
-            ),
+    else:
+        builder.append(
+            MessageEvent(
+                source="user",
+                llm_message=Message(
+                    role="user",
+                    content=[
+                        TextContent(text="Continue the task from the current workspace state.")
+                    ],
+                ),
+            )
         )
-    )
+        index = 0
     condenser_llm = PromptCapturingLLM(
         usage_id="openhands-sdk-condensation-sft-condenser",
         model=model,
@@ -254,9 +293,9 @@ def append_standardized_events_with_condensation(
         keep_first=keep_first,
     )
     records: list[dict[str, Any]] = []
+    record_trajectory_id = output_trajectory_id or trajectory.id
     segment_index = 1
     condensation_index = 1
-    index = start_index
     batch_number = 0
     last_safe_events = list(event_history)
 
@@ -272,7 +311,9 @@ def append_standardized_events_with_condensation(
             condenser=condenser,
             agent_llm=conversation.agent.llm,
             condenser_llm=condenser_llm,
-            trajectory_id=trajectory.id,
+            trajectory_id=record_trajectory_id,
+            source_trajectory_id=trajectory.id,
+            source_row_id=source_row_id,
             dataset_name=dataset_name,
             max_tokens=max_tokens,
             condensation_index=condensation_index,
@@ -284,7 +325,9 @@ def append_standardized_events_with_condensation(
             records.append(
                 make_trajectory_record_from_conversation(
                     conversation=conversation,
-                    trajectory_id=trajectory.id,
+                    trajectory_id=record_trajectory_id,
+                    source_trajectory_id=trajectory.id,
+                    source_row_id=source_row_id,
                     dataset_name=dataset_name,
                     segment_index=segment_index,
                     events=last_safe_events,
@@ -328,7 +371,9 @@ def append_standardized_events_with_condensation(
         records.append(
             make_trajectory_record_from_conversation(
                 conversation=conversation,
-                trajectory_id=trajectory.id,
+                trajectory_id=record_trajectory_id,
+                source_trajectory_id=trajectory.id,
+                source_row_id=source_row_id,
                 dataset_name=dataset_name,
                 segment_index=segment_index,
                 events=last_safe_events,
@@ -349,15 +394,14 @@ def process_row(
     keep_first: int = 2,
 ) -> list[dict[str, Any]]:
     trajectory = load_trajectory(line)
+    output_trajectory_id = trajectory.id
+    source_row_id = None
+    if os.getenv("ADP_USE_SOURCE_ROW_HASH") == "1":
+        source_row_id = source_row_id_from_line(line, trajectory.id)
+        output_trajectory_id = source_row_id
     dataset_name = dataset_name or os.getenv("MY_DATASET")
     metadata = load_dataset_metadata(dataset_name, required=True)
     register_metadata_tools(metadata)
-    first_event = trajectory.content[0] if trajectory.content else None
-    if not isinstance(first_event, TextObservation) or first_event.source != "user":
-        raise ValueError(
-            "OpenHands SDK condensation conversion expects the first event to be a "
-            "user TextObservation"
-        )
 
     llm = LLM(
         usage_id="openhands-sdk-condensation-sft-converter",
@@ -380,6 +424,8 @@ def process_row(
                 keep_first=keep_first,
                 start_index=1,
                 include_trajectories=include_trajectories,
+                output_trajectory_id=output_trajectory_id,
+                source_row_id=source_row_id,
             )
         finally:
             conversation.close()
