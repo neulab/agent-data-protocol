@@ -758,12 +758,12 @@ def make_action_event(
     call_index: int,
     llm_response_id: str,
 ) -> ActionEvent:
+    global DATASET_TOOL_SCHEMA_FALLBACK_COUNT
+
     args = json_safe_args(args)
     try:
         action = sdk_tool.action_from_arguments(args)
     except ValidationError as exc:
-        global DATASET_TOOL_SCHEMA_FALLBACK_COUNT
-
         DATASET_TOOL_SCHEMA_FALLBACK_COUNT += 1
         print(
             json.dumps(
