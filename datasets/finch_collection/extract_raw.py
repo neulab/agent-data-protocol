@@ -36,7 +36,7 @@ def iter_rows(batch_size: int, limit: int | None) -> Iterable[dict[str, Any]]:
             row["source_dataset"] = DATASET_ID
             row["source_file"] = filename
             row["row_index"] = emitted
-            row["id"] = str(row.get("global_uid") or f"finch_collection_{emitted}")
+            row["id"] = str(row.get("instance_uid") or f"finch_collection_{emitted}")
             yield row
             emitted += 1
             if limit is not None and emitted >= limit:
