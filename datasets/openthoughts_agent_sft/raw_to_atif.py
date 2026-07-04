@@ -5,7 +5,7 @@ import sys
 from typing import Any
 
 from schema.atif import Step
-from scripts.raw_to_atif_common import trajectory_from_record
+from scripts.raw_to_atif_common import dataset_name_from_script, trajectory_from_record
 
 TASK_DESCRIPTION_MARKER = "\n\nTask Description:\n"
 
@@ -34,7 +34,7 @@ def split_initial_prompt(trajectory) -> None:
 
 
 def main(script_file: str) -> None:
-    dataset_name = script_file.rsplit("/", 2)[-2]
+    dataset_name = dataset_name_from_script(script_file)
     for index, line in enumerate(sys.stdin):
         if not line.strip():
             continue
