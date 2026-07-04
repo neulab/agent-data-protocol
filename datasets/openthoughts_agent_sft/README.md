@@ -1,10 +1,10 @@
 # OpenThoughts-Agent SFT
 
-OpenThoughts-Agent SFT contains terminal-agent conversations from the OpenThoughts-Agent project. The default extractor streams the canonical `open-thoughts/OpenThoughts-Agent-v1-SFT` dataset; the larger `open-thoughts/OpenThoughts-Agent-SFT-100K` variant can be selected with `--variant sft-100k`.
+OpenThoughts-Agent SFT contains terminal-agent conversations from the OpenThoughts-Agent project. The default extractor streams the newer and larger `open-thoughts/OpenThoughts-Agent-SFT-100K` dataset; the smaller `open-thoughts/OpenThoughts-Agent-v1-SFT` variant can be selected with `--variant v1-sft`.
 
 - Source project: <https://github.com/open-thoughts/OpenThoughts-Agent>
-- Default source dataset: <https://huggingface.co/datasets/open-thoughts/OpenThoughts-Agent-v1-SFT>
-- Optional larger source dataset: <https://huggingface.co/datasets/open-thoughts/OpenThoughts-Agent-SFT-100K>
+- Default source dataset: <https://huggingface.co/datasets/open-thoughts/OpenThoughts-Agent-SFT-100K>
+- Optional smaller source dataset: <https://huggingface.co/datasets/open-thoughts/OpenThoughts-Agent-v1-SFT>
 - License: Apache-2.0
 
 ## Schema mapping

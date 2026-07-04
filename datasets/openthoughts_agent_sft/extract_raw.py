@@ -12,7 +12,7 @@ DATASETS = {
     "v1-sft": "open-thoughts/OpenThoughts-Agent-v1-SFT",
     "sft-100k": "open-thoughts/OpenThoughts-Agent-SFT-100K",
 }
-DEFAULT_VARIANT = "v1-sft"
+DEFAULT_VARIANT = "sft-100k"
 
 
 def parquet_files(dataset_id: str) -> list[str]:
