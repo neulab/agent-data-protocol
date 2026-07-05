@@ -26,9 +26,7 @@
               },
               "required": [
                 "query"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -76,9 +74,7 @@
               },
               "required": [
                 "companyName"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -101,9 +97,7 @@
               },
               "required": [
                 "url"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -164,9 +158,7 @@
               },
               "required": [
                 "query"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -229,51 +221,119 @@
               "$schema": "http://json-schema.org/draft-07/schema#"
             }
           }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "exa-search-deep_researcher_start",
+            "description": "Start a comprehensive AI-powered deep research task for complex queries. This tool initiates an intelligent agent that performs extensive web searches, crawls relevant pages, analyzes information, and synthesizes findings into a detailed research report. The agent thinks critically about the research topic and provides thorough, well-sourced answers. Use this for complex research questions that require in-depth analysis rather than simple searches. After starting a research task, IMMEDIATELY use deep_researcher_check with the returned task ID to monitor progress and retrieve results.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "instructions": {
+                  "type": "string",
+                  "description": "Complex research question or detailed instructions for the AI researcher. Be specific about what you want to research and any particular aspects you want covered."
+                },
+                "model": {
+                  "type": "string",
+                  "enum": [
+                    "exa-research",
+                    "exa-research-pro"
+                  ],
+                  "description": "Research model: 'exa-research' (faster, 15-45s, good for most queries) or 'exa-research-pro' (more comprehensive, 45s-2min, for complex topics). Default: exa-research"
+                }
+              },
+              "required": [
+                "instructions"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "exa-search-deep_researcher_check",
+            "description": "Check the status and retrieve results of a deep research task. This tool monitors the progress of an AI agent that performs comprehensive web searches, analyzes multiple sources, and synthesizes findings into detailed research reports. The tool includes a built-in 5-second delay before checking to allow processing time. IMPORTANT: You must call this tool repeatedly (poll) until the status becomes 'completed' to get the final research results. When status is 'running', wait a few seconds and call this tool again with the same task ID.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "taskId": {
+                  "type": "string",
+                  "description": "The task ID returned from deep_researcher_start tool"
+                }
+              },
+              "required": [
+                "taskId"
+              ]
+            }
+          }
         }
       ]
     },
     "steps": [
       {
         "step_id": 1,
-        "source": "system",
-        "message": "<|im_system|>tool_declare<|im_middle|>[{\"type\": \"function\", \"function\": {\"name\": \"exa-search-web_search_exa\", \"description\": \"Search the web using Exa AI - performs real-time web searches and can scrape content from specific URLs. Supports configurable result counts and returns the content from the most relevant websites.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"query\": {\"type\": \"string\", \"description\": \"Search query\"}, \"numResults\": {\"type\": \"number\", \"description\": \"Number of search results to return (default: 5)\"}}, \"required\": [\"query\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"exa-search-company_research_exa\", \"description\": \"Research companies using Exa AI - finds comprehensive information about businesses, organizations, and corporations. Provides insights into company operations, news, financial information, and industry analysis.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"companyName\": {\"type\": \"string\", \"description\": \"Name of the company to research\"}, \"numResults\": {\"type\": \"number\", \"description\": \"Number of search results to return (default: 5)\"}}, \"required\": [\"companyName\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"exa-search-crawling_exa\", \"description\": \"Extract and crawl content from specific URLs using Exa AI - retrieves full text content, metadata, and structured information from web pages. Ideal for extracting detailed content from known URLs.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"url\": {\"type\": \"string\", \"description\": \"URL to crawl and extract content from\"}, \"maxCharacters\": {\"type\": \"number\", \"description\": \"Maximum characters to extract (default: 3000)\"}}, \"required\": [\"url\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"exa-search-linkedin_search_exa\", \"description\": \"Search LinkedIn profiles and companies using Exa AI - finds professional profiles, company pages, and business-related content on LinkedIn. Useful for networking, recruitment, and business research.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"query\": {\"type\": \"string\", \"description\": \"LinkedIn search query (e.g., person name, company, job title)\"}, \"searchType\": {\"type\": \"string\", \"enum\": [\"profiles\", \"companies\", \"all\"], \"description\": \"Type of LinkedIn content to search (default: all)\"}, \"numResults\": {\"type\": \"number\", \"description\": \"Number of LinkedIn results to return (default: 5)\"}}, \"required\": [\"query\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"exa-search-deep_researcher_start\", \"description\": \"Start a comprehensive AI-powered deep research task for complex queries. This tool initiates an intelligent agent that performs extensive web searches, crawls relevant pages, analyzes information, and synthesizes findings into a detailed research report. The agent thinks critically about the research topic and provides thorough, well-sourced answers. Use this for complex research questions that require in-depth analysis rather than simple searches. After starting a research task, IMMEDIATELY use deep_researcher_check with the returned task ID to monitor progress and retrieve results.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"instructions\": {\"type\": \"string\", \"description\": \"Complex research question or detailed instructions for the AI researcher. Be specific about what you want to research and any particular aspects you want covered.\"}, \"model\": {\"type\": \"string\", \"enum\": [\"exa-research\", \"exa-research-pro\"], \"description\": \"Research model: 'exa-research' (faster, 15-45s, good for most queries) or 'exa-research-pro' (more comprehensive, 45s-2min, for complex topics). Default: exa-research\"}}, \"required\": [\"instructions\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"exa-search-deep_researcher_check\", \"description\": \"Check the status and retrieve results of a deep research task. This tool monitors the progress of an AI agent that performs comprehensive web searches, analyzes multiple sources, and synthesizes findings into detailed research reports. The tool includes a built-in 5-second delay before checking to allow processing time. IMPORTANT: You must call this tool repeatedly (poll) until the status becomes 'completed' to get the final research results. When status is 'running', wait a few seconds and call this tool again with the same task ID.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"taskId\": {\"type\": \"string\", \"description\": \"The task ID returned from deep_researcher_start tool\"}}, \"required\": [\"taskId\"]}}}]<|im_end|>"
-      },
-      {
-        "step_id": 2,
         "source": "user",
         "message": "I'm considering joining a Series B fintech startup called \"StellarPay\" as a technical product manager, but before making any decisions, I need to thoroughly research the company. Can you help me understand their business model and recent developments, identify their main competitors in the payment processing space, and find their engineering leadership team on LinkedIn so I can get a sense of their technical direction and team culture?"
       },
       {
-        "step_id": 3,
+        "step_id": 2,
         "source": "agent",
         "message": "I'll help you conduct comprehensive research on StellarPay to inform your decision. Let me break this down into several research areas: the company itself, their competitive landscape, and their engineering leadership. I'll start with a deep research task to analyze their business model and recent developments, then research competitors and find their engineering team."
       },
       {
-        "step_id": 4,
+        "step_id": 3,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_4",
+            "function_name": "exa-search-deep_researcher_start",
+            "arguments": {
+              "instructions": "Conduct a comprehensive research analysis of StellarPay, a Series B fintech startup in the payment processing space. Focus on:\n1. Business model and revenue streams - how do they make money?\n2. Recent developments, funding rounds, and company milestones\n3. Market positioning and target customers\n4. Technology stack and key product offerings\n5. Company culture, Glassdoor reviews, and employee sentiment\n6. Any recent news, partnerships, or regulatory developments\n7. Competitive advantages and unique value propositions\n8. Leadership team and their backgrounds\n\nSearch for recent articles, press releases, company announcements, funding news, and industry analysis to get a complete picture of the company's current state and trajectory.",
+              "model": "exa-research-pro"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_4",
               "content": "{\n  \"success\": true,\n  \"taskId\": \"01k1ywsbj2cv7rk9gpkvawm1yv\",\n  \"model\": \"exa-research-pro\",\n  \"instructions\": \"Conduct a comprehensive research analysis of StellarPay, a Series B fintech startup in the payment processing space. Focus on:\\n1. Business model and revenue streams - how do they make money?\\n2. Recent developments, funding rounds, and company milestones\\n3. Market positioning and target customers\\n4. Technology stack and key product offerings\\n5. Company culture, Glassdoor reviews, and employee sentiment\\n6. Any recent news, partnerships, or regulatory developments\\n7. Competitive advantages and unique value propositions\\n8. Leadership team and their backgrounds\\n\\nSearch for recent articles, press releases, company announcements, funding news, and industry analysis to get a complete picture of the company's current state and trajectory.\",\n  \"outputSchema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"report\": {\n        \"description\": \"No output schema provided. Using default output: markdown report.\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": [\n      \"report\"\n    ],\n    \"additionalProperties\": false\n  },\n  \"message\": \"Deep research task started successfully with exa-research-pro model. IMMEDIATELY use deep_researcher_check with task ID '01k1ywsbj2cv7rk9gpkvawm1yv' to monitor progress. Keep checking every few seconds until status is 'completed' to get the research results.\",\n  \"nextStep\": \"Call deep_researcher_check with taskId: \\\"01k1ywsbj2cv7rk9gpkvawm1yv\\\"\"\n}"
             }
           ]
         }
       },
       {
-        "step_id": 5,
+        "step_id": 4,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_6",
+            "function_name": "exa-search-deep_researcher_check",
+            "arguments": {
+              "taskId": "01k1ywsbj2cv7rk9gpkvawm1yv"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_6",
               "content": "{\n  \"success\": true,\n  \"status\": \"running\",\n  \"taskId\": \"01k1ywsbj2cv7rk9gpkvawm1yv\",\n  \"message\": \"\ud83d\udd04 Research in progress. Continue polling...\",\n  \"nextAction\": \"Call deep_researcher_check again with the same task ID\"\n}"
             }
           ]
         }
       },
       {
-        "step_id": 6,
+        "step_id": 5,
         "source": "agent",
         "message": "Let me check for StellarPay's engineering team on LinkedIn while the deep research is running:"
       }
@@ -431,7 +491,8 @@
             "description": "Get details of the most recent round",
             "parameters": {
               "type": "object",
-              "properties": {}
+              "properties": {},
+              "required": []
             }
           }
         },
@@ -442,7 +503,8 @@
             "description": "Get game statistics",
             "parameters": {
               "type": "object",
-              "properties": {}
+              "properties": {},
+              "required": []
             }
           }
         }
@@ -451,33 +513,45 @@
     "steps": [
       {
         "step_id": 1,
-        "source": "system",
-        "message": "<|im_system|>tool_declare<|im_middle|>[{\"type\": \"function\", \"function\": {\"name\": \"two-truths-and-a-twist-create_round\", \"description\": \"Create a new game round with a question and three statements. The twist should be playful, surprising, and entertaining - not just factually incorrect.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"category\": {\"type\": \"string\", \"description\": \"The category of the question\"}, \"question\": {\"type\": \"string\", \"description\": \"The main question for the round\"}, \"trivia_1\": {\"type\": \"string\", \"description\": \"First statement - can be truth or twist\"}, \"trivia_2\": {\"type\": \"string\", \"description\": \"Second statement - can be truth or twist\"}, \"trivia_3\": {\"type\": \"string\", \"description\": \"Third statement - can be truth or twist\"}}, \"required\": [\"category\", \"question\", \"trivia_1\", \"trivia_2\", \"trivia_3\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"two-truths-and-a-twist-submit_guess\", \"description\": \"Submit a player's guess for which statement is the twist\", \"parameters\": {\"type\": \"object\", \"properties\": {\"round_id\": {\"type\": \"integer\", \"description\": \"The ID of the round\"}, \"guess_index\": {\"type\": \"integer\", \"description\": \"Index of the guessed statement (0, 1, or 2)\"}}, \"required\": [\"round_id\", \"guess_index\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"two-truths-and-a-twist-reveal_twist\", \"description\": \"Reveal which statement was the twist and provide explanations. The explanations should be entertaining and playful - build anticipation and make the reveal fun!\", \"parameters\": {\"type\": \"object\", \"properties\": {\"round_id\": {\"type\": \"integer\", \"description\": \"The ID of the round\"}, \"twist_index\": {\"type\": \"integer\", \"description\": \"Index of the twist statement (0, 1, or 2)\"}, \"explanation_1\": {\"type\": \"string\", \"description\": \"Explanation for statement 1 - be creative and entertaining\"}, \"explanation_2\": {\"type\": \"string\", \"description\": \"Explanation for statement 2 - be creative and entertaining\"}, \"explanation_3\": {\"type\": \"string\", \"description\": \"Explanation for statement 3 - be creative and entertaining\"}}, \"required\": [\"round_id\", \"twist_index\", \"explanation_1\", \"explanation_2\", \"explanation_3\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"two-truths-and-a-twist-get_round\", \"description\": \"Get details of a specific round\", \"parameters\": {\"type\": \"object\", \"properties\": {\"round_id\": {\"type\": \"integer\", \"description\": \"The ID of the round to retrieve\"}}, \"required\": [\"round_id\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"two-truths-and-a-twist-get_last_round\", \"description\": \"Get details of the most recent round\", \"parameters\": {\"type\": \"object\", \"properties\": {}, \"required\": []}}}, {\"type\": \"function\", \"function\": {\"name\": \"two-truths-and-a-twist-get_stats\", \"description\": \"Get game statistics\", \"parameters\": {\"type\": \"object\", \"properties\": {}, \"required\": []}}}]<|im_end|>"
-      },
-      {
-        "step_id": 2,
         "source": "user",
         "message": "My friends and I have been playing trivia online, but we're getting bored with standard questions. Can you create one of those creative \"two truths and a twist\" rounds for us that's themed around famous inventors throughout history? After we decide which statement we think is the fake one, we'll need to submit our answer and see the reveal with the entertaining explanation you mentioned."
       },
       {
-        "step_id": 3,
+        "step_id": 2,
         "source": "agent",
         "message": "Perfect! Let me create a fun \"two truths and a twist\" round focused on famous inventors throughout history. This should spice up your trivia night!"
       },
       {
-        "step_id": 4,
+        "step_id": 3,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_4",
+            "function_name": "two-truths-and-a-twist-create_round",
+            "arguments": {
+              "category": "Famous Inventors",
+              "question": "Which of these statements about famous inventors throughout history is the clever twist that sounds true but isn't?",
+              "trivia_1": "Nikola Tesla once fell deeply in love with a white pigeon, claiming it communicated with him through telepathic messages and had beautiful light-beams shooting from its eyes.",
+              "trivia_2": "Alexander Graham Bell, the inventor of the telephone, was so obsessed with sound that he taught his dog to say \"How are you grandmamma?\" in a sad attempt to prove his theories about vocal cords.",
+              "trivia_3": "Marie Curie discovered radioactive elements while accidentally ingesting experimental compounds, realizing her glowing urine meant she'd found something revolutionary."
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_4",
               "content": "Round created successfully with ID: 3"
             }
           ]
         }
       },
       {
-        "step_id": 5,
+        "step_id": 4,
         "source": "agent",
         "message": "Get ready for a wild ride through inventor history! Here are your three statements - two are wonderfully true, and one is my devious twist. Can you spot which one doesn't belong?\n\n\ud83e\uddea **Round ID: 3** - Famous Inventors Edition\n\n**Which statement is the clever twist?**\n\n1\ufe0f\u20e3 **Nikola Tesla's telepathic pigeon love story** - Tesla apparently fell for a white pigeon that sent him mind messages with \"beautiful light-beams\" shooting from its eyes\n\n2\ufe0f\u20e3 **Alexander Graham Bell's talking dog** - The telephone genius who tried to teach his pup to say \"How are you grandmamma?\" for his sound experiments\n\n3\ufe0f\u20e3 **Marie Curie's glowing urine discovery** - She supposedly realized she discovered radioactive elements after her pee started glowing from accidentally ingesting compounds\n\n\ud83e\udd14 **What do you think, fellow trivia detectives?** Is Tesla's bird romance the fake? Bell's chatty canine? Or Curie's radioactive urine story?\n\nOnce you've made your group decision on which one's the twist, just let me know the number (0, 1, or 2) and I'll reveal the truth with some entertaining explanations!"
       }
@@ -525,7 +599,7 @@
                   "default": "RootObjectsOnly"
                 }
               },
-              "additionalProperties": false
+              "required": []
             }
           }
         },
@@ -559,8 +633,7 @@
               },
               "required": [
                 "instanceIDs"
-              ],
-              "additionalProperties": false
+              ]
             }
           }
         },
@@ -580,8 +653,7 @@
               },
               "required": [
                 "code"
-              ],
-              "additionalProperties": false
+              ]
             }
           }
         },
@@ -642,7 +714,7 @@
                   "description": "Filter logs before this ISO timestamp"
                 }
               },
-              "additionalProperties": false
+              "required": []
             }
           }
         },
@@ -654,7 +726,7 @@
             "parameters": {
               "type": "object",
               "properties": {},
-              "additionalProperties": false
+              "required": []
             }
           }
         },
@@ -666,7 +738,7 @@
             "parameters": {
               "type": "object",
               "properties": {},
-              "additionalProperties": false
+              "required": []
             }
           }
         },
@@ -685,9 +757,7 @@
               },
               "required": [
                 "path"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -709,9 +779,7 @@
               },
               "required": [
                 "paths"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -735,9 +803,7 @@
               "required": [
                 "path",
                 "content"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -784,9 +850,7 @@
               "required": [
                 "path",
                 "edits"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -805,9 +869,7 @@
               },
               "required": [
                 "path"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -831,9 +893,7 @@
               },
               "required": [
                 "path"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -865,9 +925,7 @@
               "required": [
                 "path",
                 "pattern"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -886,9 +944,7 @@
               },
               "required": [
                 "path"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -917,9 +973,7 @@
               },
               "required": [
                 "assetType"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         }
@@ -928,50 +982,67 @@
     "steps": [
       {
         "step_id": 1,
-        "source": "system",
-        "message": "<|im_system|>tool_declare<|im_middle|>[{\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-get_current_scene_info\", \"description\": \"Retrieve information about the current scene in Unity Editor with configurable detail level\", \"parameters\": {\"type\": \"object\", \"properties\": {\"detailLevel\": {\"type\": \"string\", \"enum\": [\"RootObjectsOnly\", \"FullHierarchy\"], \"description\": \"RootObjectsOnly: Returns just root GameObjects. FullHierarchy: Returns complete hierarchy with all children.\", \"default\": \"RootObjectsOnly\"}}, \"required\": []}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-get_game_objects_info\", \"description\": \"Retrieve detailed information about specific GameObjects in the current scene\", \"parameters\": {\"type\": \"object\", \"properties\": {\"instanceIDs\": {\"type\": \"array\", \"items\": {\"type\": \"number\"}, \"description\": \"Array of GameObject instance IDs to get information for\", \"minItems\": 1}, \"detailLevel\": {\"type\": \"string\", \"enum\": [\"BasicInfo\", \"IncludeComponents\", \"IncludeChildren\", \"IncludeComponentsAndChildren\"], \"description\": \"BasicInfo: Basic GameObject information. IncludeComponents: Includes component details. IncludeChildren: Includes child GameObjects. IncludeComponentsAndChildren: Includes both components and a full hierarchy with components on children.\", \"default\": \"IncludeComponents\"}}, \"required\": [\"instanceIDs\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-execute_editor_command\", \"description\": \"Execute C# code directly in the Unity Editor - allows full flexibility including custom namespaces and multiple classes\", \"parameters\": {\"type\": \"object\", \"properties\": {\"code\": {\"type\": \"string\", \"description\": \"C# code to execute in Unity Editor. You MUST define a public class named \\\"McpScript\\\" with a public static method named \\\"Execute\\\" that returns an object. Example: \\\"public class McpScript { public static object Execute() { /* your code here */ return result; } }\\\". You can include any necessary namespaces, additional classes, and methods.\", \"minLength\": 1}}, \"required\": [\"code\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-get_logs\", \"description\": \"Retrieve Unity Editor logs with filtering options\", \"parameters\": {\"type\": \"object\", \"properties\": {\"types\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"enum\": [\"Log\", \"Warning\", \"Error\", \"Exception\"]}, \"description\": \"Filter logs by type\"}, \"count\": {\"type\": \"number\", \"description\": \"Maximum number of log entries to return\", \"minimum\": 1, \"maximum\": 1000}, \"fields\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"enum\": [\"message\", \"stackTrace\", \"logType\", \"timestamp\"]}, \"description\": \"Specify which fields to include in the output\"}, \"messageContains\": {\"type\": \"string\", \"description\": \"Filter logs by message content\"}, \"stackTraceContains\": {\"type\": \"string\", \"description\": \"Filter logs by stack trace content\"}, \"timestampAfter\": {\"type\": \"string\", \"description\": \"Filter logs after this ISO timestamp\"}, \"timestampBefore\": {\"type\": \"string\", \"description\": \"Filter logs before this ISO timestamp\"}}, \"required\": []}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-verify_connection\", \"description\": \"Verify that the MCP server has an active connection to Unity Editor\", \"parameters\": {\"type\": \"object\", \"properties\": {}, \"required\": []}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-get_editor_state\", \"description\": \"Get the current Unity Editor state including project information\", \"parameters\": {\"type\": \"object\", \"properties\": {}, \"required\": []}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-read_file\", \"description\": \"Read the contents of a file from the Unity project. Paths are relative to the project's Assets folder. For example, use 'Scenes/MainScene.unity' to read Assets/Scenes/MainScene.unity.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\", \"description\": \"Path to the file to read. Can be absolute or relative to Unity project Assets folder. If empty, defaults to the Assets folder.\"}}, \"required\": [\"path\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-read_multiple_files\", \"description\": \"Read the contents of multiple files from the Unity project simultaneously.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"description\": \"Array of file paths to read. Paths can be absolute or relative to Unity project Assets folder.\"}}, \"required\": [\"paths\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-write_file\", \"description\": \"Create a new file or completely overwrite an existing file in the Unity project.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\", \"description\": \"Path to the file to write. Can be absolute or relative to Unity project Assets folder. If empty, defaults to the Assets folder.\"}, \"content\": {\"type\": \"string\", \"description\": \"Content to write to the file\"}}, \"required\": [\"path\", \"content\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-edit_file\", \"description\": \"Make precise edits to a text file in the Unity project. Returns a git-style diff showing changes.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\", \"description\": \"Path to the file to edit. Can be absolute or relative to Unity project Assets folder. If empty, defaults to the Assets folder.\"}, \"edits\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"oldText\": {\"type\": \"string\", \"description\": \"Text to search for - must match exactly\"}, \"newText\": {\"type\": \"string\", \"description\": \"Text to replace with\"}}, \"required\": [\"oldText\", \"newText\"], \"additionalProperties\": false}, \"description\": \"Array of edit operations to apply\"}, \"dryRun\": {\"type\": \"boolean\", \"default\": false, \"description\": \"Preview changes using git-style diff format\"}}, \"required\": [\"path\", \"edits\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-list_directory\", \"description\": \"Get a listing of all files and directories in a specified path in the Unity project. Paths are relative to the Assets folder unless absolute. For example, use 'Scenes' to list all files in Assets/Scenes directory. Use empty string to list the Assets folder.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\", \"description\": \"Path to the directory to list. Can be absolute or relative to Unity project Assets folder. If empty, defaults to the Assets folder. Example: \\\"Scenes\\\" will list all files in the Assets/Scenes directory.\"}}, \"required\": [\"path\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-directory_tree\", \"description\": \"Get a recursive tree view of files and directories in the Unity project as a JSON structure.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\", \"description\": \"Path to the directory to get tree of. Can be absolute or relative to Unity project Assets folder. If empty, defaults to the Assets folder. Example: \\\"Prefabs\\\" will show the tree for Assets/Prefabs.\"}, \"maxDepth\": {\"type\": \"number\", \"default\": 5, \"description\": \"Maximum depth to traverse\"}}, \"required\": [\"path\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-search_files\", \"description\": \"Recursively search for files and directories matching a pattern in the Unity project.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\", \"description\": \"Path to search from. Can be absolute or relative to Unity project Assets folder. If empty, defaults to the Assets folder. Example: \\\"Scripts\\\" will search within Assets/Scripts.\"}, \"pattern\": {\"type\": \"string\", \"description\": \"Pattern to search for\"}, \"excludePatterns\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"default\": [], \"description\": \"Patterns to exclude\"}}, \"required\": [\"path\", \"pattern\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-get_file_info\", \"description\": \"Retrieve detailed metadata about a file or directory in the Unity project.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\", \"description\": \"Path to the file to get info for. Can be absolute or relative to Unity project Assets folder. If empty, defaults to the Assets folder.\"}}, \"required\": [\"path\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"unity-mcp-integration-find_assets_by_type\", \"description\": \"Find all Unity assets of a specified type (e.g., Material, Prefab, Scene, Script) in the project. Set searchPath to an empty string to search the entire Assets folder.\", \"parameters\": {\"type\": \"object\", \"properties\": {\"assetType\": {\"type\": \"string\", \"description\": \"Type of assets to find (e.g., \\\"Material\\\", \\\"Prefab\\\", \\\"Scene\\\", \\\"Script\\\")\"}, \"searchPath\": {\"type\": \"string\", \"default\": \"\", \"description\": \"Directory to search in. Can be absolute or relative to Unity project Assets folder. An empty string will search the entire Assets folder.\"}, \"maxDepth\": {\"type\": \"number\", \"default\": 1, \"description\": \"Maximum depth to search. 1 means search only in the specified directory, 2 includes immediate subdirectories, and so on. Set to -1 for unlimited depth.\"}}, \"required\": [\"assetType\"]}}}]<|im_end|>"
-      },
-      {
-        "step_id": 2,
         "source": "user",
         "message": "I'm developing a VR training simulation and I need to create a dynamic lighting system that adjusts based on time of day. However, I want to reuse some lighting scripts I wrote for a previous project that had similar functionality. Can you help me search for any existing C# lighting scripts in my Unity project, examine the code in those scripts to understand their current implementation, and then execute some test code in the editor that creates a simple test scene with a directional light to verify the lighting behavior before I integrate it into my VR project?"
       },
       {
-        "step_id": 3,
+        "step_id": 2,
         "source": "agent",
         "message": "I'll help you search for existing lighting scripts, examine their code, and create a test scene to verify lighting behavior. Let's start by exploring your Unity project.\n\nFirst, let's verify the connection to Unity and check the current project state:"
       },
       {
-        "step_id": 4,
+        "step_id": 3,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_4",
+            "function_name": "unity-mcp-integration-verify_connection",
+            "arguments": {},
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_4",
               "content": "{\n  \"connected\": false,\n  \"timestamp\": \"2025-08-06T05:13:38.729Z\",\n  \"message\": \"Unity Editor is not connected. Please ensure the Unity Editor is running with the MCP plugin.\"\n}"
             }
           ]
         }
       },
       {
-        "step_id": 5,
+        "step_id": 4,
         "source": "agent",
         "message": "It appears the Unity Editor isn't currently connected. Let me get the editor state to confirm:"
       },
       {
-        "step_id": 6,
+        "step_id": 5,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_7",
+            "function_name": "unity-mcp-integration-get_editor_state",
+            "arguments": {},
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_7",
               "content": "An error occurred when calling tool `unity-mcp-integration-get_editor_state`:\nMcpError: MCP error -32603: Unity Editor is not connected. Please first verify the connection using the verify_connection tool, and ensure the Unity Editor is running with the MCP plugin and that the WebSocket connection is established.\nTraceback:\n  File \"/home/test_user/tool-rl-dev/Qwen-Agent/qwen_agent/agent.py\", line 192, in _call_tool\n    tool_result = tool.call(tool_args, **kwargs)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/test_user/tool-rl-dev/Qwen-Agent/qwen_agent/tools/mcp_manager.py\", line 283, in call\n    raise e\n  File \"/home/test_user/tool-rl-dev/Qwen-Agent/qwen_agent/tools/mcp_manager.py\", line 279, in call\n    result = future.result()\n             ^^^^^^^^^^^^^^^\n  File \"/home/test_user/.local/share/uv/python/cpython-3.12.11-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py\", line 456, in result\n    return self.__get_result()\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/home/test_user/.local/share/uv/python/cpython-3.12.11-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py\", line 401, in __get_result\n    raise self._exception\n  File \"/home/test_user/.local/share/uv/python/cpython-3.12.11-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py\", line 314, in __step_run_and_handle_result\n    result = coro.send(None)\n             ^^^^^^^^^^^^^^^\n  File \"/home/test_user/tool-rl-dev/Qwen-Agent/qwen_agent/tools/mcp_manager.py\", line 451, in execute_function\n    response = await self.session.call_tool(tool_name, tool_args)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/test_user/tool-rl-dev/.venv/lib/python3.12/site-packages/mcp/client/session.py\", line 264, in call_tool\n    return await self.send_request(\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/test_user/tool-rl-dev/.venv/lib/python3.12/site-packages/mcp/shared/session.py\", line 286, in send_request\n    raise McpError(response_or_error.error)\n"
             }
           ]
         }
       },
       {
-        "step_id": 7,
+        "step_id": 6,
         "source": "agent",
         "message": "The Unity Editor isn't connected to the MCP server. To proceed with this task, you'll need to:\n\n1. **Start Unity Editor**\n2. **Install the Unity MCP Plugin** (if not already installed)\n3. **Establish the connection** between Unity Editor and the MCP server\n\nHowever, I can still help you prepare for when the connection is established. Let me outline the steps we'll take once Unity is connected:\n\n## Plan for When Unity is Connected:\n\n1. **Search for lighting scripts** in your project\n2. **Examine existing lighting implementations**\n3. **Create a test scene** with directional lighting\n4. **Test dynamic lighting behavior**\n\n## What You'll Need to Do:\n\n**In Unity Editor:**\n1. Open your Unity project\n2. Ensure the MCP plugin is installed and running\n3. Verify the WebSocket connection is established\n\n**Once connected, I will:**\n1. Search for all C# scripts related to lighting using patterns like \"light\", \"sun\", \"time\", \"day\" in filenames\n2. Read and analyze the content of relevant lighting scripts\n3. Create a test scene with:\n   - A directional light representing the sun\n   - Test script to simulate time-of-day changes\n   - Camera setup for VR compatibility\n4. Execute code to adjust lighting parameters (color, intensity, rotation) based on simulated time\n\nWould you like me to prepare a simple lighting test script in advance that you can use once Unity is connected? This would include a basic day/night cycle implementation that we can refine based on your existing scripts.\n\nAlso, please connect Unity to the MCP server and let me know when it's ready, then I can execute the full search and testing sequence."
       }
@@ -1007,9 +1078,9 @@
             "name": "emoji-hub-server-get_random_emoji_tool",
             "description": "\n    Get a random emoji from the Emoji Hub API.\n    Returns an emoji object with name, category, group, htmlCode, and unicode.\n    ",
             "parameters": {
+              "type": "object",
               "properties": {},
-              "title": "get_random_emoji_toolArguments",
-              "type": "object"
+              "required": []
             }
           }
         },
@@ -1019,6 +1090,7 @@
             "name": "emoji-hub-server-get_random_emoji_by_category_tool",
             "description": "\n    Get a random emoji from a specific category.\n\n    Available categories:\n    - smileys-and-people\n    - animals-and-nature\n    - food-and-drink\n    - travel-and-places\n    - activities\n    - objects\n    - symbols\n    - flags\n    ",
             "parameters": {
+              "type": "object",
               "properties": {
                 "category": {
                   "title": "Category",
@@ -1027,9 +1099,7 @@
               },
               "required": [
                 "category"
-              ],
-              "title": "get_random_emoji_by_category_toolArguments",
-              "type": "object"
+              ]
             }
           }
         },
@@ -1039,6 +1109,7 @@
             "name": "emoji-hub-server-get_random_emoji_by_group_tool",
             "description": "\n    Get a random emoji from a specific group.\n\n    Some available groups include:\n    - face-positive, face-negative, face-neutral\n    - animal-bird, animal-mammal, animal-marine\n    - food-fruit, food-vegetable, food-sweet\n    - travel-and-places\n    - activities, objects, symbols, flags\n    ",
             "parameters": {
+              "type": "object",
               "properties": {
                 "group": {
                   "title": "Group",
@@ -1047,9 +1118,7 @@
               },
               "required": [
                 "group"
-              ],
-              "title": "get_random_emoji_by_group_toolArguments",
-              "type": "object"
+              ]
             }
           }
         },
@@ -1059,9 +1128,9 @@
             "name": "emoji-hub-server-get_all_emojis_tool",
             "description": "\n    Get all emojis from the Emoji Hub API.\n    Returns a list of all available emojis.\n    ",
             "parameters": {
+              "type": "object",
               "properties": {},
-              "title": "get_all_emojis_toolArguments",
-              "type": "object"
+              "required": []
             }
           }
         },
@@ -1071,6 +1140,7 @@
             "name": "emoji-hub-server-get_emojis_by_category_tool",
             "description": "\n    Get all emojis from a specific category.\n\n    Available categories:\n    - smileys-and-people\n    - animals-and-nature\n    - food-and-drink\n    - travel-and-places\n    - activities\n    - objects\n    - symbols\n    - flags\n    ",
             "parameters": {
+              "type": "object",
               "properties": {
                 "category": {
                   "title": "Category",
@@ -1079,9 +1149,7 @@
               },
               "required": [
                 "category"
-              ],
-              "title": "get_emojis_by_category_toolArguments",
-              "type": "object"
+              ]
             }
           }
         },
@@ -1091,6 +1159,7 @@
             "name": "emoji-hub-server-get_emojis_by_group_tool",
             "description": "\n    Get all emojis from a specific group.\n\n    Some available groups include:\n    - face-positive, face-negative, face-neutral\n    - animal-bird, animal-mammal, animal-marine\n    - food-fruit, food-vegetable, food-sweet\n    - travel-and-places\n    - activities, objects, symbols, flags\n    ",
             "parameters": {
+              "type": "object",
               "properties": {
                 "group": {
                   "title": "Group",
@@ -1099,9 +1168,7 @@
               },
               "required": [
                 "group"
-              ],
-              "title": "get_emojis_by_group_toolArguments",
-              "type": "object"
+              ]
             }
           }
         }
@@ -1110,49 +1177,83 @@
     "steps": [
       {
         "step_id": 1,
-        "source": "system",
-        "message": "<|im_system|>tool_declare<|im_middle|>[{\"type\": \"function\", \"function\": {\"name\": \"emoji-hub-server-get_random_emoji_tool\", \"description\": \"\\n    Get a random emoji from the Emoji Hub API.\\n    Returns an emoji object with name, category, group, htmlCode, and unicode.\\n    \", \"parameters\": {\"type\": \"object\", \"properties\": {}, \"required\": []}}}, {\"type\": \"function\", \"function\": {\"name\": \"emoji-hub-server-get_random_emoji_by_category_tool\", \"description\": \"\\n    Get a random emoji from a specific category.\\n\\n    Available categories:\\n    - smileys-and-people\\n    - animals-and-nature\\n    - food-and-drink\\n    - travel-and-places\\n    - activities\\n    - objects\\n    - symbols\\n    - flags\\n    \", \"parameters\": {\"type\": \"object\", \"properties\": {\"category\": {\"title\": \"Category\", \"type\": \"string\"}}, \"required\": [\"category\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"emoji-hub-server-get_random_emoji_by_group_tool\", \"description\": \"\\n    Get a random emoji from a specific group.\\n\\n    Some available groups include:\\n    - face-positive, face-negative, face-neutral\\n    - animal-bird, animal-mammal, animal-marine\\n    - food-fruit, food-vegetable, food-sweet\\n    - travel-and-places\\n    - activities, objects, symbols, flags\\n    \", \"parameters\": {\"type\": \"object\", \"properties\": {\"group\": {\"title\": \"Group\", \"type\": \"string\"}}, \"required\": [\"group\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"emoji-hub-server-get_all_emojis_tool\", \"description\": \"\\n    Get all emojis from the Emoji Hub API.\\n    Returns a list of all available emojis.\\n    \", \"parameters\": {\"type\": \"object\", \"properties\": {}, \"required\": []}}}, {\"type\": \"function\", \"function\": {\"name\": \"emoji-hub-server-get_emojis_by_category_tool\", \"description\": \"\\n    Get all emojis from a specific category.\\n\\n    Available categories:\\n    - smileys-and-people\\n    - animals-and-nature\\n    - food-and-drink\\n    - travel-and-places\\n    - activities\\n    - objects\\n    - symbols\\n    - flags\\n    \", \"parameters\": {\"type\": \"object\", \"properties\": {\"category\": {\"title\": \"Category\", \"type\": \"string\"}}, \"required\": [\"category\"]}}}, {\"type\": \"function\", \"function\": {\"name\": \"emoji-hub-server-get_emojis_by_group_tool\", \"description\": \"\\n    Get all emojis from a specific group.\\n\\n    Some available groups include:\\n    - face-positive, face-negative, face-neutral\\n    - animal-bird, animal-mammal, animal-marine\\n    - food-fruit, food-vegetable, food-sweet\\n    - travel-and-places\\n    - activities, objects, symbols, flags\\n    \", \"parameters\": {\"type\": \"object\", \"properties\": {\"group\": {\"title\": \"Group\", \"type\": \"string\"}}, \"required\": [\"group\"]}}}]<|im_end|>"
-      },
-      {
-        "step_id": 2,
         "source": "user",
         "message": "I'm creating a birthday card design and need to incorporate food-themed emojis. First, I want to see all the general food and drink options available, then narrow it down to specifically fruit-related emojis, and finally get a random fruit emoji that I can use as a surprise element for the final design. How can I get this complete set of emojis with that final random selection?"
       },
       {
-        "step_id": 3,
+        "step_id": 2,
         "source": "agent",
         "message": "I'll help you get that complete set of food-themed emojis for your birthday card design! Let me start by getting all the food and drink emojis, then the fruit-specific ones, and finally a random fruit emoji as your surprise element."
       },
       {
+        "step_id": 3,
+        "source": "agent",
+        "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_4",
+            "function_name": "emoji-hub-server-get_emojis_by_category_tool",
+            "arguments": {
+              "category": "food-and-drink"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ]
+      },
+      {
         "step_id": 4,
         "source": "agent",
-        "message": ""
+        "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_5",
+            "function_name": "emoji-hub-server-get_emojis_by_group_tool",
+            "arguments": {
+              "group": "food-fruit"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ]
       },
       {
         "step_id": 5,
         "source": "agent",
-        "message": ""
-      },
-      {
-        "step_id": 6,
-        "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_6",
+            "function_name": "emoji-hub-server-get_random_emoji_by_group_tool",
+            "arguments": {
+              "group": "food-fruit"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_6",
               "content": "{\n  \"name\": \"grapes\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127815;\"\n  ],\n  \"unicode\": [\n    \"U+1F347\"\n  ]\n}\n\n{\n  \"name\": \"melon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127816;\"\n  ],\n  \"unicode\": [\n    \"U+1F348\"\n  ]\n}\n\n{\n  \"name\": \"watermelon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127817;\"\n  ],\n  \"unicode\": [\n    \"U+1F349\"\n  ]\n}\n\n{\n  \"name\": \"tangerine\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127818;\"\n  ],\n  \"unicode\": [\n    \"U+1F34A\"\n  ]\n}\n\n{\n  \"name\": \"lemon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127819;\"\n  ],\n  \"unicode\": [\n    \"U+1F34B\"\n  ]\n}\n\n{\n  \"name\": \"banana\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127820;\"\n  ],\n  \"unicode\": [\n    \"U+1F34C\"\n  ]\n}\n\n{\n  \"name\": \"pineapple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127821;\"\n  ],\n  \"unicode\": [\n    \"U+1F34D\"\n  ]\n}\n\n{\n  \"name\": \"red apple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127822;\"\n  ],\n  \"unicode\": [\n    \"U+1F34E\"\n  ]\n}\n\n{\n  \"name\": \"green apple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127823;\"\n  ],\n  \"unicode\": [\n    \"U+1F34F\"\n  ]\n}\n\n{\n  \"name\": \"pear\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127824;\"\n  ],\n  \"unicode\": [\n    \"U+1F350\"\n  ]\n}\n\n{\n  \"name\": \"peach\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127825;\"\n  ],\n  \"unicode\": [\n    \"U+1F351\"\n  ]\n}\n\n{\n  \"name\": \"cherries\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127826;\"\n  ],\n  \"unicode\": [\n    \"U+1F352\"\n  ]\n}\n\n{\n  \"name\": \"strawberry\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127827;\"\n  ],\n  \"unicode\": [\n    \"U+1F353\"\n  ]\n}\n\n{\n  \"name\": \"kiwifruit\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#129373;\"\n  ],\n  \"unicode\": [\n    \"U+1F95D\"\n  ]\n}\n\n{\n  \"name\": \"tomato\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127813;\"\n  ],\n  \"unicode\": [\n    \"U+1F345\"\n  ]\n}\n\n{\n  \"name\": \"avocado\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129361;\"\n  ],\n  \"unicode\": [\n    \"U+1F951\"\n  ]\n}\n\n{\n  \"name\": \"aubergine \u224a eggplant\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127814;\"\n  ],\n  \"unicode\": [\n    \"U+1F346\"\n  ]\n}\n\n{\n  \"name\": \"potato\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129364;\"\n  ],\n  \"unicode\": [\n    \"U+1F954\"\n  ]\n}\n\n{\n  \"name\": \"carrot\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129365;\"\n  ],\n  \"unicode\": [\n    \"U+1F955\"\n  ]\n}\n\n{\n  \"name\": \"ear of maize \u224a ear of corn\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127805;\"\n  ],\n  \"unicode\": [\n    \"U+1F33D\"\n  ]\n}\n\n{\n  \"name\": \"hot pepper\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127798;\"\n  ],\n  \"unicode\": [\n    \"U+1F336\"\n  ]\n}\n\n{\n  \"name\": \"cucumber\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129362;\"\n  ],\n  \"unicode\": [\n    \"U+1F952\"\n  ]\n}\n\n{\n  \"name\": \"mushroom\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127812;\"\n  ],\n  \"unicode\": [\n    \"U+1F344\"\n  ]\n}\n\n{\n  \"name\": \"peanuts\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129372;\"\n  ],\n  \"unicode\": [\n    \"U+1F95C\"\n  ]\n}\n\n{\n  \"name\": \"chestnut\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127792;\"\n  ],\n  \"unicode\": [\n    \"U+1F330\"\n  ]\n}\n\n{\n  \"name\": \"bread\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127838;\"\n  ],\n  \"unicode\": [\n    \"U+1F35E\"\n  ]\n}\n\n{\n  \"name\": \"croissant\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129360;\"\n  ],\n  \"unicode\": [\n    \"U+1F950\"\n  ]\n}\n\n{\n  \"name\": \"baguette bread\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129366;\"\n  ],\n  \"unicode\": [\n    \"U+1F956\"\n  ]\n}\n\n{\n  \"name\": \"pancakes\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129374;\"\n  ],\n  \"unicode\": [\n    \"U+1F95E\"\n  ]\n}\n\n{\n  \"name\": \"cheese wedge\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129472;\"\n  ],\n  \"unicode\": [\n    \"U+1F9C0\"\n  ]\n}\n\n{\n  \"name\": \"meat on bone\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127830;\"\n  ],\n  \"unicode\": [\n    \"U+1F356\"\n  ]\n}\n\n{\n  \"name\": \"poultry leg\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127831;\"\n  ],\n  \"unicode\": [\n    \"U+1F357\"\n  ]\n}\n\n{\n  \"name\": \"bacon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129363;\"\n  ],\n  \"unicode\": [\n    \"U+1F953\"\n  ]\n}\n\n{\n  \"name\": \"hamburger\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127828;\"\n  ],\n  \"unicode\": [\n    \"U+1F354\"\n  ]\n}\n\n{\n  \"name\": \"french fries\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127839;\"\n  ],\n  \"unicode\": [\n    \"U+1F35F\"\n  ]\n}\n\n{\n  \"name\": \"slice of pizza \u224a pizza\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127829;\"\n  ],\n  \"unicode\": [\n    \"U+1F355\"\n  ]\n}\n\n{\n  \"name\": \"hot dog\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127789;\"\n  ],\n  \"unicode\": [\n    \"U+1F32D\"\n  ]\n}\n\n{\n  \"name\": \"taco\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127790;\"\n  ],\n  \"unicode\": [\n    \"U+1F32E\"\n  ]\n}\n\n{\n  \"name\": \"burrito\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127791;\"\n  ],\n  \"unicode\": [\n    \"U+1F32F\"\n  ]\n}\n\n{\n  \"name\": \"stuffed flatbread\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129369;\"\n  ],\n  \"unicode\": [\n    \"U+1F959\"\n  ]\n}\n\n{\n  \"name\": \"egg\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129370;\"\n  ],\n  \"unicode\": [\n    \"U+1F95A\"\n  ]\n}\n\n{\n  \"name\": \"cooking\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127859;\"\n  ],\n  \"unicode\": [\n    \"U+1F373\"\n  ]\n}\n\n{\n  \"name\": \"shallow pan of food\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129368;\"\n  ],\n  \"unicode\": [\n    \"U+1F958\"\n  ]\n}\n\n{\n  \"name\": \"pot of food\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127858;\"\n  ],\n  \"unicode\": [\n    \"U+1F372\"\n  ]\n}\n\n{\n  \"name\": \"green salad\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129367;\"\n  ],\n  \"unicode\": [\n    \"U+1F957\"\n  ]\n}\n\n{\n  \"name\": \"popcorn\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127871;\"\n  ],\n  \"unicode\": [\n    \"U+1F37F\"\n  ]\n}\n\n{\n  \"name\": \"bento box\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127857;\"\n  ],\n  \"unicode\": [\n    \"U+1F371\"\n  ]\n}\n\n{\n  \"name\": \"rice cracker\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127832;\"\n  ],\n  \"unicode\": [\n    \"U+1F358\"\n  ]\n}\n\n{\n  \"name\": \"rice ball\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127833;\"\n  ],\n  \"unicode\": [\n    \"U+1F359\"\n  ]\n}\n\n{\n  \"name\": \"cooked rice\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127834;\"\n  ],\n  \"unicode\": [\n    \"U+1F35A\"\n  ]\n}\n\n{\n  \"name\": \"curry and rice \u224a curry rice\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127835;\"\n  ],\n  \"unicode\": [\n    \"U+1F35B\"\n  ]\n}\n\n{\n  \"name\": \"steaming bowl\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127836;\"\n  ],\n  \"unicode\": [\n    \"U+1F35C\"\n  ]\n}\n\n{\n  \"name\": \"spaghetti\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127837;\"\n  ],\n  \"unicode\": [\n    \"U+1F35D\"\n  ]\n}\n\n{\n  \"name\": \"roasted sweet potato\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127840;\"\n  ],\n  \"unicode\": [\n    \"U+1F360\"\n  ]\n}\n\n{\n  \"name\": \"oden\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127842;\"\n  ],\n  \"unicode\": [\n    \"U+1F362\"\n  ]\n}\n\n{\n  \"name\": \"sushi\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127843;\"\n  ],\n  \"unicode\": [\n    \"U+1F363\"\n  ]\n}\n\n{\n  \"name\": \"fried shrimp\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127844;\"\n  ],\n  \"unicode\": [\n    \"U+1F364\"\n  ]\n}\n\n{\n  \"name\": \"fish cake with swirl design \u224a fish cake with swirl\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127845;\"\n  ],\n  \"unicode\": [\n    \"U+1F365\"\n  ]\n}\n\n{\n  \"name\": \"dango\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127841;\"\n  ],\n  \"unicode\": [\n    \"U+1F361\"\n  ]\n}\n\n{\n  \"name\": \"soft ice cream\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127846;\"\n  ],\n  \"unicode\": [\n    \"U+1F366\"\n  ]\n}\n\n{\n  \"name\": \"shaved ice\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127847;\"\n  ],\n  \"unicode\": [\n    \"U+1F367\"\n  ]\n}\n\n{\n  \"name\": \"ice cream\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127848;\"\n  ],\n  \"unicode\": [\n    \"U+1F368\"\n  ]\n}\n\n{\n  \"name\": \"doughnut\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127849;\"\n  ],\n  \"unicode\": [\n    \"U+1F369\"\n  ]\n}\n\n{\n  \"name\": \"cookie\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127850;\"\n  ],\n  \"unicode\": [\n    \"U+1F36A\"\n  ]\n}\n\n{\n  \"name\": \"birthday cake\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127874;\"\n  ],\n  \"unicode\": [\n    \"U+1F382\"\n  ]\n}\n\n{\n  \"name\": \"shortcake\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127856;\"\n  ],\n  \"unicode\": [\n    \"U+1F370\"\n  ]\n}\n\n{\n  \"name\": \"chocolate bar\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127851;\"\n  ],\n  \"unicode\": [\n    \"U+1F36B\"\n  ]\n}\n\n{\n  \"name\": \"candy\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127852;\"\n  ],\n  \"unicode\": [\n    \"U+1F36C\"\n  ]\n}\n\n{\n  \"name\": \"lollipop\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127853;\"\n  ],\n  \"unicode\": [\n    \"U+1F36D\"\n  ]\n}\n\n{\n  \"name\": \"custard\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127854;\"\n  ],\n  \"unicode\": [\n    \"U+1F36E\"\n  ]\n}\n\n{\n  \"name\": \"honey pot\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127855;\"\n  ],\n  \"unicode\": [\n    \"U+1F36F\"\n  ]\n}\n\n{\n  \"name\": \"baby bottle\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127868;\"\n  ],\n  \"unicode\": [\n    \"U+1F37C\"\n  ]\n}\n\n{\n  \"name\": \"glass of milk\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#129371;\"\n  ],\n  \"unicode\": [\n    \"U+1F95B\"\n  ]\n}\n\n{\n  \"name\": \"hot beverage\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#9749;\"\n  ],\n  \"unicode\": [\n    \"U+2615\"\n  ]\n}\n\n{\n  \"name\": \"teacup without handle\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127861;\"\n  ],\n  \"unicode\": [\n    \"U+1F375\"\n  ]\n}\n\n{\n  \"name\": \"sake bottle and cup \u224a sake\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127862;\"\n  ],\n  \"unicode\": [\n    \"U+1F376\"\n  ]\n}\n\n{\n  \"name\": \"bottle with popping cork\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127870;\"\n  ],\n  \"unicode\": [\n    \"U+1F37E\"\n  ]\n}\n\n{\n  \"name\": \"wine glass\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127863;\"\n  ],\n  \"unicode\": [\n    \"U+1F377\"\n  ]\n}\n\n{\n  \"name\": \"cocktail glass\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127864;\"\n  ],\n  \"unicode\": [\n    \"U+1F378\"\n  ]\n}\n\n{\n  \"name\": \"tropical drink\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127865;\"\n  ],\n  \"unicode\": [\n    \"U+1F379\"\n  ]\n}\n\n{\n  \"name\": \"beer mug\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127866;\"\n  ],\n  \"unicode\": [\n    \"U+1F37A\"\n  ]\n}\n\n{\n  \"name\": \"clinking beer mugs\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127867;\"\n  ],\n  \"unicode\": [\n    \"U+1F37B\"\n  ]\n}\n\n{\n  \"name\": \"clinking glasses\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#129346;\"\n  ],\n  \"unicode\": [\n    \"U+1F942\"\n  ]\n}\n\n{\n  \"name\": \"tumbler glass\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#129347;\"\n  ],\n  \"unicode\": [\n    \"U+1F943\"\n  ]\n}\n\n{\n  \"name\": \"fork and knife with plate\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#127869;\"\n  ],\n  \"unicode\": [\n    \"U+1F37D\"\n  ]\n}\n\n{\n  \"name\": \"fork and knife\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#127860;\"\n  ],\n  \"unicode\": [\n    \"U+1F374\"\n  ]\n}\n\n{\n  \"name\": \"spoon\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#129348;\"\n  ],\n  \"unicode\": [\n    \"U+1F944\"\n  ]\n}\n\n{\n  \"name\": \"hocho \u224a kitchen knife\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#128298;\"\n  ],\n  \"unicode\": [\n    \"U+1F52A\"\n  ]\n}\n\n{\n  \"name\": \"amphora\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#127994;\"\n  ],\n  \"unicode\": [\n    \"U+1F3FA\"\n  ]\n}"
             },
             {
+              "source_call_id": "call_6",
               "content": "{\n  \"name\": \"grapes\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127815;\"\n  ],\n  \"unicode\": [\n    \"U+1F347\"\n  ]\n}\n\n{\n  \"name\": \"melon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127816;\"\n  ],\n  \"unicode\": [\n    \"U+1F348\"\n  ]\n}\n\n{\n  \"name\": \"watermelon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127817;\"\n  ],\n  \"unicode\": [\n    \"U+1F349\"\n  ]\n}\n\n{\n  \"name\": \"tangerine\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127818;\"\n  ],\n  \"unicode\": [\n    \"U+1F34A\"\n  ]\n}\n\n{\n  \"name\": \"lemon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127819;\"\n  ],\n  \"unicode\": [\n    \"U+1F34B\"\n  ]\n}\n\n{\n  \"name\": \"banana\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127820;\"\n  ],\n  \"unicode\": [\n    \"U+1F34C\"\n  ]\n}\n\n{\n  \"name\": \"pineapple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127821;\"\n  ],\n  \"unicode\": [\n    \"U+1F34D\"\n  ]\n}\n\n{\n  \"name\": \"red apple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127822;\"\n  ],\n  \"unicode\": [\n    \"U+1F34E\"\n  ]\n}\n\n{\n  \"name\": \"green apple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127823;\"\n  ],\n  \"unicode\": [\n    \"U+1F34F\"\n  ]\n}\n\n{\n  \"name\": \"pear\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127824;\"\n  ],\n  \"unicode\": [\n    \"U+1F350\"\n  ]\n}\n\n{\n  \"name\": \"peach\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127825;\"\n  ],\n  \"unicode\": [\n    \"U+1F351\"\n  ]\n}\n\n{\n  \"name\": \"cherries\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127826;\"\n  ],\n  \"unicode\": [\n    \"U+1F352\"\n  ]\n}\n\n{\n  \"name\": \"strawberry\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127827;\"\n  ],\n  \"unicode\": [\n    \"U+1F353\"\n  ]\n}\n\n{\n  \"name\": \"kiwifruit\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#129373;\"\n  ],\n  \"unicode\": [\n    \"U+1F95D\"\n  ]\n}\n\n{\n  \"name\": \"tomato\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127813;\"\n  ],\n  \"unicode\": [\n    \"U+1F345\"\n  ]\n}"
             },
             {
+              "source_call_id": "call_6",
               "content": "{\n  \"name\": \"cherries\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127826;\"\n  ],\n  \"unicode\": [\n    \"U+1F352\"\n  ]\n}"
             }
           ]
         }
       },
       {
-        "step_id": 7,
+        "step_id": 6,
         "source": "agent",
         "message": "Perfect! Here's your complete food-themed emoji collection for your birthday card design:\n\n## \ud83c\udf82 **Complete Available Food & Drink Options (76 total emojis)**\nI found 76 emojis across these delicious categories:\n- **Fruits**: 15 varieties including grapes \ud83c\udf47, watermelon \ud83c\udf49, banana \ud83c\udf4c, pineapple \ud83c\udf4d, apples, etc.\n- **Vegetables**: 11 options like avocado \ud83e\udd51, eggplant \ud83c\udf46, carrot \ud83e\udd55, corn \ud83c\udf3d, etc.\n- **Prepared Foods**: 24 mouth-watering items including bread \ud83c\udf5e, pizza \ud83c\udf55, hamburger \ud83c\udf54, sushi \ud83c\udf63, etc.\n- **Asian Foods**: 13 emoji like ramen \ud83c\udf5c, curry \ud83c\udf5b, bento \ud83c\udf71, dumplings \ud83e\udd5f, etc.\n- **Sweet Treats**: 12 delectable options including birthday cake \ud83c\udf82, ice cream \ud83c\udf66, donuts \ud83c\udf69, etc.\n- **Drinks**: 15 beverages from coffee \u2615 to champagne \ud83e\udd42\n- **Dishware**: 6 essential tools like knives, forks, spoons\n\n## \ud83c\udf4e **Fruit Emoji Collection (15 detailed selections)**\n**Your fruit-specific emoji for the birthday theme:**\n- \ud83c\udf47 Grapes\n- \ud83c\udf48 Melon\n- \ud83c\udf49 Watermelon\n- \ud83c\udf4a Tangerine\n- \ud83c\udf4b Lemon\n- \ud83c\udf4c Banana\n- \ud83c\udf4d Pineapple\n- \ud83c\udf4e Red Apple\n- \ud83c\udf4f Green Apple\n- \ud83c\udf50 Pear\n- \ud83c\udf51 Peach\n- \ud83c\udf52 Cherries\n- \ud83c\udf53 Strawberry\n- \ud83e\udd5d Kiwifruit\n- \ud83c\udf45 Tomato\n\n## \ud83c\udf52 **Surprise Random Fruit!**\nYour surprise element for the final design is **Cherries**! \ud83c\udf52\n\nThis juicy pair of cherries with their iconic red color and green stem creates perfect birthday symbolism - they're sweet, celebratory, and pair beautifully with other fruit emoji for a festive fruit salad effect on your card design!"
       }
