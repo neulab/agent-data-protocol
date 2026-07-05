@@ -794,7 +794,7 @@ def structure_terminal_completion_step(step: Step) -> bool:
         ToolCall(
             tool_call_id="call_1",
             function_name="finish",
-            arguments={"task_completed": True},
+            arguments={"message": step.message, "task_completed": True},
             extra={"raw_format": "terminal_json"},
         )
     ]
