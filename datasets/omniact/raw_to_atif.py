@@ -46,10 +46,10 @@ def _split_task_and_script(task: str) -> tuple[str, str | None]:
 def convert_record(record: dict[str, Any], dataset_name: str):
     task, script = _split_task_and_script(str(record.get("task") or ""))
     steps: list[Step] = [
+        text_step(task, source="user"),
         image_observation_step(
             str(record.get("image") or "image"), annotations=_annotations(record)
         ),
-        text_step(task, source="user"),
     ]
     if script:
         steps.append(tool_step("execute_ipython_cell", {"code": script}, message="Output Script"))
