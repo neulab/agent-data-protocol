@@ -130,7 +130,7 @@ def split_terminal_task_description_prompt(trajectory: ATIFTrajectory) -> bool:
     trajectory.steps.insert(
         1,
         Step(
-            step_id=2,
+            step_id=0,
             source="user",
             message=f"Task Description:\n{task_prompt.strip()}",
         ),
@@ -151,7 +151,7 @@ def structure_terminal_completion_step(step: Step) -> bool:
         return False
     if not isinstance(payload, dict) or payload.get("task_complete") is not True:
         return False
-    commands = payload.get("commands")
+    commands = payload.get("commands") or []
     if not isinstance(commands, list) or any(
         isinstance(command, dict) and str(command.get("keystrokes") or "").strip()
         for command in commands
@@ -162,6 +162,8 @@ def structure_terminal_completion_step(step: Step) -> bool:
         str(payload.get("plan") or "").strip(),
     ]
     message = "\n\n".join(part for part in message_parts if part)
+    if not message:
+        return False
     step.message = message
     step.tool_calls = [
         ToolCall(
