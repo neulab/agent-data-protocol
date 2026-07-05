@@ -42,8 +42,17 @@ def remove_template_tool_declaration(trajectory: ATIFTrajectory) -> None:
     tools = tool_declaration(trajectory.steps[0])
     if tools is None:
         return
-    if not trajectory.agent.tool_definitions:
-        trajectory.agent.tool_definitions = tools
+    existing_tools = trajectory.agent.tool_definitions or []
+    by_name = {
+        tool.get("function", {}).get("name"): tool
+        for tool in existing_tools
+        if isinstance(tool, dict) and tool.get("function", {}).get("name")
+    }
+    for tool in tools:
+        name = tool.get("function", {}).get("name")
+        if name:
+            by_name[name] = tool
+    trajectory.agent.tool_definitions = list(by_name.values())
     trajectory.steps = trajectory.steps[1:]
 
 

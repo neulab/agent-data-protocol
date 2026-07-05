@@ -26,9 +26,7 @@
               },
               "required": [
                 "query"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -76,9 +74,7 @@
               },
               "required": [
                 "companyName"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -101,9 +97,7 @@
               },
               "required": [
                 "url"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -164,9 +158,7 @@
               },
               "required": [
                 "query"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -227,6 +219,52 @@
               ],
               "additionalProperties": false,
               "$schema": "http://json-schema.org/draft-07/schema#"
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "exa-search-deep_researcher_start",
+            "description": "Start a comprehensive AI-powered deep research task for complex queries. This tool initiates an intelligent agent that performs extensive web searches, crawls relevant pages, analyzes information, and synthesizes findings into a detailed research report. The agent thinks critically about the research topic and provides thorough, well-sourced answers. Use this for complex research questions that require in-depth analysis rather than simple searches. After starting a research task, IMMEDIATELY use deep_researcher_check with the returned task ID to monitor progress and retrieve results.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "instructions": {
+                  "type": "string",
+                  "description": "Complex research question or detailed instructions for the AI researcher. Be specific about what you want to research and any particular aspects you want covered."
+                },
+                "model": {
+                  "type": "string",
+                  "enum": [
+                    "exa-research",
+                    "exa-research-pro"
+                  ],
+                  "description": "Research model: 'exa-research' (faster, 15-45s, good for most queries) or 'exa-research-pro' (more comprehensive, 45s-2min, for complex topics). Default: exa-research"
+                }
+              },
+              "required": [
+                "instructions"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "exa-search-deep_researcher_check",
+            "description": "Check the status and retrieve results of a deep research task. This tool monitors the progress of an AI agent that performs comprehensive web searches, analyzes multiple sources, and synthesizes findings into detailed research reports. The tool includes a built-in 5-second delay before checking to allow processing time. IMPORTANT: You must call this tool repeatedly (poll) until the status becomes 'completed' to get the final research results. When status is 'running', wait a few seconds and call this tool again with the same task ID.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "taskId": {
+                  "type": "string",
+                  "description": "The task ID returned from deep_researcher_start tool"
+                }
+              },
+              "required": [
+                "taskId"
+              ]
             }
           }
         }
@@ -453,7 +491,8 @@
             "description": "Get details of the most recent round",
             "parameters": {
               "type": "object",
-              "properties": {}
+              "properties": {},
+              "required": []
             }
           }
         },
@@ -464,7 +503,8 @@
             "description": "Get game statistics",
             "parameters": {
               "type": "object",
-              "properties": {}
+              "properties": {},
+              "required": []
             }
           }
         }
@@ -559,7 +599,7 @@
                   "default": "RootObjectsOnly"
                 }
               },
-              "additionalProperties": false
+              "required": []
             }
           }
         },
@@ -593,8 +633,7 @@
               },
               "required": [
                 "instanceIDs"
-              ],
-              "additionalProperties": false
+              ]
             }
           }
         },
@@ -614,8 +653,7 @@
               },
               "required": [
                 "code"
-              ],
-              "additionalProperties": false
+              ]
             }
           }
         },
@@ -676,7 +714,7 @@
                   "description": "Filter logs before this ISO timestamp"
                 }
               },
-              "additionalProperties": false
+              "required": []
             }
           }
         },
@@ -688,7 +726,7 @@
             "parameters": {
               "type": "object",
               "properties": {},
-              "additionalProperties": false
+              "required": []
             }
           }
         },
@@ -700,7 +738,7 @@
             "parameters": {
               "type": "object",
               "properties": {},
-              "additionalProperties": false
+              "required": []
             }
           }
         },
@@ -719,9 +757,7 @@
               },
               "required": [
                 "path"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -743,9 +779,7 @@
               },
               "required": [
                 "paths"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -769,9 +803,7 @@
               "required": [
                 "path",
                 "content"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -818,9 +850,7 @@
               "required": [
                 "path",
                 "edits"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -839,9 +869,7 @@
               },
               "required": [
                 "path"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -865,9 +893,7 @@
               },
               "required": [
                 "path"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -899,9 +925,7 @@
               "required": [
                 "path",
                 "pattern"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -920,9 +944,7 @@
               },
               "required": [
                 "path"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         },
@@ -951,9 +973,7 @@
               },
               "required": [
                 "assetType"
-              ],
-              "additionalProperties": false,
-              "$schema": "http://json-schema.org/draft-07/schema#"
+              ]
             }
           }
         }
@@ -1058,9 +1078,9 @@
             "name": "emoji-hub-server-get_random_emoji_tool",
             "description": "\n    Get a random emoji from the Emoji Hub API.\n    Returns an emoji object with name, category, group, htmlCode, and unicode.\n    ",
             "parameters": {
+              "type": "object",
               "properties": {},
-              "title": "get_random_emoji_toolArguments",
-              "type": "object"
+              "required": []
             }
           }
         },
@@ -1070,6 +1090,7 @@
             "name": "emoji-hub-server-get_random_emoji_by_category_tool",
             "description": "\n    Get a random emoji from a specific category.\n\n    Available categories:\n    - smileys-and-people\n    - animals-and-nature\n    - food-and-drink\n    - travel-and-places\n    - activities\n    - objects\n    - symbols\n    - flags\n    ",
             "parameters": {
+              "type": "object",
               "properties": {
                 "category": {
                   "title": "Category",
@@ -1078,9 +1099,7 @@
               },
               "required": [
                 "category"
-              ],
-              "title": "get_random_emoji_by_category_toolArguments",
-              "type": "object"
+              ]
             }
           }
         },
@@ -1090,6 +1109,7 @@
             "name": "emoji-hub-server-get_random_emoji_by_group_tool",
             "description": "\n    Get a random emoji from a specific group.\n\n    Some available groups include:\n    - face-positive, face-negative, face-neutral\n    - animal-bird, animal-mammal, animal-marine\n    - food-fruit, food-vegetable, food-sweet\n    - travel-and-places\n    - activities, objects, symbols, flags\n    ",
             "parameters": {
+              "type": "object",
               "properties": {
                 "group": {
                   "title": "Group",
@@ -1098,9 +1118,7 @@
               },
               "required": [
                 "group"
-              ],
-              "title": "get_random_emoji_by_group_toolArguments",
-              "type": "object"
+              ]
             }
           }
         },
@@ -1110,9 +1128,9 @@
             "name": "emoji-hub-server-get_all_emojis_tool",
             "description": "\n    Get all emojis from the Emoji Hub API.\n    Returns a list of all available emojis.\n    ",
             "parameters": {
+              "type": "object",
               "properties": {},
-              "title": "get_all_emojis_toolArguments",
-              "type": "object"
+              "required": []
             }
           }
         },
@@ -1122,6 +1140,7 @@
             "name": "emoji-hub-server-get_emojis_by_category_tool",
             "description": "\n    Get all emojis from a specific category.\n\n    Available categories:\n    - smileys-and-people\n    - animals-and-nature\n    - food-and-drink\n    - travel-and-places\n    - activities\n    - objects\n    - symbols\n    - flags\n    ",
             "parameters": {
+              "type": "object",
               "properties": {
                 "category": {
                   "title": "Category",
@@ -1130,9 +1149,7 @@
               },
               "required": [
                 "category"
-              ],
-              "title": "get_emojis_by_category_toolArguments",
-              "type": "object"
+              ]
             }
           }
         },
@@ -1142,6 +1159,7 @@
             "name": "emoji-hub-server-get_emojis_by_group_tool",
             "description": "\n    Get all emojis from a specific group.\n\n    Some available groups include:\n    - face-positive, face-negative, face-neutral\n    - animal-bird, animal-mammal, animal-marine\n    - food-fruit, food-vegetable, food-sweet\n    - travel-and-places\n    - activities, objects, symbols, flags\n    ",
             "parameters": {
+              "type": "object",
               "properties": {
                 "group": {
                   "title": "Group",
@@ -1150,9 +1168,7 @@
               },
               "required": [
                 "group"
-              ],
-              "title": "get_emojis_by_group_toolArguments",
-              "type": "object"
+              ]
             }
           }
         }
