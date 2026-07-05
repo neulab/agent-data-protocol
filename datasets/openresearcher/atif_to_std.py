@@ -47,8 +47,9 @@ def standardize_openresearcher_tool_calls(trajectory: ATIFTrajectory) -> None:
 
 
 def normalize_openresearcher(trajectory: ATIFTrajectory) -> ATIFTrajectory:
-    normalized = standardize_tools(normalize_atif_trajectory(trajectory))
+    normalized = normalize_atif_trajectory(trajectory)
     standardize_openresearcher_tool_calls(normalized)
+    normalized = standardize_tools(normalized)
     normalized.steps = renumber_steps(
         [step for step in normalized.steps if not is_placeholder_system_message(step)]
     )
