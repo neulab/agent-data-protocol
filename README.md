@@ -118,6 +118,14 @@ Dataset-specific raw-to-ATIF conversion using Harbor's Agent Trajectory Intercha
 - **Tool calls**: `function_name`, `arguments`, and `tool_call_id`
 - **Observations**: Tool/environment results linked with `source_call_id`
 
+When a raw dataset contains an environment observation that cannot be linked to
+a preceding in-trajectory tool call, converters may currently emit an
+observation-only `agent` step with an empty message and `llm_call_count: 0`.
+This is a compatibility convention for the current three-source ATIF schema, not
+an indication that the agent authored the observation. Prefer attaching
+observations to the triggering tool-call step whenever that relationship is
+available.
+
 ### 4. SFT Format
 Agent-specific format ready for supervised fine-tuning. Shared `std_to_sft.py` converters accept ATIF input after dataset-specific `atif_to_std.py` normalization.
 
