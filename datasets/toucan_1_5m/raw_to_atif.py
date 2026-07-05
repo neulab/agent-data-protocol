@@ -11,6 +11,7 @@ from scripts.raw_to_atif_common import (
     trajectories_from_input,
 )
 
+
 def add_legacy_function_calls(record: dict[str, Any]) -> dict[str, Any]:
     normalized = deepcopy(record)
     messages = normalized.get("messages")
