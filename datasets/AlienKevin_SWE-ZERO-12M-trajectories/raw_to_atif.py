@@ -93,6 +93,7 @@ def process_data(data: SchemaRaw) -> ATIFTrajectory | None:
     for message in data.messages:
         content = message.content
         if message.role == "system":
+            steps.append(Step(step_id=len(steps) + 1, source="system", message=content))
             continue
         if message.role == "user":
             if content.startswith(OBSERVATION_PREFIX) and steps and steps[-1].source == "agent":
