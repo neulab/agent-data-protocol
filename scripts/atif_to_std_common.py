@@ -176,6 +176,14 @@ def structure_terminal_completion_step(step: Step) -> bool:
     return True
 
 
+def is_empty_message_only_step(step: Step) -> bool:
+    return (
+        step.observation is None
+        and not step.tool_calls
+        and not content_to_text(step.message).strip()
+    )
+
+
 def standardize_tools(trajectory: ATIFTrajectory) -> ATIFTrajectory:
     normalized = trajectory.model_copy(deep=True)
     normalize_prompt_boilerplate(normalized)

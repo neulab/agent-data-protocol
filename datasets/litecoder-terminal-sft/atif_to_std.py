@@ -3,21 +3,14 @@
 import json
 import sys
 
-from schema.atif import ATIFTrajectory, Step, content_to_text, normalize_atif_trajectory
+from schema.atif import ATIFTrajectory, normalize_atif_trajectory
 from scripts.atif_to_std_common import (
+    is_empty_message_only_step,
     renumber_steps,
     split_terminal_task_description_prompt,
     standardize_tools,
     structure_terminal_completion_step,
 )
-
-
-def is_empty_turn(step: Step) -> bool:
-    return (
-        step.observation is None
-        and not step.tool_calls
-        and not content_to_text(step.message).strip()
-    )
 
 
 def normalize_litecoder(trajectory: ATIFTrajectory) -> ATIFTrajectory:
@@ -26,7 +19,7 @@ def normalize_litecoder(trajectory: ATIFTrajectory) -> ATIFTrajectory:
     for step in normalized.steps:
         structure_terminal_completion_step(step)
     normalized.steps = renumber_steps(
-        [step for step in normalized.steps if not is_empty_turn(step)]
+        [step for step in normalized.steps if not is_empty_message_only_step(step)]
     )
     return normalized
 
