@@ -38,7 +38,7 @@ def convert_record(record: dict[str, Any], dataset_name: str):
     screenshots = record.get("screenshots") or []
     actions = record.get("actions") or []
     instructions = record.get("step_instructions") or []
-    steps: list[Step] = [text_step(str(record.get("goal") or ""), source="agent")]
+    steps: list[Step] = [text_step(str(record.get("goal") or ""), source="user")]
 
     for index, screenshot in enumerate(screenshots):
         steps.append(image_observation_step(str(screenshot), source="user"))
