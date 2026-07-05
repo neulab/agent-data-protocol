@@ -214,5 +214,15 @@ def main(script_file: str | None = None) -> None:  # noqa: ARG001
         print(normalized.model_dump_json(exclude_none=True))
 
 
+def terminal_main(script_file: str | None = None) -> None:  # noqa: ARG001
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        trajectory = ATIFTrajectory(**json.loads(line))
+        normalized = normalize_terminal_trajectory(trajectory)
+        print(normalized.model_dump_json(exclude_none=True))
+
+
 if __name__ == "__main__":
     main(__file__)
