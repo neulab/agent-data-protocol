@@ -176,12 +176,31 @@ def structure_terminal_completion_step(step: Step) -> bool:
     return True
 
 
+def is_empty_message_only_step(step: Step) -> bool:
+    return (
+        step.observation is None
+        and not step.tool_calls
+        and not content_to_text(step.message).strip()
+    )
+
+
 def standardize_tools(trajectory: ATIFTrajectory) -> ATIFTrajectory:
     normalized = trajectory.model_copy(deep=True)
     normalize_prompt_boilerplate(normalized)
     for step in normalized.steps:
         if step.tool_calls:
             step.tool_calls = [standardize_tool_call(tool_call) for tool_call in step.tool_calls]
+    return normalized
+
+
+def normalize_terminal_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
+    normalized = standardize_tools(normalize_atif_trajectory(trajectory))
+    split_terminal_task_description_prompt(normalized)
+    for step in normalized.steps:
+        structure_terminal_completion_step(step)
+    normalized.steps = renumber_steps(
+        [step for step in normalized.steps if not is_empty_message_only_step(step)]
+    )
     return normalized
 
 
@@ -192,6 +211,16 @@ def main(script_file: str | None = None) -> None:  # noqa: ARG001
             continue
         trajectory = ATIFTrajectory(**json.loads(line))
         normalized = standardize_tools(normalize_atif_trajectory(trajectory))
+        print(normalized.model_dump_json(exclude_none=True))
+
+
+def terminal_main(script_file: str | None = None) -> None:  # noqa: ARG001
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        trajectory = ATIFTrajectory(**json.loads(line))
+        normalized = normalize_terminal_trajectory(trajectory)
         print(normalized.model_dump_json(exclude_none=True))
 
 
