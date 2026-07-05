@@ -4,8 +4,8 @@ Manual audit date: 2026-07-05
 
 Scope: I audited the current 56 dataset directories in the repo, using a local
 inspection worktree that merged the open normalization PRs (#285-#303) plus the
-new Toucan and AlienKevin updates. The user mentioned 54 datasets, but the repo
-currently contains 56 after recent additions, so I included all 56.
+new Toucan and AlienKevin updates. Earlier reports cited 54 datasets, but the
+repo currently contains 56 after recent additions, so I included all 56.
 
 For each target dataset I picked three similar datasets by task family, manually
 looked at the target and comparators' standardized samples/converters, and
