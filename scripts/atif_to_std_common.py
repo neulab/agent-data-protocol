@@ -184,6 +184,17 @@ def is_empty_message_only_step(step: Step) -> bool:
     )
 
 
+def normalize_terminal_trajectory(trajectory: ATIFTrajectory) -> ATIFTrajectory:
+    normalized = standardize_tools(normalize_atif_trajectory(trajectory))
+    split_terminal_task_description_prompt(normalized)
+    for step in normalized.steps:
+        structure_terminal_completion_step(step)
+    normalized.steps = renumber_steps(
+        [step for step in normalized.steps if not is_empty_message_only_step(step)]
+    )
+    return normalized
+
+
 def standardize_tools(trajectory: ATIFTrajectory) -> ATIFTrajectory:
     normalized = trajectory.model_copy(deep=True)
     normalize_prompt_boilerplate(normalized)
