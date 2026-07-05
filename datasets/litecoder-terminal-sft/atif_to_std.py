@@ -3,20 +3,20 @@
 import json
 import sys
 
-from schema.atif import ATIFTrajectory, Step, normalize_atif_trajectory
+from schema.atif import ATIFTrajectory, Step, content_to_text, normalize_atif_trajectory
 from scripts.atif_to_std_common import (
+    renumber_steps,
     split_terminal_task_description_prompt,
     standardize_tools,
     structure_terminal_completion_step,
 )
-from scripts.raw_to_atif_common import renumber_steps, text_from_content
 
 
 def is_empty_turn(step: Step) -> bool:
     return (
         step.observation is None
         and not step.tool_calls
-        and not text_from_content(step.message).strip()
+        and not content_to_text(step.message).strip()
     )
 
 
