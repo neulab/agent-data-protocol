@@ -68,7 +68,13 @@ def check_dataset(dataset_dir: Path, update: bool) -> tuple[bool, str]:
 
     if update:
         sample_std.write_text(regenerated)
-        return True, f"updated {dataset_dir.name}"
+        sft_dir = dataset_dir / "sample_sft"
+        sft_warning = (
+            " (re-run agents/*/std_to_sft.py to refresh sample_sft/)"
+            if sft_dir.is_dir()
+            else ""
+        )
+        return True, f"updated {dataset_dir.name}{sft_warning}"
 
     diff = "".join(
         difflib.unified_diff(
