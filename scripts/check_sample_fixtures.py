@@ -20,7 +20,11 @@ DATASETS_DIR = REPO_ROOT / "datasets"
 
 def dataset_dirs(names: list[str]) -> list[Path]:
     if names:
-        return [DATASETS_DIR / name for name in names]
+        dirs = [DATASETS_DIR / name for name in names]
+        for dataset_dir in dirs:
+            if not dataset_dir.is_dir():
+                raise SystemExit(f"error: unknown dataset '{dataset_dir.name}'")
+        return dirs
     return sorted(path for path in DATASETS_DIR.iterdir() if path.is_dir())
 
 
@@ -35,7 +39,10 @@ def regenerate_sample_std(dataset_dir: Path) -> str:
         raise FileNotFoundError(f"{dataset_dir.name} is missing sample_atif.json or atif_to_std.py")
 
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(REPO_ROOT)
+    existing_pythonpath = os.environ.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = os.pathsep.join(
+        entry for entry in [str(REPO_ROOT), existing_pythonpath] if entry
+    )
     atif_rows = json.loads(sample_atif.read_text())
     result = subprocess.run(
         [sys.executable, str(converter)],
@@ -94,6 +101,9 @@ def main() -> int:
     for dataset_dir in dataset_dirs(args.dataset):
         try:
             dataset_ok, message = check_dataset(dataset_dir, args.update)
+        except subprocess.CalledProcessError as exc:
+            dataset_ok = False
+            message = f"error {dataset_dir.name}: converter failed\n{exc.stderr}"
         except Exception as exc:
             dataset_ok = False
             message = f"error {dataset_dir.name}: {exc}"
