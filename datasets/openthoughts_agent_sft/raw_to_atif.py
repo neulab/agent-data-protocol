@@ -7,6 +7,7 @@ from typing import Any
 from scripts.raw_to_atif_common import (
     dataset_name_from_script,
     split_terminal_task_description_prompt,
+    structure_terminal_completion_step,
     trajectory_from_record,
 )
 
@@ -21,6 +22,8 @@ def main(script_file: str) -> None:
             continue
         trajectory = trajectory_from_record(record, index, dataset_name)
         split_terminal_task_description_prompt(trajectory)
+        for step in trajectory.steps:
+            structure_terminal_completion_step(step)
         print(trajectory.model_dump_json(exclude_none=True))
 
 

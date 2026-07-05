@@ -767,6 +767,40 @@ def split_terminal_task_description_prompt(trajectory: ATIFTrajectory) -> bool:
     return True
 
 
+def structure_terminal_completion_step(step: Step) -> bool:
+    if step.source != "agent" or step.tool_calls or step.observation is not None:
+        return False
+    text = text_from_content(step.message).strip()
+    if not text.startswith("{"):
+        return False
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(payload, dict) or payload.get("task_complete") is not True:
+        return False
+    commands = payload.get("commands")
+    if not isinstance(commands, list) or any(
+        isinstance(command, dict) and str(command.get("keystrokes") or "").strip()
+        for command in commands
+    ):
+        return False
+    message_parts = [
+        str(payload.get("analysis") or "").strip(),
+        str(payload.get("plan") or "").strip(),
+    ]
+    step.message = "\n\n".join(part for part in message_parts if part)
+    step.tool_calls = [
+        ToolCall(
+            tool_call_id="call_1",
+            function_name="finish",
+            arguments={"task_completed": True},
+            extra={"raw_format": "terminal_json"},
+        )
+    ]
+    return True
+
+
 def screenagent_trajectories(items: list[Any], dataset_name: str) -> Iterable[ATIFTrajectory]:
     for index, item in enumerate(items):
         if not isinstance(item, dict):
