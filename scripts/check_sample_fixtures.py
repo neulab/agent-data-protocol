@@ -29,7 +29,7 @@ def dataset_dirs(names: list[str]) -> list[Path]:
 
 
 def render_jsonl(items: list[object]) -> str:
-    return "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in items)
+    return "".join(json.dumps(item, ensure_ascii=True) + "\n" for item in items)
 
 
 def regenerate_sample_std(dataset_dir: Path) -> str:
