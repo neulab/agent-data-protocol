@@ -83,7 +83,7 @@ def _action_step(record: dict[str, Any]) -> Step:
 def convert_episode(episode_data: list[dict[str, Any]], dataset_name: str):
     episode_id = str(episode_data[0]["episode_id"])
     goal = str(episode_data[0].get("goal_info") or "")
-    steps: list[Step] = [text_step(goal, source="agent")]
+    steps: list[Step] = [text_step(goal, source="user")]
     for record in episode_data:
         if record.get("goal_info") != episode_data[0].get("goal_info"):
             raise ValueError(f"goal_info changed inside episode {episode_id}")
