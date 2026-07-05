@@ -124,9 +124,7 @@ def split_terminal_task_description_prompt(trajectory: ATIFTrajectory) -> bool:
         return False
     if TERMINAL_TASK_DESCRIPTION_MARKER not in first_step.message:
         return False
-    system_prompt, task_prompt = first_step.message.split(
-        TERMINAL_TASK_DESCRIPTION_MARKER, 1
-    )
+    system_prompt, task_prompt = first_step.message.split(TERMINAL_TASK_DESCRIPTION_MARKER, 1)
     first_step.source = "system"
     first_step.message = system_prompt.strip()
     trajectory.steps.insert(
