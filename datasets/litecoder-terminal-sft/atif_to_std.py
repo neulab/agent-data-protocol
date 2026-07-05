@@ -63,6 +63,8 @@ def structure_terminal_completion(step: Step) -> None:
         str(payload.get("plan") or "").strip(),
     ]
     message = "\n\n".join(part for part in message_parts if part)
+    if not message:
+        return
     step.message = message
     step.tool_calls = [
         ToolCall(
