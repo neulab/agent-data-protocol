@@ -24,7 +24,7 @@ def split_initial_prompt(trajectory: ATIFTrajectory) -> None:
     trajectory.steps.insert(
         1,
         Step(
-            step_id=2,
+            step_id=0,
             source="user",
             message=f"Task Description:\n{task_prompt.strip()}",
         ),
@@ -63,6 +63,8 @@ def structure_terminal_completion(step: Step) -> None:
         str(payload.get("plan") or "").strip(),
     ]
     message = "\n\n".join(part for part in message_parts if part)
+    if not message:
+        return
     step.message = message
     step.tool_calls = [
         ToolCall(
