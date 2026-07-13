@@ -17,6 +17,7 @@ ROLE_MAP = {
     "system": "system",
 }
 
+
 def json_safe(value: Any) -> Any:
     return json.loads(json.dumps(value, ensure_ascii=False, default=str))
 
