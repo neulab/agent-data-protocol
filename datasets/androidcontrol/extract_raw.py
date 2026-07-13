@@ -103,10 +103,22 @@ output_dir = os.path.join(script_dir, "android_control_screenshots")
 # Ensure the output directory exists
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
-# Get the list of TFRecord files
-tfrecord_files = [
-    os.path.join(data_dir, f) for f in os.listdir(data_dir) if not f.endswith(".json")
+# Get the list of TFRecord files. The bundled tf_record_sample is only for
+# sample generation; extract_raw.py should process the full corpus by default.
+local_tfrecord_files = [
+    os.path.join(data_dir, f)
+    for f in os.listdir(data_dir)
+    if not f.endswith(".json") and f != "tf_record_sample"
 ]
+tfrecord_files = local_tfrecord_files or tf.io.gfile.glob(
+    "gs://gresearch/android_control/android_control*"
+)
+if not tfrecord_files:
+    raise FileNotFoundError(
+        "No full AndroidControl TFRecord files found. Download "
+        "gs://gresearch/android_control/android_control* into "
+        f"{data_dir}, or make sure TensorFlow can read that public GCS path."
+    )
 # Create a list to store parsed data
 data = []
 # Use ThreadPoolExecutor to process files in parallel

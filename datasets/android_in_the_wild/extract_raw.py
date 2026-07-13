@@ -54,10 +54,7 @@ for dataset_name, directory in dataset_directories.items():
 
     dataset = tf.data.TFRecordDataset(file_names, compression_type="GZIP")
     json_list: List[Dict[str, Any]] = []
-    for i, rcd in enumerate(dataset):
-        if i >= 5:
-            break
-
+    for rcd in dataset:
         example = tf.train.Example()
         example.ParseFromString(rcd.numpy())
 

@@ -16,13 +16,6 @@ ROLE_MAP = {
     "assistant": "assistant",
     "system": "system",
 }
-SAMPLE_IDS = {
-    "alfworld": ["alfworld_155", "alfworld_219", "alfworld_56", "alfworld_58", "alfworld_149"],
-    "db": ["db_100", "db_356", "db_493", "db_516", "db_531"],
-    "kg": ["kg_132", "kg_260", "kg_164", "kg_221", "kg_12"],
-    "webshop": ["webshop_330", "webshop_190", "webshop_243", "webshop_89", "webshop_26"],
-}
-
 
 def json_safe(value: Any) -> Any:
     return json.loads(json.dumps(value, ensure_ascii=False, default=str))
@@ -51,17 +44,6 @@ def has_valid_conversation(sample: dict[str, Any]) -> bool:
 def main(config_name: str) -> None:
     try:
         dataset = load_dataset("THUDM/AgentInstruct")[config_name]
-        sample_ids = SAMPLE_IDS.get(config_name)
-        if sample_ids is not None:
-            selected = {}
-            sample_id_set = set(sample_ids)
-            for sample in dataset:
-                if sample.get("id") in sample_id_set and has_valid_conversation(sample):
-                    selected[sample["id"]] = json_safe(sample)
-            for sample_id in sample_ids:
-                if sample_id in selected:
-                    print(json.dumps(selected[sample_id], ensure_ascii=False))
-            return
         for sample in dataset:
             if not has_valid_conversation(sample):
                 continue
