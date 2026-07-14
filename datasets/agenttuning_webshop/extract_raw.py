@@ -44,7 +44,11 @@ def has_valid_conversation(sample: dict[str, Any]) -> bool:
 
 def main(config_name: str) -> None:
     try:
-        dataset = load_dataset("THUDM/AgentInstruct")[config_name]
+        dataset = load_dataset(
+            "parquet",
+            data_files=f"hf://datasets/THUDM/AgentInstruct/data/{config_name}-*.parquet",
+            split="train",
+        )
         for sample in dataset:
             if not has_valid_conversation(sample):
                 continue
