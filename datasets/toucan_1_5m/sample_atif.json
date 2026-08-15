@@ -252,9 +252,23 @@
         "step_id": 4,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_4",
+            "function_name": "exa-search-deep_researcher_start",
+            "arguments": {
+              "instructions": "Conduct a comprehensive research analysis of StellarPay, a Series B fintech startup in the payment processing space. Focus on:\n1. Business model and revenue streams - how do they make money?\n2. Recent developments, funding rounds, and company milestones\n3. Market positioning and target customers\n4. Technology stack and key product offerings\n5. Company culture, Glassdoor reviews, and employee sentiment\n6. Any recent news, partnerships, or regulatory developments\n7. Competitive advantages and unique value propositions\n8. Leadership team and their backgrounds\n\nSearch for recent articles, press releases, company announcements, funding news, and industry analysis to get a complete picture of the company's current state and trajectory.",
+              "model": "exa-research-pro"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_4",
               "content": "{\n  \"success\": true,\n  \"taskId\": \"01k1ywsbj2cv7rk9gpkvawm1yv\",\n  \"model\": \"exa-research-pro\",\n  \"instructions\": \"Conduct a comprehensive research analysis of StellarPay, a Series B fintech startup in the payment processing space. Focus on:\\n1. Business model and revenue streams - how do they make money?\\n2. Recent developments, funding rounds, and company milestones\\n3. Market positioning and target customers\\n4. Technology stack and key product offerings\\n5. Company culture, Glassdoor reviews, and employee sentiment\\n6. Any recent news, partnerships, or regulatory developments\\n7. Competitive advantages and unique value propositions\\n8. Leadership team and their backgrounds\\n\\nSearch for recent articles, press releases, company announcements, funding news, and industry analysis to get a complete picture of the company's current state and trajectory.\",\n  \"outputSchema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"report\": {\n        \"description\": \"No output schema provided. Using default output: markdown report.\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": [\n      \"report\"\n    ],\n    \"additionalProperties\": false\n  },\n  \"message\": \"Deep research task started successfully with exa-research-pro model. IMMEDIATELY use deep_researcher_check with task ID '01k1ywsbj2cv7rk9gpkvawm1yv' to monitor progress. Keep checking every few seconds until status is 'completed' to get the research results.\",\n  \"nextStep\": \"Call deep_researcher_check with taskId: \\\"01k1ywsbj2cv7rk9gpkvawm1yv\\\"\"\n}"
             }
           ]
@@ -264,9 +278,22 @@
         "step_id": 5,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_6",
+            "function_name": "exa-search-deep_researcher_check",
+            "arguments": {
+              "taskId": "01k1ywsbj2cv7rk9gpkvawm1yv"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_6",
               "content": "{\n  \"success\": true,\n  \"status\": \"running\",\n  \"taskId\": \"01k1ywsbj2cv7rk9gpkvawm1yv\",\n  \"message\": \"\ud83d\udd04 Research in progress. Continue polling...\",\n  \"nextAction\": \"Call deep_researcher_check again with the same task ID\"\n}"
             }
           ]
@@ -468,9 +495,26 @@
         "step_id": 4,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_4",
+            "function_name": "two-truths-and-a-twist-create_round",
+            "arguments": {
+              "category": "Famous Inventors",
+              "question": "Which of these statements about famous inventors throughout history is the clever twist that sounds true but isn't?",
+              "trivia_1": "Nikola Tesla once fell deeply in love with a white pigeon, claiming it communicated with him through telepathic messages and had beautiful light-beams shooting from its eyes.",
+              "trivia_2": "Alexander Graham Bell, the inventor of the telephone, was so obsessed with sound that he taught his dog to say \"How are you grandmamma?\" in a sad attempt to prove his theories about vocal cords.",
+              "trivia_3": "Marie Curie discovered radioactive elements while accidentally ingesting experimental compounds, realizing her glowing urine meant she'd found something revolutionary."
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_4",
               "content": "Round created successfully with ID: 3"
             }
           ]
@@ -945,9 +989,20 @@
         "step_id": 4,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_4",
+            "function_name": "unity-mcp-integration-verify_connection",
+            "arguments": {},
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_4",
               "content": "{\n  \"connected\": false,\n  \"timestamp\": \"2025-08-06T05:13:38.729Z\",\n  \"message\": \"Unity Editor is not connected. Please ensure the Unity Editor is running with the MCP plugin.\"\n}"
             }
           ]
@@ -962,9 +1017,20 @@
         "step_id": 6,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_7",
+            "function_name": "unity-mcp-integration-get_editor_state",
+            "arguments": {},
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_7",
               "content": "An error occurred when calling tool `unity-mcp-integration-get_editor_state`:\nMcpError: MCP error -32603: Unity Editor is not connected. Please first verify the connection using the verify_connection tool, and ensure the Unity Editor is running with the MCP plugin and that the WebSocket connection is established.\nTraceback:\n  File \"/home/test_user/tool-rl-dev/Qwen-Agent/qwen_agent/agent.py\", line 192, in _call_tool\n    tool_result = tool.call(tool_args, **kwargs)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/test_user/tool-rl-dev/Qwen-Agent/qwen_agent/tools/mcp_manager.py\", line 283, in call\n    raise e\n  File \"/home/test_user/tool-rl-dev/Qwen-Agent/qwen_agent/tools/mcp_manager.py\", line 279, in call\n    result = future.result()\n             ^^^^^^^^^^^^^^^\n  File \"/home/test_user/.local/share/uv/python/cpython-3.12.11-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py\", line 456, in result\n    return self.__get_result()\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/home/test_user/.local/share/uv/python/cpython-3.12.11-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py\", line 401, in __get_result\n    raise self._exception\n  File \"/home/test_user/.local/share/uv/python/cpython-3.12.11-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py\", line 314, in __step_run_and_handle_result\n    result = coro.send(None)\n             ^^^^^^^^^^^^^^^\n  File \"/home/test_user/tool-rl-dev/Qwen-Agent/qwen_agent/tools/mcp_manager.py\", line 451, in execute_function\n    response = await self.session.call_tool(tool_name, tool_args)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/test_user/tool-rl-dev/.venv/lib/python3.12/site-packages/mcp/client/session.py\", line 264, in call_tool\n    return await self.send_request(\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/test_user/tool-rl-dev/.venv/lib/python3.12/site-packages/mcp/shared/session.py\", line 286, in send_request\n    raise McpError(response_or_error.error)\n"
             }
           ]
@@ -1126,26 +1192,65 @@
       {
         "step_id": 4,
         "source": "agent",
-        "message": ""
+        "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_4",
+            "function_name": "emoji-hub-server-get_emojis_by_category_tool",
+            "arguments": {
+              "category": "food-and-drink"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ]
       },
       {
         "step_id": 5,
         "source": "agent",
-        "message": ""
+        "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_5",
+            "function_name": "emoji-hub-server-get_emojis_by_group_tool",
+            "arguments": {
+              "group": "food-fruit"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ]
       },
       {
         "step_id": 6,
         "source": "agent",
         "message": "",
+        "tool_calls": [
+          {
+            "tool_call_id": "call_6",
+            "function_name": "emoji-hub-server-get_random_emoji_by_group_tool",
+            "arguments": {
+              "group": "food-fruit"
+            },
+            "extra": {
+              "raw_type": "function"
+            }
+          }
+        ],
         "observation": {
           "results": [
             {
+              "source_call_id": "call_6",
               "content": "{\n  \"name\": \"grapes\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127815;\"\n  ],\n  \"unicode\": [\n    \"U+1F347\"\n  ]\n}\n\n{\n  \"name\": \"melon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127816;\"\n  ],\n  \"unicode\": [\n    \"U+1F348\"\n  ]\n}\n\n{\n  \"name\": \"watermelon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127817;\"\n  ],\n  \"unicode\": [\n    \"U+1F349\"\n  ]\n}\n\n{\n  \"name\": \"tangerine\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127818;\"\n  ],\n  \"unicode\": [\n    \"U+1F34A\"\n  ]\n}\n\n{\n  \"name\": \"lemon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127819;\"\n  ],\n  \"unicode\": [\n    \"U+1F34B\"\n  ]\n}\n\n{\n  \"name\": \"banana\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127820;\"\n  ],\n  \"unicode\": [\n    \"U+1F34C\"\n  ]\n}\n\n{\n  \"name\": \"pineapple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127821;\"\n  ],\n  \"unicode\": [\n    \"U+1F34D\"\n  ]\n}\n\n{\n  \"name\": \"red apple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127822;\"\n  ],\n  \"unicode\": [\n    \"U+1F34E\"\n  ]\n}\n\n{\n  \"name\": \"green apple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127823;\"\n  ],\n  \"unicode\": [\n    \"U+1F34F\"\n  ]\n}\n\n{\n  \"name\": \"pear\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127824;\"\n  ],\n  \"unicode\": [\n    \"U+1F350\"\n  ]\n}\n\n{\n  \"name\": \"peach\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127825;\"\n  ],\n  \"unicode\": [\n    \"U+1F351\"\n  ]\n}\n\n{\n  \"name\": \"cherries\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127826;\"\n  ],\n  \"unicode\": [\n    \"U+1F352\"\n  ]\n}\n\n{\n  \"name\": \"strawberry\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127827;\"\n  ],\n  \"unicode\": [\n    \"U+1F353\"\n  ]\n}\n\n{\n  \"name\": \"kiwifruit\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#129373;\"\n  ],\n  \"unicode\": [\n    \"U+1F95D\"\n  ]\n}\n\n{\n  \"name\": \"tomato\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127813;\"\n  ],\n  \"unicode\": [\n    \"U+1F345\"\n  ]\n}\n\n{\n  \"name\": \"avocado\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129361;\"\n  ],\n  \"unicode\": [\n    \"U+1F951\"\n  ]\n}\n\n{\n  \"name\": \"aubergine \u224a eggplant\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127814;\"\n  ],\n  \"unicode\": [\n    \"U+1F346\"\n  ]\n}\n\n{\n  \"name\": \"potato\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129364;\"\n  ],\n  \"unicode\": [\n    \"U+1F954\"\n  ]\n}\n\n{\n  \"name\": \"carrot\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129365;\"\n  ],\n  \"unicode\": [\n    \"U+1F955\"\n  ]\n}\n\n{\n  \"name\": \"ear of maize \u224a ear of corn\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127805;\"\n  ],\n  \"unicode\": [\n    \"U+1F33D\"\n  ]\n}\n\n{\n  \"name\": \"hot pepper\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127798;\"\n  ],\n  \"unicode\": [\n    \"U+1F336\"\n  ]\n}\n\n{\n  \"name\": \"cucumber\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129362;\"\n  ],\n  \"unicode\": [\n    \"U+1F952\"\n  ]\n}\n\n{\n  \"name\": \"mushroom\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127812;\"\n  ],\n  \"unicode\": [\n    \"U+1F344\"\n  ]\n}\n\n{\n  \"name\": \"peanuts\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#129372;\"\n  ],\n  \"unicode\": [\n    \"U+1F95C\"\n  ]\n}\n\n{\n  \"name\": \"chestnut\",\n  \"category\": \"food and drink\",\n  \"group\": \"food vegetable\",\n  \"htmlCode\": [\n    \"&#127792;\"\n  ],\n  \"unicode\": [\n    \"U+1F330\"\n  ]\n}\n\n{\n  \"name\": \"bread\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127838;\"\n  ],\n  \"unicode\": [\n    \"U+1F35E\"\n  ]\n}\n\n{\n  \"name\": \"croissant\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129360;\"\n  ],\n  \"unicode\": [\n    \"U+1F950\"\n  ]\n}\n\n{\n  \"name\": \"baguette bread\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129366;\"\n  ],\n  \"unicode\": [\n    \"U+1F956\"\n  ]\n}\n\n{\n  \"name\": \"pancakes\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129374;\"\n  ],\n  \"unicode\": [\n    \"U+1F95E\"\n  ]\n}\n\n{\n  \"name\": \"cheese wedge\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129472;\"\n  ],\n  \"unicode\": [\n    \"U+1F9C0\"\n  ]\n}\n\n{\n  \"name\": \"meat on bone\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127830;\"\n  ],\n  \"unicode\": [\n    \"U+1F356\"\n  ]\n}\n\n{\n  \"name\": \"poultry leg\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127831;\"\n  ],\n  \"unicode\": [\n    \"U+1F357\"\n  ]\n}\n\n{\n  \"name\": \"bacon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129363;\"\n  ],\n  \"unicode\": [\n    \"U+1F953\"\n  ]\n}\n\n{\n  \"name\": \"hamburger\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127828;\"\n  ],\n  \"unicode\": [\n    \"U+1F354\"\n  ]\n}\n\n{\n  \"name\": \"french fries\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127839;\"\n  ],\n  \"unicode\": [\n    \"U+1F35F\"\n  ]\n}\n\n{\n  \"name\": \"slice of pizza \u224a pizza\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127829;\"\n  ],\n  \"unicode\": [\n    \"U+1F355\"\n  ]\n}\n\n{\n  \"name\": \"hot dog\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127789;\"\n  ],\n  \"unicode\": [\n    \"U+1F32D\"\n  ]\n}\n\n{\n  \"name\": \"taco\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127790;\"\n  ],\n  \"unicode\": [\n    \"U+1F32E\"\n  ]\n}\n\n{\n  \"name\": \"burrito\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127791;\"\n  ],\n  \"unicode\": [\n    \"U+1F32F\"\n  ]\n}\n\n{\n  \"name\": \"stuffed flatbread\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129369;\"\n  ],\n  \"unicode\": [\n    \"U+1F959\"\n  ]\n}\n\n{\n  \"name\": \"egg\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129370;\"\n  ],\n  \"unicode\": [\n    \"U+1F95A\"\n  ]\n}\n\n{\n  \"name\": \"cooking\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127859;\"\n  ],\n  \"unicode\": [\n    \"U+1F373\"\n  ]\n}\n\n{\n  \"name\": \"shallow pan of food\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129368;\"\n  ],\n  \"unicode\": [\n    \"U+1F958\"\n  ]\n}\n\n{\n  \"name\": \"pot of food\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127858;\"\n  ],\n  \"unicode\": [\n    \"U+1F372\"\n  ]\n}\n\n{\n  \"name\": \"green salad\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#129367;\"\n  ],\n  \"unicode\": [\n    \"U+1F957\"\n  ]\n}\n\n{\n  \"name\": \"popcorn\",\n  \"category\": \"food and drink\",\n  \"group\": \"food prepared\",\n  \"htmlCode\": [\n    \"&#127871;\"\n  ],\n  \"unicode\": [\n    \"U+1F37F\"\n  ]\n}\n\n{\n  \"name\": \"bento box\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127857;\"\n  ],\n  \"unicode\": [\n    \"U+1F371\"\n  ]\n}\n\n{\n  \"name\": \"rice cracker\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127832;\"\n  ],\n  \"unicode\": [\n    \"U+1F358\"\n  ]\n}\n\n{\n  \"name\": \"rice ball\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127833;\"\n  ],\n  \"unicode\": [\n    \"U+1F359\"\n  ]\n}\n\n{\n  \"name\": \"cooked rice\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127834;\"\n  ],\n  \"unicode\": [\n    \"U+1F35A\"\n  ]\n}\n\n{\n  \"name\": \"curry and rice \u224a curry rice\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127835;\"\n  ],\n  \"unicode\": [\n    \"U+1F35B\"\n  ]\n}\n\n{\n  \"name\": \"steaming bowl\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127836;\"\n  ],\n  \"unicode\": [\n    \"U+1F35C\"\n  ]\n}\n\n{\n  \"name\": \"spaghetti\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127837;\"\n  ],\n  \"unicode\": [\n    \"U+1F35D\"\n  ]\n}\n\n{\n  \"name\": \"roasted sweet potato\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127840;\"\n  ],\n  \"unicode\": [\n    \"U+1F360\"\n  ]\n}\n\n{\n  \"name\": \"oden\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127842;\"\n  ],\n  \"unicode\": [\n    \"U+1F362\"\n  ]\n}\n\n{\n  \"name\": \"sushi\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127843;\"\n  ],\n  \"unicode\": [\n    \"U+1F363\"\n  ]\n}\n\n{\n  \"name\": \"fried shrimp\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127844;\"\n  ],\n  \"unicode\": [\n    \"U+1F364\"\n  ]\n}\n\n{\n  \"name\": \"fish cake with swirl design \u224a fish cake with swirl\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127845;\"\n  ],\n  \"unicode\": [\n    \"U+1F365\"\n  ]\n}\n\n{\n  \"name\": \"dango\",\n  \"category\": \"food and drink\",\n  \"group\": \"food asian\",\n  \"htmlCode\": [\n    \"&#127841;\"\n  ],\n  \"unicode\": [\n    \"U+1F361\"\n  ]\n}\n\n{\n  \"name\": \"soft ice cream\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127846;\"\n  ],\n  \"unicode\": [\n    \"U+1F366\"\n  ]\n}\n\n{\n  \"name\": \"shaved ice\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127847;\"\n  ],\n  \"unicode\": [\n    \"U+1F367\"\n  ]\n}\n\n{\n  \"name\": \"ice cream\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127848;\"\n  ],\n  \"unicode\": [\n    \"U+1F368\"\n  ]\n}\n\n{\n  \"name\": \"doughnut\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127849;\"\n  ],\n  \"unicode\": [\n    \"U+1F369\"\n  ]\n}\n\n{\n  \"name\": \"cookie\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127850;\"\n  ],\n  \"unicode\": [\n    \"U+1F36A\"\n  ]\n}\n\n{\n  \"name\": \"birthday cake\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127874;\"\n  ],\n  \"unicode\": [\n    \"U+1F382\"\n  ]\n}\n\n{\n  \"name\": \"shortcake\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127856;\"\n  ],\n  \"unicode\": [\n    \"U+1F370\"\n  ]\n}\n\n{\n  \"name\": \"chocolate bar\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127851;\"\n  ],\n  \"unicode\": [\n    \"U+1F36B\"\n  ]\n}\n\n{\n  \"name\": \"candy\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127852;\"\n  ],\n  \"unicode\": [\n    \"U+1F36C\"\n  ]\n}\n\n{\n  \"name\": \"lollipop\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127853;\"\n  ],\n  \"unicode\": [\n    \"U+1F36D\"\n  ]\n}\n\n{\n  \"name\": \"custard\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127854;\"\n  ],\n  \"unicode\": [\n    \"U+1F36E\"\n  ]\n}\n\n{\n  \"name\": \"honey pot\",\n  \"category\": \"food and drink\",\n  \"group\": \"food sweet\",\n  \"htmlCode\": [\n    \"&#127855;\"\n  ],\n  \"unicode\": [\n    \"U+1F36F\"\n  ]\n}\n\n{\n  \"name\": \"baby bottle\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127868;\"\n  ],\n  \"unicode\": [\n    \"U+1F37C\"\n  ]\n}\n\n{\n  \"name\": \"glass of milk\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#129371;\"\n  ],\n  \"unicode\": [\n    \"U+1F95B\"\n  ]\n}\n\n{\n  \"name\": \"hot beverage\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#9749;\"\n  ],\n  \"unicode\": [\n    \"U+2615\"\n  ]\n}\n\n{\n  \"name\": \"teacup without handle\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127861;\"\n  ],\n  \"unicode\": [\n    \"U+1F375\"\n  ]\n}\n\n{\n  \"name\": \"sake bottle and cup \u224a sake\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127862;\"\n  ],\n  \"unicode\": [\n    \"U+1F376\"\n  ]\n}\n\n{\n  \"name\": \"bottle with popping cork\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127870;\"\n  ],\n  \"unicode\": [\n    \"U+1F37E\"\n  ]\n}\n\n{\n  \"name\": \"wine glass\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127863;\"\n  ],\n  \"unicode\": [\n    \"U+1F377\"\n  ]\n}\n\n{\n  \"name\": \"cocktail glass\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127864;\"\n  ],\n  \"unicode\": [\n    \"U+1F378\"\n  ]\n}\n\n{\n  \"name\": \"tropical drink\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127865;\"\n  ],\n  \"unicode\": [\n    \"U+1F379\"\n  ]\n}\n\n{\n  \"name\": \"beer mug\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127866;\"\n  ],\n  \"unicode\": [\n    \"U+1F37A\"\n  ]\n}\n\n{\n  \"name\": \"clinking beer mugs\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#127867;\"\n  ],\n  \"unicode\": [\n    \"U+1F37B\"\n  ]\n}\n\n{\n  \"name\": \"clinking glasses\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#129346;\"\n  ],\n  \"unicode\": [\n    \"U+1F942\"\n  ]\n}\n\n{\n  \"name\": \"tumbler glass\",\n  \"category\": \"food and drink\",\n  \"group\": \"drink\",\n  \"htmlCode\": [\n    \"&#129347;\"\n  ],\n  \"unicode\": [\n    \"U+1F943\"\n  ]\n}\n\n{\n  \"name\": \"fork and knife with plate\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#127869;\"\n  ],\n  \"unicode\": [\n    \"U+1F37D\"\n  ]\n}\n\n{\n  \"name\": \"fork and knife\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#127860;\"\n  ],\n  \"unicode\": [\n    \"U+1F374\"\n  ]\n}\n\n{\n  \"name\": \"spoon\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#129348;\"\n  ],\n  \"unicode\": [\n    \"U+1F944\"\n  ]\n}\n\n{\n  \"name\": \"hocho \u224a kitchen knife\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#128298;\"\n  ],\n  \"unicode\": [\n    \"U+1F52A\"\n  ]\n}\n\n{\n  \"name\": \"amphora\",\n  \"category\": \"food and drink\",\n  \"group\": \"dishware\",\n  \"htmlCode\": [\n    \"&#127994;\"\n  ],\n  \"unicode\": [\n    \"U+1F3FA\"\n  ]\n}"
             },
             {
+              "source_call_id": "call_6",
               "content": "{\n  \"name\": \"grapes\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127815;\"\n  ],\n  \"unicode\": [\n    \"U+1F347\"\n  ]\n}\n\n{\n  \"name\": \"melon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127816;\"\n  ],\n  \"unicode\": [\n    \"U+1F348\"\n  ]\n}\n\n{\n  \"name\": \"watermelon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127817;\"\n  ],\n  \"unicode\": [\n    \"U+1F349\"\n  ]\n}\n\n{\n  \"name\": \"tangerine\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127818;\"\n  ],\n  \"unicode\": [\n    \"U+1F34A\"\n  ]\n}\n\n{\n  \"name\": \"lemon\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127819;\"\n  ],\n  \"unicode\": [\n    \"U+1F34B\"\n  ]\n}\n\n{\n  \"name\": \"banana\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127820;\"\n  ],\n  \"unicode\": [\n    \"U+1F34C\"\n  ]\n}\n\n{\n  \"name\": \"pineapple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127821;\"\n  ],\n  \"unicode\": [\n    \"U+1F34D\"\n  ]\n}\n\n{\n  \"name\": \"red apple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127822;\"\n  ],\n  \"unicode\": [\n    \"U+1F34E\"\n  ]\n}\n\n{\n  \"name\": \"green apple\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127823;\"\n  ],\n  \"unicode\": [\n    \"U+1F34F\"\n  ]\n}\n\n{\n  \"name\": \"pear\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127824;\"\n  ],\n  \"unicode\": [\n    \"U+1F350\"\n  ]\n}\n\n{\n  \"name\": \"peach\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127825;\"\n  ],\n  \"unicode\": [\n    \"U+1F351\"\n  ]\n}\n\n{\n  \"name\": \"cherries\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127826;\"\n  ],\n  \"unicode\": [\n    \"U+1F352\"\n  ]\n}\n\n{\n  \"name\": \"strawberry\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127827;\"\n  ],\n  \"unicode\": [\n    \"U+1F353\"\n  ]\n}\n\n{\n  \"name\": \"kiwifruit\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#129373;\"\n  ],\n  \"unicode\": [\n    \"U+1F95D\"\n  ]\n}\n\n{\n  \"name\": \"tomato\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127813;\"\n  ],\n  \"unicode\": [\n    \"U+1F345\"\n  ]\n}"
             },
             {
+              "source_call_id": "call_6",
               "content": "{\n  \"name\": \"cherries\",\n  \"category\": \"food and drink\",\n  \"group\": \"food fruit\",\n  \"htmlCode\": [\n    \"&#127826;\"\n  ],\n  \"unicode\": [\n    \"U+1F352\"\n  ]\n}"
             }
           ]

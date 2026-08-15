@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 from typing import Any, Dict, List, Tuple
 
 import certifi
@@ -14,12 +15,16 @@ from PIL import Image, ImageDraw
 credential_path = os.path.join(
     os.environ["HOME"], ".config/gcloud/application_default_credentials.json"
 )
-if not os.path.exists(credential_path):
-    raise FileNotFoundError(
-        f"Credential file not found at {credential_path}\n Please run `gcloud auth application-default login` to set up your credentials."
+if os.path.exists(credential_path):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_path
+# Leave ADC unset when the file is absent so hosted runtimes can authenticate
+# through metadata-server credentials instead of failing before TensorFlow reads GCS.
+elif "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
+    print(
+        "GOOGLE_APPLICATION_CREDENTIALS is not set; relying on ambient ADC credentials. "
+        "If running locally, authenticate with: gcloud auth application-default login",
+        file=sys.stderr,
     )
-
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_path
 os.environ["CURL_CA_BUNDLE"] = certifi.where()
 
 # Define dataset directories

@@ -16,7 +16,7 @@ The dataset is intended for training code/data-analysis agents that read noteboo
 
 **Size and split used**: The Hugging Face dataset card lists two splits, `thinking` and `non_thinking`, with 51,389 examples each. This ADP converter samples the `non_thinking` split by default because it contains the same tool-call structure without additional thinking tags.
 
-**Sample size**: 3 trajectories in `sample_raw.json`, `sample_std.json`, and `sample_sft.json`.
+**Sample size**: 3 trajectories in `sample_raw.json`, `sample_std.json`, and `sample_sft/openhands_v0.json`.
 
 ## Schema Mapping
 
@@ -47,11 +47,12 @@ cat datasets/$MY_DATASET/sample_atif.json \
   | python scripts/jsonl_to_json.py \
   > datasets/$MY_DATASET/sample_std.json
 
+mkdir -p datasets/$MY_DATASET/sample_sft
 cat datasets/$MY_DATASET/sample_std.json \
   | python scripts/json_to_jsonl.py \
-  | python agents/openhands/std_to_sft.py --is_web=no --api_env=execute_ipython_cell \
+  | python agents/openhands_v0/std_to_sft.py --is_web=no --api_env=execute_ipython_cell \
   | python scripts/jsonl_to_json.py \
-  > datasets/$MY_DATASET/sample_sft.json
+  > datasets/$MY_DATASET/sample_sft/openhands_v0.json
 ```
 
 ## Known Limitations

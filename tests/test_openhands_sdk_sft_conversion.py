@@ -1,5 +1,7 @@
+import asyncio
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -48,7 +50,15 @@ def trajectory_id(row: dict) -> str:
 
 def assert_sdk_chat_record(record):
     assert record["messages"][0]["role"] == "system"
-    assert content_text(record["messages"][0]).startswith("You are OpenHands agent")
+    system_text = content_text(record["messages"][0])
+    # OpenHands SDK 1.29.3+ wraps the agent identity in <SOUL>...</SOUL> tags.
+    # Accept both the legacy format and the new SOUL-wrapped format.
+    if system_text.startswith("<SOUL>"):
+        inner = re.search(r"<SOUL>\n(.*?)\n</SOUL>", system_text, re.DOTALL)
+        assert inner is not None
+        assert inner.group(1).startswith("You are OpenHands agent")
+    else:
+        assert system_text.startswith("You are OpenHands agent")
     assert record["metadata"]["generation"] == "openhands_sdk_events"
     tool_names = {tool["function"]["name"] for tool in record["tools"]}
     pending_tool_call_ids = []
@@ -91,16 +101,7 @@ def patch_condensation_llm(monkeypatch, summary="[ATIF condensation test summary
 
     from agents.openhands_sdk import condensation_sft
 
-    def fake_completion(
-        self,
-        messages,
-        tools=None,
-        _return_metrics=False,
-        add_security_risk_prediction=False,
-        on_token=None,
-        **kwargs,
-    ):
-        self._captured_messages.append(messages)
+    def fake_response(self):
         return LLMResponse(
             message=Message(role="assistant", content=[TextContent(text=summary)]),
             metrics=MetricsSnapshot(
@@ -128,7 +129,19 @@ def patch_condensation_llm(monkeypatch, summary="[ATIF condensation test summary
             ),
         )
 
-    monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "completion", fake_completion)
+    async def fake_acompletion(
+        self,
+        messages,
+        tools=None,
+        _return_metrics=False,
+        add_security_risk_prediction=False,
+        on_token=None,
+        **kwargs,
+    ):
+        self._captured_messages.append(messages)
+        return fake_response(self)
+
+    monkeypatch.setattr(condensation_sft.PromptCapturingLLM, "acompletion", fake_acompletion)
 
 
 @pytest.mark.parametrize("dataset", sample_std_datasets())
@@ -349,6 +362,34 @@ def test_openhands_sdk_condensation_utility_emits_llm_summaries_after_trajectori
     assert prompt_records[0]["metadata"]["prompt_token_count_before_condensation"] > 2000
     assert prompt_records[0]["metadata"]["forgotten_event_count"] > 0
     assert prompt_records[0]["metadata"]["condensation_output"] == "llm"
+
+
+def test_openhands_sdk_condensation_utility_async_path_emits_llm_summaries(monkeypatch):
+    from agents.openhands_sdk import condensation_sft
+
+    patch_condensation_llm(monkeypatch, summary="[async condensation summary]")
+    dataset = "agenttuning_os"
+    source = json.loads((DATASET_PATH / dataset / "sample_std.json").read_text())[0]
+
+    records = asyncio.run(
+        condensation_sft.process_row_async(
+            json.dumps(source),
+            max_tokens=2000,
+            model="gpt-4o-mini",
+            dataset_name=dataset,
+        )
+    )
+
+    prompt_records = [
+        record
+        for record in records
+        if record["metadata"]["generation"] == "openhands_sdk_condensation_prompt"
+    ]
+    assert prompt_records
+    assert prompt_records[0]["messages"][-1] == {
+        "role": "assistant",
+        "content": "[async condensation summary]",
+    }
 
 
 def test_openhands_sdk_condensation_utility_rejects_non_llm_output_modes():
