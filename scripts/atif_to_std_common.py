@@ -108,6 +108,19 @@ def normalize_prompt_boilerplate(trajectory: ATIFTrajectory) -> None:
             step.source = "system"
             continue
         step.message = RESPONSE_FORMAT_PROMPT.sub("", step.message).strip()
+    if (
+        len(trajectory.steps) >= 3
+        and trajectory.steps[0].source == "system"
+        and trajectory.steps[1].source == "agent"
+        and trajectory.steps[2].source == "user"
+        and isinstance(trajectory.steps[1].message, str)
+        and trajectory.steps[1].message.lower().strip().startswith(("ok.", "okay", "sure"))
+        and not trajectory.steps[1].tool_calls
+        and trajectory.steps[1].observation is None
+    ):
+        del trajectory.steps[1]
+        for index, step in enumerate(trajectory.steps, start=1):
+            step.step_id = index
 
 
 def renumber_steps(steps: list[Step]) -> list[Step]:
