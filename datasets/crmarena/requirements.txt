@@ -1,0 +1,31 @@
+# Dependencies for REGENERATING CRMArena rollouts (the raw agent trajectories) —
+# NOT for the ADP conversion scripts in this directory. extract_raw.py,
+# schema_raw.py, raw_to_atif.py, and atif_to_std.py rely only on the Python
+# standard library plus the shared agent-data-protocol dependencies.
+#
+# Rollouts are produced by running the CRMArena tool-calling agent
+# (https://github.com/SalesforceAIResearch/CRMArena) against a Salesforce sandbox
+# via its run_tasks.py. Install these into that runtime environment, e.g.:
+#
+#   pip install -r datasets/crmarena/requirements.txt
+#
+# Versions match CRMArena's pinned requirements for the packages specific to the
+# rollout harness. Transitive core libraries (pydantic, numpy, requests) are
+# intentionally left unpinned so installing this file does not downgrade the
+# agent-data-protocol environment (which requires a newer pydantic).
+#
+# KNOWN CONFLICT: together==1.3.1 pins pillow<11 and rich<14, but agent-data-protocol's
+# openhands-sdk (used by the openhands_sdk SFT converter) needs pillow>=12.1.1 and
+# rich>=14. `together` is only imported by CRMArena's chat_agent (never called on the
+# OpenAI/tool_call path) and imports fine with newer pillow/rich, so the pin is safe to
+# override. After installing this file into an env that also has openhands-sdk, run:
+#   pip install 'pillow>=12.1.1' 'rich>=14.0.0'
+# (pip will print a harmless "together ... incompatible" warning that can be ignored.)
+
+simple-salesforce==1.12.6
+sacrebleu==2.4.3
+rouge==1.0.1
+together==1.3.1
+litellm
+python-dateutil
+tqdm
