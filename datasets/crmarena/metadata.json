@@ -1,0 +1,720 @@
+{
+  "custom_tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "calculate_average_handle_time",
+        "description": "Calculate the average handle time for each agent based on a list of cases.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "CreatedDate": {
+                    "type": "string",
+                    "description": "The date and time when the case was created"
+                  },
+                  "ClosedDate": {
+                    "type": "string",
+                    "description": "The date and time when the case was closed"
+                  },
+                  "OwnerId": {
+                    "type": "string",
+                    "description": "The ID of the agent who owns the case"
+                  }
+                },
+                "required": [
+                  "CreatedDate",
+                  "ClosedDate",
+                  "OwnerId"
+                ]
+              },
+              "description": "A list of case dictionaries. Each case should have 'CreatedDate', 'ClosedDate', and 'OwnerId' keys., where each item should be object"
+            }
+          },
+          "required": [
+            "cases"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "calculate_region_average_closure_times",
+        "description": "Calculates the average closure times for cases grouped by region (shipping state).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "ShippingState": {
+                    "type": "string",
+                    "description": "The shipping state of the case"
+                  },
+                  "CreatedDate": {
+                    "type": "string",
+                    "description": "The date and time when the case was created"
+                  },
+                  "ClosedDate": {
+                    "type": "string",
+                    "description": "The date and time when the case was closed"
+                  }
+                },
+                "required": [
+                  "ShippingState",
+                  "CreatedDate",
+                  "ClosedDate"
+                ]
+              },
+              "description": "A list of dictionaries, where each dictionary represents a case and contains at least 'ShippingState', 'CreatedDate', and 'ClosedDate' keys., where each item should be object"
+            }
+          },
+          "required": [
+            "cases"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "find_id_with_max_value",
+        "description": "Identifies the ID with the maximum value from a dictionary.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "values_by_id": {
+              "type": "object",
+              "description": "A dictionary with IDs as keys and their corresponding values."
+            }
+          },
+          "required": [
+            "values_by_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "find_id_with_min_value",
+        "description": "Identifies the ID with the minimum value from a dictionary.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "values_by_id": {
+              "type": "object",
+              "description": "A dictionary with IDs as keys and their corresponding values."
+            }
+          },
+          "required": [
+            "values_by_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_account_id_by_contact_id",
+        "description": "Retrieves the Account ID associated with a given Contact ID.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "contact_id": {
+              "type": "string",
+              "description": "The ID of the contact."
+            }
+          },
+          "required": [
+            "contact_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_agent_handled_cases_by_period",
+        "description": "Retrieve the number of cases handled by each agent within a specified time period.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "description": "The start date of the period in Salesforce datetime format (e.g., '2023-01-01T00:00:00Z')."
+            },
+            "end_date": {
+              "type": "string",
+              "description": "The end date of the period in Salesforce datetime format (e.g., '2023-12-31T23:59:59Z')."
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_agent_transferred_cases_by_period",
+        "description": "Retrieves the number of cases transferred between agents within a specified date range.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "description": "The start date of the period to check, in Salesforce datetime format (e.g., '2023-01-01T00:00:00Z')."
+            },
+            "end_date": {
+              "type": "string",
+              "description": "The end date of the period to check, in Salesforce datetime format (e.g., '2023-12-31T23:59:59Z')."
+            },
+            "qualified_agent_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of agent IDs (User ID) to filter cases by., where each item should be string"
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_agents_with_max_cases",
+        "description": "Returns a list of agent IDs with the maximum number of cases from the given subset of cases.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subset_cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "OwnerId": {
+                    "type": "string",
+                    "description": "The ID of the agent who owns the case"
+                  }
+                },
+                "required": [
+                  "OwnerId"
+                ]
+              },
+              "description": "A list of case records, where each record is expected to have an 'OwnerId' field representing the agent ID., where each item should be object"
+            }
+          },
+          "required": [
+            "subset_cases"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_agents_with_min_cases",
+        "description": "Returns a list of agent IDs with the minimum number of cases from the given subset of cases.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subset_cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "OwnerId": {
+                    "type": "string",
+                    "description": "The ID of the agent who owns the case"
+                  }
+                },
+                "required": [
+                  "OwnerId"
+                ]
+              },
+              "description": "A list of case records, where each record is expected to have an 'OwnerId' field representing the agent ID., where each item should be object"
+            }
+          },
+          "required": [
+            "subset_cases"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_cases",
+        "description": "Retrieve cases based on various filtering criteria.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "description": "The start date of the period in Salesforce datetime format (e.g., '2023-01-01T00:00:00Z')."
+            },
+            "end_date": {
+              "type": "string",
+              "description": "The end date of the period in Salesforce datetime format (e.g., '2023-12-31T23:59:59Z')."
+            },
+            "agent_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of agent IDs (User ID) to filter cases by., where each item should be string"
+            },
+            "case_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of case IDs to filter cases by., where each item should be string"
+            },
+            "order_item_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of order item IDs (OrderItem__c ID) to filter cases by., where each item should be string"
+            },
+            "issue_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of issue IDs (Issue__c ID) to filter cases by., where each item should be string"
+            },
+            "statuses": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of case statuses to filter cases by., where each item should be string"
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_email_messages_by_case_id",
+        "description": "Retrieves email messages associated with a specific case ID.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "case_id": {
+              "type": "string",
+              "description": "The ID of the case to retrieve email messages for."
+            }
+          },
+          "required": [
+            "case_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_issue_counts",
+        "description": "Retrieves the issue counts for a product within a given time period.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "description": "The start date of the time period (format: 'YYYY-MM-DDTHH:MM:SSZ')."
+            },
+            "end_date": {
+              "type": "string",
+              "description": "The end date of the time period (format: 'YYYY-MM-DDTHH:MM:SSZ')."
+            },
+            "order_item_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of order item IDs to filter issues by., where each item should be string"
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date",
+            "order_item_ids"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_issues",
+        "description": "Retrieves a list of issue records from Salesforce.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_livechat_transcript_by_case_id",
+        "description": "Retrieves live chat transcripts associated with a specific case ID.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "case_id": {
+              "type": "string",
+              "description": "The ID of the case to retrieve live chat transcripts for."
+            }
+          },
+          "required": [
+            "case_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_month_to_case_count",
+        "description": "Counts the number of cases for each month from a list of cases.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "CreatedDate": {
+                    "type": "string",
+                    "description": "The date and time when the case was created, in the format 'YYYY-MM-DDTHH:MM:SSZ'."
+                  }
+                },
+                "required": [
+                  "CreatedDate"
+                ]
+              },
+              "description": "A list of dictionaries, where each dictionary represents a case and contains at least a 'CreatedDate' key with a value in the format 'YYYY-MM-DDTHH:MM:SSZ'., where each item should be object"
+            }
+          },
+          "required": [
+            "cases"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_non_transferred_case_ids",
+        "description": "Retrieves the IDs of cases that were not transferred between agents within a specified date range.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "description": "The start date of the period in Salesforce datetime format (e.g., '2023-01-01T00:00:00Z')."
+            },
+            "end_date": {
+              "type": "string",
+              "description": "The end date of the period in Salesforce datetime format (e.g., '2023-12-31T23:59:59Z')."
+            }
+          },
+          "required": [
+            "start_date",
+            "end_date"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_order_item_ids_by_product",
+        "description": "Retrieves the order item IDs associated with a given product.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "product_id": {
+              "type": "string",
+              "description": "The ID of the product."
+            }
+          },
+          "required": [
+            "product_id"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_period",
+        "description": "Calculate the start and end date based on the period name and year.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "period_name": {
+              "type": "string",
+              "description": "The name of the period ('January', 'February', ..., 'December', 'Q1', 'Q2', 'Q3', 'Q4', 'Spring', 'Summer', 'Fall', 'Winter')."
+            },
+            "year": {
+              "type": "integer",
+              "description": "The year in which the period falls."
+            }
+          },
+          "required": [
+            "period_name",
+            "year"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_purchase_history",
+        "description": "Retrieves the purchase history for a specific account, date, and set of products.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "account_id": {
+              "type": "string",
+              "description": "The ID of the account to search for."
+            },
+            "purchase_date": {
+              "type": "string",
+              "description": "The date of purchase in 'YYYY-MM-DD' format."
+            },
+            "related_product_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "A list of product IDs to search for., where each item should be string"
+            }
+          },
+          "required": [
+            "account_id",
+            "purchase_date",
+            "related_product_ids"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_qualified_agent_ids_by_case_count",
+        "description": "Filters agent IDs based on the number of cases they have handled.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "agent_handled_cases": {
+              "type": "object",
+              "description": "A dictionary where keys are agent IDs and values are the number of cases handled by each agent."
+            },
+            "n_cases": {
+              "type": "integer",
+              "description": "The minimum number of cases an agent must have handled to be included."
+            }
+          },
+          "required": [
+            "agent_handled_cases",
+            "n_cases"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_shipping_state",
+        "description": "Adds shipping state information to the given cases.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "AccountId": {
+                    "type": "string",
+                    "description": "The ID of the account associated with the case"
+                  }
+                },
+                "required": [
+                  "AccountId"
+                ]
+              },
+              "description": "A list of dictionaries, where each dictionary represents a case and contains at least 'AccountId' key., where each item should be object"
+            }
+          },
+          "required": [
+            "cases"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_start_date",
+        "description": "Calculate the start date based on the end date, period, and interval count.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "end_date": {
+              "type": "string",
+              "description": "The end date in ISO format 'YYYY-MM-DDTHH:MM:SSZ'."
+            },
+            "period": {
+              "type": "string",
+              "description": "The time period unit ('day', 'week', 'month', or 'quarter')."
+            },
+            "interval_count": {
+              "type": "integer",
+              "description": "The number of periods to subtract from the end date."
+            }
+          },
+          "required": [
+            "end_date",
+            "period",
+            "interval_count"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "issue_soql_query",
+        "description": "Executes a SOQL (Salesforce Object Query Language) query to retrieve data from Salesforce.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The SOQL query string to execute."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "issue_sosl_query",
+        "description": "Executes a SOSL (Salesforce Object Search Language) query to search for records across multiple objects in Salesforce.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The SOSL query string to execute."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "respond",
+        "description": "Returns the input content without modification.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string",
+              "description": "The content to be returned."
+            }
+          },
+          "required": [
+            "content"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_knowledge_articles",
+        "description": "Searches for knowledge articles based on given keywords.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "search_term": {
+              "type": "string",
+              "description": "A list of keywords to search for in knowledge articles."
+            },
+            "keywords": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of keyword strings; some agents pass this alongside search_term."
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_products",
+        "description": "Searches for products based on a given search term.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "search_term": {
+              "type": "string",
+              "description": "The term to search for in the products."
+            }
+          },
+          "required": [
+            "search_term"
+          ]
+        }
+      }
+    }
+  ],
+  "code_enabled": [],
+  "file_editor_enabled": false,
+  "browser_enabled": false,
+  "sample_expectations": {
+    "min_std_steps": 6,
+    "min_std_tool_calls": 4,
+    "min_sdk_messages": 10
+  }
+}
